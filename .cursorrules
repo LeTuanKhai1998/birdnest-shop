@@ -52,45 +52,57 @@
 
 ### 3. Core Features - Customer Side [ ]
 
-- [] Home Layout:
-  - Create `(home)` folder in `app` directory
-  - Header with logo, search bar, and navigation
-  - Footer with links and social media
-- [] Homepage:
-  - banner carousel
-  - latest products
-- [] Products Catalog:
-  - Sidebar with categories and filters
-  - Search results
-  - Product grid
+- [X] Home Layout:
+  - Create `(home)` folder in the `app` directory  
+  - Header with logo, search bar, and navigation (Home, Products, About, Contact)  
+  - Footer with links (Purchase Policy, Delivery, Return & Exchange) and social media (Facebook, Zalo, Instagram)
+
+- [ ] Homepage:
+  - Banner carousel (images of bird's nest, gift combos, promotions)  
+  - Latest bird's nest products  
+  - Premium bird's nest combos
+
+- [ ] Products Catalog:
+  - Sidebar with categories and filters:  
+    - Nest type: Refined Nest, Raw Nest, Feather-removed Nest  
+    - Origin: Kien Giang  
+    - Weight: 50g, 100g, 200g  
+    - Price range  
+  - Search results  
+  - Product grid  
   - Pagination
-- [] Product pages:
-  - Create product detail page layout
-  - Implement image gallery with thumbnails
-  - Add product information section:
-    - Title, price, description
-    - Stock status
-    - Add to cart button
-  - Reviews and ratings section:
-    - Display existing reviews
-    - Add review form for authenticated users
-    - Star rating component
-  - Related products section:
-    - Show products from same category
+
+- [ ] Product pages:
+  - Create product detail page layout  
+  - Implement image gallery with thumbnails  
+  - Add product information section:  
+    - Product name, price, full description  
+    - Stock status (in stock / out of stock)  
+    - Add to cart button  
+  - Reviews and ratings section:  
+    - Display existing reviews  
+    - Add review form for authenticated users  
+    - Star rating component  
+  - Related products section:  
+    - Show products from the same category  
     - Product card carousel
-- [] Shopping cart:
-  - Add/remove items
-  - Update quantities
-  - Cart persistence
-- [] Checkout process:
-  - Shipping information
-  - Payment integration (Stripe)
-  - Order confirmation
-- [] User dashboard:
-  - Order history
-  - Profile management
-  - Saved addresses
-  - Wishlist
+
+- [ ] Shopping cart:
+  - Add/remove items  
+  - Update quantities  
+  - Cart persistence (via localStorage or Zustand)
+
+- [ ] Checkout process:
+  - Shipping information (Full name, phone number, delivery address)  
+  - Payment integration (Stripe — international, extendable to Momo/VNPAY later)  
+  - Order confirmation page with order ID
+
+- [ ] User dashboard:
+  - Order history (with status tracking)  
+  - Profile management (personal info, password change)  
+  - Saved addresses  
+  - Wishlist (favorite products)
+
 
 ### 4. Admin Dashboard [ ]
 
