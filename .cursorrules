@@ -44,7 +44,7 @@
   - Order model
   - Review model
   - Cart model
-- [] Implement NextAuth.js authentication:
+- [X] Implement NextAuth.js authentication:
   - Email/Password
   - OAuth providers (Google, GitHub)
   - JWT handling
