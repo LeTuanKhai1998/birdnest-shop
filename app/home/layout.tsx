@@ -4,7 +4,7 @@ import { Facebook, Instagram, ShoppingCart, Search, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import CurrentYear from "@/components/CurrentYear";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
   // Placeholder cart count (replace with Zustand/localStorage logic)
