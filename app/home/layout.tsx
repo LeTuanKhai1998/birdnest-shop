@@ -19,7 +19,10 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
       <header className="w-full border-b bg-white/80 backdrop-blur sticky top-0 z-30">
         <div className="container mx-auto flex items-center justify-between py-4 px-2">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-red-700 tracking-wide">Birdnest Shop</Link>
+          <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-red-700 tracking-wide">
+            <Image src="/images/logo.png" alt="Birdnest Shop Logo" width={40} height={40} />
+            Birdnest Shop
+          </Link>
           {/* Navigation */}
           <nav className="hidden md:flex gap-6 text-lg">
             <Link href="/" className="hover:text-yellow-600 transition">Home</Link>
