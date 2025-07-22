@@ -6,13 +6,22 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
+export interface Review {
+  user: string;
+  rating: number;
+  comment: string;
+}
+
 export interface Product {
   name: string;
-  image: string;
+  image?: string; // fallback for compatibility
+  images?: string[]; // new: array of images for gallery
   price: number;
   weight: number;
   description: string;
   type?: string; // Added for filtering and consistency
+  quantity?: number; // Stock quantity for status
+  reviews?: Review[]; // Mock reviews
 }
 
 export function ProductCard({ product }: { product: Product }) {
@@ -29,7 +38,7 @@ export function ProductCard({ product }: { product: Product }) {
           <Link href={`/products/${slug}`} prefetch={false} className="block">
             <AspectRatio ratio={4/3} className="overflow-hidden rounded-t-xl bg-gradient-to-b from-white via-gray-50 to-gray-100 border border-gray-200 shadow-sm">
               <Image
-                src={product.image}
+                src={product.image || (product.images && product.images[0]) || ""}
                 alt={product.name}
                 fill
                 className="object-cover w-full h-full group-hover:opacity-90 transition duration-200"
