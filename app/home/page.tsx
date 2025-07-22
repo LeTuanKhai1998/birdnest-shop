@@ -12,42 +12,13 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { useRef, useEffect, useState } from "react";
+import { ProductCard } from "@/components/ProductCard";
+import { products } from "@/lib/products-data";
 
 const banners = [
   { src: "/images/banner1.png", alt: "Premium Birdnest Banner 1" },
   { src: "/images/banner2.png", alt: "Gift Combo Banner 2" },
   { src: "/images/banner3.png", alt: "Promotion Banner 3" },
-];
-
-const products = [
-  {
-    name: "Yến tinh chế Khánh Hòa",
-    price: "₫3,500,000",
-    img: "/images/p1.png",
-  },
-  {
-    name: "Yến rút lông Nha Trang",
-    price: "₫4,000,000",
-    img: "/images/p2.png",
-  },
-  {
-    name: "Tổ yến thô Bình Định",
-    price: "₫3,000,000",
-    img: "/images/p3.png",
-  },
-];
-
-const combos = [
-  {
-    name: "Combo 1",
-    price: "₫6,500,000",
-    img: "/images/p1.png",
-  },
-  {
-    name: "Combo 2",
-    price: "₫7,000,000",
-    img: "/images/p2.png",
-  },
 ];
 
 export default function HomePage() {
@@ -116,22 +87,8 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold mb-6 text-red-700">Latest Products</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10">
-          {products.map((product, i) => (
-            <Card key={i} className="flex flex-col items-center p-4">
-              <CardContent className="flex flex-col items-center p-0 w-full">
-                <AspectRatio ratio={1} className="w-full mb-4">
-                  <Image
-                    src={product.img}
-                    alt={product.name}
-                    fill
-                    className="object-contain object-center rounded-lg"
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                  />
-                </AspectRatio>
-                <div className="font-semibold text-lg text-center mb-1">{product.name}</div>
-                <div className="text-red-700 font-bold text-center">{product.price}</div>
-              </CardContent>
-            </Card>
+          {products.filter(p => p.type !== "Combo").slice(0, 3).map((product, i) => (
+            <ProductCard key={i} product={product} />
           ))}
         </div>
       </section>
@@ -140,22 +97,8 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold mb-6 text-yellow-700">Premium Birdnest Combos</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10">
-          {combos.map((combo, i) => (
-            <Card key={i} className="flex flex-col items-center p-4">
-              <CardContent className="flex flex-col items-center p-0 w-full">
-                <AspectRatio ratio={1} className="w-full mb-4">
-                  <Image
-                    src={combo.img}
-                    alt={combo.name}
-                    fill
-                    className="object-contain object-center rounded-lg"
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                  />
-                </AspectRatio>
-                <div className="font-semibold text-lg text-center mb-1">{combo.name}</div>
-                <div className="text-yellow-700 font-bold text-center">{combo.price}</div>
-              </CardContent>
-            </Card>
+          {products.filter(p => p.type === "Combo").map((combo, i) => (
+            <ProductCard key={i} product={combo} />
           ))}
         </div>
       </section>
