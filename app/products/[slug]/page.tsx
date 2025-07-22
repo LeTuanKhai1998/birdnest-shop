@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { AddToCartButton } from "@/components/AddToCartButton";
@@ -8,10 +9,11 @@ import Image from "next/image";
 import { products } from "@/lib/products-data";
 import { notFound } from "next/navigation";
 
-export default function ProductDetailPage({ params }: { params: { slug: string } }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = React.use(params);
   // For now, use product name slug (replace spaces with dashes, lowercase)
   const product = products.find(
-    p => p.name.toLowerCase().replace(/\s+/g, "-") === params.slug
+    p => p.name.toLowerCase().replace(/\s+/g, "-") === slug
   );
   if (!product) return notFound();
 
