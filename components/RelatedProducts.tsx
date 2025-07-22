@@ -1,8 +1,9 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { Product } from "@/components/ProductCard";
 
-export default function RelatedProducts({ currentProduct, products }: { currentProduct: any, products: any[] }) {
+export default function RelatedProducts({ currentProduct, products }: { currentProduct: Product, products: Product[] }) {
   const related = products.filter(
     p => p.type === currentProduct.type && p.name !== currentProduct.name
   );
@@ -19,7 +20,7 @@ export default function RelatedProducts({ currentProduct, products }: { currentP
           >
             <div className="relative w-full h-36 mb-2">
               <Image
-                src={product.images?.[0] || product.image}
+                src={product.images?.[0] || product.image || "/images/placeholder.png"}
                 alt={product.name}
                 fill
                 className="object-contain w-full h-full rounded"

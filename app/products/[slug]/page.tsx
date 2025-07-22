@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { AddToCartButton } from "@/components/AddToCartButton";
@@ -19,15 +19,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const product = products.find(
     p => p.name.toLowerCase().replace(/\s+/g, "-") === slug
   );
-  if (!product) return notFound();
-
-  const images = product.images || (product.image ? [product.image] : []);
+  const images = product?.images || (product?.image ? [product.image] : []);
   // Review form state (mocked, local only)
-  const [reviewRating, setReviewRating] = useState(0);
-  const [reviewComment, setReviewComment] = useState("");
-  const [localReviews, setLocalReviews] = useState(product.reviews || []);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitMsg, setSubmitMsg] = useState("");
+  const [reviewRating, setReviewRating] = React.useState(0);
+  const [reviewComment, setReviewComment] = React.useState("");
+  const [localReviews, setLocalReviews] = React.useState(product?.reviews || []);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [submitMsg, setSubmitMsg] = React.useState("");
+  if (!product) return notFound();
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
