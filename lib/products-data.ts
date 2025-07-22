@@ -9,6 +9,7 @@ export const products: Product[] = [
     weight: 50,
     type: "Refined Nest",
     quantity: 12,
+    sold: 3200,
     reviews: [
       { user: "Nguyen Van A", rating: 5, comment: "Sản phẩm rất chất lượng, đóng gói đẹp." },
       { user: "Tran Thi B", rating: 4, comment: "Yến ngon, giao hàng nhanh." }

@@ -12,6 +12,7 @@ import { Star } from "lucide-react";
 import ProductImageGallery from "@/components/ProductImageGallery";
 import RelatedProducts from "@/components/RelatedProducts";
 import { products as allProducts } from "@/lib/products-data";
+import ProductMeta from "@/components/ProductMeta";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
@@ -41,6 +42,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           {/* Product info */}
           <div className="flex-1 flex flex-col gap-4 justify-center">
             <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
+            <ProductMeta
+              rating={product.reviews?.length ? (product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length) : 4.8}
+              reviewCount={product.reviews?.length ?? 120}
+              soldCount={product.sold ?? 1500}
+              className="gap-4 items-center"
+            />
             <div className="text-lg text-gray-500 mb-2">{product.weight}g</div>
             <div className={`mb-2 text-sm font-medium ${product.quantity === 0 ? 'text-red-500' : 'text-green-600'}`}>{product.quantity === 0 ? 'Out of stock' : `In stock: ${product.quantity}`}</div>
             <div className="text-2xl font-bold text-red-700 mb-4">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(product.price)}</div>

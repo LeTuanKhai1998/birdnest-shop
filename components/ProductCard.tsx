@@ -5,6 +5,7 @@ import { Eye, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import ProductMeta from "@/components/ProductMeta";
 
 export interface Review {
   user: string;
@@ -22,6 +23,7 @@ export interface Product {
   type?: string; // Added for filtering and consistency
   quantity?: number; // Stock quantity for status
   reviews?: Review[]; // Mock reviews
+  sold?: number; // Added for sold count
 }
 
 export function ProductCard({ product }: { product: Product }) {
@@ -54,6 +56,8 @@ export function ProductCard({ product }: { product: Product }) {
             </Link>
             <span className="text-xs text-gray-500 font-medium">{product.weight}g</span>
           </div>
+          {/* Product meta: rating, sold, reviews */}
+          <ProductMeta rating={product.reviews?.length ? (product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length) : 4.8} reviewCount={product.reviews?.length ?? 120} soldCount={product.sold ?? 1500} />
           <div className="font-bold text-red-700 text-base sm:text-lg mb-1">{currencyFormatter.format(product.price)}</div>
           <div className="flex gap-2 mt-2">
             {/* Mobile: icon buttons, Desktop: text buttons */}
