@@ -87,7 +87,7 @@
     - Show products from the same category  
     - Product card carousel
 
-- [ ] Shopping cart:
+- [X] Shopping cart:
   - Add/remove items  
   - Update quantities  
   - Cart persistence (via localStorage or Zustand)

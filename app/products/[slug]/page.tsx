@@ -46,7 +46,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             <div className="text-2xl font-bold text-red-700 mb-4">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(product.price)}</div>
             <div className="text-base text-gray-700 mb-4">{product.description}</div>
             {/* Add to Cart */}
-            <AddToCartButton className="w-full md:w-auto" disabled={product.quantity === 0}>Add to Cart</AddToCartButton>
+            <AddToCartButton product={product} className="w-full md:w-auto" disabled={product.quantity === 0}>Add to Cart</AddToCartButton>
           </div>
         </Card>
         {/* Reviews and Ratings Section */}

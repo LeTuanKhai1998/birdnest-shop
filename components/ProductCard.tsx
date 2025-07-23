@@ -13,6 +13,7 @@ export interface Review {
 }
 
 export interface Product {
+  id: string; // Unique product ID
   name: string;
   image?: string; // fallback for compatibility
   images?: string[]; // new: array of images for gallery
@@ -36,7 +37,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Card className="h-full flex flex-col transition-shadow duration-200 hover:shadow-lg">
         <CardContent className="p-0">
           <Link href={`/products/${slug}`} prefetch={false} className="block">
-            <AspectRatio ratio={4/3} className="overflow-hidden rounded-t-xl bg-gradient-to-b from-white via-gray-50 to-gray-100 border border-gray-200 shadow-sm">
+            <AspectRatio ratio={1/1} className="overflow-hidden rounded-t-xl bg-gradient-to-b from-white via-gray-50 to-gray-100 border border-gray-200 shadow-sm">
               <Image
                 src={product.image || (product.images && product.images[0]) || ""}
                 alt={product.name}
@@ -57,16 +58,16 @@ export function ProductCard({ product }: { product: Product }) {
           <div className="font-bold text-red-700 text-base sm:text-lg mb-1">{currencyFormatter.format(product.price)}</div>
           <div className="flex gap-2 mt-2">
             {/* Mobile: icon buttons, Desktop: text buttons */}
-            <AddToCartButton className="flex-1 py-2 text-xs sm:text-sm md:hidden" >
+            <AddToCartButton product={product} className="flex-1 py-2 text-xs sm:text-sm md:hidden" >
               <ShoppingCart className="w-5 h-5" />
             </AddToCartButton>
             <Link href={`/products/${slug}`} prefetch={false} className="flex-1 py-2 text-xs sm:text-sm md:hidden border rounded bg-white flex items-center justify-center" aria-label="View Details">
               <Eye className="w-5 h-5" />
             </Link>
-            <AddToCartButton className="flex-1 py-2 text-xs sm:text-sm hidden md:block">
+            <AddToCartButton product={product} className="flex-1 py-2 text-xs sm:text-sm hidden md:block">
               Add to Cart
             </AddToCartButton>
-            <Link href={`/products/${slug}`} prefetch={false} className="flex-1 py-2 text-xs sm:text-sm hidden md:block border rounded bg-white flex items-center justify-center" aria-label="View Details">
+            <Link href={`/products/${slug}`} prefetch={false} className="flex-1 py-2 text-xs sm:text-sm hidden md:block border rounded bg-white flex items-center justify-center text-center" aria-label="View Details">
               View Details
             </Link>
           </div>

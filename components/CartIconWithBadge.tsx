@@ -1,10 +1,10 @@
 import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useCartStore } from "@/lib/cart-store";
+import { useCartStore, selectCartCount } from "@/lib/cart-store";
 
 export function CartIconWithBadge() {
-  const cartCount = useCartStore((s) => s.cartCount);
+  const cartCount = useCartStore(selectCartCount);
   const cartBounce = useCartStore((s) => s.cartBounce);
 
   return (

@@ -28,7 +28,7 @@ export default function ProductImageGallery({ images, productName }: { images: s
   return (
     <div className="w-full flex flex-col items-center relative">
       {/* Main Embla Carousel */}
-      <div className="w-full max-w-[600px] aspect-[4/3] relative overflow-hidden" ref={emblaRef}>
+      <div className="w-full max-w-[600px] aspect-[1/1] relative overflow-hidden" ref={emblaRef}>
         <div className="flex h-full">
           {images.map((img, idx) => (
             <div
@@ -43,6 +43,7 @@ export default function ProductImageGallery({ images, productName }: { images: s
                   fill
                   className="object-contain w-full h-full rounded-xl shadow transition-all duration-500"
                   priority={idx === 0}
+                  sizes="(max-width: 768px) 100vw, 600px"
                 />
               </div>
             </div>
@@ -63,7 +64,7 @@ export default function ProductImageGallery({ images, productName }: { images: s
               type="button"
             >
               <div className="relative w-full h-full">
-                <Image src={img} alt={productName + ' thumbnail'} fill className="object-cover w-full h-full" />
+                <Image src={img} alt={productName + ' thumbnail'} fill className="object-cover w-full h-full" sizes="64px" />
               </div>
             </button>
           ))}
