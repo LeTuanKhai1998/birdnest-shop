@@ -15,6 +15,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return {
         ...provider,
         async authorize(credentials) {
+          console.log("CREDENTIALS:", credentials);
+          // Mock user for dev
+          if (
+            credentials.email === "test@demo.com" &&
+            credentials.password === "Test@1234"
+          ) {
+            return {
+              id: "mock-user-id",
+              email: "test@demo.com",
+              name: "Test User",
+              isAdmin: false,
+            };
+          }
+          // Real DB logic
           const email = credentials.email?.toString() || "";
           const user = await prisma.user.findUnique({ where: { email } });
           if (!user || !user.password) return null;

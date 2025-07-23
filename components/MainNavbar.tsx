@@ -3,16 +3,21 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerTrigger, DrawerContent, DrawerClose, DrawerTitle } from "@/components/ui/drawer";
-import { Search, User, Menu, X } from "lucide-react";
+import { Search, User, Menu, X, LayoutDashboard } from "lucide-react";
 import { CartIconWithBadge } from "@/components/CartIconWithBadge";
 import { useState, useRef } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { useSession, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 export function MainNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { data: session } = useSession();
+  const pathname = usePathname();
+  const user = session?.user;
 
   return (
     <header className="w-full border-b bg-white/80 backdrop-blur sticky top-0 z-30">
@@ -57,25 +62,41 @@ export function MainNavbar() {
           {/* User/Profile */}
           {/* Desktop: show Login/Sign up, Mobile: show user icon */}
           <div className="flex items-center gap-2">
-            <Link href="/login" className="hidden md:block">
-              <Button variant="outline" size="sm">Login</Button>
-            </Link>
-            <Link href="/signup" className="hidden md:block">
-              <Button variant="default" size="sm">Sign up</Button>
-            </Link>
-            {/* User icon with dropdown (desktop and mobile) */}
+            {/* Remove Login and Sign up buttons */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="User menu">
-                  <User className="w-5 h-5" />
+                  {user?.image ? (
+                    <Image src={user.image} alt={user.name || "User"} width={28} height={28} className="rounded-full object-cover" />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => toast.success("Signed out!")}>Sign out</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-48" aria-label="User menu">
+                {session ? (
+                  <>
+                    <DropdownMenuItem asChild className={pathname.startsWith("/dashboard") ? "bg-gray-100 font-semibold" : ""}>
+                      <Link href="/dashboard">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => { signOut(); toast.success("Signed out!"); }}>
+                      Sign out
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/login">Login</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/signup">Sign up</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -104,8 +125,10 @@ export function MainNavbar() {
                 <Link href="/products" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Products</Link>
                 <Link href="/about" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>About</Link>
                 <Link href="/contact" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Contact</Link>
-                <Link href="/login" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Login</Link>
-                <Link href="/signup" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Sign up</Link>
+                {!session && <Link href="/login" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Login</Link>}
+                {!session && <Link href="/signup" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Sign up</Link>}
+                {session && <Link href="/dashboard" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Dashboard</Link>}
+                {session && <button onClick={() => { setDrawerOpen(false); signOut(); }} className="text-left py-2 hover:text-yellow-600 transition w-full">Sign out</button>}
               </nav>
             </DrawerContent>
           </Drawer>
