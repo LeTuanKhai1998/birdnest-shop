@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Defensive check: ensure all product IDs exist
-  const productIds = (products as ProductCartItem[]).map(item => item.product.id);
+  const productIds = (products as ProductCartItem[]).map((item: ProductCartItem) => item.product.id);
   const foundProducts = await prisma.product.findMany({ where: { id: { in: productIds } } });
   if (foundProducts.length !== productIds.length) {
     return NextResponse.json({ error: "One or more products not found in database. Please refresh your cart." }, { status: 400 });
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   ].filter(Boolean).join(", ");
 
   // Calculate total
-  const subtotal = products.reduce((sum: number, item: any) => sum + item.product.price * item.quantity, 0);
+  const subtotal = products.reduce((sum: number, item: ProductCartItem) => sum + item.product.price * item.quantity, 0);
   const total = subtotal + (deliveryFee || 0);
 
   // Create order and order items
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       paymentMethod: paymentMethod?.toUpperCase() || "COD",
       shippingAddress,
       orderItems: {
-        create: (products as ProductCartItem[]).map(item => ({
+        create: (products as ProductCartItem[]).map((item: ProductCartItem) => ({
           productId: item.product.id,
           quantity: item.quantity,
           price: item.product.price,

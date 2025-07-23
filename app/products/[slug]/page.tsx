@@ -19,6 +19,27 @@ import { useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  discount: number;
+  quantity: number;
+  images: string[];
+  categoryId: string;
+  reviews: Review[];
+};
+type Review = {
+  id: string;
+  userId: string;
+  productId: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+};
+
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
   // For now, use product name slug (replace spaces with dashes, lowercase)
@@ -177,7 +198,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   );
 }
 
-function MoreImagesGallery({ product }: { product: any }) {
+function MoreImagesGallery({ product }: { product: Product }) {
   const moreImages = product.images || [];
   const [open, setOpen] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number>(0);
@@ -258,7 +279,7 @@ function MoreImagesGallery({ product }: { product: any }) {
 }
 
 // Tabbed details component for mobile-first UI
-function ProductDetailsTabs({ product }: { product: any }) {
+function ProductDetailsTabs({ product }: { product: Product }) {
   const [tab, setTab] = useState("desc");
   const tabList = [
     { key: "desc", label: "Description" },
