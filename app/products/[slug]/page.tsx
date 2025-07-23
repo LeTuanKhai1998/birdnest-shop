@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { AddToCartButton } from "@/components/AddToCartButton";
@@ -17,6 +17,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
@@ -35,63 +36,49 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      <main className="flex-1 container mx-auto px-2 py-8 max-w-4xl">
+      <main className="flex-1 container mx-auto px-4 md:px-0 pt-4 pb-6 max-w-4xl">
         {/* Image Gallery Modern Layout */}
-        <Card className="mb-8 p-4 md:p-8 flex flex-col md:flex-row gap-8 shadow-lg border-0 bg-transparent">
+        <Card className="mb-4 p-0 md:p-8 flex flex-col md:flex-row gap-2 md:gap-8 shadow-lg border-0 bg-white rounded-2xl">
           <div className="flex flex-col w-full items-center md:items-start md:w-[60%]">
-            <div className="w-full flex flex-col items-center relative">
+            <div className="w-full flex flex-col items-center relative gap-1 md:gap-4">
               <ProductImageGallery images={images} productName={product.name} />
+              {/* Remove MoreImagesGallery from here */}
             </div>
           </div>
           {/* Product info */}
-          <div className="flex-1 flex flex-col gap-4 justify-center">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
-            <ProductMeta
-              rating={product.reviews?.length ? (product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length) : 4.8}
-              reviewCount={product.reviews?.length ?? 120}
-              soldCount={product.sold ?? 1500}
-              className="gap-4 items-center"
-            />
-            <div className="text-lg text-gray-500 mb-2">{product.weight}g</div>
-            <div className={`mb-2 text-sm font-medium ${product.quantity === 0 ? 'text-red-500' : 'text-green-600'}`}>{product.quantity === 0 ? 'Out of stock' : `In stock: ${product.quantity}`}</div>
-            <div className="text-2xl font-bold text-red-700 mb-4">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(product.price)}</div>
-            {/* Expanded Description Section */}
-            <Accordion type="single" collapsible className="mb-4">
-              <AccordionItem value="desc">
-                <AccordionTrigger className="text-xl font-semibold">Description</AccordionTrigger>
-                <AccordionContent>
-                  <div className="prose prose-sm text-muted-foreground leading-relaxed px-1">
-                    {product.description}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="ingredients">
-                <AccordionTrigger>Ingredients</AccordionTrigger>
-                <AccordionContent>
-                  <div className="text-muted-foreground">100% Pure Bird's Nest, no additives.</div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="usage">
-                <AccordionTrigger>Usage</AccordionTrigger>
-                <AccordionContent>
-                  <div className="text-muted-foreground">Soak in water for 30 minutes, cook with sugar or as desired.</div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="preservation">
-                <AccordionTrigger>Preservation</AccordionTrigger>
-                <AccordionContent>
-                  <div className="text-muted-foreground">Store in a cool, dry place. Use within 6 months.</div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            {/* More Images Gallery */}
-            <MoreImagesGallery product={product} />
-            {/* Add to Cart */}
-            <AddToCartButton product={product} className="w-full md:w-auto" disabled={product.quantity === 0}>Add to Cart</AddToCartButton>
+          <div className="flex-1 flex flex-col gap-1 md:gap-2 justify-center px-4 md:px-0 md:mx-0">
+            <h1 className="text-xl md:text-3xl font-bold mb-1 md:mb-4 break-words leading-tight">{product.name}</h1>
+            {/* Info row: Sold, Reviews, Weight */}
+            <div className="flex items-center gap-3 text-sm text-gray-500 mb-1">
+              <span className="flex items-center gap-1"><span className="text-orange-500"><svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 016 6c0 4.418-6 10-6 10S4 12.418 4 8a6 6 0 016-6zm0 8.5A2.5 2.5 0 1010 5a2.5 2.5 0 000 5.5z"/></svg></span>{product.sold ?? 0} Sold</span>
+              <span className="flex items-center gap-1"><span className="text-yellow-500"><svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z"/></svg></span>{product.reviews?.length ?? 0} Reviews</span>
+              <span className="flex items-center gap-1"><span className="text-blue-500"><svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><text x="10" y="15" textAnchor="middle" fontSize="10" fill="#fff">{product.weight}g</text></svg></span>{product.weight}g</span>
+            </div>
+            {/* Price and stock badge */}
+            <div className="flex items-end gap-2 bg-gray-50 rounded-lg px-3 py-2 mb-2">
+              <span className="text-3xl font-bold text-red-700">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(product.price)}</span>
+              <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${product.quantity === 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>{product.quantity === 0 ? 'Out of stock' : `In stock: ${product.quantity}`}</span>
+            </div>
+            {/* Tabbed Details Section */}
+            <ProductDetailsTabs product={product} />
+            {/* More Images above Add to Cart */}
+            <div className="mb-4">
+              <MoreImagesGallery product={product} />
+            </div>
+            {/* Sticky Add to Cart Button for mobile */}
+            <div className="block md:hidden fixed bottom-0 left-0 w-full z-40 px-4 pb-4 pointer-events-none">
+              <div className="pointer-events-auto">
+                <AddToCartButton product={product} className="w-full rounded-xl shadow-lg py-4 text-lg font-semibold" disabled={product.quantity === 0}>Add to Cart</AddToCartButton>
+              </div>
+            </div>
+            {/* Add to Cart for desktop */}
+            <div className="hidden md:block">
+              <AddToCartButton product={product} className="w-full md:w-auto" disabled={product.quantity === 0}>Add to Cart</AddToCartButton>
+            </div>
           </div>
         </Card>
         {/* Reviews and Ratings Section */}
-        <div className="mt-10 bg-white rounded-xl shadow p-6 max-w-3xl mx-auto">
+        <div className="mt-6 mb-4 md:mt-10 md:mb-8 bg-white rounded-xl shadow p-4 md:p-6 max-w-3xl mx-auto">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             Đánh giá sản phẩm
             {localReviews.length > 0 && (
@@ -190,55 +177,126 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   );
 }
 
-// MoreImagesGallery component (inline for now)
 function MoreImagesGallery({ product }: { product: any }) {
-  // Mock more images
-  const moreImages = [
-    "/images/p1.png",
-    "/images/p2.png",
-    "/images/p3.png",
-    "/images/banner1.png",
-    "/images/banner2.png",
-    "/images/banner3.png",
-  ];
+  const moreImages = product.images || [];
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
-  const selectedIdx = selected ? moreImages.indexOf(selected) : -1;
-  const prevImg = () => {
-    if (selectedIdx === -1) return;
-    setSelected(moreImages[(selectedIdx - 1 + moreImages.length) % moreImages.length]);
-  };
-  const nextImg = () => {
-    if (selectedIdx === -1) return;
-    setSelected(moreImages[(selectedIdx + 1) % moreImages.length]);
-  };
+  const [selectedIdx, setSelectedIdx] = useState<number>(0);
+  if (moreImages.length === 0) return null;
   return (
-    <div className="mt-8">
-      <h3 className="text-lg font-semibold mb-2">More Images</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {moreImages.map((img, i) => (
-          <button key={img} className="relative aspect-[4/3] rounded overflow-hidden group" onClick={() => { setSelected(img); setOpen(true); }}>
+    <div className="mt-4">
+      <h3 className="text-base font-semibold mb-2">More Images</h3>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {moreImages.map((img: string, i: number) => (
+          <button key={img} className="relative w-28 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 group" onClick={() => { setSelectedIdx(i); setOpen(true); }}>
             <Image src={img} alt={product.name + ' gallery ' + (i+1)} fill className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200" />
           </button>
         ))}
       </div>
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
         <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 bg-black/70 z-50" />
-          <DialogPrimitive.Content className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="relative bg-white rounded-xl shadow-lg max-w-3xl w-full max-h-[90vh] flex flex-col">
-              <button onClick={() => setOpen(false)} className="absolute top-2 right-2 z-10 bg-white/80 rounded-full p-2 hover:bg-white"><X className="w-6 h-6" /></button>
-              {selected && (
-                <div className="relative w-full h-[60vh] min-h-[300px] flex items-center justify-center">
-                  <button onClick={prevImg} className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 rounded-full p-2 hover:bg-white"><ChevronLeft className="w-7 h-7" /></button>
-                  <Image src={selected} alt="Zoomed" fill className="object-contain w-full h-full rounded-xl" />
-                  <button onClick={nextImg} className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 rounded-full p-2 hover:bg-white"><ChevronRight className="w-7 h-7" /></button>
-                </div>
-              )}
+          {open && (
+            <div
+              className="fixed inset-0 bg-black/80 z-50 transition-opacity duration-300 animate-fadeIn cursor-pointer"
+              aria-label="Close image zoom"
+              tabIndex={-1}
+              onClick={() => setOpen(false)}
+            />
+          )}
+          <DialogPrimitive.Content
+            className="fixed inset-0 flex items-center justify-center z-50 outline-none transition-transform duration-300 animate-zoomIn p-0 w-screen h-screen max-w-full max-h-full"
+            onPointerDownOutside={() => setOpen(false)}
+          >
+            <DialogPrimitive.Title className="sr-only">Product Image Gallery</DialogPrimitive.Title>
+            <div className="relative bg-white rounded-xl shadow-lg w-full h-full max-w-full max-h-full flex flex-col animate-fadeInContent">
+              <button onClick={() => setOpen(false)} className="absolute top-2 right-2 z-10 bg-white/80 rounded-full p-2 hover:bg-white transition"><X className="w-6 h-6" /></button>
+              <div className="flex items-center justify-between px-2 pt-2">
+                <span className="text-xs text-gray-500 mx-auto">{selectedIdx + 1}/{moreImages.length}</span>
+              </div>
+              {/* Desktop center arrows */}
+              <button
+                onClick={() => setSelectedIdx((selectedIdx - 1 + moreImages.length) % moreImages.length)}
+                className="hidden md:flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition"
+                style={{ pointerEvents: 'auto' }}
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="w-8 h-8 text-gray-700" />
+              </button>
+              <button
+                onClick={() => setSelectedIdx((selectedIdx + 1) % moreImages.length)}
+                className="hidden md:flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition"
+                style={{ pointerEvents: 'auto' }}
+                aria-label="Next image"
+              >
+                <ChevronRight className="w-8 h-8 text-gray-700" />
+              </button>
+              <div className="relative w-full flex-1 flex items-center justify-center select-none">
+                <AnimatePresence initial={false} custom={selectedIdx}>
+                  <motion.div
+                    key={selectedIdx}
+                    className="absolute inset-0 flex items-center justify-center w-full h-full"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={(e, info) => {
+                      if (info.offset.x < -80) setSelectedIdx((selectedIdx + 1) % moreImages.length);
+                      else if (info.offset.x > 80) setSelectedIdx((selectedIdx - 1 + moreImages.length) % moreImages.length);
+                    }}
+                    initial={{ opacity: 0, x: 100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  >
+                    <Image src={moreImages[selectedIdx]} alt="Zoomed" fill className="object-contain w-full h-full rounded-xl transition-transform duration-300" />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>
+    </div>
+  );
+}
+
+// Tabbed details component for mobile-first UI
+function ProductDetailsTabs({ product }: { product: any }) {
+  const [tab, setTab] = useState("desc");
+  const tabList = [
+    { key: "desc", label: "Description" },
+    { key: "ingredients", label: "Ingredients" },
+    { key: "usage", label: "Usage" },
+    { key: "preservation", label: "Preservation" },
+  ];
+  return (
+    <div className="mb-4 md:mb-6">
+      <div className="flex gap-2 md:gap-4 border-b border-gray-200 mb-3 overflow-x-auto">
+        {tabList.map(t => (
+          <button
+            key={t.key}
+            className={`px-3 py-2 text-sm font-medium rounded-t-lg transition-colors duration-150 whitespace-nowrap
+              ${tab === t.key ? 'bg-white text-primary shadow font-semibold' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+            onClick={() => setTab(t.key)}
+            type="button"
+            aria-selected={tab === t.key}
+            tabIndex={tab === t.key ? 0 : -1}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="bg-white rounded-b-xl shadow-sm px-3 py-4 min-h-[60px] text-sm md:text-base">
+        {tab === "desc" && (
+          <div className="prose prose-sm text-muted-foreground leading-relaxed">{product.description}</div>
+        )}
+        {tab === "ingredients" && (
+          <div className="text-muted-foreground">100% Pure Bird's Nest, no additives.</div>
+        )}
+        {tab === "usage" && (
+          <div className="text-muted-foreground">Soak in water for 30 minutes, cook with sugar or as desired.</div>
+        )}
+        {tab === "preservation" && (
+          <div className="text-muted-foreground">Store in a cool, dry place. Use within 6 months.</div>
+        )}
+      </div>
     </div>
   );
 } 

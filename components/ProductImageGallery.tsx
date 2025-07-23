@@ -27,7 +27,7 @@ export default function ProductImageGallery({ images, productName }: { images: s
 
   return (
     <div className="w-full flex flex-col items-center relative">
-      {/* Main Embla Carousel */}
+      {/* Main Embla Carousel with overlay index */}
       <div className="w-full max-w-[600px] aspect-[1/1] relative overflow-hidden" ref={emblaRef}>
         <div className="flex h-full">
           {images.map((img, idx) => (
@@ -36,7 +36,7 @@ export default function ProductImageGallery({ images, productName }: { images: s
               className="flex-shrink-0 flex-grow-0 basis-full flex items-center justify-center h-full"
               style={{ minWidth: '100%' }}
             >
-              <div className="relative w-full h-[300px] md:h-[450px]">
+              <div className="relative w-full h-[480px] md:h-[520px]">
                 <Image
                   src={img}
                   alt={productName + ' image'}
@@ -45,6 +45,10 @@ export default function ProductImageGallery({ images, productName }: { images: s
                   priority={idx === 0}
                   sizes="(max-width: 768px) 100vw, 600px"
                 />
+                {/* Overlay image index */}
+                <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full z-10 select-none">
+                  {selectedIndex + 1}/{images.length}
+                </div>
               </div>
             </div>
           ))}
@@ -52,7 +56,7 @@ export default function ProductImageGallery({ images, productName }: { images: s
       </div>
       {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex gap-2 mt-8 overflow-x-auto w-full justify-center md:justify-start h-[110px] md:h-[130px] pt-2 md:pt-3">
+        <div className="flex gap-2 mt-4 overflow-x-auto w-full justify-center md:justify-start h-[80px] md:h-[110px] pt-2 md:pt-3">
           {images.map((img, idx) => (
             <button
               key={img}

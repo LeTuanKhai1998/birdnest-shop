@@ -4,7 +4,11 @@ export const products: Product[] = [
   {
     id: "p1",
     name: "Premium Refined Birdnest 50g",
-    image: "/images/p1.png",
+    images: [
+      "/images/p1.png",
+      "/images/banner1.png",
+      "/images/banner2.png"
+    ],
     price: 2500000,
     description: "High quality, ready-to-cook refined birdnest from Kien Giang.",
     weight: 50,
@@ -19,7 +23,11 @@ export const products: Product[] = [
   {
     id: "p2",
     name: "Raw Birdnest 100g",
-    image: "/images/p2.png",
+    images: [
+      "/images/p2.png",
+      "/images/banner2.png",
+      "/images/banner3.png"
+    ],
     price: 4200000,
     description: "Raw, natural birdnest, carefully selected and packed.",
     weight: 100,
@@ -28,7 +36,11 @@ export const products: Product[] = [
   {
     id: "p3",
     name: "Feather-removed Birdnest 200g",
-    image: "/images/p3.png",
+    images: [
+      "/images/p3.png",
+      "/images/banner3.png",
+      "/images/banner1.png"
+    ],
     price: 7900000,
     description: "Feather-removed, premium birdnest for health and gifting.",
     weight: 200,
@@ -37,7 +49,11 @@ export const products: Product[] = [
   {
     id: "p4",
     name: "Premium Refined Birdnest 100g",
-    image: "/images/p1.png",
+    images: [
+      "/images/p1.png",
+      "/images/banner1.png",
+      "/images/banner2.png"
+    ],
     price: 4800000,
     description: "Premium refined birdnest, 100g pack.",
     weight: 100,
@@ -46,7 +62,11 @@ export const products: Product[] = [
   {
     id: "p5",
     name: "Raw Birdnest 50g",
-    image: "/images/p2.png",
+    images: [
+      "/images/p2.png",
+      "/images/banner2.png",
+      "/images/banner3.png"
+    ],
     price: 2100000,
     description: "Raw birdnest, 50g pack.",
     weight: 50,
@@ -55,7 +75,11 @@ export const products: Product[] = [
   {
     id: "p6",
     name: "Feather-removed Birdnest 100g",
-    image: "/images/p3.png",
+    images: [
+      "/images/p3.png",
+      "/images/banner3.png",
+      "/images/banner1.png"
+    ],
     price: 3900000,
     description: "Feather-removed birdnest, 100g pack.",
     weight: 100,
@@ -64,7 +88,11 @@ export const products: Product[] = [
   {
     id: "p7",
     name: "Premium Refined Birdnest 200g",
-    image: "/images/p1.png",
+    images: [
+      "/images/p1.png",
+      "/images/banner1.png",
+      "/images/banner2.png"
+    ],
     price: 9500000,
     description: "Premium refined birdnest, 200g pack.",
     weight: 200,
@@ -73,7 +101,11 @@ export const products: Product[] = [
   {
     id: "p8",
     name: "Raw Birdnest 200g",
-    image: "/images/p2.png",
+    images: [
+      "/images/p2.png",
+      "/images/banner2.png",
+      "/images/banner3.png"
+    ],
     price: 8200000,
     description: "Raw birdnest, 200g pack.",
     weight: 200,
@@ -82,7 +114,11 @@ export const products: Product[] = [
   {
     id: "p9",
     name: "Feather-removed Birdnest 50g",
-    image: "/images/p3.png",
+    images: [
+      "/images/p3.png",
+      "/images/banner3.png",
+      "/images/banner1.png"
+    ],
     price: 2100000,
     description: "Feather-removed birdnest, 50g pack.",
     weight: 50,

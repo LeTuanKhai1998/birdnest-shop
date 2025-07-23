@@ -112,6 +112,28 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeInContent {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.3s cubic-bezier(0.4,0,0.2,1) both;
+}
+.animate-zoomIn {
+  animation: zoomIn 0.3s cubic-bezier(0.4,0,0.2,1) both;
+}
+.animate-fadeInContent {
+  animation: fadeInContent 0.4s cubic-bezier(0.4,0,0.2,1) both;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

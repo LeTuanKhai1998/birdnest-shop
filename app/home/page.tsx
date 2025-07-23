@@ -86,8 +86,8 @@ export default function HomePage() {
       {/* Latest Products */}
       <section className="container mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold mb-6 text-red-700">Latest Products</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10">
-          {products.filter(p => p.type !== "Combo").slice(0, 3).map((product, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-2 gap-y-4">
+          {products.filter(p => p.type !== "Combo").slice(0, 4).map((product, i) => (
             <ProductCard key={i} product={product} />
           ))}
         </div>
@@ -96,7 +96,7 @@ export default function HomePage() {
       {/* Premium Combos */}
       <section className="container mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold mb-6 text-yellow-700">Premium Birdnest Combos</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-2 gap-y-4">
           {products.filter(p => p.type === "Combo").map((combo, i) => (
             <ProductCard key={i} product={combo} />
           ))}
