@@ -1,6 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
 import { User, ListOrdered, MapPin, Heart } from "lucide-react";
@@ -16,6 +16,7 @@ const navItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -40,8 +41,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition",
-                // TODO: highlight active link
+                "flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-gray-100 transition",
+                pathname === href ? "bg-primary/10 text-primary font-semibold" : "text-gray-700"
               )}
             >
               <Icon className="w-5 h-5" />

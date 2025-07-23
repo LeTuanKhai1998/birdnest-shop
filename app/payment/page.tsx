@@ -34,14 +34,29 @@ export default function PaymentPage() {
     return [info.province, info.district, info.ward, info.address, info.apartment].filter(Boolean).join(", ");
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setConfirming(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          info: checkoutInfo,
+          products: items,
+          deliveryFee: shippingFee,
+          paymentMethod: method,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Order failed");
       clearCart();
       triggerCartBounce();
       setConfirming(false);
-      router.push("/order/mock123");
-    }, 1200);
+      router.push("/dashboard/orders");
+    } catch (e: any) {
+      setConfirming(false);
+      alert(e.message || "Order failed");
+    }
   };
 
   return (

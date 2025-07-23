@@ -17,18 +17,66 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signIn("credentials", {
+    const res = await signIn("credentials", {
       email,
       password,
       callbackUrl: "/dashboard",
+      redirect: false,
     });
     setLoading(false);
+    console.log("[LOGIN] Request:", { email, password });
+    console.log("[LOGIN] Response:", res);
+    if (res?.error) {
+      toast.error("Sign in failed: " + res.error);
+    } else if (!res?.ok) {
+      toast.error("Sign in failed: Unknown error");
+    } else if (res.url) {
+      router.push(res.url);
+    }
   };
 
   const handleSocial = async (provider: string) => {
     setLoading(true);
     await signIn(provider, { callbackUrl: "/dashboard" });
     setLoading(false);
+  };
+
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    const res = await signIn("credentials", {
+      email: "demo@demo.com",
+      password: "Demo@1234",
+      callbackUrl: "/dashboard",
+      redirect: false,
+    });
+    setLoading(false);
+    console.log("[DEMO LOGIN] Response:", res);
+    if (res?.error) {
+      toast.error("Demo login failed: " + res.error);
+    } else if (!res?.ok) {
+      toast.error("Demo login failed: Unknown error");
+    } else if (res.url) {
+      router.push(res.url);
+    }
+  };
+
+  const handleTestLogin = async () => {
+    setLoading(true);
+    const res = await signIn("credentials", {
+      email: "user@example.com",
+      password: "123456",
+      callbackUrl: "/dashboard",
+      redirect: false,
+    });
+    setLoading(false);
+    console.log("[TEST LOGIN] Response:", res);
+    if (res?.error) {
+      toast.error("Test login failed: " + res.error);
+    } else if (!res?.ok) {
+      toast.error("Test login failed: Unknown error");
+    } else if (res.url) {
+      router.push(res.url);
+    }
   };
 
   return (
@@ -66,6 +114,12 @@ export default function LoginPage() {
           <Button variant="outline" className="w-full flex items-center justify-center gap-2" onClick={() => handleSocial("github")} disabled={loading}>
             <Github className="w-5 h-5" /> Sign in with GitHub
           </Button>
+          <Button variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={handleDemoLogin} disabled={loading}>
+            🚀 Demo Login
+          </Button>
+          <Button variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={handleTestLogin} disabled={loading}>
+           🧪 Test Login (user@example.com / 123456)
+         </Button>
         </div>
         <div className="mt-6 text-center text-sm text-gray-600">
           Don&apos;t have an account? <a href="/signup" className="text-red-600 hover:underline">Sign up</a>
