@@ -67,7 +67,12 @@ export function ProductCard({ product }: { product: Product }) {
             <AddToCartButton product={product} className="flex-1 py-2 text-xs sm:text-sm hidden md:block">
               Add to Cart
             </AddToCartButton>
-            <Link href={`/products/${slug}`} prefetch={false} className="flex-1 py-2 text-xs sm:text-sm hidden md:block border rounded bg-white flex items-center justify-center text-center" aria-label="View Details">
+            <Link
+              href={`/products/${slug}`}
+              prefetch={false}
+              className="flex-1 py-2 text-xs sm:text-sm hidden md:block border rounded-md bg-white flex items-center justify-center text-center font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 h-10"
+              aria-label="View Details"
+            >
               View Details
             </Link>
           </div>

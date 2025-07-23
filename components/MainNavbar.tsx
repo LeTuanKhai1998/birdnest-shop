@@ -6,6 +6,8 @@ import { Drawer, DrawerTrigger, DrawerContent, DrawerClose, DrawerTitle } from "
 import { Search, User, Menu, X } from "lucide-react";
 import { CartIconWithBadge } from "@/components/CartIconWithBadge";
 import { useState, useRef } from "react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 export function MainNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -61,11 +63,21 @@ export function MainNavbar() {
             <Link href="/signup" className="hidden md:block">
               <Button variant="default" size="sm">Sign up</Button>
             </Link>
-            <Link href="/login" className="md:hidden">
-              <Button variant="ghost" size="icon" aria-label="Login">
-                <User className="w-5 h-5" />
-              </Button>
-            </Link>
+            {/* User icon with dropdown (desktop and mobile) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="User menu">
+                  <User className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => toast.success("Signed out!")}>Sign out</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           {/* Hamburger menu (mobile) */}
           <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="left">
