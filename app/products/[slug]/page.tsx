@@ -18,27 +18,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-type Product = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  discount: number;
-  quantity: number;
-  images: string[];
-  categoryId: string;
-  reviews: Review[];
-};
-type Review = {
-  id: string;
-  userId: string;
-  productId: string;
-  rating: number;
-  comment?: string;
-  createdAt: string;
-};
+import { Product, Review } from "@/components/ProductCard";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
@@ -309,7 +289,7 @@ function ProductDetailsTabs({ product }: { product: Product }) {
           <div className="prose prose-sm text-muted-foreground leading-relaxed">{product.description}</div>
         )}
         {tab === "ingredients" && (
-          <div className="text-muted-foreground">100% Pure Bird's Nest, no additives.</div>
+          <div className="text-muted-foreground">100% Pure Bird&apos;s Nest, no additives.</div>
         )}
         {tab === "usage" && (
           <div className="text-muted-foreground">Soak in water for 30 minutes, cook with sugar or as desired.</div>

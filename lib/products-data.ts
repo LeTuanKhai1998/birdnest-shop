@@ -32,6 +32,7 @@ export const products: Product[] = [
     description: "Raw, natural birdnest, carefully selected and packed.",
     weight: 100,
     type: "Raw Nest",
+    reviews: []
   },
   {
     id: "p3",
@@ -45,6 +46,7 @@ export const products: Product[] = [
     description: "Feather-removed, premium birdnest for health and gifting.",
     weight: 200,
     type: "Feather-removed Nest",
+    reviews: []
   },
   {
     id: "p4",
@@ -58,6 +60,7 @@ export const products: Product[] = [
     description: "Premium refined birdnest, 100g pack.",
     weight: 100,
     type: "Refined Nest",
+    reviews: []
   },
   {
     id: "p5",
@@ -71,6 +74,7 @@ export const products: Product[] = [
     description: "Raw birdnest, 50g pack.",
     weight: 50,
     type: "Raw Nest",
+    reviews: []
   },
   {
     id: "p6",
@@ -84,6 +88,7 @@ export const products: Product[] = [
     description: "Feather-removed birdnest, 100g pack.",
     weight: 100,
     type: "Feather-removed Nest",
+    reviews: []
   },
   {
     id: "p7",
@@ -97,6 +102,7 @@ export const products: Product[] = [
     description: "Premium refined birdnest, 200g pack.",
     weight: 200,
     type: "Refined Nest",
+    reviews: []
   },
   {
     id: "p8",
@@ -110,6 +116,7 @@ export const products: Product[] = [
     description: "Raw birdnest, 200g pack.",
     weight: 200,
     type: "Raw Nest",
+    reviews: []
   },
   {
     id: "p9",
@@ -123,6 +130,7 @@ export const products: Product[] = [
     description: "Feather-removed birdnest, 50g pack.",
     weight: 50,
     type: "Feather-removed Nest",
+    reviews: []
   },
   // Combos (from homepage)
   {
@@ -133,6 +141,7 @@ export const products: Product[] = [
     description: "Combo yến cao cấp, tiết kiệm hơn.",
     weight: 150,
     type: "Combo",
+    reviews: []
   },
   {
     id: "c2",
@@ -142,6 +151,7 @@ export const products: Product[] = [
     description: "Combo yến đa dạng, phù hợp làm quà tặng.",
     weight: 200,
     type: "Combo",
+    reviews: []
   },
   // Homepage products
   {
@@ -152,6 +162,7 @@ export const products: Product[] = [
     weight: 50,
     description: "Yến tinh chế chất lượng cao từ Khánh Hòa.",
     type: "Refined Nest",
+    reviews: []
   },
   {
     id: "h2",
@@ -161,6 +172,7 @@ export const products: Product[] = [
     weight: 100,
     description: "Yến rút lông tự nhiên, đóng gói tại Nha Trang.",
     type: "Raw Nest",
+    reviews: []
   },
   {
     id: "h3",
@@ -170,5 +182,6 @@ export const products: Product[] = [
     weight: 200,
     description: "Tổ yến thô nguyên chất từ Bình Định.",
     type: "Feather-removed Nest",
+    reviews: []
   },
 ]; 

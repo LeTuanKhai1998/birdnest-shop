@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Truck, XCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 type OrderItem = {
   id: string;
@@ -72,45 +73,32 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString("vi-VN", { year: "numeric", month: "short", day: "numeric" });
 }
 
-export default function OrderDetailPage({ params }: { params: { orderId: string } }) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [order, setOrder] = useState<Order | null>(null);
+export default async function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const { orderId } = await params;
 
-  useEffect(() => {
-    setLoading(true);
-    // Use mock data for mock orders
-    if (params.orderId.startsWith("mock")) {
-      const found = mockOrders.find((o) => o.id === params.orderId);
-      setOrder(found || null);
-      setLoading(false);
-      return;
-    }
-    // TODO: Fetch real order from API
-    setTimeout(() => setLoading(false), 800); // skeleton for now
-  }, [params.orderId]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin mb-4 text-gray-400" />
-        <div className="text-gray-500">Loading order details...</div>
-      </div>
-    );
+  // Use mock data for mock orders
+  let order: Order | null = null;
+  if (orderId.startsWith("mock")) {
+    order = mockOrders.find((o) => o.id === orderId) || null;
   }
+  // TODO: Fetch real order from API if not mock
 
   if (!order) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="text-red-500 font-semibold">Order not found.</div>
-        <Button className="mt-4" onClick={() => router.push("/dashboard/orders")}>Back to Orders</Button>
+        <Link href="/dashboard/orders">
+          <Button className="mt-4">Back to Orders</Button>
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-2">
-      <Button variant="ghost" className="mb-4" onClick={() => router.push("/dashboard/orders")}>← Back to Orders</Button>
+      <Link href="/dashboard/orders">
+        <Button variant="ghost" className="mb-4">← Back to Orders</Button>
+      </Link>
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
