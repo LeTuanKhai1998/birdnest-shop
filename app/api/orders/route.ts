@@ -2,7 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: NextRequest) {
+type OrderItem = {
+  id: string;
+  quantity: number;
+  price: number;
+  product: { id: string; name: string; images: string[] };
+};
+type Order = {
+  id: string;
+  createdAt: string;
+  status: string;
+  total: number;
+  orderItems: OrderItem[];
+};
+
+export async function GET() {
   const session = await auth();
   if (!session || !session.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -13,7 +27,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const orders = await prisma.order.findMany({
+  const prismaOrders = await prisma.order.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     include: {
@@ -24,6 +38,23 @@ export async function GET(req: NextRequest) {
       },
     },
   });
+
+  const orders: Order[] = prismaOrders.map((order) => ({
+    id: order.id,
+    createdAt: order.createdAt.toISOString(),
+    status: order.status,
+    total: Number(order.total),
+    orderItems: order.orderItems.map((item) => ({
+      id: item.id,
+      quantity: item.quantity,
+      price: Number(item.price),
+      product: {
+        id: item.product.id,
+        name: item.product.name,
+        images: item.product.images,
+      },
+    })),
+  }));
 
   return NextResponse.json({ orders });
 } 

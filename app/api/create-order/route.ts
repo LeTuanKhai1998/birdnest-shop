@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+type ProductCartItem = {
+  product: { id: string; price: number };
+  quantity: number;
+};
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session || !session.user?.email) {
@@ -20,7 +25,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Defensive check: ensure all product IDs exist
-  const productIds = products.map((item: any) => item.product.id);
+  const productIds = (products as ProductCartItem[]).map(item => item.product.id);
   const foundProducts = await prisma.product.findMany({ where: { id: { in: productIds } } });
   if (foundProducts.length !== productIds.length) {
     return NextResponse.json({ error: "One or more products not found in database. Please refresh your cart." }, { status: 400 });
@@ -52,7 +57,7 @@ export async function POST(req: NextRequest) {
       paymentMethod: paymentMethod?.toUpperCase() || "COD",
       shippingAddress,
       orderItems: {
-        create: products.map((item: any) => ({
+        create: (products as ProductCartItem[]).map(item => ({
           productId: item.product.id,
           quantity: item.quantity,
           price: item.product.price,

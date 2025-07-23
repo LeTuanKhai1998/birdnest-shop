@@ -15,10 +15,15 @@ const PAYMENT_METHODS = [
   { value: "cod", label: "Cash on Delivery (COD)" },
 ];
 
+type ProductCartItem = {
+  product: { id: string; price: number; name: string; images?: string[]; image?: string };
+  quantity: number;
+};
+
 export default function PaymentPage() {
   const [method, setMethod] = useState("stripe");
   const [confirming, setConfirming] = useState(false);
-  const items = useCheckoutStore((s) => s.products);
+  const items = useCheckoutStore((s) => s.products) as ProductCartItem[];
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const shippingFee = useCheckoutStore((s) => s.deliveryFee);
   const total = subtotal + shippingFee;
@@ -53,9 +58,9 @@ export default function PaymentPage() {
       triggerCartBounce();
       setConfirming(false);
       router.push("/dashboard/orders");
-    } catch (e: any) {
+    } catch (e) {
       setConfirming(false);
-      alert(e.message || "Order failed");
+      alert(e instanceof Error ? e.message : "Order failed");
     }
   };
 
