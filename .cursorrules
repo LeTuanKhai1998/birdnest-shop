@@ -92,7 +92,7 @@
   - Update quantities  
   - Cart persistence (via localStorage or Zustand)
 
-- [ ] Checkout process:
+- [X] Checkout process:
   - Shipping information (Full name, phone number, delivery address)  
   - Payment integration (Stripe — international, extendable to Momo/VNPAY later)  
   - Order confirmation page with order ID
