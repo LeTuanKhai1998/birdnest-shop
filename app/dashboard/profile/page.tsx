@@ -100,8 +100,12 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error(result.error || "Update failed");
       mutate("/api/profile");
       toast.success("Profile updated!");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
     } finally {
       setSaving(false);
     }
@@ -120,8 +124,12 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error(result.error || "Password change failed");
       toast.success("Password changed!");
       resetPw();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
     } finally {
       setPwSaving(false);
     }

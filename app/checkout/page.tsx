@@ -53,10 +53,24 @@ interface Ward {
   name: string;
 }
 
-function getAddressDisplay(addr: any, provinces: any[]): string {
-  const province = provinces.find((p: any) => String(p.code) === String(addr.province))?.name || "";
-  const district = provinces.find((p: any) => String(p.code) === String(addr.province))?.districts.find((d: any) => String(d.code) === String(addr.district))?.name || "";
-  const ward = provinces.find((p: any) => String(p.code) === String(addr.province))?.districts.find((d: any) => String(d.code) === String(addr.district))?.wards.find((w: any) => String(w.code) === String(addr.ward))?.name || "";
+interface Address {
+  id: string;
+  fullName: string;
+  phone: string;
+  email?: string;
+  province: string;
+  district: string;
+  ward: string;
+  address: string;
+  apartment?: string;
+  isDefault?: boolean;
+  country?: string;
+}
+
+function getAddressDisplay(addr: Address, provinces: Province[]): string {
+  const province = provinces.find((p: Province) => String(p.code) === String(addr.province))?.name || "";
+  const district = provinces.find((p: Province) => String(p.code) === String(addr.province))?.districts.find((d: District) => String(d.code) === String(addr.district))?.name || "";
+  const ward = provinces.find((p: Province) => String(p.code) === String(addr.province))?.districts.find((d: District) => String(d.code) === String(addr.district))?.wards.find((w: Ward) => String(w.code) === String(addr.ward))?.name || "";
   return [addr.address, addr.apartment, ward, district, province].filter(Boolean).join(", ");
 }
 
@@ -104,7 +118,7 @@ export default function CheckoutPage() {
     if (loadingProvinces) return;
     if (selectedAddressId && selectedAddressId !== "new") {
       if (lastResetId.current !== selectedAddressId) {
-        const addr = savedAddresses.find((a: any) => a.id === selectedAddressId);
+        const addr = savedAddresses.find((a: Address) => a.id === selectedAddressId);
         if (addr) {
           reset({
             fullName: addr.fullName,
@@ -230,7 +244,7 @@ export default function CheckoutPage() {
                         value={selectedAddressId}
                         onChange={e => setSelectedAddressId(e.target.value)}
                       >
-                        {[...savedAddresses].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)).map((a: any) => (
+                        {[...savedAddresses].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)).map((a: Address) => (
                           <option key={a.id} value={a.id}>
                             {getAddressDisplay(a, provinces)}{a.isDefault ? " (Default)" : ""}
                           </option>

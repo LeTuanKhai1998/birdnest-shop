@@ -25,6 +25,19 @@ const addressSchema = z.object({
 
 type AddressForm = z.infer<typeof addressSchema>;
 
+interface Address {
+  id: string;
+  fullName: string;
+  phone: string;
+  email?: string;
+  province: string;
+  district: string;
+  ward: string;
+  address: string;
+  apartment?: string;
+  isDefault?: boolean;
+  country?: string;
+}
 interface Province {
   code: string;
   name: string;
@@ -44,7 +57,7 @@ function fetcher(url: string) {
   return fetch(url).then(r => r.json());
 }
 
-function getFullAddress(addr: any, provinces: Province[]): string {
+function getFullAddress(addr: Address, provinces: Province[]): string {
   const province = provinces.find((p) => p.code === addr.province)?.name || addr.province || "";
   const district = provinces.find((p) => p.code === addr.province)?.districts.find((d) => d.code === addr.district)?.name || addr.district || "";
   const ward = provinces.find((p) => p.code === addr.province)?.districts.find((d) => d.code === addr.district)?.wards.find((w) => w.code === addr.ward)?.name || addr.ward || "";
@@ -58,7 +71,7 @@ function getFullAddress(addr: any, provinces: Province[]): string {
   ].filter(Boolean).join(", ");
 }
 
-function getShortAddress(addr: any, provinces: Province[]): string {
+function getShortAddress(addr: Address, provinces: Province[]): string {
   const district = provinces.find((p) => p.code === addr.province)?.districts.find((d) => d.code === addr.district)?.name || addr.district || "";
   const ward = provinces.find((p) => p.code === addr.province)?.districts.find((d) => d.code === addr.district)?.wards.find((w) => w.code === addr.ward)?.name || addr.ward || "";
   return [
@@ -69,10 +82,10 @@ function getShortAddress(addr: any, provinces: Province[]): string {
   ].filter(Boolean).join(", ");
 }
 
-function getLine1(addr: any): string {
+function getLine1(addr: Address): string {
   return [addr.address, addr.apartment].filter(Boolean).join(", ");
 }
-function getLine2(addr: any, provinces: Province[]): string {
+function getLine2(addr: Address, provinces: Province[]): string {
   const province = provinces.find((p) => String(p.code) === String(addr.province))?.name || "";
   const district = provinces.find((p) => String(p.code) === String(addr.province))?.districts.find((d) => String(d.code) === String(addr.district))?.name || "";
   const ward = provinces.find((p) => String(p.code) === String(addr.province))?.districts.find((d) => String(d.code) === String(addr.district))?.wards.find((w) => String(w.code) === String(addr.ward))?.name || "";
@@ -89,7 +102,7 @@ export default function AddressesPage() {
   const [loadingProvinces, setLoadingProvinces] = useState(true);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingWards, setLoadingWards] = useState(false);
-  const editing = editId ? addresses.find((a: any) => a.id === editId) : null;
+  const editing = editId ? addresses.find((a: Address) => a.id === editId) : null;
 
   const {
     register,
@@ -135,7 +148,7 @@ export default function AddressesPage() {
         setValue("ward", String(editing.ward));
       }, 0);
     } else {
-      reset({ country: "Vietnam", isDefault: false } as any);
+      reset({ country: "Vietnam", isDefault: false });
     }
   }, [editing, reset, setValue]);
 
@@ -166,8 +179,12 @@ export default function AddressesPage() {
       toast.success(editing ? "Address updated!" : "Address added!");
       setShowForm(false);
       setEditId(null);
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
     } finally {
       setSaving(false);
     }
@@ -185,8 +202,12 @@ export default function AddressesPage() {
       if (!res.ok) throw new Error((await res.json()).error || "Failed to delete address");
       mutate("/api/addresses");
       toast.success("Address deleted!");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
     } finally {
       setDeleting(null);
     }
@@ -195,7 +216,7 @@ export default function AddressesPage() {
   // Set as default
   async function handleSetDefault(id: string) {
     try {
-      const addr = addresses.find((a: any) => a.id === id);
+      const addr = addresses.find((a: Address) => a.id === id);
       if (!addr) return;
       await fetch("/api/addresses", {
         method: "PATCH",
@@ -204,8 +225,12 @@ export default function AddressesPage() {
       });
       mutate("/api/addresses");
       toast.success("Default address set!");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
     }
   }
 
@@ -234,7 +259,7 @@ export default function AddressesPage() {
       </div>
       <LoadingOrEmpty loading={isLoading} empty={addresses.length === 0} emptyText="No addresses saved yet.">
         <div className="flex flex-col gap-4">
-          {addresses.map((addr: any) => (
+          {addresses.map((addr: Address) => (
             <Card key={addr.id} className={`relative p-4 flex flex-col md:flex-row md:items-center gap-2 border ${addr.isDefault ? 'border-primary' : 'border-gray-200'}`}>
               <div className="flex-1">
                 <div className="font-semibold text-base flex items-center gap-2">

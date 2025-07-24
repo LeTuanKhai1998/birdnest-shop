@@ -90,7 +90,7 @@ export function MainNavbar() {
                 ) : (
                   <>
                     <DropdownMenuItem asChild>
-                      <Link href="/login">Login</Link>
+                      <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}>Login</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/signup">Sign up</Link>
@@ -125,7 +125,7 @@ export function MainNavbar() {
                 <Link href="/products" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Products</Link>
                 <Link href="/about" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>About</Link>
                 <Link href="/contact" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Contact</Link>
-                {!session && <Link href="/login" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Login</Link>}
+                {!session && <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`} className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Login</Link>}
                 {!session && <Link href="/signup" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Sign up</Link>}
                 {session && <Link href="/dashboard" className="hover:text-yellow-600 transition py-2" onClick={() => setDrawerOpen(false)}>Dashboard</Link>}
                 {session && <button onClick={() => { setDrawerOpen(false); signOut(); }} className="text-left py-2 hover:text-yellow-600 transition w-full">Sign out</button>}

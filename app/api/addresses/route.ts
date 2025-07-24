@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+interface SessionUser {
+  id: string;
+  name?: string;
+  email?: string;
+}
+
 // GET: List all addresses for current user
 export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const userId = (session.user as any).id;
+  const userId = (session.user as SessionUser).id;
   const addresses = await prisma.address.findMany({
     where: { userId },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
@@ -18,7 +24,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const userId = (session.user as any).id;
+  const userId = (session.user as SessionUser).id;
   const data = await req.json();
   // If isDefault, unset previous default
   if (data.isDefault) {
@@ -32,7 +38,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const userId = (session.user as any).id;
+  const userId = (session.user as SessionUser).id;
   const { id, ...data } = await req.json();
   // Only allow updating user's own address
   const address = await prisma.address.findUnique({ where: { id } });
@@ -48,7 +54,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const userId = (session.user as any).id;
+  const userId = (session.user as SessionUser).id;
   const { id } = await req.json();
   const address = await prisma.address.findUnique({ where: { id } });
   if (!address || address.userId !== userId) return NextResponse.json({ error: "Not found" }, { status: 404 });

@@ -140,7 +140,15 @@ export const products: Product[] = [
     id: "db12",
     slug: "to-yen-tho-can-gio-50g",
     name: "Tổ yến thô Cần Giờ 50g",
-    images: ["/images/p2.png"],
+    images: [
+      "/images/p2.png",
+      "/images/p1.png",
+      "/images/p3.png",
+      "/images/banner1.png",
+      "/images/banner2.png",
+      "/images/banner3.png",
+      "/images/logo.png"
+    ],
     price: 3200000,
     description: "Tổ yến thô Cần Giờ, thơm ngon, bổ dưỡng, trọng lượng 50g.",
     weight: 50,

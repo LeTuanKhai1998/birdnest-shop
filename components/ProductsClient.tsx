@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { ProductCard } from "@/components/ProductCard";
+import { ProductCard, type Product } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
@@ -27,7 +27,7 @@ const minPrice = 0;
 const maxPrice = 10000000;
 const PRODUCTS_PER_PAGE = 8;
 
-export default function ProductsClient({ products }: { products: any[] }) {
+export default function ProductsClient({ products }: { products: Product[] }) {
   const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedWeights, setSelectedWeights] = useState<number[]>([]);

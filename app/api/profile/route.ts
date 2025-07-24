@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+interface SessionUser {
+  id: string;
+  name?: string;
+  email?: string;
+}
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const userId = (session.user as any).id;
+  const userId = (session.user as SessionUser).id;
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, name: true, email: true, phone: true, bio: true, createdAt: true },
@@ -23,7 +29,7 @@ export async function PATCH(req: NextRequest) {
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const userId = (session.user as any).id;
+  const userId = (session.user as SessionUser).id;
   const { name, email, phone, bio } = await req.json();
   try {
     const updated = await prisma.user.update({
@@ -32,7 +38,10 @@ export async function PATCH(req: NextRequest) {
       select: { id: true, name: true, email: true, phone: true, bio: true, createdAt: true },
     });
     return NextResponse.json(updated);
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 });
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      return NextResponse.json({ error: e.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 400 });
   }
 } 
