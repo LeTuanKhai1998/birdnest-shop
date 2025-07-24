@@ -10,9 +10,10 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { toast } from "sonner";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar as ShadcnAvatar } from "@/components/ui/avatar";
 import { LogIn } from "lucide-react";
 import useSWR from "swr";
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export function MainNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -67,55 +68,68 @@ export function MainNavbar() {
           {/* User/Profile */}
           <div className="flex items-center gap-2">
             {!session ? (
-              <Link
-                href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
-                className="flex items-center gap-x-2 px-4 py-2 rounded-full bg-red-600 text-white font-secondary font-medium shadow hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition text-base"
-                aria-label="Sign In"
-                title="Sign In"
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="rounded-xl p-2 flex flex-col items-center gap-1 text-sm font-medium hover:bg-muted transition"
               >
-                <LogIn className="w-5 h-5" />
-                <span className="hidden md:inline">Login</span>
-              </Link>
+                <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`} aria-label="Sign In">
+                  <LogIn className="w-5 h-5 mb-1" />
+                  <span className="i18n-login">Sign in</span>
+                </Link>
+              </Button>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     aria-label="User menu"
-                    className="flex items-center gap-3 rounded-full px-2 py-1 hover:bg-gray-100 transition focus-visible:ring-2 focus-visible:ring-primary"
+                    className="flex items-center gap-3 rounded-xl p-2 hover:bg-muted transition min-w-0"
                   >
-                    <Avatar
-                      src={user?.image || "/images/user.jpeg"}
-                      name={user?.name}
-                      size={36}
-                      className="shadow border-2 border-white"
-                    />
-                    <div className="hidden md:flex flex-col items-start min-w-0">
-                      <span className="font-semibold text-base text-gray-900 truncate max-w-[120px]">
-                        Hi, {firstName}
-                      </span>
-                      {user?.bio && (
-                        <span className="text-xs text-gray-500 truncate max-w-[120px]">{user.bio}</span>
-                      )}
-                    </div>
+                    <span className="block md:hidden">
+                      <ShadcnAvatar
+                        src={user?.image || "/images/user.jpeg"}
+                        name={user?.name}
+                        size={32}
+                        className="shadow border border-gray-200"
+                      />
+                    </span>
+                    <span className="hidden md:flex items-center gap-3 min-w-0">
+                      <ShadcnAvatar
+                        src={user?.image || "/images/user.jpeg"}
+                        name={user?.name}
+                        size={36}
+                        className="w-9 h-9 shadow border border-gray-200"
+                      />
+                      <div className="flex flex-col leading-tight break-words max-w-[180px] text-left">
+                        <span className="font-medium">{user?.name}</span>
+                        {user?.bio && (
+                          <span className="text-sm text-muted-foreground break-words">{user.bio}</span>
+                        )}
+                      </div>
+                    </span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg p-2">
+                <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-lg p-2">
                   <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
                     <Link href="/dashboard/profile">
-                      <User2 className="w-4 h-4" /> My Profile
+                      <User2 className="w-4 h-4" />
+                      <span className="i18n-profile">My Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
                     <Link href="/dashboard/orders">
-                      <ShoppingBag className="w-4 h-4" /> Orders
+                      <ShoppingBag className="w-4 h-4" />
+                      <span className="i18n-orders">Orders</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => { signOut(); toast.success('Signed out!'); }}
+                    onClick={() => { signOut(); }}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-red-600 hover:bg-red-50 focus:bg-red-100 transition"
                   >
-                    <LogOut className="w-4 h-4" /> Logout
+                    <LogOut className="w-4 h-4" />
+                    <span className="i18n-logout">Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
