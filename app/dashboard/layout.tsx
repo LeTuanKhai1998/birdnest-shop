@@ -33,7 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r shadow-sm py-8 px-4">
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r shadow-sm py-8 px-4 sticky top-0 h-screen">
         <div className="mb-8 text-2xl font-bold tracking-tight">User Dashboard</div>
         <nav className="flex flex-col gap-2">
           {navItems.map(({ label, href, icon: Icon }) => (
@@ -51,8 +51,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
       </aside>
-      {/* Mobile sidebar (drawer) can be implemented later */}
-      <main className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">
+      {/* Mobile bottom navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t shadow flex justify-around items-center h-16 md:hidden">
+        {navItems.map(({ label, href, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              "flex flex-col items-center justify-center flex-1 h-full text-xs font-medium transition",
+              pathname === href ? "text-primary" : "text-gray-600 hover:text-primary"
+            )}
+          >
+            <Icon className="w-5 h-5 mb-1" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+      {/* Main content */}
+      <main className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full pb-20 md:pb-0">
         {children}
       </main>
     </div>

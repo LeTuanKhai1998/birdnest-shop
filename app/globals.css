@@ -134,6 +134,15 @@
   animation: fadeInContent 0.4s cubic-bezier(0.4,0,0.2,1) both;
 }
 
+/* Logo image styling for circular appearance */
+.logo-img {
+  border-radius: 50%;
+  object-fit: cover;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08); /* soft shadow */
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -24,7 +24,7 @@ export function MainNavbar() {
       <div className="container mx-auto flex items-center justify-between py-2 px-2 md:py-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-red-700 tracking-wide">
-          <Image src="/images/logo.png" alt="Birdnest Shop Logo" width={36} height={36} className="md:w-10 md:h-10 w-9 h-9" />
+          <Image src="/images/logo.png" alt="Birdnest Shop Logo" width={36} height={36} className="logo-img md:w-10 md:h-10 w-9 h-9" />
           <span>Birdnest Shop</span>
         </Link>
         {/* Desktop Navigation */}
