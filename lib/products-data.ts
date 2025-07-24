@@ -1,187 +1,151 @@
 import { Product } from "@/components/ProductCard";
 
 export const products: Product[] = [
+  // Yến tinh chế
   {
-    id: "p1",
-    name: "Premium Refined Birdnest 50g",
-    images: [
-      "/images/p1.png",
-      "/images/banner1.png",
-      "/images/banner2.png"
-    ],
-    price: 2500000,
-    description: "High quality, ready-to-cook refined birdnest from Kien Giang.",
-    weight: 50,
-    type: "Refined Nest",
-    quantity: 12,
-    sold: 3200,
-    reviews: [
-      { user: "Nguyen Van A", rating: 5, comment: "Sản phẩm rất chất lượng, đóng gói đẹp." },
-      { user: "Tran Thi B", rating: 4, comment: "Yến ngon, giao hàng nhanh." }
-    ]
-  },
-  {
-    id: "p2",
-    name: "Raw Birdnest 100g",
-    images: [
-      "/images/p2.png",
-      "/images/banner2.png",
-      "/images/banner3.png"
-    ],
-    price: 4200000,
-    description: "Raw, natural birdnest, carefully selected and packed.",
-    weight: 100,
-    type: "Raw Nest",
-    reviews: []
-  },
-  {
-    id: "p3",
-    name: "Feather-removed Birdnest 200g",
-    images: [
-      "/images/p3.png",
-      "/images/banner3.png",
-      "/images/banner1.png"
-    ],
-    price: 7900000,
-    description: "Feather-removed, premium birdnest for health and gifting.",
-    weight: 200,
-    type: "Feather-removed Nest",
-    reviews: []
-  },
-  {
-    id: "p4",
-    name: "Premium Refined Birdnest 100g",
-    images: [
-      "/images/p1.png",
-      "/images/banner1.png",
-      "/images/banner2.png"
-    ],
-    price: 4800000,
-    description: "Premium refined birdnest, 100g pack.",
-    weight: 100,
-    type: "Refined Nest",
-    reviews: []
-  },
-  {
-    id: "p5",
-    name: "Raw Birdnest 50g",
-    images: [
-      "/images/p2.png",
-      "/images/banner2.png",
-      "/images/banner3.png"
-    ],
-    price: 2100000,
-    description: "Raw birdnest, 50g pack.",
-    weight: 50,
-    type: "Raw Nest",
-    reviews: []
-  },
-  {
-    id: "p6",
-    name: "Feather-removed Birdnest 100g",
-    images: [
-      "/images/p3.png",
-      "/images/banner3.png",
-      "/images/banner1.png"
-    ],
-    price: 3900000,
-    description: "Feather-removed birdnest, 100g pack.",
-    weight: 100,
-    type: "Feather-removed Nest",
-    reviews: []
-  },
-  {
-    id: "p7",
-    name: "Premium Refined Birdnest 200g",
-    images: [
-      "/images/p1.png",
-      "/images/banner1.png",
-      "/images/banner2.png"
-    ],
-    price: 9500000,
-    description: "Premium refined birdnest, 200g pack.",
-    weight: 200,
-    type: "Refined Nest",
-    reviews: []
-  },
-  {
-    id: "p8",
-    name: "Raw Birdnest 200g",
-    images: [
-      "/images/p2.png",
-      "/images/banner2.png",
-      "/images/banner3.png"
-    ],
-    price: 8200000,
-    description: "Raw birdnest, 200g pack.",
-    weight: 200,
-    type: "Raw Nest",
-    reviews: []
-  },
-  {
-    id: "p9",
-    name: "Feather-removed Birdnest 50g",
-    images: [
-      "/images/p3.png",
-      "/images/banner3.png",
-      "/images/banner1.png"
-    ],
-    price: 2100000,
-    description: "Feather-removed birdnest, 50g pack.",
-    weight: 50,
-    type: "Feather-removed Nest",
-    reviews: []
-  },
-  // Combos (from homepage)
-  {
-    id: "c1",
-    name: "Combo 1",
-    image: "/images/p1.png",
-    price: 6500000,
-    description: "Combo yến cao cấp, tiết kiệm hơn.",
-    weight: 150,
-    type: "Combo",
-    reviews: []
-  },
-  {
-    id: "c2",
-    name: "Combo 2",
-    image: "/images/p2.png",
-    price: 7000000,
-    description: "Combo yến đa dạng, phù hợp làm quà tặng.",
-    weight: 200,
-    type: "Combo",
-    reviews: []
-  },
-  // Homepage products
-  {
-    id: "h1",
-    name: "Yến tinh chế Khánh Hòa",
+    id: "db1",
+    slug: "yen-tinh-che-khanh-hoa-50g",
+    name: "Yến tinh chế Khánh Hòa 50g",
+    images: ["/images/p1.png"],
     price: 3500000,
-    image: "/images/p1.png",
+    description: "Yến tinh chế Khánh Hòa, nguồn gốc tự nhiên, tốt cho sức khỏe, trọng lượng 50g.",
     weight: 50,
-    description: "Yến tinh chế chất lượng cao từ Khánh Hòa.",
-    type: "Refined Nest",
+    type: "Yến tinh chế",
+    quantity: 20,
     reviews: []
   },
   {
-    id: "h2",
-    name: "Yến rút lông Nha Trang",
-    price: 4000000,
-    image: "/images/p2.png",
+    id: "db2",
+    slug: "yen-tinh-che-can-gio-100g",
+    name: "Yến tinh chế Cần Giờ 100g",
+    images: ["/images/p2.png"],
+    price: 6500000,
+    description: "Yến tinh chế Cần Giờ, bổ dưỡng, tăng cường sức đề kháng, trọng lượng 100g.",
     weight: 100,
-    description: "Yến rút lông tự nhiên, đóng gói tại Nha Trang.",
-    type: "Raw Nest",
+    type: "Yến tinh chế",
+    quantity: 10,
     reviews: []
   },
   {
-    id: "h3",
-    name: "Tổ yến thô Bình Định",
-    price: 3000000,
-    image: "/images/p3.png",
+    id: "db3",
+    slug: "yen-tinh-che-kien-giang-200g",
+    name: "Yến tinh chế Kiên Giang 200g",
+    images: ["/images/p3.png"],
+    price: 12000000,
+    description: "Yến tinh chế Kiên Giang, chất lượng cao, trọng lượng 200g.",
     weight: 200,
-    description: "Tổ yến thô nguyên chất từ Bình Định.",
-    type: "Feather-removed Nest",
+    type: "Yến tinh chế",
+    quantity: 5,
+    reviews: []
+  },
+  {
+    id: "db4",
+    slug: "yen-tinh-che-soc-trang-50g",
+    name: "Yến tinh chế Sóc Trăng 50g",
+    images: ["/images/p1.png"],
+    price: 3400000,
+    description: "Yến tinh chế Sóc Trăng, thơm ngon, bổ dưỡng, trọng lượng 50g.",
+    weight: 50,
+    type: "Yến tinh chế",
+    quantity: 12,
+    reviews: []
+  },
+  // Yến rút lông
+  {
+    id: "db5",
+    slug: "yen-rut-long-nha-trang-50g",
+    name: "Yến rút lông Nha Trang 50g",
+    images: ["/images/p3.png"],
+    price: 4000000,
+    description: "Yến rút lông Nha Trang, sạch lông, giữ nguyên dưỡng chất, trọng lượng 50g.",
+    weight: 50,
+    type: "Yến rút lông",
+    quantity: 15,
+    reviews: []
+  },
+  {
+    id: "db6",
+    slug: "yen-rut-long-phan-rang-100g",
+    name: "Yến rút lông Phan Rang 100g",
+    images: ["/images/p1.png"],
+    price: 7500000,
+    description: "Yến rút lông Phan Rang, giàu dinh dưỡng, tốt cho sức khỏe, trọng lượng 100g.",
+    weight: 100,
+    type: "Yến rút lông",
+    quantity: 8,
+    reviews: []
+  },
+  {
+    id: "db7",
+    slug: "yen-rut-long-can-gio-200g",
+    name: "Yến rút lông Cần Giờ 200g",
+    images: ["/images/p2.png"],
+    price: 14000000,
+    description: "Yến rút lông Cần Giờ, chất lượng cao, trọng lượng 200g.",
+    weight: 200,
+    type: "Yến rút lông",
+    quantity: 3,
+    reviews: []
+  },
+  {
+    id: "db8",
+    slug: "yen-rut-long-binh-dinh-50g",
+    name: "Yến rút lông Bình Định 50g",
+    images: ["/images/p3.png"],
+    price: 4100000,
+    description: "Yến rút lông Bình Định, thơm ngon, bổ dưỡng, trọng lượng 50g.",
+    weight: 50,
+    type: "Yến rút lông",
+    quantity: 10,
+    reviews: []
+  },
+  // Tổ yến thô
+  {
+    id: "db9",
+    slug: "to-yen-tho-binh-dinh-50g",
+    name: "Tổ yến thô Bình Định 50g",
+    images: ["/images/p2.png"],
+    price: 3000000,
+    description: "Tổ yến thô Bình Định, nguyên chất, chưa qua chế biến, trọng lượng 50g.",
+    weight: 50,
+    type: "Tổ yến thô",
+    quantity: 25,
+    reviews: []
+  },
+  {
+    id: "db10",
+    slug: "to-yen-tho-quang-nam-100g",
+    name: "Tổ yến thô Quảng Nam 100g",
+    images: ["/images/p3.png"],
+    price: 6000000,
+    description: "Tổ yến thô Quảng Nam, tự nhiên, giàu dưỡng chất, trọng lượng 100g.",
+    weight: 100,
+    type: "Tổ yến thô",
+    quantity: 12,
+    reviews: []
+  },
+  {
+    id: "db11",
+    slug: "to-yen-tho-kien-giang-200g",
+    name: "Tổ yến thô Kiên Giang 200g",
+    images: ["/images/p1.png"],
+    price: 11000000,
+    description: "Tổ yến thô Kiên Giang, chất lượng cao, trọng lượng 200g.",
+    weight: 200,
+    type: "Tổ yến thô",
+    quantity: 6,
+    reviews: []
+  },
+  {
+    id: "db12",
+    slug: "to-yen-tho-can-gio-50g",
+    name: "Tổ yến thô Cần Giờ 50g",
+    images: ["/images/p2.png"],
+    price: 3200000,
+    description: "Tổ yến thô Cần Giờ, thơm ngon, bổ dưỡng, trọng lượng 50g.",
+    weight: 50,
+    type: "Tổ yến thô",
+    quantity: 18,
     reviews: []
   },
 ]; 

@@ -7,17 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useCartStore } from "@/lib/cart-store";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Toaster, toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCheckoutStore } from "@/lib/checkout-store";
 import { CartItem } from "@/lib/cart-store";
+import { useSession } from "next-auth/react";
+import useSWR from "swr";
+
+function fetcher(url: string) {
+  return fetch(url).then(r => r.json());
+}
 
 const schema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   phone: z.string().regex(/^(0|\+84)[0-9]{9}$/, "Invalid Vietnamese phone number"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   province: z.string(),
   district: z.string(),
   ward: z.string(),
@@ -47,17 +53,29 @@ interface Ward {
   name: string;
 }
 
+function getAddressDisplay(addr: any, provinces: any[]): string {
+  const province = provinces.find((p: any) => String(p.code) === String(addr.province))?.name || "";
+  const district = provinces.find((p: any) => String(p.code) === String(addr.province))?.districts.find((d: any) => String(d.code) === String(addr.district))?.name || "";
+  const ward = provinces.find((p: any) => String(p.code) === String(addr.province))?.districts.find((d: any) => String(d.code) === String(addr.district))?.wards.find((w: any) => String(w.code) === String(addr.ward))?.name || "";
+  return [addr.address, addr.apartment, ward, district, province].filter(Boolean).join(", ");
+}
+
 export default function CheckoutPage() {
+  const { data: session } = useSession();
+  const user = session?.user;
+  const { data: savedAddresses = [] } = useSWR(user ? "/api/addresses" : null, fetcher);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | "new">(savedAddresses.length > 0 ? savedAddresses[0].id : "new");
   const items = useCartStore((s) => s.items);
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, watch, setValue, reset } = useForm<FormData>({
     resolver: zodResolver(schema),
     mode: "onTouched",
     defaultValues: {
       addressMode: "manual",
+      email: user?.email || "",
     },
   });
   const [addressMode, setAddressMode] = useState<"manual" | "map">("manual");
@@ -69,6 +87,7 @@ export default function CheckoutPage() {
   const setCheckoutInfo = useCheckoutStore((s) => s.setCheckoutInfo);
   const setProducts = useCheckoutStore((s) => s.setProducts);
   const setDeliveryFee = useCheckoutStore((s) => s.setDeliveryFee);
+  const lastResetId = useRef<string | null>(null);
 
   useEffect(() => {
     setLoadingProvinces(true);
@@ -80,11 +99,75 @@ export default function CheckoutPage() {
       });
   }, []);
 
+  // Pre-fill form when address is selected
+  useEffect(() => {
+    if (loadingProvinces) return;
+    if (selectedAddressId && selectedAddressId !== "new") {
+      if (lastResetId.current !== selectedAddressId) {
+        const addr = savedAddresses.find((a: any) => a.id === selectedAddressId);
+        if (addr) {
+          reset({
+            fullName: addr.fullName,
+            phone: addr.phone,
+            email: addr.email && addr.email !== "" ? addr.email : (user?.email ?? ""),
+            province: String(addr.province),
+            district: String(addr.district),
+            ward: String(addr.ward),
+            address: addr.address,
+            apartment: addr.apartment || "",
+            addressMode: "manual",
+            note: "",
+          });
+          setTimeout(() => {
+            setValue("province", String(addr.province));
+            setValue("district", String(addr.district));
+            setValue("ward", String(addr.ward));
+          }, 0);
+          lastResetId.current = selectedAddressId;
+        }
+      }
+    } else if (lastResetId.current !== "new") {
+      reset({
+        fullName: "",
+        phone: "",
+        email: user?.email ?? "",
+        province: "",
+        district: "",
+        ward: "",
+        address: "",
+        apartment: "",
+        addressMode: "manual",
+        note: "",
+      });
+      lastResetId.current = "new";
+    }
+  }, [selectedAddressId, savedAddresses, loadingProvinces]);
+
   const shippingFee = subtotal >= 2000000 ? 0 : 30000;
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
-    setCheckoutInfo(data);
+    // If user is logged in and selected 'new', auto-save address
+    if (user && (selectedAddressId === "new" || !selectedAddressId)) {
+      try {
+        await fetch("/api/addresses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: data.fullName,
+            phone: data.phone,
+            province: String(data.province),
+            district: String(data.district),
+            ward: String(data.ward),
+            address: data.address,
+            apartment: data.apartment,
+            country: "Vietnam",
+            isDefault: savedAddresses.length === 0,
+          }),
+        });
+      } catch (e) { /* ignore for now */ }
+    }
+    setCheckoutInfo({ ...data, email: data.email ?? "" });
     setProducts(items as CartItem[]);
     setDeliveryFee(shippingFee);
     setTimeout(() => {
@@ -118,6 +201,7 @@ export default function CheckoutPage() {
 
   const watchedAddress = watch("address");
 
+  // Always show the address form. If not logged in, show a sign-in link above the form.
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Toaster position="top-center" richColors />
@@ -133,6 +217,28 @@ export default function CheckoutPage() {
               <Card className="p-6 space-y-4">
                 <h2 className="text-lg font-semibold mb-2">Shipping Information</h2>
                 <div className="flex flex-col gap-4">
+                  {!user && (
+                    <div className="mb-2 text-center text-sm text-gray-600">
+                      <a href="/login?callbackUrl=/checkout" className="text-red-600 hover:underline">Sign in for faster checkout</a>
+                    </div>
+                  )}
+                  {user && savedAddresses.length > 0 && (
+                    <div>
+                      <label className="block font-medium mb-1">Select Address</label>
+                      <select
+                        className="w-full border rounded px-2 py-2 mb-2"
+                        value={selectedAddressId}
+                        onChange={e => setSelectedAddressId(e.target.value)}
+                      >
+                        {[...savedAddresses].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)).map((a: any) => (
+                          <option key={a.id} value={a.id}>
+                            {getAddressDisplay(a, provinces)}{a.isDefault ? " (Default)" : ""}
+                          </option>
+                        ))}
+                        <option value="new">Add new address</option>
+                      </select>
+                    </div>
+                  )}
                   <div>
                     <label className="block font-medium mb-1" htmlFor="fullName">Full Name</label>
                     <Input id="fullName" {...register("fullName")}/>
@@ -144,7 +250,7 @@ export default function CheckoutPage() {
                     {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone.message}</p>}
                   </div>
                   <div>
-                    <label className="block font-medium mb-1" htmlFor="email">Email Address</label>
+                    <label className="block font-medium mb-1" htmlFor="email">Email Address (optional)</label>
                     <Input id="email" type="email" {...register("email")}/>
                     {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
                   </div>

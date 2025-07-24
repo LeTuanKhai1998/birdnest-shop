@@ -15,7 +15,7 @@ export default function RelatedProducts({ currentProduct, products }: { currentP
         {related.map(product => (
           <Link
             key={product.name}
-            href={`/products/${product.name.toLowerCase().replace(/\s+/g, "-")}`}
+            href={`/products/${product.slug}`}
             className="min-w-[200px] max-w-[220px] bg-white rounded-xl shadow hover:shadow-lg border p-3 flex flex-col items-center transition-all duration-200"
           >
             <div className="relative w-full h-36 mb-2">
@@ -26,7 +26,9 @@ export default function RelatedProducts({ currentProduct, products }: { currentP
                 className="object-contain w-full h-full rounded"
               />
             </div>
-            <div className="font-medium text-center line-clamp-2 mb-1">{product.name}</div>
+            <span className="block text-sm font-medium text-primary hover:underline">
+              {product.name}
+            </span>
             <div className="text-red-700 font-bold mb-1 text-lg">
               {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(product.price)}
             </div>

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -13,6 +14,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +23,7 @@ export default function LoginPage() {
     const res = await signIn("credentials", {
       email,
       password,
-      callbackUrl: "/dashboard",
+      callbackUrl,
       redirect: false,
     });
     setLoading(false);
@@ -37,7 +40,7 @@ export default function LoginPage() {
 
   const handleSocial = async (provider: string) => {
     setLoading(true);
-    await signIn(provider, { callbackUrl: "/dashboard" });
+    await signIn(provider, { callbackUrl });
     setLoading(false);
   };
 
@@ -46,7 +49,7 @@ export default function LoginPage() {
     const res = await signIn("credentials", {
       email: "demo@demo.com",
       password: "Demo@1234",
-      callbackUrl: "/dashboard",
+      callbackUrl,
       redirect: false,
     });
     setLoading(false);
@@ -65,7 +68,7 @@ export default function LoginPage() {
     const res = await signIn("credentials", {
       email: "user@example.com",
       password: "123456",
-      callbackUrl: "/dashboard",
+      callbackUrl,
       redirect: false,
     });
     setLoading(false);

@@ -1,69 +1,18 @@
 "use client";
+import { use } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Truck, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-type OrderItem = {
-  id: string;
-  quantity: number;
-  price: number;
-  product: { id: string; name: string; images: string[] };
-};
-type Order = {
-  id: string;
-  createdAt: string;
-  status: string;
-  total: number;
-  orderItems: OrderItem[];
-};
+import { mockOrders, Order } from "@/lib/mock-orders";
 
 const statusColor: Record<string, string> = {
   DELIVERED: "bg-green-100 text-green-700",
   SHIPPED: "bg-blue-100 text-blue-700",
   CANCELLED: "bg-red-100 text-red-700",
 };
-
-const mockOrders: Order[] = [
-  {
-    id: "mock1",
-    createdAt: new Date().toISOString(),
-    status: "DELIVERED",
-    total: 4200000,
-    orderItems: [
-      {
-        id: "item1",
-        quantity: 2,
-        price: 2100000,
-        product: {
-          id: "p5",
-          name: "Raw Birdnest 50g",
-          images: ["/images/p2.png"],
-        },
-      },
-    ],
-  },
-  {
-    id: "mock2",
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-    status: "SHIPPED",
-    total: 7900000,
-    orderItems: [
-      {
-        id: "item2",
-        quantity: 1,
-        price: 7900000,
-        product: {
-          id: "p3",
-          name: "Feather-removed Birdnest 200g",
-          images: ["/images/p3.png"],
-        },
-      },
-    ],
-  },
-];
 
 function formatVND(amount: number) {
   return amount.toLocaleString("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
@@ -73,8 +22,8 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString("vi-VN", { year: "numeric", month: "short", day: "numeric" });
 }
 
-export default async function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
-  const { orderId } = await params;
+export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const { orderId } = use(params);
 
   // Use mock data for mock orders
   let order: Order | null = null;
@@ -113,7 +62,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
           </span>
         </div>
         <div className="divide-y">
-          {order.orderItems.map((item: OrderItem) => (
+          {order.orderItems.map((item) => (
             <div key={item.id} className="flex items-center gap-4 py-4">
               {item.product?.images?.[0] && (
                 <img src={item.product.images[0]} alt={item.product.name} className="w-16 h-16 object-cover rounded border" />

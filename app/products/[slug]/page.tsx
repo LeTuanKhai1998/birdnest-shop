@@ -20,11 +20,22 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Product, Review } from "@/components/ProductCard";
 
+function slugify(str: string) {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-z0-9\s-]/gu, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
-  // For now, use product name slug (replace spaces with dashes, lowercase)
+  const decodedSlug = decodeURIComponent(slug);
   const product = products.find(
-    p => p.name.toLowerCase().replace(/\s+/g, "-") === slug
+    p => p.slug === decodedSlug
   );
   const images = product?.images || (product?.image ? [product.image] : []);
   // Review form state (mocked, local only)

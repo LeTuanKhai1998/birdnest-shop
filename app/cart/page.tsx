@@ -34,13 +34,13 @@ export default function CartPage() {
             <div className="flex flex-col gap-4 mb-8">
               {items.map(({ product, quantity }) => (
                 <Card key={product.id} className="flex flex-col sm:flex-row items-center gap-4 p-4">
-                  <Link href={`/products/${product.name.toLowerCase().replace(/\s+/g, "-")}`} className="block w-24 h-24 flex-shrink-0">
+                  <Link href={`/products/${product.slug}`} className="block w-24 h-24 flex-shrink-0">
                     <AspectRatio ratio={1/1} className="rounded bg-gray-50 border overflow-hidden">
                       <Image src={product.image || (product.images && product.images[0]) || ""} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
                     </AspectRatio>
                   </Link>
                   <div className="flex-1 flex flex-col gap-1 justify-center">
-                    <Link href={`/products/${product.name.toLowerCase().replace(/\s+/g, "-")}`} className="font-semibold text-base hover:underline line-clamp-2">{product.name}</Link>
+                    <Link href={`/products/${product.slug}`} className="font-semibold text-base hover:underline line-clamp-2">{product.name}</Link>
                     <div className="text-sm text-gray-500">{product.weight}g</div>
                     <div className="font-bold text-red-700 text-lg">{currencyFormatter.format(product.price)}</div>
                   </div>
