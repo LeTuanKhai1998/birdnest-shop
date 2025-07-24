@@ -71,12 +71,12 @@ export function MainNavbar() {
               <Button
                 asChild
                 variant="outline"
-                size="lg"
-                className="rounded-xl p-2 flex flex-col items-center gap-1 text-sm font-medium hover:bg-muted transition"
+                size="sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-full font-medium text-base border border-gray-300 shadow-sm hover:bg-gray-100 transition"
               >
                 <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`} aria-label="Sign In">
-                  <LogIn className="w-5 h-5 mb-1" />
-                  <span className="i18n-login">Sign in</span>
+                  <LogIn className="w-5 h-5" />
+                  <span className="hidden sm:inline">Sign in</span>
                 </Link>
               </Button>
             ) : (
