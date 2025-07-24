@@ -23,6 +23,7 @@ import { Heart } from "lucide-react";
 import { useWishlist } from "@/lib/wishlist-store";
 import { useSession } from "next-auth/react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { useReducedMotion } from "framer-motion";
 
 function slugify(str: string) {
   return str
@@ -53,6 +54,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const { isInWishlist, add, remove, loading } = useWishlist();
   const favorited = isInWishlist(product.id);
   if (!product) return notFound();
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -87,8 +89,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                       >
                         <motion.span
                           initial={false}
-                          animate={{ scale: favorited ? 1.2 : 1, color: favorited ? "#dc2626" : "#a3a3a3" }}
-                          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                          animate={favorited ? {
+                            scale: [1, 1.3, 0.95, 1.1, 1],
+                            opacity: [1, 1, 1, 1, 1],
+                            rotate: [0, 10, -10, 0, 0],
+                            color: "#dc2626"
+                          } : {
+                            scale: [1, 0.8, 1],
+                            opacity: [1, 0.7, 1],
+                            rotate: [0, -10, 0],
+                            color: "#a3a3a3"
+                          }}
+                          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.35, times: [0, 0.2, 0.5, 0.8, 1], ease: "easeInOut" }}
+                          whileTap={shouldReduceMotion ? {} : { scale: 0.85 }}
                         >
                           <Heart fill={favorited ? "#dc2626" : "none"} className="w-7 h-7" />
                         </motion.span>
