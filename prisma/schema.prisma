@@ -38,6 +38,7 @@ model User {
   reviews   Review[]
   cartItems CartItem[]
   addresses Address[]
+  wishlist  Wishlist[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 }
@@ -56,6 +57,7 @@ model Product {
   reviews     Review[]
   orderItems  OrderItem[]
   cartItems   CartItem[]
+  wishlist    Wishlist[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
