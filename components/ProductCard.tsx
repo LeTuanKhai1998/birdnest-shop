@@ -1,11 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { AddToCartButton } from "@/components/AddToCartButton";
-import { Eye, ShoppingCart } from "lucide-react";
+import { Eye, ShoppingCart, Heart } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import ProductMeta from "@/components/ProductMeta";
+import { useWishlist } from "@/lib/wishlist-store";
+import { useSession } from "next-auth/react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 export interface Review {
   user: string;
@@ -30,6 +33,9 @@ export interface Product {
 
 export function ProductCard({ product }: { product: Product }) {
   const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
+  const { data: session } = useSession();
+  const { isInWishlist, add, remove, loading } = useWishlist();
+  const favorited = isInWishlist(product.id);
   return (
     <motion.div
       whileHover={{ scale: 1.03, boxShadow: "0 4px 24px 0 rgba(0,0,0,0.08)" }}
@@ -37,7 +43,36 @@ export function ProductCard({ product }: { product: Product }) {
       className="group cursor-pointer"
     >
       <Card className="h-full flex flex-col transition-shadow duration-200 hover:shadow-lg min-w-0">
-        <CardContent className="p-0 min-w-0">
+        <CardContent className="p-0 min-w-0 relative">
+          {/* Wishlist Heart Button */}
+          {session?.user && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={favorited ? "Remove from Wishlist" : "Add to Wishlist"}
+                    className={`absolute top-2 right-2 z-10 rounded-full bg-white/90 shadow p-1.5 hover:bg-red-50 transition-colors border border-gray-200 ${favorited ? "text-red-600" : "text-gray-400 hover:text-red-500"}`}
+                    onClick={e => {
+                      e.preventDefault();
+                      if (loading) return;
+                      favorited ? remove(product.id) : add(product);
+                    }}
+                    disabled={loading}
+                  >
+                    <motion.span
+                      initial={false}
+                      animate={{ scale: favorited ? 1.2 : 1, color: favorited ? "#dc2626" : "#a3a3a3" }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    >
+                      <Heart fill={favorited ? "#dc2626" : "none"} className="w-6 h-6" />
+                    </motion.span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{favorited ? "Remove from Wishlist" : "Add to Wishlist"}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Link href={`/products/${product.slug}`} prefetch={false} className="block min-w-0">
             <AspectRatio ratio={1/1} className="overflow-hidden rounded-t-xl bg-gradient-to-b from-white via-gray-50 to-gray-100 border border-gray-200 shadow-sm min-w-0">
               <Image

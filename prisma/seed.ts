@@ -24,6 +24,7 @@ async function main() {
     data: [
       // Yến tinh chế
       {
+        id: 'db1',
         name: 'Yến tinh chế Khánh Hòa 50g',
         slug: 'yen-tinh-che-khanh-hoa-50g',
         description: 'Yến tinh chế Khánh Hòa, nguồn gốc tự nhiên, tốt cho sức khỏe, trọng lượng 50g.',
@@ -34,6 +35,7 @@ async function main() {
         categoryId: yenTinhChe?.id || '',
       },
       {
+        id: 'db2',
         name: 'Yến tinh chế Cần Giờ 100g',
         slug: 'yen-tinh-che-can-gio-100g',
         description: 'Yến tinh chế Cần Giờ, bổ dưỡng, tăng cường sức đề kháng, trọng lượng 100g.',
@@ -44,6 +46,7 @@ async function main() {
         categoryId: yenTinhChe?.id || '',
       },
       {
+        id: 'db3',
         name: 'Yến tinh chế Kiên Giang 200g',
         slug: 'yen-tinh-che-kien-giang-200g',
         description: 'Yến tinh chế Kiên Giang, chất lượng cao, trọng lượng 200g.',
@@ -54,6 +57,7 @@ async function main() {
         categoryId: yenTinhChe?.id || '',
       },
       {
+        id: 'db4',
         name: 'Yến tinh chế Sóc Trăng 50g',
         slug: 'yen-tinh-che-soc-trang-50g',
         description: 'Yến tinh chế Sóc Trăng, thơm ngon, bổ dưỡng, trọng lượng 50g.',
@@ -65,6 +69,7 @@ async function main() {
       },
       // Yến rút lông
       {
+        id: 'db5',
         name: 'Yến rút lông Nha Trang 50g',
         slug: 'yen-rut-long-nha-trang-50g',
         description: 'Yến rút lông Nha Trang, sạch lông, giữ nguyên dưỡng chất, trọng lượng 50g.',
@@ -75,6 +80,7 @@ async function main() {
         categoryId: yenRutLong?.id || '',
       },
       {
+        id: 'db6',
         name: 'Yến rút lông Phan Rang 100g',
         slug: 'yen-rut-long-phan-rang-100g',
         description: 'Yến rút lông Phan Rang, giàu dinh dưỡng, tốt cho sức khỏe, trọng lượng 100g.',
@@ -85,6 +91,7 @@ async function main() {
         categoryId: yenRutLong?.id || '',
       },
       {
+        id: 'db7',
         name: 'Yến rút lông Cần Giờ 200g',
         slug: 'yen-rut-long-can-gio-200g',
         description: 'Yến rút lông Cần Giờ, chất lượng cao, trọng lượng 200g.',
@@ -95,6 +102,7 @@ async function main() {
         categoryId: yenRutLong?.id || '',
       },
       {
+        id: 'db8',
         name: 'Yến rút lông Bình Định 50g',
         slug: 'yen-rut-long-binh-dinh-50g',
         description: 'Yến rút lông Bình Định, thơm ngon, bổ dưỡng, trọng lượng 50g.',
@@ -106,6 +114,7 @@ async function main() {
       },
       // Tổ yến thô
       {
+        id: 'db9',
         name: 'Tổ yến thô Bình Định 50g',
         slug: 'to-yen-tho-binh-dinh-50g',
         description: 'Tổ yến thô Bình Định, nguyên chất, chưa qua chế biến, trọng lượng 50g.',
@@ -116,6 +125,7 @@ async function main() {
         categoryId: toYenTho?.id || '',
       },
       {
+        id: 'db10',
         name: 'Tổ yến thô Quảng Nam 100g',
         slug: 'to-yen-tho-quang-nam-100g',
         description: 'Tổ yến thô Quảng Nam, tự nhiên, giàu dưỡng chất, trọng lượng 100g.',
@@ -126,6 +136,7 @@ async function main() {
         categoryId: toYenTho?.id || '',
       },
       {
+        id: 'db11',
         name: 'Tổ yến thô Kiên Giang 200g',
         slug: 'to-yen-tho-kien-giang-200g',
         description: 'Tổ yến thô Kiên Giang, chất lượng cao, trọng lượng 200g.',
@@ -136,6 +147,7 @@ async function main() {
         categoryId: toYenTho?.id || '',
       },
       {
+        id: 'db12',
         name: 'Tổ yến thô Cần Giờ 50g',
         slug: 'to-yen-tho-can-gio-50g',
         description: 'Tổ yến thô Cần Giờ, thơm ngon, bổ dưỡng, trọng lượng 50g.',

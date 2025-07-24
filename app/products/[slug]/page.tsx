@@ -19,6 +19,10 @@ import { useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Product, Review } from "@/components/ProductCard";
+import { Heart } from "lucide-react";
+import { useWishlist } from "@/lib/wishlist-store";
+import { useSession } from "next-auth/react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 function slugify(str: string) {
   return str
@@ -37,13 +41,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const product = products.find(
     p => p.slug === decodedSlug
   );
-  const images = product?.images || (product?.image ? [product.image] : []);
+  if (!product) return notFound();
+  const images = product.images || (product.image ? [product.image] : []);
   // Review form state (mocked, local only)
   const [reviewRating, setReviewRating] = React.useState(0);
   const [reviewComment, setReviewComment] = React.useState("");
   const [localReviews, setLocalReviews] = React.useState(product?.reviews || []);
   const [submitting, setSubmitting] = React.useState(false);
   const [submitMsg, setSubmitMsg] = React.useState("");
+  const { data: session } = useSession();
+  const { isInWishlist, add, remove, loading } = useWishlist();
+  const favorited = isInWishlist(product.id);
   if (!product) return notFound();
 
   return (
@@ -59,7 +67,38 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           </div>
           {/* Product info */}
           <div className="flex-1 flex flex-col gap-1 md:gap-2 justify-center px-4 md:px-0 md:mx-0">
-            <h1 className="text-xl md:text-3xl font-bold mb-1 md:mb-4 break-words leading-tight">{product.name}</h1>
+            <div className="flex items-center gap-2 mb-1 md:mb-4">
+              <h1 className="text-xl md:text-3xl font-bold break-words leading-tight flex-1">{product.name}</h1>
+              {/* Wishlist Heart Button */}
+              {session?.user && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={favorited ? "Remove from Wishlist" : "Add to Wishlist"}
+                        className={`rounded-full bg-white/90 shadow p-2 hover:bg-red-50 transition-colors border border-gray-200 ${favorited ? "text-red-600" : "text-gray-400 hover:text-red-500"}`}
+                        onClick={e => {
+                          e.preventDefault();
+                          if (loading) return;
+                          favorited ? remove(product.id) : add(product);
+                        }}
+                        disabled={loading}
+                      >
+                        <motion.span
+                          initial={false}
+                          animate={{ scale: favorited ? 1.2 : 1, color: favorited ? "#dc2626" : "#a3a3a3" }}
+                          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                        >
+                          <Heart fill={favorited ? "#dc2626" : "none"} className="w-7 h-7" />
+                        </motion.span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>{favorited ? "Remove from Wishlist" : "Add to Wishlist"}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             {/* Info row: Sold, Reviews, Weight */}
             <div className="flex items-center gap-3 text-sm text-gray-500 mb-1">
               <span className="flex items-center gap-1"><span className="text-orange-500"><svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 016 6c0 4.418-6 10-6 10S4 12.418 4 8a6 6 0 016-6zm0 8.5A2.5 2.5 0 1010 5a2.5 2.5 0 000 5.5z"/></svg></span>{product.sold ?? 0} Sold</span>

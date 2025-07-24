@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerTrigger, DrawerContent, DrawerClose, DrawerTitle } from "@/components/ui/drawer";
-import { Search, User, Menu, X, LayoutDashboard, User2, ShoppingBag, LogOut } from "lucide-react";
+import { Search, User, Menu, X, LayoutDashboard, User2, ShoppingBag, LogOut, Heart } from "lucide-react";
 import { CartIconWithBadge } from "@/components/CartIconWithBadge";
 import { useState, useRef } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -121,6 +121,12 @@ export function MainNavbar() {
                     <Link href="/dashboard/orders">
                       <ShoppingBag className="w-4 h-4" />
                       <span className="i18n-orders">Orders</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
+                    <Link href="/dashboard/wishlist">
+                      <Heart className="w-4 h-4" />
+                      <span className="i18n-wishlist">Wishlist</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
