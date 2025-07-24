@@ -34,8 +34,13 @@ export async function POST(req: NextRequest) {
       include: { product: true },
     });
     return NextResponse.json(wishlistItem, { status: 201 });
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code?: unknown }).code === 'P2002'
+    ) {
       return NextResponse.json({ error: 'Already in wishlist' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Failed to add to wishlist' }, { status: 500 });

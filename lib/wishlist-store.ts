@@ -34,8 +34,8 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       });
       if (!res.ok) throw new Error(await res.text());
       mutate();
-    } catch (e: any) {
-      set({ items: prev, error: e.message });
+    } catch (e: unknown) {
+      set({ items: prev, error: e instanceof Error ? e.message : String(e) });
     } finally {
       set({ loading: false });
     }
@@ -52,8 +52,8 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       });
       if (!res.ok) throw new Error(await res.text());
       mutate();
-    } catch (e: any) {
-      set({ items: prev, error: e.message });
+    } catch (e: unknown) {
+      set({ items: prev, error: e instanceof Error ? e.message : String(e) });
     } finally {
       set({ loading: false });
     }

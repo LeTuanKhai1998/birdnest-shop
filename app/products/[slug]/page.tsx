@@ -42,8 +42,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const product = products.find(
     p => p.slug === decodedSlug
   );
-  if (!product) return notFound();
-  const images = product.images || (product.image ? [product.image] : []);
+  // Move all hooks here, before any return
+  const images = product?.images || (product?.image ? [product.image] : []);
   // Review form state (mocked, local only)
   const [reviewRating, setReviewRating] = React.useState(0);
   const [reviewComment, setReviewComment] = React.useState("");
@@ -52,9 +52,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [submitMsg, setSubmitMsg] = React.useState("");
   const { data: session } = useSession();
   const { isInWishlist, add, remove, loading } = useWishlist();
-  const favorited = isInWishlist(product.id);
-  if (!product) return notFound();
+  const favorited = product ? isInWishlist(product.id) : false;
   const shouldReduceMotion = useReducedMotion();
+
+  if (!product) return notFound();
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
