@@ -69,6 +69,16 @@ function getShortAddress(addr: any, provinces: Province[]): string {
   ].filter(Boolean).join(", ");
 }
 
+function getLine1(addr: any): string {
+  return [addr.address, addr.apartment].filter(Boolean).join(", ");
+}
+function getLine2(addr: any, provinces: Province[]): string {
+  const province = provinces.find((p) => String(p.code) === String(addr.province))?.name || "";
+  const district = provinces.find((p) => String(p.code) === String(addr.province))?.districts.find((d) => String(d.code) === String(addr.district))?.name || "";
+  const ward = provinces.find((p) => String(p.code) === String(addr.province))?.districts.find((d) => String(d.code) === String(addr.district))?.wards.find((w) => String(w.code) === String(addr.ward))?.name || "";
+  return [ward, district, province].filter(Boolean).join(", ");
+}
+
 export default function AddressesPage() {
   const { data: addresses = [], isLoading } = useSWR("/api/addresses", fetcher);
   const [showForm, setShowForm] = useState(false);
@@ -112,18 +122,40 @@ export default function AddressesPage() {
   // Reset form when editing changes
   useEffect(() => {
     if (editing) {
-      reset({ ...editing });
+      reset({
+        ...editing,
+        province: String(editing.province),
+        district: String(editing.district),
+        ward: String(editing.ward),
+      });
+      // Ensure dropdowns are set for province/district/ward
+      setTimeout(() => {
+        setValue("province", String(editing.province));
+        setValue("district", String(editing.district));
+        setValue("ward", String(editing.ward));
+      }, 0);
     } else {
       reset({ country: "Vietnam", isDefault: false } as any);
     }
-  }, [editing, reset]);
+  }, [editing, reset, setValue]);
 
   // Create or update address
   async function onSubmit(data: AddressForm) {
+    if (!data.province || !data.district || !data.ward) {
+      toast.error("Please select province, district, and ward.");
+      return;
+    }
     setSaving(true);
     try {
+      // Ensure district and ward are saved as strings
+      const cleanData = {
+        ...data,
+        province: String(data.province),
+        district: String(data.district),
+        ward: String(data.ward),
+      };
       const method = editing ? "PATCH" : "POST";
-      const body = editing ? { ...data, id: editing.id } : data;
+      const body = editing ? { ...cleanData, id: editing.id } : cleanData;
       const res = await fetch("/api/addresses", {
         method,
         headers: { "Content-Type": "application/json" },
@@ -211,7 +243,8 @@ export default function AddressesPage() {
                 </div>
                 <div className="text-gray-500 text-sm">{addr.phone}</div>
                 <div className="text-gray-700 text-sm mt-1">
-                  {getFullAddress(addr, provinces)}
+                  <div>{getLine1(addr)}</div>
+                  <div>{getLine2(addr, provinces)}</div>
                 </div>
               </div>
               <div className="flex gap-2 mt-2 md:mt-0">
@@ -298,13 +331,6 @@ export default function AddressesPage() {
                 <Input id="apartment" {...register("apartment")}
                   placeholder="Apartment, suite, etc." disabled={saving} />
                 {errors.apartment && <div className="text-red-500 text-xs mt-1">{errors.apartment.message}</div>}
-              </div>
-              {/* Country (fixed to Vietnam) */}
-              <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="country">Country</label>
-                <Input id="country" {...register("country")}
-                  placeholder="Country" required disabled value="Vietnam" />
-                {errors.country && <div className="text-red-500 text-xs mt-1">{errors.country.message}</div>}
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <input type="checkbox" id="isDefault" {...register("isDefault")} disabled={saving} className="w-4 h-4" />
