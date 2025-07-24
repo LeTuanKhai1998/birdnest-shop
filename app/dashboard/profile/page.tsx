@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Edit2 } from "lucide-react";
 import React from "react";
+import { Avatar } from "@/components/ui/avatar";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -159,10 +160,12 @@ export default function ProfilePage() {
           className="flex flex-col items-center gap-2 mb-6"
         >
           <div className="relative group">
-            <img
+            <Avatar
               src={user?.image || "/images/user.jpeg"}
-              alt="User avatar"
-              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md bg-white"
+              name={user?.name || undefined}
+              size={96}
+              aria-label="User avatar"
+              className="border-4 border-white shadow-md bg-white w-24 h-24 text-4xl"
             />
             <button
               className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 hover:bg-gray-100 transition flex items-center"

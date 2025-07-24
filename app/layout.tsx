@@ -4,37 +4,25 @@ import "./globals.css";
 import { MainNavbar } from "@/components/MainNavbar";
 import { SessionProvider } from "next-auth/react";
 
-const geistSans = localFont({
+const inter = localFont({
   src: [
-    {
-      path: "../public/fonts/Geist/webfonts/Geist-Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/Geist/webfonts/Geist-Bold.woff2",
-      weight: "700",
-      style: "normal",
-    },
+    { path: "../public/fonts/Inter/Inter-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../public/fonts/Inter/Inter-Medium.woff2", weight: "500", style: "normal" },
+    { path: "../public/fonts/Inter/Inter-SemiBold.woff2", weight: "600", style: "normal" },
+    { path: "../public/fonts/Inter/Inter-Bold.woff2", weight: "700", style: "normal" },
   ],
-  variable: "--font-geist-sans",
+  variable: "--font-primary",
   display: "swap",
 });
 
-const geistMono = localFont({
+const poppins = localFont({
   src: [
-    {
-      path: "../public/fonts/GeistMono/webfonts/GeistMono-Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/GeistMono/webfonts/GeistMono-Bold.woff2",
-      weight: "700",
-      style: "normal",
-    },
+    { path: "../public/fonts/Poppins/Poppins-Regular.ttf", weight: "400", style: "normal" },
+    { path: "../public/fonts/Poppins/Poppins-Medium.ttf", weight: "500", style: "normal" },
+    { path: "../public/fonts/Poppins/Poppins-SemiBold.ttf", weight: "600", style: "normal" },
+    { path: "../public/fonts/Poppins/Poppins-Bold.ttf", weight: "700", style: "normal" },
   ],
-  variable: "--font-geist-mono",
+  variable: "--font-secondary",
   display: "swap",
 });
 
@@ -50,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
         <SessionProvider>
           <MainNavbar />
         {children}

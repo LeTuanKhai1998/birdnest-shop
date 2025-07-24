@@ -44,6 +44,8 @@
 }
 
 :root {
+  --font-primary: 'Inter', 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', 'sans-serif';
+  --font-secondary: 'Poppins', 'Manrope', 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', 'sans-serif';
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -76,6 +78,31 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+body {
+  font-family: var(--font-primary), sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-secondary, .product-title, .btn, button, .heading {
+  font-family: var(--font-secondary), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.btn, button, .font-secondary {
+  font-family: var(--font-secondary), sans-serif;
+  font-weight: 500;
+}
+
+label, .label, .description, .text-body, .text-label {
+  font-family: var(--font-primary), sans-serif;
+  font-weight: 400;
 }
 
 .dark {
@@ -123,15 +150,6 @@
 @keyframes fadeInContent {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn {
-  animation: fadeIn 0.3s cubic-bezier(0.4,0,0.2,1) both;
-}
-.animate-zoomIn {
-  animation: zoomIn 0.3s cubic-bezier(0.4,0,0.2,1) both;
-}
-.animate-fadeInContent {
-  animation: fadeInContent 0.4s cubic-bezier(0.4,0,0.2,1) both;
 }
 
 /* Logo image styling for circular appearance */
