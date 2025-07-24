@@ -129,6 +129,14 @@ export function MainNavbar() {
                       <span className="i18n-wishlist">Wishlist</span>
                     </Link>
                   </DropdownMenuItem>
+                  {session && (session.user && session.user.isAdmin) && (
+                    <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
+                      <Link href="/admin">
+                        <LayoutDashboard className="w-4 h-4" />
+                        <span className="i18n-admin-dashboard">Admin Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => { signOut(); }}

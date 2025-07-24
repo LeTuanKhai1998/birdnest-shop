@@ -250,12 +250,14 @@ function MoreImagesGallery({ product }: { product: Product }) {
   return (
     <div className="mt-4">
       <h3 className="text-base font-semibold mb-2">More Images</h3>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {moreImages.map((img: string, i: number) => (
-          <button key={img} className="relative w-28 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 group" onClick={() => { setSelectedIdx(i); setOpen(true); }}>
-            <Image src={img} alt={product.name + ' gallery ' + (i+1)} fill className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200" />
-          </button>
-        ))}
+      <div className="overflow-x-auto max-w-full scroll-smooth snap-x px-2 pb-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <div className="flex gap-2 w-max">
+          {moreImages.map((img: string, i: number) => (
+            <button key={img} className="relative w-28 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 group snap-start" onClick={() => { setSelectedIdx(i); setOpen(true); }}>
+              <Image src={img} alt={product.name + ' gallery ' + (i+1)} fill className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200" />
+            </button>
+          ))}
+        </div>
       </div>
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
         <DialogPrimitive.Portal>
