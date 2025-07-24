@@ -3,13 +3,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerTrigger, DrawerContent, DrawerClose, DrawerTitle } from "@/components/ui/drawer";
-import { Search, User, Menu, X, LayoutDashboard } from "lucide-react";
+import { Search, User, Menu, X, LayoutDashboard, User2, ShoppingBag, LogOut } from "lucide-react";
 import { CartIconWithBadge } from "@/components/CartIconWithBadge";
 import { useState, useRef } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import { Avatar } from "@/components/ui/avatar";
+import { LogIn } from "lucide-react";
+import useSWR from "swr";
 
 export function MainNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -17,7 +20,9 @@ export function MainNavbar() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
   const pathname = usePathname();
-  const user = session?.user;
+  const userFromSession = session?.user;
+  const { data: user } = useSWR(userFromSession ? "/api/profile" : null, url => fetch(url).then(r => r.json()), { fallbackData: userFromSession });
+  const firstName = user?.name?.split(" ")[0] || user?.name || "";
 
   return (
     <header className="w-full border-b bg-white/80 backdrop-blur sticky top-0 z-30">
@@ -60,45 +65,61 @@ export function MainNavbar() {
           {/* Cart Icon */}
           <CartIconWithBadge />
           {/* User/Profile */}
-          {/* Desktop: show Login/Sign up, Mobile: show user icon */}
           <div className="flex items-center gap-2">
-            {/* Remove Login and Sign up buttons */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="User menu">
-                  {user?.image ? (
-                    <Image src={user.image} alt={user.name || "User"} width={28} height={28} className="rounded-full object-cover" />
-                  ) : (
-                    <User className="w-5 h-5" />
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48" aria-label="User menu">
-                {session ? (
-                  <>
-                    <DropdownMenuItem asChild className={pathname.startsWith("/dashboard") ? "bg-gray-100 font-semibold" : ""}>
-                      <Link href="/dashboard">
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => { signOut(); toast.success("Signed out!"); }}>
-                      Sign out
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}>Login</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/signup">Sign up</Link>
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {!session ? (
+              <Link
+                href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                className="flex items-center gap-x-2 px-4 py-2 rounded-full bg-red-600 text-white font-secondary font-medium shadow hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition text-base"
+                aria-label="Sign In"
+                title="Sign In"
+              >
+                <LogIn className="w-5 h-5" />
+                <span className="hidden md:inline">Login</span>
+              </Link>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    aria-label="User menu"
+                    className="flex items-center gap-3 rounded-full px-2 py-1 hover:bg-gray-100 transition focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <Avatar
+                      src={user?.image || "/images/user.jpeg"}
+                      name={user?.name}
+                      size={36}
+                      className="shadow border-2 border-white"
+                    />
+                    <div className="hidden md:flex flex-col items-start min-w-0">
+                      <span className="font-semibold text-base text-gray-900 truncate max-w-[120px]">
+                        Hi, {firstName}
+                      </span>
+                      {user?.bio && (
+                        <span className="text-xs text-gray-500 truncate max-w-[120px]">{user.bio}</span>
+                      )}
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg p-2">
+                  <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
+                    <Link href="/dashboard/profile">
+                      <User2 className="w-4 h-4" /> My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
+                    <Link href="/dashboard/orders">
+                      <ShoppingBag className="w-4 h-4" /> Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => { signOut(); toast.success('Signed out!'); }}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-red-600 hover:bg-red-50 focus:bg-red-100 transition"
+                  >
+                    <LogOut className="w-4 h-4" /> Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
           {/* Hamburger menu (mobile) */}
           <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="left">
