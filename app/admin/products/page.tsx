@@ -12,6 +12,14 @@ import { useRef } from "react";
 import ProductImageGallery from "@/components/ProductImageGallery";
 import { AdminTable } from "@/components/ui/AdminTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerClose,
+} from "@/components/ui/drawer";
 
 const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -59,6 +67,7 @@ export default function AdminProductsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [editInitial, setEditInitial] = useState<ProductForm | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [images, setImages] = useState<{ url: string; isPrimary?: boolean }[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -153,6 +162,7 @@ export default function AdminProductsPage() {
     setEditId(null);
     setEditInitial(null);
     setImages([]);
+    setDrawerOpen(false); // Close drawer on successful submission
   };
 
   // Handle edit button
@@ -177,6 +187,7 @@ export default function AdminProductsPage() {
     });
     // Load images from product.images (API shape)
     setImages((product.images || []).map((img: any, i: number) => ({ url: img.url, isPrimary: img.isPrimary ?? i === 0 })));
+    setDrawerOpen(true); // Open drawer for edit
   };
 
   // Handle cancel edit
@@ -299,182 +310,188 @@ export default function AdminProductsPage() {
           <Button type="button" variant="outline" onClick={() => { resetFilter(); setSearchValue(""); }}>Reset</Button>
         </div>
       </form>
-      {/* Inline Product Form */}
-      <form
-        className="mb-8"
-        onSubmit={handleSubmit(onSubmit)}
-        aria-label={editId ? "Edit Product Form" : "Add Product Form"}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
-            <Input id="name" {...register("name")} aria-invalid={!!errors.name} aria-describedby="name-error" />
-            {errors.name && (
-              <span id="name-error" className="text-xs text-red-600">{errors.name.message}</span>
-            )}
-          </div>
-          <div>
-            <label htmlFor="price" className="block text-sm font-medium mb-1">Price (VND)</label>
-            <Controller
-              name="price"
-              control={control}
-              render={({ field }) => {
-                // Format value for display with commas
-                const displayValue = field.value
-                  ? Number(field.value.replace(/[^\d]/g, "")).toLocaleString()
-                  : "";
-                return (
-                  <Input
-                    id="price"
-                    type="text"
-                    inputMode="numeric"
-                    min={1000}
-                    step={1000}
-                    value={displayValue}
-                    onChange={e => {
-                      // Remove all non-digit chars for storage
-                      const raw = e.target.value.replace(/[^\d]/g, "");
-                      field.onChange(raw);
-                    }}
-                    aria-invalid={!!errors.price}
-                    aria-describedby="price-error"
-                  />
-                );
-              }}
-            />
-            {errors.price && (
-              <span id="price-error" className="text-xs text-red-600">{errors.price.message}</span>
-            )}
-          </div>
-          <div>
-            <label htmlFor="stock" className="block text-sm font-medium mb-1">Stock</label>
-            <Input
-              id="stock"
-              type="number"
-              min={0}
-              step={1}
-              {...register("stock")}
-              aria-invalid={!!errors.stock}
-              aria-describedby="stock-error"
-            />
-            {errors.stock && (
-              <span id="stock-error" className="text-xs text-red-600">{errors.stock.message}</span>
-            )}
-          </div>
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
-            <select
-              id="category"
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              {...register("category")}
-            >
-              <option value="">Select category</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            {errors.category && (
-              <span id="category-error" className="text-xs text-red-600">{errors.category.message}</span>
-            )}
-          </div>
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <select
-                  id="status"
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  value={field.value}
-                  onChange={e => field.onChange(e.target.value)}
-                >
-                  {STATUS.map((s) => (
-                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                  ))}
-                </select>
-              )}
-            />
-            {errors.status && (
-              <span id="status-error" className="text-xs text-red-600">{errors.status.message}</span>
-            )}
-          </div>
-          <div className="md:col-span-2">
-            <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
-            <Textarea
-              id="description"
-              {...register("description")}
-              aria-invalid={!!errors.description}
-              aria-describedby="description-error"
-              rows={4}
-              placeholder="Enter a detailed product description..."
-            />
-            {errors.description && (
-              <span id="description-error" className="text-xs text-red-600">{errors.description.message}</span>
-            )}
-          </div>
-        </div>
-        <div className="mt-8">
-          <h3 className="text-lg font-medium mb-2">Images</h3>
-          <div className="bg-gray-50 p-4 rounded">
-            <Button type="button" variant="outline" onClick={handleUploadClick} disabled={uploading} className="mb-2">
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Image
-            </Button>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              ref={fileInputRef}
-              onChange={e => handleImageUpload(e.target.files)}
-              disabled={uploading}
-              className="hidden"
-            />
-            {uploadError && <div className="text-xs text-red-600 mb-2">{uploadError}</div>}
-            <div className="flex gap-2 flex-wrap items-center">
-              {images.map((img, idx) => (
-                <div key={img.url + '-' + idx} className="relative group w-20 h-20 border rounded overflow-hidden">
-                  <img src={img.url} alt={`Product image ${idx + 1}`} className="object-cover w-full h-full" />
-                  <button
-                    type="button"
-                    className="absolute top-0 right-0 bg-black/60 text-white text-xs px-1 py-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition"
-                    onClick={() => handleRemoveImage(img.url)}
-                    aria-label="Remove image"
-                  >
-                    ×
-                  </button>
-                  <button
-                    type="button"
-                    className={`absolute bottom-0 left-0 right-0 bg-white/80 text-xs px-1 py-0.5 rounded-t text-center ${img.isPrimary ? 'text-red-600 font-bold' : 'text-gray-500'}`}
-                    onClick={() => handleSetPrimary(img.url)}
-                    aria-label="Set as primary"
-                    tabIndex={0}
-                  >
-                    {img.isPrimary ? 'Primary' : 'Set as Primary'}
-                  </button>
+      {/* Add Product Button and Drawer */}
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => { setEditId(null); setEditInitial(null); setImages([]); reset(); setDrawerOpen(true); }}>
+          Add Product
+        </Button>
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <DrawerContent className="max-w-lg w-full mx-auto">
+            <DrawerHeader>
+              <DrawerTitle>{editId ? "Edit Product" : "Add Product"}</DrawerTitle>
+            </DrawerHeader>
+            <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto max-h-[70vh] px-4" aria-label={editId ? "Edit Product Form" : "Add Product Form"}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
+                  <Input id="name" {...register("name")} aria-invalid={!!errors.name} aria-describedby="name-error" />
+                  {errors.name && (
+                    <span id="name-error" className="text-xs text-red-600">{errors.name.message}</span>
+                  )}
                 </div>
-              ))}
-              {uploading && <div className="w-20 h-20 flex items-center justify-center border rounded animate-pulse bg-gray-100">Uploading...</div>}
-              {images.length > 0 && (
-                <span
-                  className="ml-2 text-xs text-gray-500 truncate max-w-[120px]"
-                  title={images.map(i => i.url).join(", ")}
-                >
-                  {images.length} image{images.length > 1 ? "s" : ""} selected
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2 justify-end py-6">
-          {editId && (
-            <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-          )}
-          <Button type="submit" disabled={loading} aria-busy={loading} className="min-w-[120px]">
-            {loading ? (editId ? "Saving..." : "Creating...") : (editId ? "Save Changes" : "Create Product")}
-          </Button>
-        </div>
-      </form>
+                <div>
+                  <label htmlFor="price" className="block text-sm font-medium mb-1">Price (VND)</label>
+                  <Controller
+                    name="price"
+                    control={control}
+                    render={({ field }) => {
+                      const displayValue = field.value
+                        ? Number(field.value.replace(/[^\d]/g, "")).toLocaleString()
+                        : "";
+                      return (
+                        <Input
+                          id="price"
+                          type="text"
+                          inputMode="numeric"
+                          min={1000}
+                          step={1000}
+                          value={displayValue}
+                          onChange={e => {
+                            const raw = e.target.value.replace(/[^\d]/g, "");
+                            field.onChange(raw);
+                          }}
+                          aria-invalid={!!errors.price}
+                          aria-describedby="price-error"
+                        />
+                      );
+                    }}
+                  />
+                  {errors.price && (
+                    <span id="price-error" className="text-xs text-red-600">{errors.price.message}</span>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="stock" className="block text-sm font-medium mb-1">Stock</label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    min={0}
+                    step={1}
+                    {...register("stock")}
+                    aria-invalid={!!errors.stock}
+                    aria-describedby="stock-error"
+                  />
+                  {errors.stock && (
+                    <span id="stock-error" className="text-xs text-red-600">{errors.stock.message}</span>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
+                  <select
+                    id="category"
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    {...register("category")}
+                  >
+                    <option value="">Select category</option>
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  {errors.category && (
+                    <span id="category-error" className="text-xs text-red-600">{errors.category.message}</span>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <select
+                        id="status"
+                        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                        value={field.value}
+                        onChange={e => field.onChange(e.target.value)}
+                      >
+                        {STATUS.map((s) => (
+                          <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                        ))}
+                      </select>
+                    )}
+                  />
+                  {errors.status && (
+                    <span id="status-error" className="text-xs text-red-600">{errors.status.message}</span>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
+                  <Textarea
+                    id="description"
+                    {...register("description")}
+                    aria-invalid={!!errors.description}
+                    aria-describedby="description-error"
+                    rows={4}
+                    placeholder="Enter a detailed product description..."
+                  />
+                  {errors.description && (
+                    <span id="description-error" className="text-xs text-red-600">{errors.description.message}</span>
+                  )}
+                </div>
+              </div>
+              <div className="mt-8">
+                <h3 className="text-lg font-medium mb-2">Images</h3>
+                <div className="bg-gray-50 p-4 rounded">
+                  <Button type="button" variant="outline" onClick={handleUploadClick} disabled={uploading} className="mb-2">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Image
+                  </Button>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    ref={fileInputRef}
+                    onChange={e => handleImageUpload(e.target.files)}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                  {uploadError && <div className="text-xs text-red-600 mb-2">{uploadError}</div>}
+                  <div className="flex gap-2 flex-wrap items-center">
+                    {images.map((img, idx) => (
+                      <div key={img.url + '-' + idx} className="relative group w-20 h-20 border rounded overflow-hidden">
+                        <img src={img.url} alt={`Product image ${idx + 1}`} className="object-cover w-full h-full" />
+                        <button
+                          type="button"
+                          className="absolute top-0 right-0 bg-black/60 text-white text-xs px-1 py-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition"
+                          onClick={() => handleRemoveImage(img.url)}
+                          aria-label="Remove image"
+                        >
+                          ×
+                        </button>
+                        <button
+                          type="button"
+                          className={`absolute bottom-0 left-0 right-0 bg-white/80 text-xs px-1 py-0.5 rounded-t text-center ${img.isPrimary ? 'text-red-600 font-bold' : 'text-gray-500'}`}
+                          onClick={() => handleSetPrimary(img.url)}
+                          aria-label="Set as primary"
+                          tabIndex={0}
+                        >
+                          {img.isPrimary ? 'Primary' : 'Set as Primary'}
+                        </button>
+                      </div>
+                    ))}
+                    {uploading && <div className="w-20 h-20 flex items-center justify-center border rounded animate-pulse bg-gray-100">Uploading...</div>}
+                    {images.length > 0 && (
+                      <span
+                        className="ml-2 text-xs text-gray-500 truncate max-w-[120px]"
+                        title={images.map(i => i.url).join(", ")}
+                      >
+                        {images.length} image{images.length > 1 ? "s" : ""} selected
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end py-6">
+                <DrawerClose asChild>
+                  <Button type="button" variant="outline" onClick={() => { handleCancelEdit(); setDrawerOpen(false); }}>Cancel</Button>
+                </DrawerClose>
+                <Button type="submit" disabled={loading} aria-busy={loading} className="min-w-[120px]">
+                  {loading ? (editId ? "Saving..." : "Creating...") : (editId ? "Save Changes" : "Create Product")}
+                </Button>
+              </div>
+            </form>
+          </DrawerContent>
+        </Drawer>
+      </div>
       {/* Desktop Table */}
       <div className="hidden md:block w-full min-w-0 overflow-x-auto">
         <AdminTable
@@ -506,7 +523,7 @@ export default function AdminProductsPage() {
           }))}
           actions={p => (
             <div className="flex gap-2 justify-end">
-              <Button type="button" size="sm" variant="outline" className="rounded-full px-4 py-1 text-sm font-semibold" onClick={() => handleEdit(p)}>
+              <Button type="button" size="sm" variant="outline" className="rounded-full px-4 py-1 text-sm font-semibold" onClick={() => { handleEdit(p); setDrawerOpen(true); }}>
                 Edit
               </Button>
               <Button
