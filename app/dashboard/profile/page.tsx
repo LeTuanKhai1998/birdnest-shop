@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
@@ -143,6 +144,8 @@ export default function ProfilePage() {
     }
   }, [user, reset]);
 
+  const MotionDiv: React.FC<any> = motion.div;
+
   return (
     <div className="py-8 px-2 md:px-0 max-w-2xl mx-auto bg-gray-50 min-h-screen">
       {/* Sticky header for mobile */}
@@ -151,7 +154,7 @@ export default function ProfilePage() {
       </div>
       <LoadingOrEmpty loading={isLoading}>
         {/* Avatar + identity zone */}
-        <motion.div
+        <MotionDiv
           key="avatar-section"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -182,16 +185,18 @@ export default function ProfilePage() {
           {user?.createdAt && (
             <div className="text-xs text-gray-400 mt-1">Account created: {new Date(user.createdAt).toLocaleDateString()}</div>
           )}
-        </motion.div>
+        </MotionDiv>
         {/* Profile info card */}
         <AnimatePresence>
-          <motion.div
-            key="profile-form"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100"
+          <MotionDiv
+            {...{
+              key: "profile-form",
+              initial: { opacity: 0, y: 20 },
+              animate: { opacity: 1, y: 0 },
+              exit: { opacity: 0, y: 20 },
+              transition: { duration: 0.3 },
+              className: "bg-white rounded-2xl shadow-lg p-6 border border-gray-100",
+            } as any}
           >
             <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
               <span>Personal Information</span>
@@ -235,7 +240,7 @@ export default function ProfilePage() {
               </div>
               <Button type="submit" disabled={saving} className="w-full mt-2">{saving ? "Saving..." : "Save Changes"}</Button>
             </form>
-          </motion.div>
+          </MotionDiv>
           {/* Divider */}
           <div className="h-2" />
           {/* Password change card */}

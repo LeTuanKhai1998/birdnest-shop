@@ -41,6 +41,7 @@ model User {
   wishlist  Wishlist[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  lastLoginAt DateTime?
 }
 
 model Product {

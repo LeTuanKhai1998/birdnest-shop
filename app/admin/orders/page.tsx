@@ -60,6 +60,15 @@ export default function AdminOrdersPage() {
     setOrderList(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
 
+  function formatFullDate(date: string) {
+    const d = new Date(date);
+    return d.toLocaleString('vi-VN', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false
+    });
+  }
+
   return (
     <div className="w-full max-w-7xl mx-auto px-6 lg:px-8 min-w-0">
       <h2 className="text-2xl font-bold mb-4">Order Management</h2>
@@ -162,33 +171,29 @@ export default function AdminOrdersPage() {
       {/* Mobile Card List */}
       <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24 max-w-2xl mx-auto">
         {filteredOrders.map((o) => {
-          const showMore = !!showMoreMap[o.id];
-          const details = `Order ID: ${o.id}\nCustomer: ${o.customer}\nDate: ${o.date}\nStatus: ${o.status}\nTotal: ₫${o.total.toLocaleString()}`;
-          const isLong = details.length > 80;
           let badgeColor = "bg-gray-100 text-gray-800 border-gray-200";
           if (o.status === "PAID" || o.status === "DELIVERED") badgeColor = "bg-green-100 text-green-800 border-green-200";
           else if (o.status === "PENDING") badgeColor = "bg-yellow-100 text-yellow-800 border-yellow-200";
           else if (o.status === "CANCELLED") badgeColor = "bg-red-100 text-red-800 border-red-200";
           else if (o.status === "SHIPPED") badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
           return (
-            <div key={o.id} className="rounded-xl border p-4 space-y-2 bg-white shadow-sm">
-              {/* Top Row */}
-              <div className="flex justify-between items-center">
-                <div className="font-bold text-base text-gray-800 font-mono">#{o.id}</div>
-                <Badge className={badgeColor}>{o.status}</Badge>
+            <div key={o.id} className="rounded-xl border p-4 bg-white shadow-sm flex flex-col gap-2 relative">
+              {/* Top Row: Order ID and Status */}
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-bold text-base text-blue-900">#{o.id}</span>
+                <Badge className={badgeColor + " px-3 py-1 text-xs font-semibold rounded-full"}>{o.status}</Badge>
               </div>
-              {/* Second Row */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                <div className="font-bold text-gray-900 truncate">{o.customer}</div>
-                <div className="font-bold text-red-700 text-base sm:text-right">₫{o.total.toLocaleString()}</div>
+              {/* Name and Price Row */}
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-gray-900">{o.customer}</span>
+                <span className="font-bold text-red-600 text-lg">₫{o.total.toLocaleString()}</span>
               </div>
-              {/* Third Row */}
-              <div className="flex items-center text-sm text-muted-foreground gap-1">
-                <span role="img" aria-label="calendar">📅</span>
-                <span>{o.date}</span>
+              {/* Date Row */}
+              <div className="text-sm text-gray-500 mb-2">
+                {formatFullDate(o.date)}
               </div>
               {/* Actions */}
-              <div className="flex justify-between gap-2 pt-2">
+              <div className="flex gap-2 mt-2">
                 <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setViewId(o.id)} aria-label={`View order ${o.id}`}>
                   View
                 </Button>
@@ -196,11 +201,11 @@ export default function AdminOrdersPage() {
                   type="button"
                   size="sm"
                   variant="ghost"
-                  className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center justify-center gap-1"
                   onClick={() => setDeleteId(o.id)}
                   aria-label={`Delete order ${o.id}`}
                 >
-                  <span className="inline-block align-middle mr-1">🗑️</span>Delete
+                  Delete
                 </Button>
               </div>
             </div>

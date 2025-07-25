@@ -5,11 +5,23 @@ import { UserCard } from "@/components/UserCard";
 import { UserTable } from "@/components/UserTable";
 import { toast } from "sonner";
 
+type AdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  isAdmin: boolean;
+  role: string;
+  status: string;
+  createdAt?: string;
+  lastLoginAt?: string | null;
+};
+
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function AdminUsersPage() {
   const { data, mutate, isLoading } = useSWR("/api/users", fetcher);
   const users = data?.users || [];
+  const [editUser, setEditUser] = useState<AdminUser | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleRoleChange = async (id: string, isAdmin: boolean) => {
@@ -53,7 +65,7 @@ export default function AdminUsersPage() {
       {!isLoading && (
         <>
           <div className="block lg:hidden">
-            {users.map((u: any) => (
+            {users.map((u: AdminUser) => (
               <UserCard
                 key={u.id}
                 id={u.id}
