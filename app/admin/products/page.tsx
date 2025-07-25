@@ -20,6 +20,9 @@ import {
   DrawerTitle,
   DrawerClose,
 } from "@/components/ui/drawer";
+import { Card } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useState as useLocalState } from "react";
 
 const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -100,9 +103,9 @@ export default function AdminProductsPage() {
   });
 
   const products = [
-    { id: 'p1', name: 'Tổ yến tinh chế 100g', sku: 'SKU001', price: 3500000, stock: 12, category: 'Tinh chế', status: 'active' },
-    { id: 'p2', name: 'Tổ yến thô 50g', sku: 'SKU002', price: 1800000, stock: 8, category: 'Thô', status: 'inactive' },
-    { id: 'p3', name: 'Combo quà tặng 200g', sku: 'SKU003', price: 7000000, stock: 3, category: 'Combo', status: 'active' },
+    { id: 'p1', name: 'Tổ yến tinh chế 100g', sku: 'SKU001', price: 3500000, stock: 12, category: 'Tinh chế', status: 'active', description: 'Tổ yến tinh chế 100g là sản phẩm cao cấp, đã được làm sạch lông và tạp chất, thích hợp cho mọi đối tượng sử dụng.' },
+    { id: 'p2', name: 'Tổ yến thô 50g', sku: 'SKU002', price: 1800000, stock: 8, category: 'Thô', status: 'inactive', description: 'Tổ yến thô 50g giữ nguyên hương vị tự nhiên, cần làm sạch trước khi chế biến, phù hợp cho người thích trải nghiệm.' },
+    { id: 'p3', name: 'Combo quà tặng 200g', sku: 'SKU003', price: 7000000, stock: 3, category: 'Combo', status: 'active', description: 'Combo quà tặng 200g gồm nhiều sản phẩm yến chất lượng, đóng gói sang trọng, thích hợp làm quà biếu.' },
   ];
 
   // Simulated product list (would be state/API in real app)
@@ -545,49 +548,59 @@ export default function AdminProductsPage() {
         />
       </div>
       {/* Mobile Card List */}
-      <div className="block md:hidden space-y-4">
-        {filteredProducts.map((p) => (
-          <div key={p.id} className="bg-white rounded-lg shadow-sm p-4 flex flex-col gap-2">
-            <div className="flex items-center gap-4">
-              <img
-                src={(p.images && p.images[0]) || FALLBACK_IMAGE}
-                alt={p.name}
-                className="w-16 h-16 object-cover rounded border"
-                width={64}
-                height={64}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-base truncate text-gray-900">{p.name}</div>
-                <div className="text-xs text-gray-500">SKU: {p.sku}</div>
-                <div className="text-xs text-gray-500">Category: {p.category}</div>
-                <div className="text-xs text-gray-500">Stock: {p.stock}</div>
-                <div className="text-xs text-gray-500">Status: <span className="capitalize">{p.status}</span></div>
+      <div className="block md:hidden space-y-4 pb-24">
+        {filteredProducts.map((p) => {
+          const [showMore, setShowMore] = useLocalState(false);
+          const fullProduct = productList.find(prod => prod.id === p.id);
+          const desc = (fullProduct && typeof fullProduct.description === 'string' ? fullProduct.description : '') || "";
+          const isLong = desc.length > 80;
+          return (
+            <Card key={p.id} className="flex flex-col gap-2 p-4">
+              <div className="flex items-center gap-4 mb-2">
+                <img
+                  src={(p.images && p.images[0]) || FALLBACK_IMAGE}
+                  alt={p.name}
+                  className="w-20 h-20 object-cover rounded border"
+                  width={80}
+                  height={80}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-base text-gray-900 mb-1">{p.name}</div>
+                  <div className="text-xs text-gray-500 mb-0.5">SKU: {p.sku}</div>
+                  <div className="text-xs text-gray-500 mb-0.5">Category: {p.category}</div>
+                  <div className="text-xs text-gray-500 mb-0.5">Stock: {p.stock}</div>
+                  <div className="text-xs text-gray-500 mb-0.5">{typeof p.price === "number"
+                    ? `₫${p.price.toLocaleString()}`
+                    : `₫${Number(String(p.price ?? '').replace(/[^\d]/g, "")).toLocaleString()}`}</div>
+                  <div className="mt-1"><StatusBadge status={p.status} /></div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost" className="ml-2"><span className="sr-only">Actions</span>⋮</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => { handleEdit(p); setDrawerOpen(true); }}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDeleteClick(p.id)} className="text-red-600">Delete</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <div className="font-bold text-lg text-red-700">
-                {typeof p.price === "number"
-                  ? `₫${p.price.toLocaleString()}`
-                  : `₫${Number(String(p.price ?? '').replace(/[^\d]/g, "")).toLocaleString()}`}
+              <div className="text-xs text-gray-700 whitespace-pre-line">
+                <span>
+                  {isLong && !showMore ? desc.slice(0, 80) + "..." : desc}
+                </span>
+                {isLong && (
+                  <button className="ml-2 text-primary underline text-xs" onClick={e => { e.preventDefault(); setShowMore(!showMore); }}>
+                    {showMore ? "Show less" : "Show more"}
+                  </button>
+                )}
               </div>
-              <div className="flex gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={() => handleEdit(p)}>
-                  Edit
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
-                  onClick={() => handleDeleteClick(p.id)}
-                  aria-label="Delete product"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
+            </Card>
+          );
+        })}
+        {/* Floating Add Product Button */}
+        <Button className="fixed bottom-6 right-6 z-50 rounded-full h-14 w-14 p-0 shadow-lg bg-primary text-white text-2xl flex items-center justify-center" onClick={() => { setEditId(null); setEditInitial(null); setImages([]); reset(); setDrawerOpen(true); }} aria-label="Add Product">
+          +
+        </Button>
       </div>
       {/* Delete confirmation modal */}
       {deleteModalOpen && (

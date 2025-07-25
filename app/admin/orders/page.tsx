@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo, useEffect } from "react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Card } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useState as useLocalState } from "react";
 
 const STATUS = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"];
 
@@ -20,6 +23,7 @@ export default function AdminOrdersPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewId, setViewId] = useState<string | null>(null);
   const [statusUpdate, setStatusUpdate] = useState<{ id: string; status: string } | null>(null);
+  const [showMoreMap, setShowMoreMap] = useState<Record<string, boolean>>({});
 
   // Debounce search input
   useEffect(() => {
@@ -113,39 +117,55 @@ export default function AdminOrdersPage() {
         />
       </div>
       {/* Mobile Card List */}
-      <div className="block md:hidden space-y-4">
-        {filteredOrders.map((o) => (
-          <div key={o.id} className="bg-white rounded-lg shadow-sm p-4 flex flex-col gap-2">
-            <div className="flex items-center gap-4">
-              <div className="flex-1 min-w-0">
+      <div className="block md:hidden space-y-4 pb-24 max-w-md mx-auto">
+        {filteredOrders.map((o) => {
+          const showMore = !!showMoreMap[o.id];
+          const details = `Order ID: ${o.id}\nCustomer: ${o.customer}\nDate: ${o.date}\nStatus: ${o.status}\nTotal: ₫${o.total.toLocaleString()}`;
+          const isLong = details.length > 80;
+          return (
+            <Card key={o.id} className="flex flex-col gap-2 p-4 border border-gray-200 shadow-sm transition hover:bg-gray-50 active:scale-[0.98]">
+              <div className="flex flex-col gap-1 mb-2">
                 <div className="font-mono text-xs text-gray-400">Order #{o.id}</div>
-                <div className="font-medium text-base truncate text-gray-900">{o.customer}</div>
+                <div className="font-medium text-base text-gray-900">{o.customer}</div>
                 <div className="text-xs text-gray-500">Date: {o.date}</div>
-                <div className="text-xs text-gray-500">Status: <span className="capitalize">{o.status}</span></div>
+                <div className="mt-2 mb-1"><StatusBadge status={o.status} /></div>
+                <div className="font-bold text-lg text-red-700 mt-1">₫{o.total.toLocaleString()}</div>
               </div>
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <div className="font-bold text-lg text-red-700">
-                ₫{o.total.toLocaleString()}
+              <div className="text-xs text-gray-700 whitespace-pre-line mb-2">
+                <span>
+                  {isLong && !showMore ? details.slice(0, 80) + "..." : details}
+                </span>
+                {isLong && (
+                  <button className="ml-2 text-primary underline text-xs" onClick={e => { e.preventDefault(); setShowMoreMap(prev => ({ ...prev, [o.id]: !prev[o.id] })); }}>
+                    {showMore ? "Show less" : "Show more"}
+                  </button>
+                )}
               </div>
-              <div className="flex gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={() => setViewId(o.id)}>
+              <hr className="my-2 border-gray-200" />
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setViewId(o.id)} aria-label={`View order ${o.id}`}>
                   View
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   variant="ghost"
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
+                  className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
                   onClick={() => setDeleteId(o.id)}
-                  aria-label="Delete order"
+                  aria-label={`Delete order ${o.id}`}
                 >
                   Delete
                 </Button>
               </div>
-            </div>
-          </div>
-        ))}
+            </Card>
+          );
+        })}
+        {/* Floating Add Order Button (disabled for now) */}
+        {/*
+        <Button className="fixed bottom-6 right-6 z-50 rounded-full h-14 w-14 p-0 shadow-lg bg-primary text-white text-2xl flex items-center justify-center" aria-label="Add Order" disabled>
+          +
+        </Button>
+        */}
       </div>
       {/* Delete confirmation modal */}
       {deleteId && (
