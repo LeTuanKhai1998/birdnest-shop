@@ -1,34 +1,499 @@
+"use client";
+
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useState, useMemo, useEffect } from "react";
+import { Upload, Trash2 } from "lucide-react";
+import { useRef } from "react";
+import ProductImageGallery from "@/components/ProductImageGallery";
+
+const productSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  description: z.string().min(5, "Description is required"),
+  price: z
+    .string()
+    .min(1, "Price is required")
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 1000, {
+      message: "Price must be a number and at least 1,000 VND",
+    }),
+  stock: z
+    .string()
+    .min(1, "Stock is required")
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Stock must be a non-negative number",
+    }),
+  category: z.string().min(2, "Category is required"),
+  status: z.enum(["active", "inactive"]),
+  // images: z.array(z.string()).optional(), // Placeholder for now
+});
+
+const filterSchema = z.object({
+  search: z.string().optional(),
+  category: z.string().optional(),
+  status: z.string().optional(),
+});
+
+type ProductForm = z.infer<typeof productSchema>;
+type FilterForm = z.infer<typeof filterSchema>;
+
+const CATEGORIES = ["Tinh chế", "Thô", "Combo"];
+const STATUS = ["active", "inactive"];
+
+// Add a fallback image path
+const FALLBACK_IMAGE = "/images/banner1.png";
+
+// Add a helper to mark one image as primary
+function setPrimaryImage(images: { url: string; isPrimary?: boolean }[], url: string) {
+  return images.map(img => ({ ...img, isPrimary: img.url === url }));
+}
+
 export default function AdminProductsPage() {
+  const [loading, setLoading] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editInitial, setEditInitial] = useState<ProductForm | null>(null);
+  const [images, setImages] = useState<{ url: string; isPrimary?: boolean }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Filter form
+  const {
+    register: filterRegister,
+    control: filterControl,
+    watch: filterWatch,
+    setValue: setFilterValue,
+    reset: resetFilter,
+  } = useForm<FilterForm>({
+    resolver: zodResolver(filterSchema),
+    defaultValues: { search: "", category: "", status: "" },
+  });
+
+  // Product form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+  } = useForm<ProductForm>({
+    resolver: zodResolver(productSchema),
+    defaultValues: { name: "", description: "", price: "1000", stock: "0", category: "", status: "active" },
+    mode: "onTouched",
+  });
+
   const products = [
-    { id: 'p1', name: 'Tổ yến tinh chế 100g', price: 3500000, stock: 12, category: 'Tinh chế' },
-    { id: 'p2', name: 'Tổ yến thô 50g', price: 1800000, stock: 8, category: 'Thô' },
-    { id: 'p3', name: 'Combo quà tặng 200g', price: 7000000, stock: 3, category: 'Combo' },
+    { id: 'p1', name: 'Tổ yến tinh chế 100g', sku: 'SKU001', price: 3500000, stock: 12, category: 'Tinh chế', status: 'active' },
+    { id: 'p2', name: 'Tổ yến thô 50g', sku: 'SKU002', price: 1800000, stock: 8, category: 'Thô', status: 'inactive' },
+    { id: 'p3', name: 'Combo quà tặng 200g', sku: 'SKU003', price: 7000000, stock: 3, category: 'Combo', status: 'active' },
   ];
+
+  // Simulated product list (would be state/API in real app)
+  const [productList, setProductList] = useState(products.map(p => ({ ...p, images: [FALLBACK_IMAGE] })));
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchValue);
+      setFilterValue("search", searchValue);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchValue, setFilterValue]);
+
+  // Watch filter values
+  const filterCategory = filterWatch("category");
+  const filterStatus = filterWatch("status");
+  const filterSearch = filterWatch("search");
+
+  // Filter products in-memory
+  const filteredProducts = useMemo(() => {
+    return productList.filter((p) => {
+      const matchesSearch =
+        !filterSearch ||
+        p.name.toLowerCase().includes(filterSearch.toLowerCase()) ||
+        p.id.toLowerCase().includes(filterSearch.toLowerCase()) ||
+        (p.sku && p.sku.toLowerCase().includes(filterSearch.toLowerCase()));
+      const matchesCategory = !filterCategory || p.category === filterCategory;
+      const matchesStatus = !filterStatus || p.status === filterStatus;
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [productList, filterSearch, filterCategory, filterStatus]);
+
+  // On submit, send images array (with url and isPrimary) to API
+  const onSubmit = async (data: ProductForm) => {
+    setLoading(true);
+    await new Promise((r) => setTimeout(r, 1200));
+    setLoading(false);
+    const payload = {
+      ...data,
+      images: images.map((img, i) => ({ url: img.url, isPrimary: img.isPrimary ?? i === 0 })),
+    };
+    if (editId) {
+      // Edit mode
+      // Call PATCH API with payload
+    } else {
+      // Create mode
+      // Call POST API with payload
+    }
+    reset();
+    setEditId(null);
+    setEditInitial(null);
+    setImages([]);
+  };
+
+  // Handle edit button
+  const handleEdit = (product: any) => {
+    setEditId(product.id);
+    setEditInitial({
+      name: product.name,
+      description: product.description || "",
+      price: String(product.price),
+      stock: String(product.stock),
+      category: product.category,
+      status: product.status,
+    });
+    reset({
+      name: product.name,
+      description: product.description || "",
+      price: String(product.price),
+      stock: String(product.stock),
+      category: product.category,
+      status: product.status,
+    });
+    // Load images from product.images (API shape)
+    setImages((product.images || []).map((img: any, i: number) => ({ url: img.url, isPrimary: img.isPrimary ?? i === 0 })));
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditId(null);
+    setEditInitial(null);
+    reset();
+  };
+
+  // Handle image upload (simulate, replace with Uploadthing integration)
+  const handleImageUpload = async (files: FileList | null) => {
+    if (!files) return;
+    setUploadError(null);
+    setUploading(true);
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    const newImages: { url: string; isPrimary?: boolean }[] = [];
+    for (const file of Array.from(files)) {
+      if (!allowedTypes.includes(file.type)) {
+        setUploadError("Only JPG, PNG, and WEBP images are allowed.");
+        setUploading(false);
+        return;
+      }
+      if (file.size > maxSize) {
+        setUploadError("Each image must be less than 2MB.");
+        setUploading(false);
+        return;
+      }
+      // Simulate upload and get URL (replace with Uploadthing integration)
+      const url = URL.createObjectURL(file);
+      newImages.push({ url });
+    }
+    setImages((prev) => [...prev, ...newImages]);
+    setUploading(false);
+  };
+
+  // Handle upload button click
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Remove image
+  const handleRemoveImage = (url: string) => {
+    setImages((prev) => prev.filter((img) => img.url !== url));
+  };
+
+  // Set primary image
+  const handleSetPrimary = (url: string) => {
+    setImages((prev) => setPrimaryImage(prev, url));
+  };
+
+  // Add state for delete modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+
+  // Handle delete button click
+  const handleDeleteClick = (productId: string) => {
+    setProductToDelete(productId);
+    setDeleteModalOpen(true);
+  };
+
+  // Handle confirm delete
+  const handleConfirmDelete = async () => {
+    if (!productToDelete) return;
+    // TODO: Call API to delete product
+    setDeleteModalOpen(false);
+    setProductToDelete(null);
+    // TODO: Remove product from UI (refetch or update state)
+  };
+
+  // Handle cancel delete
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setProductToDelete(null);
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Product Management</h2>
+      {/* Filter Bar */}
+      <form className="mb-6 flex flex-wrap gap-4 items-end bg-white p-4 rounded shadow-sm" onSubmit={e => e.preventDefault()} aria-label="Product Filters">
+        <div className="flex-1 min-w-[200px]">
+          <label htmlFor="search" className="block text-xs font-medium mb-1">Search (Name, SKU, ID)</label>
+          <Input
+            id="search"
+            placeholder="Search products..."
+            value={searchValue}
+            onChange={e => setSearchValue(e.target.value)}
+            autoComplete="off"
+            className=""
+          />
+        </div>
+        <div>
+          <label htmlFor="category" className="block text-xs font-medium mb-1">Category</label>
+          <select
+            id="category"
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            {...filterRegister("category")}
+          >
+            <option value="">All</option>
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="status" className="block text-xs font-medium mb-1">Status</label>
+          <select
+            id="status"
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            {...filterRegister("status")}
+          >
+            <option value="">All</option>
+            {STATUS.map((s) => (
+              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Button type="button" variant="outline" onClick={() => { resetFilter(); setSearchValue(""); }}>Reset</Button>
+        </div>
+      </form>
+      {/* Inline Product Form */}
+      <form
+        className="mb-8 grid grid-cols-1 md:grid-cols-6 gap-4 items-end bg-gray-50 p-4 rounded shadow"
+        onSubmit={handleSubmit(onSubmit)}
+        aria-label={editId ? "Edit Product Form" : "Add Product Form"}
+      >
+        <div className="md:col-span-2">
+          <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
+          <Input id="name" {...register("name")} aria-invalid={!!errors.name} aria-describedby="name-error" />
+          {errors.name && (
+            <span id="name-error" className="text-xs text-red-600">{errors.name.message}</span>
+          )}
+        </div>
+        <div className="md:col-span-2">
+          <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
+          <Input id="description" {...register("description")} aria-invalid={!!errors.description} aria-describedby="description-error" />
+          {errors.description && (
+            <span id="description-error" className="text-xs text-red-600">{errors.description.message}</span>
+          )}
+        </div>
+        <div>
+          <label htmlFor="price" className="block text-sm font-medium mb-1">Price (VND)</label>
+          <Input
+            id="price"
+            type="number"
+            min={1000}
+            step={1000}
+            {...register("price")}
+            aria-invalid={!!errors.price}
+            aria-describedby="price-error"
+          />
+          {errors.price && (
+            <span id="price-error" className="text-xs text-red-600">{errors.price.message}</span>
+          )}
+        </div>
+        <div>
+          <label htmlFor="stock" className="block text-sm font-medium mb-1">Stock</label>
+          <Input
+            id="stock"
+            type="number"
+            min={0}
+            step={1}
+            {...register("stock")}
+            aria-invalid={!!errors.stock}
+            aria-describedby="stock-error"
+          />
+          {errors.stock && (
+            <span id="stock-error" className="text-xs text-red-600">{errors.stock.message}</span>
+          )}
+        </div>
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
+          <select
+            id="category"
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            {...register("category")}
+          >
+            <option value="">Select category</option>
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+          {errors.category && (
+            <span id="category-error" className="text-xs text-red-600">{errors.category.message}</span>
+          )}
+        </div>
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
+          <select
+            id="status"
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            {...register("status")}
+          >
+            {STATUS.map((s) => (
+              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+            ))}
+          </select>
+          {errors.status && (
+            <span id="status-error" className="text-xs text-red-600">{errors.status.message}</span>
+          )}
+        </div>
+        {/* Image upload */}
+        <div className="md:col-span-6">
+          <label className="block text-sm font-medium mb-1">Images</label>
+          <Button type="button" variant="outline" onClick={handleUploadClick} disabled={uploading} className="mb-2">
+            <Upload className="mr-2 h-4 w-4" />
+            Upload Image
+          </Button>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            ref={fileInputRef}
+            onChange={e => handleImageUpload(e.target.files)}
+            disabled={uploading}
+            className="hidden"
+          />
+          {uploadError && <div className="text-xs text-red-600 mb-2">{uploadError}</div>}
+          <div className="flex gap-2 flex-wrap items-center">
+            {images.map((img, idx) => (
+              <div key={img.url + '-' + idx} className="relative group w-20 h-20 border rounded overflow-hidden">
+                <img src={img.url} alt={`Product image ${idx + 1}`} className="object-cover w-full h-full" />
+                <button
+                  type="button"
+                  className="absolute top-0 right-0 bg-black/60 text-white text-xs px-1 py-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition"
+                  onClick={() => handleRemoveImage(img.url)}
+                  aria-label="Remove image"
+                >
+                  ×
+                </button>
+                <button
+                  type="button"
+                  className={`absolute bottom-0 left-0 right-0 bg-white/80 text-xs px-1 py-0.5 rounded-t text-center ${img.isPrimary ? 'text-red-600 font-bold' : 'text-gray-500'}`}
+                  onClick={() => handleSetPrimary(img.url)}
+                  aria-label="Set as primary"
+                  tabIndex={0}
+                >
+                  {img.isPrimary ? 'Primary' : 'Set as Primary'}
+                </button>
+              </div>
+            ))}
+            {uploading && <div className="w-20 h-20 flex items-center justify-center border rounded animate-pulse bg-gray-100">Uploading...</div>}
+            {images.length > 0 && (
+              <span
+                className="ml-2 text-xs text-gray-500 truncate max-w-[120px]"
+                title={images.map(i => i.url).join(", ")}
+              >
+                {images.length} image{images.length > 1 ? "s" : ""} selected
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="md:col-span-6 flex gap-2 justify-end">
+          {editId && (
+            <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+          )}
+          <Button type="submit" disabled={loading} aria-busy={loading} className="min-w-[120px]">
+            {loading ? (editId ? "Saving..." : "Creating...") : (editId ? "Save Changes" : "Create Product")}
+          </Button>
+        </div>
+      </form>
       <table className="min-w-full bg-white rounded shadow">
         <thead>
-          <tr>
-            <th className="px-4 py-2">ID</th>
-            <th className="px-4 py-2">Name</th>
-            <th className="px-4 py-2">Price</th>
-            <th className="px-4 py-2">Stock</th>
-            <th className="px-4 py-2">Category</th>
+          <tr className="bg-gray-100">
+            <th className="px-4 py-2 text-left font-semibold">ID</th>
+            <th className="px-4 py-2 text-left font-semibold">Name</th>
+            <th className="px-4 py-2 text-left font-semibold">Thumbnail</th>
+            <th className="px-4 py-2 text-left font-semibold">SKU</th>
+            <th className="px-4 py-2 text-left font-semibold">Price</th>
+            <th className="px-4 py-2 text-left font-semibold">Stock</th>
+            <th className="px-4 py-2 text-left font-semibold">Category</th>
+            <th className="px-4 py-2 text-left font-semibold">Status</th>
+            <th className="px-4 py-2 text-left font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {products.map((p) => (
-            <tr key={p.id} className="border-t">
-              <td className="px-4 py-2">{p.id}</td>
-              <td className="px-4 py-2">{p.name}</td>
-              <td className="px-4 py-2">₫{p.price.toLocaleString()}</td>
-              <td className="px-4 py-2">{p.stock}</td>
-              <td className="px-4 py-2">{p.category}</td>
+          {filteredProducts.map((p) => (
+            <tr key={p.id} className="border-t hover:bg-gray-50 transition-colors">
+              <td className="px-4 py-2 text-left align-middle whitespace-nowrap">{p.id}</td>
+              <td className="px-4 py-2 text-left align-middle">{p.name}</td>
+              <td className="px-4 py-2 text-left align-middle">
+                <img
+                  src={(p.images && p.images[0]) || FALLBACK_IMAGE}
+                  alt={p.name}
+                  className="w-16 h-16 object-cover rounded border"
+                  width={64}
+                  height={64}
+                />
+              </td>
+              <td className="px-4 py-2 text-left align-middle">{p.sku}</td>
+              <td className="px-4 py-2 text-left align-middle">₫{p.price.toLocaleString()}</td>
+              <td className="px-4 py-2 text-left align-middle">{p.stock}</td>
+              <td className="px-4 py-2 text-left align-middle">{p.category}</td>
+              <td className="px-4 py-2 text-left align-middle capitalize">{p.status}</td>
+              <td className="px-4 py-2 text-left align-middle flex gap-2 justify-end">
+                <Button type="button" size="sm" variant="outline" onClick={() => handleEdit(p)}>
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
+                  onClick={() => handleDeleteClick(p.id)}
+                  aria-label="Delete product"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      {/* Delete confirmation modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+            <h3 className="text-lg font-bold mb-2 text-red-700">Delete Product</h3>
+            <p className="mb-4 text-gray-700">Are you sure you want to delete this product? This action cannot be undone.</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={handleCancelDelete}>Cancel</Button>
+              <Button variant="destructive" onClick={handleConfirmDelete} className="bg-red-600 text-white hover:bg-red-700">Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

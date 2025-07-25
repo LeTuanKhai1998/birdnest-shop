@@ -23,8 +23,7 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { toast } from "sonner";
-import { BarChart, Bar, Tooltip as RechartsTooltip } from "recharts";
-import { PieChart, Pie, Cell, Legend as RechartsLegend } from "recharts";
+import { BarChart, Bar, Tooltip as RechartsTooltip, Cell, PieChart, Pie, Cell as RechartsCell, Legend as RechartsLegend } from "recharts";
 import Papa from "papaparse";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -394,6 +393,38 @@ export default function AdminDashboardPage() {
   }
   if (!session || !(session.user && session.user.isAdmin)) return null;
 
+  // Add a deterministic color palette for products
+  const PRODUCT_COLORS = [
+    '#2563eb', // blue-600
+    '#16a34a', // green-600
+    '#dc2626', // red-600
+    '#9333ea', // purple-600
+    '#f59e42', // orange-400
+    '#0d9488', // teal-600
+    '#eab308', // yellow-500
+    '#f43f5e', // pink-500
+    '#64748b', // slate-500
+    '#a21caf', // fuchsia-700
+  ];
+
+  function hashStringToColorIdx(str: string) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % PRODUCT_COLORS.length;
+  }
+
+  // Define a color palette for acquisition sources
+  const ACQUISITION_COLORS = [
+    '#fbbf24', // yellow-400 (Facebook)
+    '#ef4444', // red-500 (Google)
+    '#10b981', // green-500 (Organic)
+    '#f59e42', // orange-400 (Referral)
+    '#6366f1', // indigo-500 (extra)
+    '#a21caf', // fuchsia-700 (extra)
+  ];
+
   return (
     <div className="space-y-12 pb-12"> {/* More vertical spacing between sections */}
       {/* Metrics Grid */}
@@ -480,7 +511,7 @@ export default function AdminDashboardPage() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b text-gray-600 dark:text-gray-300">
-                  <th scope="col" className="py-2 px-3 cursor-pointer" onClick={() => setOrderSort(s => ({ key: "id", dir: s.dir === "asc" ? "desc" : "asc" }))} tabIndex={0}>Order ID</th>
+                  <th scope="col" className="py-2 px-3 text-left align-middle cursor-pointer" onClick={() => setOrderSort(s => ({ key: "id", dir: s.dir === "asc" ? "desc" : "asc" }))} tabIndex={0}>Order ID</th>
                   <th scope="col" className="py-2 px-3">Customer Name</th>
                   <th scope="col" className="py-2 px-3 cursor-pointer" onClick={() => setOrderSort(s => ({ key: "total", dir: s.dir === "asc" ? "desc" : "asc" }))} tabIndex={0}>Total</th>
                   <th scope="col" className="py-2 px-3">Status</th>
@@ -500,12 +531,12 @@ export default function AdminDashboardPage() {
                       className={`border-b hover:bg-red-50 dark:hover:bg-neutral-700 transition ${highlightedOrderId === order.id ? "bg-green-100 dark:bg-green-900 animate-pulse" : ""}`}
                     >
                       <td className="py-2 px-3 font-mono text-xs">{order.id}</td>
-                      <td className="py-2 px-3">{order.customer}</td>
-                      <td className="py-2 px-3 font-semibold">{formatVND(order.total)}</td>
-                      <td className="py-2 px-3">
+                      <td className="py-2 px-3 text-left align-middle">{order.customer}</td>
+                      <td className="py-2 px-3 font-semibold text-left align-middle">{formatVND(order.total)}</td>
+                      <td className="py-2 px-3 text-left align-middle">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor[order.status] || "bg-gray-100 text-gray-700"}`}>{order.status}</span>
                       </td>
-                      <td className="py-2 px-3">{formatDate(order.createdAt)}</td>
+                      <td className="py-2 px-3 text-left align-middle">{formatDate(order.createdAt)}</td>
                       <td className="py-2 px-3">
                         <div className="flex gap-2">
                           <button
@@ -600,7 +631,7 @@ export default function AdminDashboardPage() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b text-gray-600 dark:text-gray-300">
-                  <th className="py-2 px-3">Product</th>
+                  <th className="py-2 px-3 text-left align-middle">Product</th>
                   <th className="py-2 px-3">Current Stock</th>
                   <th className="py-2 px-3">Status</th>
                   <th className="py-2 px-3">Actions</th>
@@ -619,7 +650,7 @@ export default function AdminDashboardPage() {
                         <span className="font-semibold">{product.name}</span>
                       </td>
                       <td className="py-2 px-3 font-semibold">{product.quantity}</td>
-                      <td className="py-2 px-3">
+                      <td className="py-2 px-3 text-left align-middle">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${product.quantity < 3 ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"}`}>
                           {product.quantity < 3 ? "Critical" : "Low"}
                         </span>
@@ -650,7 +681,7 @@ export default function AdminDashboardPage() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b text-gray-600 dark:text-gray-300">
-                  <th className="py-2 px-3">Product</th>
+                  <th className="py-2 px-3 text-left align-middle">Product</th>
                   <th className="py-2 px-3">Units Sold</th>
                   <th className="py-2 px-3">Revenue</th>
                   <th className="py-2 px-3">Stock</th>
@@ -670,7 +701,7 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="py-2 px-3 font-semibold">{product.unitsSold}</td>
                       <td className="py-2 px-3 font-semibold text-green-700">{formatVND(product.revenue)}</td>
-                      <td className="py-2 px-3">
+                      <td className="py-2 px-3 text-left align-middle">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${product.stock < 3 ? "bg-red-100 text-red-800" : product.stock < 10 ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}`}>
                           {product.stock < 3 ? "Critical" : product.stock < 10 ? "Low" : "In Stock"}
                         </span>
@@ -685,87 +716,95 @@ export default function AdminDashboardPage() {
           {topProducts.length > 0 && (
             <div className="h-56 w-full mt-8">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topProducts.reverse()} layout="vertical" margin={{ left: 40, right: 24, top: 8, bottom: 8 }}>
+                <BarChart data={topProducts.slice().reverse()} layout="vertical" margin={{ left: 40, right: 24, top: 8, bottom: 8 }}>
                   <XAxis type="number" dataKey="revenue" hide />
                   <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 13 }} />
                   <RechartsTooltip formatter={v => formatVND(Number(v))} />
-                  <Bar dataKey="revenue" fill="#dc2626" radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="revenue" radius={[0, 8, 8, 0]} isAnimationActive={false}>
+                    {topProducts.slice().reverse().map((product, idx) => (
+                      <Cell
+                        key={product.name}
+                        fill={PRODUCT_COLORS[hashStringToColorIdx(product.name)]}
+                        aria-label={`Color for ${product.name}`}
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
+              {/* Color legend for accessibility */}
+              <div className="flex flex-wrap gap-3 mt-4">
+                {topProducts.map((product) => (
+                  <div key={product.name} className="flex items-center gap-2 text-xs">
+                    <span
+                      className="inline-block w-4 h-4 rounded"
+                      style={{ background: PRODUCT_COLORS[hashStringToColorIdx(product.name)] }}
+                      aria-label={`Color for ${product.name}`}
+                    />
+                    <span>{product.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
       </section>
       {/* Customer Insights */}
       <section aria-label="Customer Insights" className="px-2 sm:px-4">
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 mt-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-            <h2 className="text-lg font-bold">Customer Insights</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* New vs Returning Pie Chart */}
-            <div className="flex flex-col items-center">
-              <PieChart width={180} height={180}>
-                <Pie
-                  data={customerPieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={70}
-                  innerRadius={40}
-                  label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                >
-                  {customerPieData.map((entry, idx) => (
-                    <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
-                  ))}
-                </Pie>
-                <RechartsLegend verticalAlign="bottom" height={36} />
-              </PieChart>
-              <div className="mt-2 text-sm text-gray-500">New vs Returning Customers</div>
-            </div>
-            {/* Top Customers Table */}
-            <div className="col-span-2">
-              <div className="font-semibold mb-2">Top Customers by Revenue</div>
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b text-gray-600 dark:text-gray-300">
-                    <th className="py-2 px-3">Name</th>
-                    <th className="py-2 px-3">Email</th>
-                    <th className="py-2 px-3">Revenue</th>
+        {/* Revenue Trend Chart (full width) */}
+        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 mt-8 mb-8">
+          <h2 className="text-lg font-bold mb-4">Revenue Trend</h2>
+          {/* TODO: Insert Revenue Trend Chart component here */}
+        </div>
+        {/* 2-column grid for Top Customers and Acquisition Sources */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Top Customers by Revenue */}
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6">
+            <h2 className="text-lg font-bold mb-4">Top Customers by Revenue</h2>
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b text-gray-600 dark:text-gray-300">
+                  <th className="py-2 px-3 text-left align-middle">Name</th>
+                  <th className="py-2 px-3 text-left align-middle">Email</th>
+                  <th className="py-2 px-3 text-left align-middle">Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topCustomers.map((c) => (
+                  <tr key={c.email} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
+                    <td className="py-2 px-3 font-semibold text-left align-middle">{c.name}</td>
+                    <td className="py-2 px-3 text-left align-middle">{c.email}</td>
+                    <td className="py-2 px-3 font-semibold text-green-700 text-left align-middle">{formatVND(c.revenue)}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {topCustomers.map((c) => (
-                    <tr key={c.email} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
-                      <td className="py-2 px-3 font-semibold">{c.name}</td>
-                      <td className="py-2 px-3">{c.email}</td>
-                      <td className="py-2 px-3 font-semibold text-green-700">{formatVND(c.revenue)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-          {/* Acquisition Sources Pie Chart (optional) */}
-          <div className="mt-8 flex flex-col items-center">
-            <div className="font-semibold mb-2">Customer Acquisition Sources</div>
-            <PieChart width={260} height={180}>
+          {/* Customer Acquisition Sources Pie Chart */}
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 flex flex-col items-center overflow-visible min-h-[320px]">
+            <h2 className="text-lg font-bold mb-4">Customer Acquisition Sources</h2>
+            <PieChart width={340} height={260}>
               <Pie
                 data={acquisitionSources}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={70}
-                innerRadius={40}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                outerRadius={110}
+                innerRadius={60}
+                label={false}
               >
                 {acquisitionSources.map((entry, idx) => (
-                  <Cell key={`cell-src-${idx}`} fill={pieColors[idx % pieColors.length]} />
+                  <RechartsCell key={`cell-src-${idx}`} fill={ACQUISITION_COLORS[idx % ACQUISITION_COLORS.length]} />
                 ))}
               </Pie>
-              <RechartsLegend verticalAlign="bottom" height={36} />
+              <RechartsTooltip formatter={(value, name, props) => [value, props.payload.name]} />
+              <RechartsLegend layout="vertical" align="right" verticalAlign="middle"
+                payload={acquisitionSources.map((entry, idx) => ({
+                  value: entry.name,
+                  type: "square",
+                  color: ACQUISITION_COLORS[idx % ACQUISITION_COLORS.length],
+                }))}
+              />
             </PieChart>
           </div>
         </div>
@@ -794,7 +833,7 @@ export default function AdminDashboardPage() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b text-gray-600 dark:text-gray-300">
-                  <th className="py-2 px-3">Order ID</th>
+                  <th className="py-2 px-3 text-left align-middle">Order ID</th>
                   <th className="py-2 px-3">Customer</th>
                   <th className="py-2 px-3">Total</th>
                   <th className="py-2 px-3">Status</th>
@@ -810,12 +849,12 @@ export default function AdminDashboardPage() {
                   filteredExportOrders.map((o: Order & { customer: string }) => (
                     <tr key={o.id} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
                       <td className="py-2 px-3 font-mono text-xs">{o.id}</td>
-                      <td className="py-2 px-3">{o.customer}</td>
-                      <td className="py-2 px-3 font-semibold">{formatVND(o.total)}</td>
-                      <td className="py-2 px-3">
+                      <td className="py-2 px-3 text-left align-middle">{o.customer}</td>
+                      <td className="py-2 px-3 font-semibold text-left align-middle">{formatVND(o.total)}</td>
+                      <td className="py-2 px-3 text-left align-middle">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor[o.status] || "bg-gray-100 text-gray-700"}`}>{o.status}</span>
                       </td>
-                      <td className="py-2 px-3">{format(parseISO(o.createdAt), "yyyy-MM-dd HH:mm")}</td>
+                      <td className="py-2 px-3 text-left align-middle">{format(parseISO(o.createdAt), "yyyy-MM-dd HH:mm")}</td>
                     </tr>
                   ))
                 )}
@@ -824,51 +863,6 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </section>
-      {/* Drawer for order details */}
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent className="max-w-lg mx-auto">
-          <DrawerHeader>
-            <DrawerTitle>Order Details</DrawerTitle>
-            <DrawerDescription>Order ID: {selectedOrder?.id}</DrawerDescription>
-          </DrawerHeader>
-          <div className="px-4 pb-4 space-y-2">
-            <div className="flex justify-between">
-              <span className="font-medium">Customer:</span>
-              <span>{selectedOrder?.customer}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Status:</span>
-              <span className={`px-2 py-1 rounded text-xs font-medium ${selectedOrder ? statusColor[selectedOrder.status] : ""}`}>{selectedOrder?.status}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Created:</span>
-              <span>{selectedOrder ? formatDate(selectedOrder.createdAt) : ""}</span>
-            </div>
-            <div className="font-medium mt-4 mb-1">Items:</div>
-            <ul className="divide-y divide-gray-200 dark:divide-neutral-700">
-              {selectedOrder?.orderItems.map(item => (
-                <li key={item.id} className="py-2 flex items-center gap-3">
-                  <img src={item.product.images[0]} alt={item.product.name} className="w-10 h-10 rounded object-cover border" />
-                  <div className="flex-1">
-                    <div className="font-semibold">{item.product.name}</div>
-                    <div className="text-xs text-gray-500">Qty: {item.quantity}</div>
-                  </div>
-                  <div className="font-semibold">{formatVND(item.price)}</div>
-                </li>
-              ))}
-            </ul>
-            <div className="flex justify-between pt-4 border-t mt-4">
-              <span className="font-bold">Total:</span>
-              <span className="font-bold text-red-600">{selectedOrder ? formatVND(selectedOrder.total) : ""}</span>
-            </div>
-          </div>
-          <DrawerFooter>
-            <DrawerClose asChild>
-              <button className="w-full py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none">Close</button>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
     </div>
   );
-} 
+}

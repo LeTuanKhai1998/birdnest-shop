@@ -51,7 +51,7 @@ model Product {
   price       Decimal    @db.Decimal(10,2)
   discount    Float      @default(0)
   quantity    Int
-  images      String[]
+  images      Image[]
   categoryId  String
   category    Category   @relation(fields: [categoryId], references: [id])
   reviews     Review[]
@@ -142,4 +142,13 @@ model Wishlist {
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  isPrimary Boolean  @default(false)
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  createdAt DateTime @default(now())
 } 

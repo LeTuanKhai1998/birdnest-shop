@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import type { Product } from "@prisma/client";
 import ProductsClient from "@/components/ProductsClient";
 import Footer from "@/components/Footer";
+
+type ProductWithImages = Product & { images: { url: string; isPrimary: boolean }[] };
+
+const FALLBACK_IMAGE = "/images/placeholder.png";
 
 const mockProducts = [
   {
@@ -73,6 +78,7 @@ const mockProducts = [
 export default async function ProductsPage() {
   // Fetch products from the database
   const dbProducts = await prisma.product.findMany({
+    include: { images: true },
     orderBy: { createdAt: "desc" },
   });
   // Map DB fields to ProductCard props
@@ -80,7 +86,12 @@ export default async function ProductsPage() {
     id: p.id,
     slug: p.slug,
     name: p.name,
-    images: p.images,
+    images: Array.isArray(p.images) && p.images.length > 0 && typeof p.images[0] === 'object' && 'url' in p.images[0]
+      ? [
+          ...p.images.filter((img: any) => img.isPrimary).map((img: any) => img.url),
+          ...p.images.filter((img: any) => !img.isPrimary).map((img: any) => img.url),
+        ]
+      : [FALLBACK_IMAGE],
     price: Number(p.price),
     description: p.description,
     weight: (() => {

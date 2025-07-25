@@ -41,24 +41,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </aside>
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Topbar */}
-        <header className="sticky top-0 z-10 bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-gray-200 dark:border-neutral-700 flex items-center px-4 h-16 gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full max-w-xs rounded-md border border-gray-300 dark:border-neutral-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-600 dark:bg-neutral-800 dark:text-gray-100 transition"
-            />
-          </div>
-          <button className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 transition">
-            <Bell className="w-5 h-5" />
-          </button>
-          {/* User menu placeholder */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-neutral-700" />
-            <span className="hidden md:inline text-gray-700 dark:text-gray-200 font-medium">Admin</span>
-          </div>
-        </header>
         {/* Main content */}
         <main className="flex-1 p-4 md:p-8 bg-gray-50 dark:bg-neutral-900 min-h-[calc(100vh-4rem)]">
           {children}
