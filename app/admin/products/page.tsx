@@ -114,7 +114,7 @@ export default function AdminProductsPage() {
     products.map(p => ({
       ...p,
       price: typeof p.price === 'string' ? Number(String(p.price ?? '').replace(/[^\d]/g, '')) : p.price,
-      images: [FALLBACK_IMAGE],
+      images: [{ url: FALLBACK_IMAGE }],
     }))
   );
 
@@ -170,27 +170,29 @@ export default function AdminProductsPage() {
   };
 
   // Handle edit button
-  const handleEdit = (product: any) => {
+  type Product = { id: string; name: string; images: Image[]; [key: string]: unknown };
+  type Image = { url: string; isPrimary?: boolean };
+  const handleEdit = (product: Product) => {
     setEditId(product.id);
     const sanitizedPrice = String(product.price ?? "").replace(/[^\d]/g, "");
     setEditInitial({
       name: product.name,
-      description: product.description || "",
+      description: typeof product.description === 'string' ? product.description : '',
       price: sanitizedPrice,
-      stock: String(product.stock),
-      category: product.category,
-      status: product.status,
+      stock: String(product.stock ?? ""),
+      category: typeof product.category === 'string' ? product.category : '',
+      status: product.status === 'active' || product.status === 'inactive' ? product.status : 'active',
     });
     reset({
       name: product.name,
-      description: product.description || "",
+      description: typeof product.description === 'string' ? product.description : '',
       price: sanitizedPrice,
       stock: String(product.stock ?? ""),
-      category: product.category,
-      status: product.status,
+      category: typeof product.category === 'string' ? product.category : '',
+      status: product.status === 'active' || product.status === 'inactive' ? product.status : 'active',
     });
     // Load images from product.images (API shape)
-    setImages((product.images || []).map((img: any, i: number) => ({ url: img.url, isPrimary: img.isPrimary ?? i === 0 })));
+    setImages((product.images || []).map((img: Image, i: number) => ({ url: img.url, isPrimary: img.isPrimary ?? i === 0 })));
     setDrawerOpen(true); // Open drawer for edit
   };
 
@@ -267,6 +269,9 @@ export default function AdminProductsPage() {
     setDeleteModalOpen(false);
     setProductToDelete(null);
   };
+
+  // Move this to the top level of the component, not inside a callback
+  const [showMore, setShowMore] = useLocalState(false);
 
   return (
     <div>
@@ -526,7 +531,7 @@ export default function AdminProductsPage() {
             ...p,
             thumbnail: (
               <img
-                src={(p.images && p.images[0]) || FALLBACK_IMAGE}
+                src={(p.images && p.images[0]?.url) || FALLBACK_IMAGE}
                 alt={p.name}
                 className="w-16 h-16 object-cover rounded border"
                 width={64}
@@ -564,7 +569,6 @@ export default function AdminProductsPage() {
       {/* Mobile Card List */}
       <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24">
         {filteredProducts.map((p) => {
-          const [showMore, setShowMore] = useLocalState(false);
           const fullProduct = productList.find(prod => prod.id === p.id);
           const desc = (fullProduct && typeof fullProduct.description === 'string' ? fullProduct.description : '') || "";
           const isLong = desc.length > 80;
@@ -572,7 +576,7 @@ export default function AdminProductsPage() {
             <Card key={p.id} className="flex flex-col gap-2 p-4 rounded-lg shadow border border-gray-200 transition hover:bg-gray-50 active:scale-[0.98]">
               <div className="flex items-start gap-4">
                 <img
-                  src={(p.images && p.images[0]) || FALLBACK_IMAGE}
+                  src={(p.images && p.images[0]?.url) || FALLBACK_IMAGE}
                   alt={p.name}
                   className="w-16 h-16 object-cover rounded border"
                   width={64}

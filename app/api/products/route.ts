@@ -18,6 +18,8 @@ const productSchema = z.object({
   categoryId: z.string(),
 });
 
+type ImageInput = { url: string; isPrimary?: boolean };
+
 export async function GET(req: NextRequest) {
   try {
     const products = await prisma.product.findMany({
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
       data: {
         ...productData,
         images: {
-          create: images.map((img: any, i: number) => ({
+          create: (images as ImageInput[]).map((img, i) => ({
             url: img.url,
             isPrimary: img.isPrimary ?? i === 0,
           })),
@@ -71,14 +73,14 @@ export async function PATCH(req: NextRequest) {
     if (Array.isArray(images)) {
       // Fetch current images
       const currentImages = await prisma.image.findMany({ where: { productId: id } });
-      const newImageUrls = images.map((img: any) => img.url);
+      const newImageUrls = (images as ImageInput[]).map((img) => img.url);
       // Delete images that are no longer present
-      const toDelete = currentImages.filter((img: any) => !newImageUrls.includes(img.url));
-      await prisma.image.deleteMany({ where: { id: { in: toDelete.map((img: any) => img.id) } } });
+      const toDelete = currentImages.filter((img) => !newImageUrls.includes(img.url));
+      await prisma.image.deleteMany({ where: { id: { in: toDelete.map((img) => img.id) } } });
       // Upsert (update or create) images
       for (let i = 0; i < images.length; i++) {
-        const img = images[i];
-        const existing = currentImages.find((ci: any) => ci.url === img.url);
+        const img = images[i] as ImageInput;
+        const existing = currentImages.find((ci) => ci.url === img.url);
         if (existing) {
           await prisma.image.update({
             where: { id: existing.id },
@@ -95,7 +97,7 @@ export async function PATCH(req: NextRequest) {
         }
       }
       // Ensure only one isPrimary
-      const primaryImages = images.filter((img: any) => img.isPrimary);
+      const primaryImages = (images as ImageInput[]).filter((img) => img.isPrimary);
       if (primaryImages.length === 0 && images.length > 0) {
         // Set first image as primary if none marked
         const firstImg = await prisma.image.findFirst({ where: { productId: id, url: images[0].url } });
@@ -104,9 +106,9 @@ export async function PATCH(req: NextRequest) {
         }
       } else if (primaryImages.length > 1) {
         // Only one should be primary
-        const firstPrimary = images.find((img: any) => img.isPrimary);
-        for (const img of images) {
-          if (img.url !== firstPrimary.url) {
+        const firstPrimary = (images as ImageInput[]).find((img) => img.isPrimary);
+        for (const img of images as ImageInput[]) {
+          if (img.url !== firstPrimary?.url) {
             const dbImg = await prisma.image.findFirst({ where: { productId: id, url: img.url } });
             if (dbImg) await prisma.image.update({ where: { id: dbImg.id }, data: { isPrimary: false } });
           }

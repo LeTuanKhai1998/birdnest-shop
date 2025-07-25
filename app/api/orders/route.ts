@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { mapOrderToApi } from "@/lib/order-mapper";
 
 type OrderItem = {
   id: string;
@@ -33,28 +34,15 @@ export async function GET() {
     include: {
       orderItems: {
         include: {
-          product: true,
+          product: {
+            include: { images: true },
+          },
         },
       },
     },
   });
 
-  const orders: Order[] = prismaOrders.map((order) => ({
-    id: order.id,
-    createdAt: order.createdAt.toISOString(),
-    status: order.status,
-    total: Number(order.total),
-    orderItems: order.orderItems.map((item) => ({
-      id: item.id,
-      quantity: item.quantity,
-      price: Number(item.price),
-      product: {
-        id: item.product.id,
-        name: item.product.name,
-        images: item.product.images,
-      },
-    })),
-  }));
+  const orders = prismaOrders.map(mapOrderToApi);
 
   return NextResponse.json({ orders });
 }

@@ -33,7 +33,7 @@ model User {
   phone     String?    @unique
   address   String?
   isAdmin   Boolean    @default(false)
-  bio       String?    // User bio/tagline
+  bio       String? // User bio/tagline
   orders    Order[]
   reviews   Review[]
   cartItems CartItem[]
@@ -44,22 +44,22 @@ model User {
 }
 
 model Product {
-  id          String     @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
-  slug        String     @unique
+  slug        String      @unique
   description String
-  price       Decimal    @db.Decimal(10,2)
-  discount    Float      @default(0)
+  price       Decimal     @db.Decimal(10, 2)
+  discount    Float       @default(0)
   quantity    Int
   images      Image[]
   categoryId  String
-  category    Category   @relation(fields: [categoryId], references: [id])
+  category    Category    @relation(fields: [categoryId], references: [id])
   reviews     Review[]
   orderItems  OrderItem[]
   cartItems   CartItem[]
   wishlist    Wishlist[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 model Category {
@@ -72,26 +72,26 @@ model Category {
 }
 
 model Order {
-  id              String      @id @default(cuid())
+  id              String        @id @default(cuid())
   userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  total           Decimal     @db.Decimal(10,2)
-  status          OrderStatus @default(PENDING)
+  user            User          @relation(fields: [userId], references: [id])
+  total           Decimal       @db.Decimal(10, 2)
+  status          OrderStatus   @default(PENDING)
   paymentMethod   PaymentMethod @default(COD)
   shippingAddress String
   orderItems      OrderItem[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   orderId   String
-  order     Order    @relation(fields: [orderId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id])
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
   quantity  Int
-  price     Decimal  @db.Decimal(10,2)
+  price     Decimal @db.Decimal(10, 2)
 }
 
 model Review {
@@ -151,4 +151,4 @@ model Image {
   product   Product  @relation(fields: [productId], references: [id])
   productId String
   createdAt DateTime @default(now())
-} 
+}

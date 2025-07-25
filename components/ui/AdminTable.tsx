@@ -17,10 +17,10 @@ interface AdminTableProps<T> {
   pagination?: React.ReactNode;
   actions?: (row: T) => React.ReactNode;
   exportButtons?: React.ReactNode;
-  statusBadgeRenderer?: (status: any) => React.ReactNode;
+  statusBadgeRenderer?: (status: unknown) => React.ReactNode;
 }
 
-export function AdminTable<T extends { id: string | number } = any>({
+export function AdminTable<T extends { id: string | number } = { id: string | number }>({
   columns,
   data,
   loading,

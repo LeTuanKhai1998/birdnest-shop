@@ -34,6 +34,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import type { Product } from "@/components/ProductCard";
 
 const ResponsiveContainer = dynamic(() => import("recharts").then(m => m.ResponsiveContainer), { ssr: false });
 const LineChart = dynamic(() => import("recharts").then(m => m.LineChart), { ssr: false });
@@ -170,11 +171,11 @@ async function exportOrdersPDF(data: (Order & { customer: string })[]) {
   });
   doc.save(`orders-${Date.now()}.pdf`);
 }
-function exportLowStockCSV(data: any[]) {
+function exportLowStockCSV(data: Product[]) {
   const rows = data.map((p) => ({
     Product: p.name,
     Stock: p.quantity,
-    Status: p.quantity < 3 ? "Critical" : "Low",
+    Status: (p.quantity ?? 0) < 3 ? "Critical" : "Low",
   }));
   const csv = Papa.unparse(rows);
   const blob = new Blob([csv], { type: "text/csv" });
@@ -185,7 +186,7 @@ function exportLowStockCSV(data: any[]) {
   a.click();
   URL.revokeObjectURL(url);
 }
-async function exportLowStockPDF(data: any[]) {
+async function exportLowStockPDF(data: Product[]) {
   const { default: jsPDF } = await import("jspdf");
   const autoTable = (await import("jspdf-autotable")).default;
   const doc = new jsPDF();
@@ -194,8 +195,8 @@ async function exportLowStockPDF(data: any[]) {
     head: [["Product", "Stock", "Status"]],
     body: data.map((p) => [
       p.name,
-      p.quantity,
-      p.quantity < 3 ? "Critical" : "Low",
+      p.quantity ?? 0,
+      (p.quantity ?? 0) < 3 ? "Critical" : "Low",
     ]),
     startY: 22,
     styles: { fontSize: 9 },
@@ -203,7 +204,7 @@ async function exportLowStockPDF(data: any[]) {
   });
   doc.save(`low-stock-${Date.now()}.pdf`);
 }
-function exportTopProductsCSV(data: any[]) {
+function exportTopProductsCSV(data: { name: string; unitsSold: number; revenue: number; stock: number; image: string }[]) {
   const rows = data.map((p) => ({
     Product: p.name,
     "Units Sold": p.unitsSold,
@@ -219,7 +220,7 @@ function exportTopProductsCSV(data: any[]) {
   a.click();
   URL.revokeObjectURL(url);
 }
-async function exportTopProductsPDF(data: any[]) {
+async function exportTopProductsPDF(data: { name: string; unitsSold: number; revenue: number; stock: number; image: string }[]) {
   const { default: jsPDF } = await import("jspdf");
   const autoTable = (await import("jspdf-autotable")).default;
   const doc = new jsPDF();
@@ -291,20 +292,20 @@ export default function AdminDashboardPage() {
   }, [realOrders]);
   const products = productsData || [];
   const LOW_STOCK_THRESHOLD = 10;
-  const lowStockProducts = products.filter((p: any) => typeof p.quantity === 'number' && p.quantity < LOW_STOCK_THRESHOLD);
+  const lowStockProducts = (products as Product[]).filter((p) => typeof p.quantity === 'number' && p.quantity < LOW_STOCK_THRESHOLD);
   const allOrders = realOrders.length > 0 ? realOrders : mockOrders;
   const productSalesMap = new Map<string, { name: string; image: string; unitsSold: number; revenue: number; stock: number }>();
   allOrders.forEach((order: Order) => {
-    order.orderItems.forEach((item: any) => {
+    order.orderItems.forEach((item) => {
       const key = item.product.id;
       if (!productSalesMap.has(key)) {
-        const prod = products.find((p: any) => p.id === key);
+        const prod = (products as Product[]).find((p) => p.id === key);
         productSalesMap.set(key, {
           name: item.product.name,
           image: item.product.images[0],
           unitsSold: 0,
           revenue: 0,
-          stock: prod ? prod.quantity : 0,
+          stock: prod ? prod.quantity ?? 0 : 0,
         });
       }
       const entry = productSalesMap.get(key)!;
@@ -643,16 +644,16 @@ export default function AdminDashboardPage() {
                     <td colSpan={4} className="text-center py-8 text-gray-400">No low stock products.</td>
                   </tr>
                 ) : (
-                  lowStockProducts.map((product: any) => (
+                  lowStockProducts.map((product) => (
                     <tr key={product.id} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
                       <td className="py-2 px-3 flex items-center gap-3">
                         <img src={product.images?.[0]} alt={product.name} className="w-10 h-10 rounded object-cover border" />
                         <span className="font-semibold">{product.name}</span>
                       </td>
-                      <td className="py-2 px-3 font-semibold">{product.quantity}</td>
+                      <td className="py-2 px-3 font-semibold">{product.quantity ?? 0}</td>
                       <td className="py-2 px-3 text-left align-middle">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${product.quantity < 3 ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"}`}>
-                          {product.quantity < 3 ? "Critical" : "Low"}
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${(product.quantity ?? 0) < 3 ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"}`}>
+                          {(product.quantity ?? 0) < 3 ? "Critical" : "Low"}
                         </span>
                       </td>
                       <td className="py-2 px-3">
@@ -798,13 +799,7 @@ export default function AdminDashboardPage() {
                 ))}
               </Pie>
               <RechartsTooltip formatter={(value, name, props) => [value, props.payload.name]} />
-              <RechartsLegend layout="vertical" align="right" verticalAlign="middle"
-                payload={acquisitionSources.map((entry, idx) => ({
-                  value: entry.name,
-                  type: "square",
-                  color: ACQUISITION_COLORS[idx % ACQUISITION_COLORS.length],
-                }))}
-              />
+              <RechartsLegend layout="vertical" align="right" verticalAlign="middle" />
             </PieChart>
           </div>
         </div>
