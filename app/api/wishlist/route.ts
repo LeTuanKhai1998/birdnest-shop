@@ -57,11 +57,15 @@ export async function DELETE(req: NextRequest) {
   if (!productId) {
     return NextResponse.json({ error: 'Missing productId' }, { status: 400 });
   }
-  await prisma.wishlist.deleteMany({
-    where: {
-      userId,
-      productId,
-    },
-  });
-  return NextResponse.json({ success: true });
+  try {
+    await prisma.wishlist.deleteMany({
+      where: {
+        userId,
+        productId,
+      },
+    });
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'Failed to remove from wishlist' }, { status: 500 });
+  }
 } 
