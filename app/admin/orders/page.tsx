@@ -7,6 +7,16 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useState as useLocalState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { ChevronDown } from "lucide-react";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const STATUS = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"];
 
@@ -44,6 +54,11 @@ export default function AdminOrdersPage() {
       return matchesSearch && matchesStatus;
     });
   }, [orderList, debouncedSearch, statusFilter]);
+
+  // Status change handler
+  const onStatusChange = (orderId: string, newStatus: string) => {
+    setOrderList(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto px-6 lg:px-8 min-w-0">
@@ -91,7 +106,35 @@ export default function AdminOrdersPage() {
           data={filteredOrders.map(o => ({
             ...o,
             total: o.total.toLocaleString() + " ₫",
-            status: <StatusBadge status={o.status} />,
+            status: (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild aria-label="Change order status">
+                  <button className="flex items-center gap-1 min-w-[90px] px-2 py-1 outline-none">
+                    <Badge className={
+                      o.status === "PAID" || o.status === "DELIVERED"
+                        ? "bg-green-100 text-green-800 border-green-200"
+                        : o.status === "PENDING"
+                        ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                        : o.status === "CANCELLED"
+                        ? "bg-red-100 text-red-800 border-red-200"
+                        : o.status === "SHIPPED"
+                        ? "bg-blue-100 text-blue-800 border-blue-200"
+                        : "bg-gray-100 text-gray-800 border-gray-200"
+                    }>
+                      {o.status}
+                    </Badge>
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {STATUS.map(s => (
+                    <DropdownMenuItem key={s} onClick={() => onStatusChange(o.id, s)}>
+                      {s.charAt(0) + s.slice(1).toLowerCase()}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ),
           }))}
           actions={o => (
             <div className="flex gap-2 justify-end">
@@ -123,29 +166,47 @@ export default function AdminOrdersPage() {
           const details = `Order ID: ${o.id}\nCustomer: ${o.customer}\nDate: ${o.date}\nStatus: ${o.status}\nTotal: ₫${o.total.toLocaleString()}`;
           const isLong = details.length > 80;
           return (
-            <Card key={o.id} className="flex flex-col gap-2 p-4 border border-gray-200 shadow-sm transition hover:bg-gray-50 active:scale-[0.98]">
-              <div className="flex items-center justify-between mb-2">
+            <Card key={o.id} className="flex flex-col gap-2 p-4 rounded-lg shadow border border-gray-200 transition hover:bg-gray-50 active:scale-[0.98]">
+              {/* Top Row */}
+              <div className="flex justify-between items-start mb-1">
                 <div className="font-mono text-xs text-gray-400">#{o.id}</div>
-                <StatusBadge status={o.status} />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild aria-label="Change order status">
+                    <button className="flex items-center gap-1 outline-none">
+                      <Badge className={
+                        o.status === "PAID" || o.status === "DELIVERED"
+                          ? "bg-green-100 text-green-800 border-green-200"
+                          : o.status === "PENDING"
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                          : o.status === "CANCELLED"
+                          ? "bg-red-100 text-red-800 border-red-200"
+                          : o.status === "SHIPPED"
+                          ? "bg-blue-100 text-blue-800 border-blue-200"
+                          : "bg-gray-100 text-gray-800 border-gray-200"
+                      }>
+                        {o.status}
+                      </Badge>
+                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {STATUS.map(s => (
+                      <DropdownMenuItem key={s} onClick={() => onStatusChange(o.id, s)}>
+                        {s.charAt(0) + s.slice(1).toLowerCase()}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
+              {/* Middle Row */}
               <div className="flex flex-col gap-1 mb-1">
-                <div className="font-bold text-base text-gray-900">{o.customer}</div>
-                <div className="font-bold text-lg text-red-700">₫{o.total.toLocaleString()}</div>
+                <div className="font-bold text-base text-gray-900 truncate">{o.customer}</div>
+                <div className="font-bold text-lg text-red-700 truncate">₫{o.total.toLocaleString()}</div>
               </div>
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+              {/* Bottom Row */}
+              <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
                 <span>Date: {o.date}</span>
               </div>
-              <div className="text-xs text-gray-700 whitespace-pre-line mb-2">
-                <span>
-                  {isLong && !showMore ? details.slice(0, 80) + "..." : details}
-                </span>
-                {isLong && (
-                  <button className="ml-2 text-primary underline text-xs" onClick={e => { e.preventDefault(); setShowMoreMap(prev => ({ ...prev, [o.id]: !prev[o.id] })); }}>
-                    {showMore ? "Show less" : "Show more"}
-                  </button>
-                )}
-              </div>
-              <hr className="my-2 border-gray-200" />
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setViewId(o.id)} aria-label={`View order ${o.id}`}>
                   View
@@ -184,18 +245,95 @@ export default function AdminOrdersPage() {
           </div>
         </div>
       )}
-      {/* View/Edit modal placeholder */}
-      {viewId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold mb-2">Order Details</h3>
-            <p className="mb-4 text-gray-700">Order ID: {viewId}</p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setViewId(null)}>Close</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={!!viewId} onOpenChange={open => { if (!open) setViewId(null); }}>
+        <DialogContent className="w-full sm:max-w-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto p-6">
+          {(() => {
+            const order = orderList.find(o => o.id === viewId);
+            if (!order) return null;
+            let badgeColor = "bg-gray-100 text-gray-800 border-gray-200";
+            if (order.status === "PAID" || order.status === "DELIVERED") badgeColor = "bg-green-100 text-green-800 border-green-200";
+            else if (order.status === "PENDING") badgeColor = "bg-yellow-100 text-yellow-800 border-yellow-200";
+            else if (order.status === "CANCELLED") badgeColor = "bg-red-100 text-red-800 border-red-200";
+            else if (order.status === "SHIPPED") badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
+            const items = [
+              {
+                id: 'p1',
+                name: 'Tổ yến tinh chế 50g',
+                image: '/images/p1.png',
+                quantity: 2,
+                price: 1750000,
+              },
+              {
+                id: 'p2',
+                name: 'Tổ yến thô 100g',
+                image: '/images/p2.png',
+                quantity: 1,
+                price: 3200000,
+              },
+            ];
+            const subtotal = items.reduce((sum: number, item) => sum + item.price * item.quantity, 0);
+            const discount = 0;
+            const shipping = 0;
+            const finalTotal = subtotal - discount + shipping;
+            const payment = 'Credit Card';
+            const shippingAddress = '123 Main St, District 1, HCMC';
+            return (
+              <>
+                <DialogHeader>
+                  <div className="flex items-center justify-between gap-2">
+                    <DialogTitle>Order #{order.id}</DialogTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild aria-label="Change order status">
+                        <button className="flex items-center gap-1 outline-none">
+                          <Badge className={badgeColor}>{order.status}</Badge>
+                          <ChevronDown className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {STATUS.map(s => (
+                          <DropdownMenuItem key={s} onClick={() => onStatusChange(order.id, s)}>
+                            {s.charAt(0) + s.slice(1).toLowerCase()}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </DialogHeader>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                  <div><span className="font-semibold">Customer:</span> {order.customer}</div>
+                  <div><span className="font-semibold">Date:</span> {order.date}</div>
+                  <div><span className="font-semibold">Total:</span> <span className="font-bold text-red-700">₫{order.total.toLocaleString()}</span></div>
+                  <div><span className="font-semibold">Payment:</span> {payment}</div>
+                  <div className="sm:col-span-2"><span className="font-semibold">Shipping:</span> {shippingAddress}</div>
+                </div>
+                <div className="mb-4">
+                  <div className="font-semibold mb-2">Products</div>
+                  <div className="flex flex-col gap-4 divide-y">
+                    {items.map(item => (
+                      <div key={item.id} className="flex items-center gap-4 pt-2 first:pt-0">
+                        <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded border" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{item.name}</div>
+                          <div className="text-xs text-gray-500">{item.quantity} × ₫{item.price.toLocaleString()} = <span className="font-semibold text-gray-900">₫{(item.price * item.quantity).toLocaleString()}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4 border-t pt-4 space-y-1 text-sm">
+                  <div className="flex justify-between"><span>Subtotal</span><span>₫{subtotal.toLocaleString()}</span></div>
+                  {discount > 0 && <div className="flex justify-between"><span>Discount</span><span>-₫{discount.toLocaleString()}</span></div>}
+                  {shipping > 0 && <div className="flex justify-between"><span>Shipping</span><span>₫{shipping.toLocaleString()}</span></div>}
+                  <div className="flex justify-between font-bold text-base text-red-700"><span>Total</span><span>₫{finalTotal.toLocaleString()}</span></div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setViewId(null)}>Close</Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
