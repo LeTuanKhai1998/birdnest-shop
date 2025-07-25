@@ -117,19 +117,23 @@ export default function AdminOrdersPage() {
         />
       </div>
       {/* Mobile Card List */}
-      <div className="block md:hidden space-y-4 pb-24 max-w-md mx-auto">
+      <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24 max-w-2xl mx-auto">
         {filteredOrders.map((o) => {
           const showMore = !!showMoreMap[o.id];
           const details = `Order ID: ${o.id}\nCustomer: ${o.customer}\nDate: ${o.date}\nStatus: ${o.status}\nTotal: ₫${o.total.toLocaleString()}`;
           const isLong = details.length > 80;
           return (
             <Card key={o.id} className="flex flex-col gap-2 p-4 border border-gray-200 shadow-sm transition hover:bg-gray-50 active:scale-[0.98]">
-              <div className="flex flex-col gap-1 mb-2">
-                <div className="font-mono text-xs text-gray-400">Order #{o.id}</div>
-                <div className="font-medium text-base text-gray-900">{o.customer}</div>
-                <div className="text-xs text-gray-500">Date: {o.date}</div>
-                <div className="mt-2 mb-1"><StatusBadge status={o.status} /></div>
-                <div className="font-bold text-lg text-red-700 mt-1">₫{o.total.toLocaleString()}</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-mono text-xs text-gray-400">#{o.id}</div>
+                <StatusBadge status={o.status} />
+              </div>
+              <div className="flex flex-col gap-1 mb-1">
+                <div className="font-bold text-base text-gray-900">{o.customer}</div>
+                <div className="font-bold text-lg text-red-700">₫{o.total.toLocaleString()}</div>
+              </div>
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                <span>Date: {o.date}</span>
               </div>
               <div className="text-xs text-gray-700 whitespace-pre-line mb-2">
                 <span>

@@ -12,6 +12,7 @@ import { useRef } from "react";
 import ProductImageGallery from "@/components/ProductImageGallery";
 import { AdminTable } from "@/components/ui/AdminTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
   DrawerTrigger,
@@ -314,8 +315,21 @@ export default function AdminProductsPage() {
         </div>
       </form>
       {/* Add Product Button and Drawer */}
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => { setEditId(null); setEditInitial(null); setImages([]); reset(); setDrawerOpen(true); }}>
+      <div className="hidden md:flex justify-end mb-4">
+        <Button onClick={() => {
+          setEditId(null);
+          setEditInitial(null);
+          setImages([]);
+          reset({
+            name: "",
+            description: "",
+            price: "1000",
+            stock: "0",
+            category: "",
+            status: "active"
+          });
+          setDrawerOpen(true);
+        }}>
           Add Product
         </Button>
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
@@ -548,57 +562,85 @@ export default function AdminProductsPage() {
         />
       </div>
       {/* Mobile Card List */}
-      <div className="block md:hidden space-y-4 pb-24">
+      <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24">
         {filteredProducts.map((p) => {
           const [showMore, setShowMore] = useLocalState(false);
           const fullProduct = productList.find(prod => prod.id === p.id);
           const desc = (fullProduct && typeof fullProduct.description === 'string' ? fullProduct.description : '') || "";
           const isLong = desc.length > 80;
           return (
-            <Card key={p.id} className="flex flex-col gap-2 p-4">
-              <div className="flex items-center gap-4 mb-2">
+            <Card key={p.id} className="flex flex-col gap-2 p-4 rounded-lg shadow border border-gray-200 transition hover:bg-gray-50 active:scale-[0.98]">
+              <div className="flex items-start gap-4">
                 <img
                   src={(p.images && p.images[0]) || FALLBACK_IMAGE}
                   alt={p.name}
-                  className="w-20 h-20 object-cover rounded border"
-                  width={80}
-                  height={80}
+                  className="w-16 h-16 object-cover rounded border"
+                  width={64}
+                  height={64}
                 />
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-base text-gray-900 mb-1">{p.name}</div>
-                  <div className="text-xs text-gray-500 mb-0.5">SKU: {p.sku}</div>
-                  <div className="text-xs text-gray-500 mb-0.5">Category: {p.category}</div>
-                  <div className="text-xs text-gray-500 mb-0.5">Stock: {p.stock}</div>
-                  <div className="text-xs text-gray-500 mb-0.5">{typeof p.price === "number"
-                    ? `₫${p.price.toLocaleString()}`
-                    : `₫${Number(String(p.price ?? '').replace(/[^\d]/g, "")).toLocaleString()}`}</div>
-                  <div className="mt-1"><StatusBadge status={p.status} /></div>
+                <div className="flex-1 min-w-0 flex flex-col gap-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-bold text-lg text-gray-900 truncate">{p.name}</div>
+                    <Badge variant={p.status === 'active' ? 'success' : 'secondary'} className={p.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'}>
+                      {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-red-700 text-base">{typeof p.price === "number"
+                      ? `₫${p.price.toLocaleString()}`
+                      : `₫${Number(String(p.price ?? '').replace(/[^\d]/g, "")).toLocaleString()}`}</span>
+                    <span className="text-xs text-gray-500">Stock: {p.stock}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">SKU: {p.sku}</span>
+                    <span className="text-xs text-gray-500">Category: {p.category}</span>
+                  </div>
+                  <div className="text-xs text-gray-700 whitespace-pre-line">
+                    <span>
+                      {isLong && !showMore ? desc.slice(0, 80) + "..." : desc}
+                    </span>
+                    {isLong && (
+                      <button className="ml-2 text-primary underline text-xs" onClick={e => { e.preventDefault(); setShowMore(!showMore); }}>
+                        {showMore ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost" className="ml-2"><span className="sr-only">Actions</span>⋮</Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => { handleEdit(p); setDrawerOpen(true); }}>Edit</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDeleteClick(p.id)} className="text-red-600">Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
-              <div className="text-xs text-gray-700 whitespace-pre-line">
-                <span>
-                  {isLong && !showMore ? desc.slice(0, 80) + "..." : desc}
-                </span>
-                {isLong && (
-                  <button className="ml-2 text-primary underline text-xs" onClick={e => { e.preventDefault(); setShowMore(!showMore); }}>
-                    {showMore ? "Show less" : "Show more"}
-                  </button>
-                )}
+              <hr className="my-2 border-gray-200" />
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => handleEdit(p)} aria-label={`Edit product ${p.name}`}>
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => handleDeleteClick(p.id)}
+                  aria-label={`Delete product ${p.name}`}
+                >
+                  Delete
+                </Button>
               </div>
             </Card>
           );
         })}
         {/* Floating Add Product Button */}
-        <Button className="fixed bottom-6 right-6 z-50 rounded-full h-14 w-14 p-0 shadow-lg bg-primary text-white text-2xl flex items-center justify-center" onClick={() => { setEditId(null); setEditInitial(null); setImages([]); reset(); setDrawerOpen(true); }} aria-label="Add Product">
+        <Button className="fixed bottom-6 right-6 z-50 rounded-full h-14 w-14 p-0 shadow-lg bg-primary text-white text-2xl flex items-center justify-center" onClick={() => {
+          setEditId(null);
+          setEditInitial(null);
+          setImages([]);
+          reset({
+            name: "",
+            description: "",
+            price: "1000",
+            stock: "0",
+            category: "",
+            status: "active"
+          });
+          setDrawerOpen(true);
+        }} aria-label="Add Product">
           +
         </Button>
       </div>
@@ -617,4 +659,4 @@ export default function AdminProductsPage() {
       )}
     </div>
   );
-}
+} 
