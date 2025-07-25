@@ -165,64 +165,45 @@ export default function AdminOrdersPage() {
           const showMore = !!showMoreMap[o.id];
           const details = `Order ID: ${o.id}\nCustomer: ${o.customer}\nDate: ${o.date}\nStatus: ${o.status}\nTotal: ₫${o.total.toLocaleString()}`;
           const isLong = details.length > 80;
+          let badgeColor = "bg-gray-100 text-gray-800 border-gray-200";
+          if (o.status === "PAID" || o.status === "DELIVERED") badgeColor = "bg-green-100 text-green-800 border-green-200";
+          else if (o.status === "PENDING") badgeColor = "bg-yellow-100 text-yellow-800 border-yellow-200";
+          else if (o.status === "CANCELLED") badgeColor = "bg-red-100 text-red-800 border-red-200";
+          else if (o.status === "SHIPPED") badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
           return (
-            <Card key={o.id} className="flex flex-col gap-2 p-4 rounded-lg shadow border border-gray-200 transition hover:bg-gray-50 active:scale-[0.98]">
+            <div key={o.id} className="rounded-xl border p-4 space-y-2 bg-white shadow-sm">
               {/* Top Row */}
-              <div className="flex justify-between items-start mb-1">
-                <div className="font-mono text-xs text-gray-400">#{o.id}</div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild aria-label="Change order status">
-                    <button className="flex items-center gap-1 outline-none">
-                      <Badge className={
-                        o.status === "PAID" || o.status === "DELIVERED"
-                          ? "bg-green-100 text-green-800 border-green-200"
-                          : o.status === "PENDING"
-                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-                          : o.status === "CANCELLED"
-                          ? "bg-red-100 text-red-800 border-red-200"
-                          : o.status === "SHIPPED"
-                          ? "bg-blue-100 text-blue-800 border-blue-200"
-                          : "bg-gray-100 text-gray-800 border-gray-200"
-                      }>
-                        {o.status}
-                      </Badge>
-                      <ChevronDown className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {STATUS.map(s => (
-                      <DropdownMenuItem key={s} onClick={() => onStatusChange(o.id, s)}>
-                        {s.charAt(0) + s.slice(1).toLowerCase()}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <div className="flex justify-between items-center">
+                <div className="font-bold text-base text-gray-800 font-mono">#{o.id}</div>
+                <Badge className={badgeColor}>{o.status}</Badge>
               </div>
-              {/* Middle Row */}
-              <div className="flex flex-col gap-1 mb-1">
-                <div className="font-bold text-base text-gray-900 truncate">{o.customer}</div>
-                <div className="font-bold text-lg text-red-700 truncate">₫{o.total.toLocaleString()}</div>
+              {/* Second Row */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                <div className="font-bold text-gray-900 truncate">{o.customer}</div>
+                <div className="font-bold text-red-700 text-base sm:text-right">₫{o.total.toLocaleString()}</div>
               </div>
-              {/* Bottom Row */}
-              <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                <span>Date: {o.date}</span>
+              {/* Third Row */}
+              <div className="flex items-center text-sm text-muted-foreground gap-1">
+                <span role="img" aria-label="calendar">📅</span>
+                <span>{o.date}</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setViewId(o.id)} aria-label={`View order ${o.id}`}>
+              {/* Actions */}
+              <div className="flex justify-between gap-2 pt-2">
+                <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setViewId(o.id)} aria-label={`View order ${o.id}`}>
                   View
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   variant="ghost"
-                  className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+                  className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700"
                   onClick={() => setDeleteId(o.id)}
                   aria-label={`Delete order ${o.id}`}
                 >
-                  Delete
+                  <span className="inline-block align-middle mr-1">🗑️</span>Delete
                 </Button>
               </div>
-            </Card>
+            </div>
           );
         })}
         {/* Floating Add Order Button (disabled for now) */}
