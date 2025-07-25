@@ -57,4 +57,24 @@ export async function GET() {
   }));
 
   return NextResponse.json({ orders });
+}
+
+export async function PATCH(req: NextRequest) {
+  const session = await auth();
+  if (!session || !session.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { id, status } = await req.json();
+  if (!id || !status) {
+    return NextResponse.json({ error: "Missing id or status" }, { status: 400 });
+  }
+  try {
+    const order = await prisma.order.update({
+      where: { id },
+      data: { status },
+    });
+    return NextResponse.json({ success: true, order });
+  } catch (error) {
+    return NextResponse.json({ error: "Order update failed" }, { status: 500 });
+  }
 } 

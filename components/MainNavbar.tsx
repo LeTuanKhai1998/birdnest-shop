@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerTrigger, DrawerContent, DrawerClose, DrawerTitle } from "@/components/ui/drawer";
-import { Search, User, Menu, X, LayoutDashboard, User2, ShoppingBag, LogOut, Heart } from "lucide-react";
+import { Search, User, Menu, X, LayoutDashboard, User2, ShoppingBag, LogOut, Heart, Bell } from "lucide-react";
 import { CartIconWithBadge } from "@/components/CartIconWithBadge";
 import { useState, useRef } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -24,6 +24,20 @@ export function MainNavbar() {
   const userFromSession = session?.user;
   const { data: user } = useSWR(userFromSession ? "/api/profile" : null, url => fetch(url).then(r => r.json()), { fallbackData: userFromSession });
   const firstName = user?.name?.split(" ")[0] || user?.name || "";
+
+  // --- Notification dropdown state and mock data ---
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "New order received!", read: false, time: "2m ago" },
+    { id: 2, text: "Stock low: Raw Birdnest 50g", read: false, time: "10m ago" },
+    { id: 3, text: "Order #1234 marked as shipped", read: true, time: "1h ago" },
+  ]);
+  const unreadCount = notifications.filter(n => !n.read).length;
+  function markAllRead() {
+    setNotifications(n => n.map(notif => ({ ...notif, read: true })));
+  }
+  function clearNotifications() {
+    setNotifications([]);
+  }
 
   return (
     <header className="w-full border-b bg-white/80 backdrop-blur sticky top-0 z-30">
@@ -65,6 +79,48 @@ export function MainNavbar() {
           </form>
           {/* Cart Icon */}
           <CartIconWithBadge />
+          {/* Notification Bell */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="relative p-2 rounded-full hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none" aria-label="Notifications">
+                <Bell className="w-5 h-5 text-gray-500" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 font-bold shadow">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 max-w-xs p-2 rounded-xl shadow-lg">
+              <div className="flex items-center justify-between px-2 py-1">
+                <span className="font-semibold text-base">Notifications</span>
+                {notifications.length > 0 && (
+                  <button onClick={markAllRead} className="text-xs text-blue-600 hover:underline focus:outline-none">Mark all as read</button>
+                )}
+              </div>
+              <div className="max-h-60 overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-800">
+                {notifications.length === 0 ? (
+                  <div className="text-center text-gray-400 py-6">No notifications</div>
+                ) : (
+                  notifications.map(n => (
+                    <div key={n.id} className={`flex items-start gap-2 px-2 py-3 ${n.read ? "bg-white dark:bg-neutral-800" : "bg-red-50 dark:bg-red-900"}`}>
+                      <span className={`w-2 h-2 rounded-full mt-2 ${n.read ? "bg-gray-300" : "bg-red-600"}`} />
+                      <div className="flex-1">
+                        <div className="text-sm text-gray-800 dark:text-gray-100">{n.text}</div>
+                        <div className="text-xs text-gray-400 mt-1">{n.time}</div>
+                      </div>
+                      {!n.read && (
+                        <button onClick={() => setNotifications(notifications.map(notif => notif.id === n.id ? { ...notif, read: true } : notif))} className="text-xs text-blue-600 hover:underline focus:outline-none">Mark read</button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+              {notifications.length > 0 && (
+                <button onClick={clearNotifications} className="w-full mt-2 py-1 rounded bg-gray-100 dark:bg-neutral-700 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-neutral-600 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none">Clear all</button>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {/* User/Profile */}
           <div className="flex items-center gap-2">
             {!session ? (

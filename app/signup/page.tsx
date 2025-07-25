@@ -13,15 +13,26 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Call your signup API here (not implemented)
-    // On success:
-    toast.success("Account created! Please sign in.");
+    setError("");
+    const res = await fetch("/api/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
     setLoading(false);
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Signup failed");
+      toast.error(data.error || "Signup failed");
+      return;
+    }
+    toast.success("Account created! Please sign in.");
     router.push("/login");
   };
 
@@ -47,6 +58,11 @@ export default function SignupPage() {
               </button>
             </div>
           </div>
+          {error && (
+            <div className="bg-red-100 text-red-700 px-4 py-2 rounded text-sm border border-red-200 animate-fade-in">
+              {error}
+            </div>
+          )}
           <Button type="submit" className="w-full text-base font-semibold py-3 mt-2" disabled={loading}>
             {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
             Sign up

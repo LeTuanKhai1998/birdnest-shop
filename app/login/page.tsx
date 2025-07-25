@@ -14,6 +14,7 @@ function LoginPageInner() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
@@ -21,6 +22,7 @@ function LoginPageInner() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
     const res = await signIn("credentials", {
       email,
       password,
@@ -28,11 +30,15 @@ function LoginPageInner() {
       redirect: false,
     });
     setLoading(false);
-    console.log("[LOGIN] Request:", { email, password });
-    console.log("[LOGIN] Response:", res);
     if (res?.error) {
-      toast.error("Sign in failed: " + res.error);
+      if (res.error === "CredentialsSignin") {
+        setError("Invalid email or password. Please try again.");
+      } else {
+        setError(res.error);
+        toast.error("Sign in failed: " + res.error);
+      }
     } else if (!res?.ok) {
+      setError("Sign in failed: Unknown error");
       toast.error("Sign in failed: Unknown error");
     } else if (res.url) {
       router.push(res.url);
@@ -101,6 +107,11 @@ function LoginPageInner() {
               </button>
             </div>
           </div>
+          {error && (
+            <div className="bg-red-100 text-red-700 px-4 py-2 rounded text-sm border border-red-200 animate-fade-in">
+              {error}
+            </div>
+          )}
           <Button type="submit" className="w-full text-base font-semibold py-3 mt-2" disabled={loading}>
             {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
             Sign in
@@ -118,12 +129,6 @@ function LoginPageInner() {
           <Button variant="outline" className="w-full flex items-center justify-center gap-2" onClick={() => handleSocial("github")} disabled={loading}>
             <Github className="w-5 h-5" /> Sign in with GitHub
           </Button>
-          <Button variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={handleDemoLogin} disabled={loading}>
-            🚀 Demo Login
-          </Button>
-          <Button variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={handleTestLogin} disabled={loading}>
-           🧪 Test Login (user@example.com / 123456)
-         </Button>
         </div>
         <div className="mt-6 text-center text-sm text-gray-600">
           Don&apos;t have an account? <a href="/signup" className="text-red-600 hover:underline">Sign up</a>
