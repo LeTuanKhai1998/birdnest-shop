@@ -8,6 +8,8 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: "bg-red-100 text-red-800 border-red-200",
   ACTIVE: "bg-green-100 text-green-800 border-green-200",
   INACTIVE: "bg-gray-100 text-gray-800 border-gray-200",
+  ADMIN: "bg-blue-100 text-blue-800 border-blue-200",
+  USER: "bg-gray-100 text-gray-800 border-gray-200",
 };
 
 export function StatusBadge({ status }: { status: string }) {
