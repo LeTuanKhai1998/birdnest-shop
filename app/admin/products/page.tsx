@@ -4,11 +4,14 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo, useEffect } from "react";
 import { Upload, Trash2 } from "lucide-react";
 import { useRef } from "react";
 import ProductImageGallery from "@/components/ProductImageGallery";
+import { AdminTable } from "@/components/ui/AdminTable";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -80,6 +83,7 @@ export default function AdminProductsPage() {
     formState: { errors },
     reset,
     setValue,
+    control,
   } = useForm<ProductForm>({
     resolver: zodResolver(productSchema),
     defaultValues: { name: "", description: "", price: "1000", stock: "0", category: "", status: "active" },
@@ -93,7 +97,13 @@ export default function AdminProductsPage() {
   ];
 
   // Simulated product list (would be state/API in real app)
-  const [productList, setProductList] = useState(products.map(p => ({ ...p, images: [FALLBACK_IMAGE] })));
+  const [productList, setProductList] = useState(
+    products.map(p => ({
+      ...p,
+      price: typeof p.price === 'string' ? Number(String(p.price ?? '').replace(/[^\d]/g, '')) : p.price,
+      images: [FALLBACK_IMAGE],
+    }))
+  );
 
   // Debounce search input
   useEffect(() => {
@@ -148,10 +158,11 @@ export default function AdminProductsPage() {
   // Handle edit button
   const handleEdit = (product: any) => {
     setEditId(product.id);
+    const sanitizedPrice = String(product.price ?? "").replace(/[^\d]/g, "");
     setEditInitial({
       name: product.name,
       description: product.description || "",
-      price: String(product.price),
+      price: sanitizedPrice,
       stock: String(product.stock),
       category: product.category,
       status: product.status,
@@ -159,8 +170,8 @@ export default function AdminProductsPage() {
     reset({
       name: product.name,
       description: product.description || "",
-      price: String(product.price),
-      stock: String(product.stock),
+      price: sanitizedPrice,
+      stock: String(product.stock ?? ""),
       category: product.category,
       status: product.status,
     });
@@ -290,137 +301,172 @@ export default function AdminProductsPage() {
       </form>
       {/* Inline Product Form */}
       <form
-        className="mb-8 grid grid-cols-1 md:grid-cols-6 gap-4 items-end bg-gray-50 p-4 rounded shadow"
+        className="mb-8"
         onSubmit={handleSubmit(onSubmit)}
         aria-label={editId ? "Edit Product Form" : "Add Product Form"}
       >
-        <div className="md:col-span-2">
-          <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
-          <Input id="name" {...register("name")} aria-invalid={!!errors.name} aria-describedby="name-error" />
-          {errors.name && (
-            <span id="name-error" className="text-xs text-red-600">{errors.name.message}</span>
-          )}
-        </div>
-        <div className="md:col-span-2">
-          <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
-          <Input id="description" {...register("description")} aria-invalid={!!errors.description} aria-describedby="description-error" />
-          {errors.description && (
-            <span id="description-error" className="text-xs text-red-600">{errors.description.message}</span>
-          )}
-        </div>
-        <div>
-          <label htmlFor="price" className="block text-sm font-medium mb-1">Price (VND)</label>
-          <Input
-            id="price"
-            type="number"
-            min={1000}
-            step={1000}
-            {...register("price")}
-            aria-invalid={!!errors.price}
-            aria-describedby="price-error"
-          />
-          {errors.price && (
-            <span id="price-error" className="text-xs text-red-600">{errors.price.message}</span>
-          )}
-        </div>
-        <div>
-          <label htmlFor="stock" className="block text-sm font-medium mb-1">Stock</label>
-          <Input
-            id="stock"
-            type="number"
-            min={0}
-            step={1}
-            {...register("stock")}
-            aria-invalid={!!errors.stock}
-            aria-describedby="stock-error"
-          />
-          {errors.stock && (
-            <span id="stock-error" className="text-xs text-red-600">{errors.stock.message}</span>
-          )}
-        </div>
-        <div>
-          <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
-          <select
-            id="category"
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            {...register("category")}
-          >
-            <option value="">Select category</option>
-            {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-          {errors.category && (
-            <span id="category-error" className="text-xs text-red-600">{errors.category.message}</span>
-          )}
-        </div>
-        <div>
-          <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
-          <select
-            id="status"
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            {...register("status")}
-          >
-            {STATUS.map((s) => (
-              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-            ))}
-          </select>
-          {errors.status && (
-            <span id="status-error" className="text-xs text-red-600">{errors.status.message}</span>
-          )}
-        </div>
-        {/* Image upload */}
-        <div className="md:col-span-6">
-          <label className="block text-sm font-medium mb-1">Images</label>
-          <Button type="button" variant="outline" onClick={handleUploadClick} disabled={uploading} className="mb-2">
-            <Upload className="mr-2 h-4 w-4" />
-            Upload Image
-          </Button>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            ref={fileInputRef}
-            onChange={e => handleImageUpload(e.target.files)}
-            disabled={uploading}
-            className="hidden"
-          />
-          {uploadError && <div className="text-xs text-red-600 mb-2">{uploadError}</div>}
-          <div className="flex gap-2 flex-wrap items-center">
-            {images.map((img, idx) => (
-              <div key={img.url + '-' + idx} className="relative group w-20 h-20 border rounded overflow-hidden">
-                <img src={img.url} alt={`Product image ${idx + 1}`} className="object-cover w-full h-full" />
-                <button
-                  type="button"
-                  className="absolute top-0 right-0 bg-black/60 text-white text-xs px-1 py-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition"
-                  onClick={() => handleRemoveImage(img.url)}
-                  aria-label="Remove image"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
+            <Input id="name" {...register("name")} aria-invalid={!!errors.name} aria-describedby="name-error" />
+            {errors.name && (
+              <span id="name-error" className="text-xs text-red-600">{errors.name.message}</span>
+            )}
+          </div>
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium mb-1">Price (VND)</label>
+            <Controller
+              name="price"
+              control={control}
+              render={({ field }) => {
+                // Format value for display with commas
+                const displayValue = field.value
+                  ? Number(field.value.replace(/[^\d]/g, "")).toLocaleString()
+                  : "";
+                return (
+                  <Input
+                    id="price"
+                    type="text"
+                    inputMode="numeric"
+                    min={1000}
+                    step={1000}
+                    value={displayValue}
+                    onChange={e => {
+                      // Remove all non-digit chars for storage
+                      const raw = e.target.value.replace(/[^\d]/g, "");
+                      field.onChange(raw);
+                    }}
+                    aria-invalid={!!errors.price}
+                    aria-describedby="price-error"
+                  />
+                );
+              }}
+            />
+            {errors.price && (
+              <span id="price-error" className="text-xs text-red-600">{errors.price.message}</span>
+            )}
+          </div>
+          <div>
+            <label htmlFor="stock" className="block text-sm font-medium mb-1">Stock</label>
+            <Input
+              id="stock"
+              type="number"
+              min={0}
+              step={1}
+              {...register("stock")}
+              aria-invalid={!!errors.stock}
+              aria-describedby="stock-error"
+            />
+            {errors.stock && (
+              <span id="stock-error" className="text-xs text-red-600">{errors.stock.message}</span>
+            )}
+          </div>
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
+            <select
+              id="category"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              {...register("category")}
+            >
+              <option value="">Select category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            {errors.category && (
+              <span id="category-error" className="text-xs text-red-600">{errors.category.message}</span>
+            )}
+          </div>
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium mb-1">Status</label>
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <select
+                  id="status"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  value={field.value}
+                  onChange={e => field.onChange(e.target.value)}
                 >
-                  ×
-                </button>
-                <button
-                  type="button"
-                  className={`absolute bottom-0 left-0 right-0 bg-white/80 text-xs px-1 py-0.5 rounded-t text-center ${img.isPrimary ? 'text-red-600 font-bold' : 'text-gray-500'}`}
-                  onClick={() => handleSetPrimary(img.url)}
-                  aria-label="Set as primary"
-                  tabIndex={0}
-                >
-                  {img.isPrimary ? 'Primary' : 'Set as Primary'}
-                </button>
-              </div>
-            ))}
-            {uploading && <div className="w-20 h-20 flex items-center justify-center border rounded animate-pulse bg-gray-100">Uploading...</div>}
-            {images.length > 0 && (
-              <span
-                className="ml-2 text-xs text-gray-500 truncate max-w-[120px]"
-                title={images.map(i => i.url).join(", ")}
-              >
-                {images.length} image{images.length > 1 ? "s" : ""} selected
-              </span>
+                  {STATUS.map((s) => (
+                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                  ))}
+                </select>
+              )}
+            />
+            {errors.status && (
+              <span id="status-error" className="text-xs text-red-600">{errors.status.message}</span>
+            )}
+          </div>
+          <div className="md:col-span-2">
+            <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
+            <Textarea
+              id="description"
+              {...register("description")}
+              aria-invalid={!!errors.description}
+              aria-describedby="description-error"
+              rows={4}
+              placeholder="Enter a detailed product description..."
+            />
+            {errors.description && (
+              <span id="description-error" className="text-xs text-red-600">{errors.description.message}</span>
             )}
           </div>
         </div>
-        <div className="md:col-span-6 flex gap-2 justify-end">
+        <div className="mt-8">
+          <h3 className="text-lg font-medium mb-2">Images</h3>
+          <div className="bg-gray-50 p-4 rounded">
+            <Button type="button" variant="outline" onClick={handleUploadClick} disabled={uploading} className="mb-2">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Image
+            </Button>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              ref={fileInputRef}
+              onChange={e => handleImageUpload(e.target.files)}
+              disabled={uploading}
+              className="hidden"
+            />
+            {uploadError && <div className="text-xs text-red-600 mb-2">{uploadError}</div>}
+            <div className="flex gap-2 flex-wrap items-center">
+              {images.map((img, idx) => (
+                <div key={img.url + '-' + idx} className="relative group w-20 h-20 border rounded overflow-hidden">
+                  <img src={img.url} alt={`Product image ${idx + 1}`} className="object-cover w-full h-full" />
+                  <button
+                    type="button"
+                    className="absolute top-0 right-0 bg-black/60 text-white text-xs px-1 py-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition"
+                    onClick={() => handleRemoveImage(img.url)}
+                    aria-label="Remove image"
+                  >
+                    ×
+                  </button>
+                  <button
+                    type="button"
+                    className={`absolute bottom-0 left-0 right-0 bg-white/80 text-xs px-1 py-0.5 rounded-t text-center ${img.isPrimary ? 'text-red-600 font-bold' : 'text-gray-500'}`}
+                    onClick={() => handleSetPrimary(img.url)}
+                    aria-label="Set as primary"
+                    tabIndex={0}
+                  >
+                    {img.isPrimary ? 'Primary' : 'Set as Primary'}
+                  </button>
+                </div>
+              ))}
+              {uploading && <div className="w-20 h-20 flex items-center justify-center border rounded animate-pulse bg-gray-100">Uploading...</div>}
+              {images.length > 0 && (
+                <span
+                  className="ml-2 text-xs text-gray-500 truncate max-w-[120px]"
+                  title={images.map(i => i.url).join(", ")}
+                >
+                  {images.length} image{images.length > 1 ? "s" : ""} selected
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end py-6">
           {editId && (
             <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
           )}
@@ -429,40 +475,85 @@ export default function AdminProductsPage() {
           </Button>
         </div>
       </form>
-      <table className="min-w-full bg-white rounded shadow">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="px-4 py-2 text-left font-semibold">ID</th>
-            <th className="px-4 py-2 text-left font-semibold">Name</th>
-            <th className="px-4 py-2 text-left font-semibold">Thumbnail</th>
-            <th className="px-4 py-2 text-left font-semibold">SKU</th>
-            <th className="px-4 py-2 text-left font-semibold">Price</th>
-            <th className="px-4 py-2 text-left font-semibold">Stock</th>
-            <th className="px-4 py-2 text-left font-semibold">Category</th>
-            <th className="px-4 py-2 text-left font-semibold">Status</th>
-            <th className="px-4 py-2 text-left font-semibold">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredProducts.map((p) => (
-            <tr key={p.id} className="border-t hover:bg-gray-50 transition-colors">
-              <td className="px-4 py-2 text-left align-middle whitespace-nowrap">{p.id}</td>
-              <td className="px-4 py-2 text-left align-middle">{p.name}</td>
-              <td className="px-4 py-2 text-left align-middle">
-                <img
-                  src={(p.images && p.images[0]) || FALLBACK_IMAGE}
-                  alt={p.name}
-                  className="w-16 h-16 object-cover rounded border"
-                  width={64}
-                  height={64}
-                />
-              </td>
-              <td className="px-4 py-2 text-left align-middle">{p.sku}</td>
-              <td className="px-4 py-2 text-left align-middle">₫{p.price.toLocaleString()}</td>
-              <td className="px-4 py-2 text-left align-middle">{p.stock}</td>
-              <td className="px-4 py-2 text-left align-middle">{p.category}</td>
-              <td className="px-4 py-2 text-left align-middle capitalize">{p.status}</td>
-              <td className="px-4 py-2 text-left align-middle flex gap-2 justify-end">
+      {/* Desktop Table */}
+      <div className="hidden md:block w-full min-w-0 overflow-x-auto">
+        <AdminTable
+          columns={[ 
+            { key: "id", label: "ID" },
+            { key: "name", label: "Name" },
+            { key: "thumbnail", label: "Thumbnail" },
+            { key: "sku", label: "SKU" },
+            { key: "price", label: "Price" },
+            { key: "stock", label: "Stock" },
+            { key: "category", label: "Category" },
+            { key: "status", label: "Status" },
+          ]}
+          data={filteredProducts.map(p => ({
+            ...p,
+            thumbnail: (
+              <img
+                src={(p.images && p.images[0]) || FALLBACK_IMAGE}
+                alt={p.name}
+                className="w-16 h-16 object-cover rounded border"
+                width={64}
+                height={64}
+              />
+            ),
+            price: (typeof p.price === "number"
+              ? p.price.toLocaleString()
+              : Number(String(p.price ?? '').replace(/[^\d]/g, "")).toLocaleString()) + " ₫",
+            status: <StatusBadge status={p.status} />,
+          }))}
+          actions={p => (
+            <div className="flex gap-2 justify-end">
+              <Button type="button" size="sm" variant="outline" className="rounded-full px-4 py-1 text-sm font-semibold" onClick={() => handleEdit(p)}>
+                Edit
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="rounded-full px-4 py-1 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
+                onClick={() => handleDeleteClick(p.id)}
+                aria-label="Delete product"
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </div>
+          )}
+          exportButtons={[
+            <Button key="csv" className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded" onClick={() => alert('Export CSV')}>Export CSV</Button>,
+            <Button key="pdf" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded" onClick={() => alert('Export PDF')}>Export PDF</Button>,
+          ]}
+        />
+      </div>
+      {/* Mobile Card List */}
+      <div className="block md:hidden space-y-4">
+        {filteredProducts.map((p) => (
+          <div key={p.id} className="bg-white rounded-lg shadow-sm p-4 flex flex-col gap-2">
+            <div className="flex items-center gap-4">
+              <img
+                src={(p.images && p.images[0]) || FALLBACK_IMAGE}
+                alt={p.name}
+                className="w-16 h-16 object-cover rounded border"
+                width={64}
+                height={64}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-base truncate text-gray-900">{p.name}</div>
+                <div className="text-xs text-gray-500">SKU: {p.sku}</div>
+                <div className="text-xs text-gray-500">Category: {p.category}</div>
+                <div className="text-xs text-gray-500">Stock: {p.stock}</div>
+                <div className="text-xs text-gray-500">Status: <span className="capitalize">{p.status}</span></div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <div className="font-bold text-lg text-red-700">
+                {typeof p.price === "number"
+                  ? `₫${p.price.toLocaleString()}`
+                  : `₫${Number(String(p.price ?? '').replace(/[^\d]/g, "")).toLocaleString()}`}
+              </div>
+              <div className="flex gap-2">
                 <Button type="button" size="sm" variant="outline" onClick={() => handleEdit(p)}>
                   Edit
                 </Button>
@@ -476,11 +567,11 @@ export default function AdminProductsPage() {
                 >
                   <Trash2 className="w-5 h-5" />
                 </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
       {/* Delete confirmation modal */}
       {deleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -496,4 +587,4 @@ export default function AdminProductsPage() {
       )}
     </div>
   );
-} 
+}

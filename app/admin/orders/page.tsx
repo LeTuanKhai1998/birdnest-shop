@@ -1,34 +1,177 @@
+"use client";
+import { AdminTable } from "@/components/ui/AdminTable";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState, useMemo, useEffect } from "react";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+
+const STATUS = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"];
+
 export default function AdminOrdersPage() {
   const orders = [
     { id: 'o1', customer: 'Nguyễn Văn A', total: 3500000, status: 'PAID', date: '2024-07-24' },
     { id: 'o2', customer: 'Trần Thị B', total: 1800000, status: 'PENDING', date: '2024-07-23' },
     { id: 'o3', customer: 'Lê Minh C', total: 7000000, status: 'DELIVERED', date: '2024-07-22' },
   ];
+  const [orderList, setOrderList] = useState(orders);
+  const [searchValue, setSearchValue] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewId, setViewId] = useState<string | null>(null);
+  const [statusUpdate, setStatusUpdate] = useState<{ id: string; status: string } | null>(null);
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchValue);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchValue]);
+
+  // Filter orders in-memory
+  const filteredOrders = useMemo(() => {
+    return orderList.filter((o) => {
+      const matchesSearch =
+        !debouncedSearch ||
+        o.id.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        o.customer.toLowerCase().includes(debouncedSearch.toLowerCase());
+      const matchesStatus = !statusFilter || o.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [orderList, debouncedSearch, statusFilter]);
+
   return (
-    <div>
+    <div className="w-full max-w-7xl mx-auto px-6 lg:px-8 min-w-0">
       <h2 className="text-2xl font-bold mb-4">Order Management</h2>
-      <table className="min-w-full bg-white rounded shadow">
-        <thead>
-          <tr>
-            <th className="px-4 py-2">Order ID</th>
-            <th className="px-4 py-2">Customer</th>
-            <th className="px-4 py-2">Total</th>
-            <th className="px-4 py-2">Status</th>
-            <th className="px-4 py-2">Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((o) => (
-            <tr key={o.id} className="border-t">
-              <td className="px-4 py-2">{o.id}</td>
-              <td className="px-4 py-2">{o.customer}</td>
-              <td className="px-4 py-2">₫{o.total.toLocaleString()}</td>
-              <td className="px-4 py-2">{o.status}</td>
-              <td className="px-4 py-2">{o.date}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Filter Bar */}
+      <form className="mb-2 flex flex-wrap gap-4 items-end w-full" onSubmit={e => e.preventDefault()} aria-label="Order Filters">
+        <div className="flex-1 min-w-[200px]">
+          <label htmlFor="order-search" className="block text-xs font-medium mb-1">Search (Order ID, Customer)</label>
+          <Input
+            id="order-search"
+            placeholder="Search orders..."
+            value={searchValue}
+            onChange={e => setSearchValue(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+        <div>
+          <label htmlFor="order-status" className="block text-xs font-medium mb-1">Status</label>
+          <select
+            id="order-status"
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            <option value="">All</option>
+            {STATUS.map((s) => (
+              <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Button type="button" variant="outline" onClick={() => { setStatusFilter(""); setSearchValue(""); }}>Reset</Button>
+        </div>
+      </form>
+      {/* Desktop Table */}
+      <div className="hidden md:block w-full min-w-0 overflow-x-auto">
+        <AdminTable
+          columns={[
+            { key: "id", label: "Order ID" },
+            { key: "customer", label: "Customer Name" },
+            { key: "total", label: "Total" },
+            { key: "status", label: "Status" },
+            { key: "date", label: "Date" },
+          ]}
+          data={filteredOrders.map(o => ({
+            ...o,
+            total: o.total.toLocaleString() + " ₫",
+            status: <StatusBadge status={o.status} />,
+          }))}
+          actions={o => (
+            <div className="flex gap-2 justify-end">
+              <Button type="button" size="sm" variant="outline" className="rounded-full px-4 py-1 text-sm font-semibold" onClick={() => setViewId(o.id)}>
+                View
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="rounded-full px-4 py-1 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
+                onClick={() => setDeleteId(o.id)}
+                aria-label="Delete order"
+              >
+                Delete
+              </Button>
+            </div>
+          )}
+          exportButtons={[
+            <Button key="csv" className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded" onClick={() => alert('Export CSV')}>Export CSV</Button>,
+            <Button key="pdf" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded" onClick={() => alert('Export PDF')}>Export PDF</Button>,
+          ]}
+        />
+      </div>
+      {/* Mobile Card List */}
+      <div className="block md:hidden space-y-4">
+        {filteredOrders.map((o) => (
+          <div key={o.id} className="bg-white rounded-lg shadow-sm p-4 flex flex-col gap-2">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="font-mono text-xs text-gray-400">Order #{o.id}</div>
+                <div className="font-medium text-base truncate text-gray-900">{o.customer}</div>
+                <div className="text-xs text-gray-500">Date: {o.date}</div>
+                <div className="text-xs text-gray-500">Status: <span className="capitalize">{o.status}</span></div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <div className="font-bold text-lg text-red-700">
+                ₫{o.total.toLocaleString()}
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => setViewId(o.id)}>
+                  View
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
+                  onClick={() => setDeleteId(o.id)}
+                  aria-label="Delete order"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Delete confirmation modal */}
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+            <h3 className="text-lg font-bold mb-2 text-red-700">Delete Order</h3>
+            <p className="mb-4 text-gray-700">Are you sure you want to delete this order? This action cannot be undone.</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => { setDeleteId(null); /* TODO: Delete logic */ }} className="bg-red-600 text-white hover:bg-red-700">Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* View/Edit modal placeholder */}
+      {viewId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold mb-2">Order Details</h3>
+            <p className="mb-4 text-gray-700">Order ID: {viewId}</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setViewId(null)}>Close</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
