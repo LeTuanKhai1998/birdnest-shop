@@ -1,30 +1,15 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Roboto } from 'next/font/google';
 import "./globals.css";
 import { MainNavbar } from "@/components/MainNavbar";
 import { Providers } from "@/components/Providers";
 import { HydrationSafe } from "@/components/HydrationSafe";
 
-const inter = localFont({
-  src: [
-    { path: "../public/fonts/Inter/Inter-Regular.woff2", weight: "400", style: "normal" },
-    { path: "../public/fonts/Inter/Inter-Medium.woff2", weight: "500", style: "normal" },
-    { path: "../public/fonts/Inter/Inter-SemiBold.woff2", weight: "600", style: "normal" },
-    { path: "../public/fonts/Inter/Inter-Bold.woff2", weight: "700", style: "normal" },
-  ],
-  variable: "--font-primary",
-  display: "swap",
-});
-
-const poppins = localFont({
-  src: [
-    { path: "../public/fonts/Poppins/Poppins-Regular.ttf", weight: "400", style: "normal" },
-    { path: "../public/fonts/Poppins/Poppins-Medium.ttf", weight: "500", style: "normal" },
-    { path: "../public/fonts/Poppins/Poppins-SemiBold.ttf", weight: "600", style: "normal" },
-    { path: "../public/fonts/Poppins/Poppins-Bold.ttf", weight: "700", style: "normal" },
-  ],
-  variable: "--font-secondary",
-  display: "swap",
+const roboto = Roboto({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-roboto',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -38,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
+    <html lang="en" className={`${roboto.variable} font-sans`}>
+      <body>
         <Providers>
           <HydrationSafe>
             <MainNavbar />

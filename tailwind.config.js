@@ -6,7 +6,11 @@ module.exports = {
     './pages/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['var(--font-roboto)', 'sans-serif'],
+      },
+    },
   },
   plugins: [
     require('tailwind-scrollbar'),
