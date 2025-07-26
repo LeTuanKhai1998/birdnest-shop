@@ -143,7 +143,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      <Button variant="ghost" size="sm" className="text-xs px-2 py-1 mt-4 w-full" onClick={handleResetFilters}>Reset</Button>
+      <Button variant="ghost" size="sm" className="px-2 py-1 mt-4 w-full" onClick={handleResetFilters}>Reset</Button>
     </>
   );
 

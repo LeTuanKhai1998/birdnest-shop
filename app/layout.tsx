@@ -4,6 +4,7 @@ import "./globals.css";
 import { MainNavbar } from "@/components/MainNavbar";
 import { Providers } from "@/components/Providers";
 import { HydrationSafe } from "@/components/HydrationSafe";
+import Footer from "@/components/Footer";
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -30,6 +31,7 @@ export default function RootLayout({
             <MainNavbar />
           </HydrationSafe>
           {children}
+          <Footer />
         </Providers>
       </body>
     </html>
