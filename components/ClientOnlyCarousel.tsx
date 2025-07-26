@@ -20,7 +20,7 @@ export default function ClientOnlyCarousel() {
                   src={banner.src}
                   alt={banner.alt}
                   fill
-                  sizes="100vw"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1152px"
                   className="object-contain object-center w-full h-full"
                   priority={i === 0}
                 />

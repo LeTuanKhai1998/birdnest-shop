@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import useSWR from "swr";
 import { UserCard } from "@/components/UserCard";
 import { UserTable } from "@/components/UserTable";
@@ -21,8 +21,6 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export default function AdminUsersPage() {
   const { data, mutate, isLoading } = useSWR("/api/users", fetcher);
   const users = data?.users || [];
-  const [editUser, setEditUser] = useState<AdminUser | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleRoleChange = async (id: string, isAdmin: boolean) => {
     const res = await fetch("/api/users", {
@@ -40,13 +38,11 @@ export default function AdminUsersPage() {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
-    setDeletingId(id);
     const res = await fetch("/api/users", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    setDeletingId(null);
     if (res.ok) {
       toast.success("User deleted");
       mutate();
@@ -55,9 +51,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  // Responsive: show cards on mobile, table on desktop
-  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
-
   return (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">User Management</h2>
@@ -65,23 +58,22 @@ export default function AdminUsersPage() {
       {!isLoading && (
         <>
           <div className="block lg:hidden">
-            {users.map((u: AdminUser) => (
+            {users.map((user: AdminUser) => (
               <UserCard
-                key={u.id}
-                id={u.id}
-                name={u.name}
-                email={u.email}
-                isAdmin={u.isAdmin}
+                key={user.id}
+                name={user.name}
+                email={user.email}
+                isAdmin={user.isAdmin}
                 onEdit={() => toast.info("Edit not implemented")}
-                onDelete={() => handleDelete(u.id)}
-                onRoleChange={isAdmin => handleRoleChange(u.id, isAdmin)}
+                onDelete={() => handleDelete(user.id)}
+                onRoleChange={isAdmin => handleRoleChange(user.id, isAdmin)}
               />
             ))}
           </div>
           <div className="hidden lg:block">
             <UserTable
               users={users}
-              onEdit={id => toast.info("Edit not implemented")}
+              onEdit={() => toast.info("Edit not implemented")}
               onDelete={handleDelete}
               onRoleChange={handleRoleChange}
             />

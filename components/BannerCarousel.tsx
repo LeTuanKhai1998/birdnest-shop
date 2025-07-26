@@ -49,7 +49,7 @@ export default function BannerCarousel() {
                         alt={banner.alt}
                         fill
                         className="object-cover object-center w-full h-full rounded-2xl"
-                        sizes="100vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1152px"
                         priority={i === 0}
                       />
                     </AspectRatio>

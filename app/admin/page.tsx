@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, Suspense, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, DollarSign, ShoppingBag, Users, BarChart2, Loader } from "lucide-react";
@@ -13,19 +13,9 @@ import { MoreHorizontal } from "lucide-react";
 import useSWR from "swr/immutable";
 import { fetcher } from "@/lib/utils";
 import type { Order } from "@/lib/mock-orders";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerClose,
-  DrawerFooter,
-} from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { BarChart, Bar, Tooltip as RechartsTooltip, Cell, PieChart, Pie, Cell as RechartsCell, Legend as RechartsLegend } from "recharts";
 import Papa from "papaparse";
-import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { format, parseISO, isAfter, isBefore } from "date-fns";
 import {
@@ -35,6 +25,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import type { Product } from "@/components/ProductCard";
+import Image from "next/image";
 
 const ResponsiveContainer = dynamic(() => import("recharts").then(m => m.ResponsiveContainer), { ssr: false });
 const LineChart = dynamic(() => import("recharts").then(m => m.LineChart), { ssr: false });
@@ -43,35 +34,6 @@ const XAxis = dynamic(() => import("recharts").then(m => m.XAxis), { ssr: false 
 const YAxis = dynamic(() => import("recharts").then(m => m.YAxis), { ssr: false });
 const Tooltip = dynamic(() => import("recharts").then(m => m.Tooltip), { ssr: false });
 const CartesianGrid = dynamic(() => import("recharts").then(m => m.CartesianGrid), { ssr: false });
-
-function DashboardWidgets() {
-  // Mock data for demonstration
-  const totalRevenue = 125000000;
-  const totalOrders = 320;
-  const totalCustomers = 180;
-  const avgOrderValue = totalRevenue / totalOrders;
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div className="bg-white rounded-xl shadow p-6 flex flex-col items-start">
-        <span className="text-gray-500 text-sm mb-2">Total Revenue</span>
-        <span className="text-2xl font-bold text-green-600">₫{totalRevenue.toLocaleString()}</span>
-      </div>
-      <div className="bg-white rounded-xl shadow p-6 flex flex-col items-start">
-        <span className="text-gray-500 text-sm mb-2">Total Orders</span>
-        <span className="text-2xl font-bold text-blue-600">{totalOrders}</span>
-      </div>
-      <div className="bg-white rounded-xl shadow p-6 flex flex-col items-start">
-        <span className="text-gray-500 text-sm mb-2">Total Customers</span>
-        <span className="text-2xl font-bold text-yellow-600">{totalCustomers}</span>
-      </div>
-      <div className="bg-white rounded-xl shadow p-6 flex flex-col items-start">
-        <span className="text-gray-500 text-sm mb-2">Avg. Order Value</span>
-        <span className="text-2xl font-bold text-purple-600">₫{avgOrderValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-      </div>
-    </div>
-  );
-}
 
 const metrics = [
   {
@@ -246,8 +208,6 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const [filter, setFilter] = useState("monthly");
   const chartData = useMemo(() => groupOrders(mockOrders, filter), [filter]);
-  const [selectedOrder, setSelectedOrder] = useState<Order & { customer: string } | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const prevOrderIds = useRef<Set<string>>(new Set<string>());
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(null);
@@ -256,8 +216,8 @@ export default function AdminDashboardPage() {
     fetcher,
     { refreshInterval: 5000 }
   );
-  const { data: productsData, error: productsError } = useSWR("/api/products", fetcher, { refreshInterval: 10000 });
-  const realOrders = ordersData?.orders || [];
+  const { data: productsData } = useSWR("/api/products", fetcher, { refreshInterval: 10000 });
+  const realOrders = useMemo(() => ordersData?.orders || [], [ordersData]);
   function isRealOrder(orderId: string) {
     return realOrders.some((o: Order) => o.id === orderId);
   }
@@ -314,11 +274,6 @@ export default function AdminDashboardPage() {
     });
   });
   const topProducts = Array.from(productSalesMap.values()).sort((a, b) => b.unitsSold - a.unitsSold).slice(0, 5);
-  const customerPieData = [
-    { name: "New Customers", value: 32 },
-    { name: "Returning Customers", value: 68 },
-  ];
-  const pieColors = ["#dc2626", "#fbbf24"];
   const topCustomers = [
     { name: "Nguyễn Văn Quang", email: "user1@birdnest.vn", revenue: 12000000 },
     { name: "Trần Thị Mai", email: "user2@birdnest.vn", revenue: 9500000 },
@@ -387,7 +342,6 @@ export default function AdminDashboardPage() {
   }, [status, session, router]);
   // Loading states for SWR
   const ordersLoading = !ordersData && !ordersError;
-  const productsLoading = !productsData && !productsError;
   if (status === "loading") {
     // Global loading state
     return <div className="flex-1 flex items-center justify-center h-screen"><Skeleton className="w-32 h-32 rounded-full" /></div>;
@@ -543,8 +497,8 @@ export default function AdminDashboardPage() {
                           <button
                             className="px-2 py-1 rounded bg-gray-100 dark:bg-neutral-700 hover:bg-red-100 dark:hover:bg-neutral-600 text-xs font-medium text-red-600 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none"
                             onClick={() => {
-                              setSelectedOrder(order);
-                              setDrawerOpen(true);
+                              // setSelectedOrder(order); // Removed as per edit hint
+                              // setDrawerOpen(true); // Removed as per edit hint
                             }}
                             aria-label={`View order ${order.id}`}
                           >
@@ -577,9 +531,7 @@ export default function AdminDashboardPage() {
                                         return;
                                       }
                                       setUpdatingOrderId(order.id);
-                                      const prevStatus = order.status;
-                                      setSelectedOrder((sel) => (sel && sel.id === order.id ? { ...sel, status: s } : sel));
-                                      const prevOrders = [...filteredOrders];
+                                      // setSelectedOrder((sel) => (sel && sel.id === order.id ? { ...sel, status: s } : sel)); // Removed as per edit hint
                                       filteredOrders = filteredOrders.map((o: Order & { customer: string }) => o.id === order.id ? { ...o, status: s } : o);
                                       try {
                                         const res = await fetch("/api/orders", {
@@ -589,10 +541,9 @@ export default function AdminDashboardPage() {
                                         });
                                         if (!res.ok) throw new Error("Failed to update");
                                         showToast("Order status updated!", "success");
-                                        setDrawerOpen(false);
-                                      } catch (e) {
-                                        setSelectedOrder((sel) => (sel && sel.id === order.id ? { ...sel, status: prevStatus } : sel));
-                                        filteredOrders = prevOrders;
+                                        // setDrawerOpen(false); // Removed as per edit hint
+                                      } catch {
+                                        // setSelectedOrder((sel) => (sel && sel.id === order.id ? { ...sel, status: prevStatus } : sel)); // Removed as per edit hint
                                         showToast("Failed to update order status", "error");
                                       } finally {
                                         setUpdatingOrderId(null);
@@ -647,7 +598,7 @@ export default function AdminDashboardPage() {
                   lowStockProducts.map((product) => (
                     <tr key={product.id} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
                       <td className="py-2 px-3 flex items-center gap-3">
-                        <img src={product.images?.[0]} alt={product.name} className="w-10 h-10 rounded object-cover border" />
+                        <Image src={product.images?.[0] || '/fallback.png'} alt={product.name} width={40} height={40} className="rounded object-cover border" />
                         <span className="font-semibold">{product.name}</span>
                       </td>
                       <td className="py-2 px-3 font-semibold">{product.quantity ?? 0}</td>
@@ -694,10 +645,10 @@ export default function AdminDashboardPage() {
                     <td colSpan={4} className="text-center py-8 text-gray-400">No sales data.</td>
                   </tr>
                 ) : (
-                  topProducts.map((product, idx) => (
+                  topProducts.map((product) => (
                     <tr key={product.name} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
                       <td className="py-2 px-3 flex items-center gap-3">
-                        <img src={product.image} alt={product.name} className="w-10 h-10 rounded object-cover border" />
+                        <Image src={product.image || '/fallback.png'} alt={product.name} width={40} height={40} className="rounded object-cover border" />
                         <span className="font-semibold">{product.name}</span>
                       </td>
                       <td className="py-2 px-3 font-semibold">{product.unitsSold}</td>
@@ -722,7 +673,7 @@ export default function AdminDashboardPage() {
                   <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 13 }} />
                   <RechartsTooltip formatter={v => formatVND(Number(v))} />
                   <Bar dataKey="revenue" radius={[0, 8, 8, 0]} isAnimationActive={false}>
-                    {topProducts.slice().reverse().map((product, idx) => (
+                    {topProducts.slice().reverse().map((product) => (
                       <Cell
                         key={product.name}
                         fill={PRODUCT_COLORS[hashStringToColorIdx(product.name)]}

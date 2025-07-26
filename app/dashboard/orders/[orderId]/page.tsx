@@ -1,12 +1,11 @@
 "use client";
 import { use } from "react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Truck, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Truck, XCircle } from "lucide-react";
 import Link from "next/link";
 import { mockOrders, Order } from "@/lib/mock-orders";
+import Image from 'next/image';
 
 const statusColor: Record<string, string> = {
   DELIVERED: "bg-green-100 text-green-700",
@@ -65,7 +64,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
           {order.orderItems.map((item) => (
             <div key={item.id} className="flex items-center gap-4 py-4">
               {item.product?.images?.[0] && (
-                <img src={item.product.images[0]} alt={item.product.name} className="w-16 h-16 object-cover rounded border" />
+                <Image src={item.product.images[0]} alt={item.product.name} width={80} height={80} className="object-cover rounded-lg" />
               )}
               <div className="flex-1 min-w-0">
                 <div className="font-semibold">{item.product?.name}</div>

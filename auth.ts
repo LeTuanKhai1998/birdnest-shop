@@ -14,6 +14,8 @@ if (!process.env.NEXTAUTH_SECRET) {
   console.warn("[AUTH] WARNING: NEXTAUTH_SECRET is not set in the environment. Credential logins will fail.");
 }
 
+type AuthUser = { id: string; isAdmin: boolean; email: string; name?: string };
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
@@ -81,15 +83,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.isAdmin = (user as any).isAdmin;
+        token.id = (user as AuthUser).id;
+        token.isAdmin = (user as AuthUser).isAdmin;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).isAdmin = token.isAdmin as boolean;
+        (session.user as AuthUser).id = token.id as string;
+        (session.user as AuthUser).isAdmin = token.isAdmin as boolean;
       }
       return session;
     },

@@ -1,9 +1,8 @@
 "use client";
 import Link from "next/link";
 import { ReactNode } from "react";
-import { LayoutDashboard, ShoppingBag, Users, Settings, Sun, Moon, Bell, Menu } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Users, Settings, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Drawer, DrawerTrigger, DrawerContent } from "@/components/ui/drawer";
 
 const navLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },

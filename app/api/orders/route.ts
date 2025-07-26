@@ -3,20 +3,6 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { mapOrderToApi } from "@/lib/order-mapper";
 
-type OrderItem = {
-  id: string;
-  quantity: number;
-  price: number;
-  product: { id: string; name: string; images: string[] };
-};
-type Order = {
-  id: string;
-  createdAt: string;
-  status: string;
-  total: number;
-  orderItems: OrderItem[];
-};
-
 export async function GET() {
   const session = await auth();
   if (!session || !session.user?.email) {
@@ -62,7 +48,7 @@ export async function PATCH(req: NextRequest) {
       data: { status },
     });
     return NextResponse.json({ success: true, order });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Order update failed" }, { status: 500 });
   }
 } 

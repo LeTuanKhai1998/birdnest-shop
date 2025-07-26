@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import Footer from "@/components/Footer";
 import Image from "next/image";
@@ -12,29 +11,15 @@ import { Star } from "lucide-react";
 import ProductImageGallery from "@/components/ProductImageGallery";
 import RelatedProducts from "@/components/RelatedProducts";
 import { products as allProducts } from "@/lib/products-data";
-import ProductMeta from "@/components/ProductMeta";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { useState } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Product, Review } from "@/components/ProductCard";
-import { Heart } from "lucide-react";
 import { useWishlist } from "@/lib/wishlist-store";
 import { useSession } from "next-auth/react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useReducedMotion } from "framer-motion";
-
-function slugify(str: string) {
-  return str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-z0-9\s-]/gu, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import { Product } from "@/components/ProductCard";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, X, ChevronLeft, ChevronRight } from "lucide-react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
@@ -81,10 +66,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                         type="button"
                         aria-label={favorited ? "Remove from Wishlist" : "Add to Wishlist"}
                         className={`rounded-full bg-white/90 shadow p-2 hover:bg-red-50 transition-colors border border-gray-200 ${favorited ? "text-red-600" : "text-gray-400 hover:text-red-500"}`}
-                        onClick={e => {
-                          e.preventDefault();
+                        onClick={() => {
                           if (loading) return;
-                          favorited ? remove(product.id) : add(product);
+                          if (favorited) {
+                            remove(product.id);
+                          } else {
+                            add(product);
+                          }
                         }}
                         disabled={loading}
                       >
@@ -299,18 +287,20 @@ function MoreImagesGallery({ product }: { product: Product }) {
               <div className="relative w-full flex-1 flex items-center justify-center select-none">
                 <AnimatePresence initial={false} custom={selectedIdx}>
                   <motion.div
-                    key={selectedIdx}
-                    className="absolute inset-0 flex items-center justify-center w-full h-full"
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    onDragEnd={(e, info) => {
-                      if (info.offset.x < -80) setSelectedIdx((selectedIdx + 1) % moreImages.length);
-                      else if (info.offset.x > 80) setSelectedIdx((selectedIdx - 1 + moreImages.length) % moreImages.length);
+                    {...{
+                      key: selectedIdx,
+                      className: "absolute inset-0 flex items-center justify-center w-full h-full",
+                      drag: "x",
+                      dragConstraints: { left: 0, right: 0 },
+                      onDragEnd: (event, info) => {
+                        if (info.offset.x < -80) setSelectedIdx((selectedIdx + 1) % moreImages.length);
+                        else if (info.offset.x > 80) setSelectedIdx((selectedIdx - 1 + moreImages.length) % moreImages.length);
+                      },
+                      initial: { opacity: 0, x: 100 },
+                      animate: { opacity: 1, x: 0 },
+                      exit: { opacity: 0, x: -100 },
+                      transition: { type: "spring", stiffness: 300, damping: 30 }
                     }}
-                    initial={{ opacity: 0, x: 100 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
                     <Image src={moreImages[selectedIdx]} alt="Zoomed" fill className="object-contain w-full h-full rounded-xl transition-transform duration-300" />
                   </motion.div>
@@ -343,7 +333,6 @@ function ProductDetailsTabs({ product }: { product: Product }) {
               ${tab === t.key ? 'bg-white text-primary shadow font-semibold' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
             onClick={() => setTab(t.key)}
             type="button"
-            aria-selected={tab === t.key}
             tabIndex={tab === t.key ? 0 : -1}
           >
             {t.label}

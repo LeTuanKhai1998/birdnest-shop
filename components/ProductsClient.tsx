@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
@@ -16,10 +15,6 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShoppingCart, Eye } from "lucide-react";
-import Link from "next/link";
-import { toast, Toaster } from "sonner";
-import { motion } from "framer-motion";
 
 const nestTypes = ["Refined Nest", "Raw Nest", "Feather-removed Nest"];
 const weights = [50, 100, 200];
@@ -34,7 +29,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
   const [price, setPrice] = useState<number>(maxPrice);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
 
   // Filtering logic
   const filteredProducts = products.filter((product) => {
@@ -167,7 +162,6 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      <Toaster position="top-center" richColors />
       <div className="w-full flex justify-end px-2 pt-2 pb-1 sticky top-[56px] z-20 bg-white border-b md:hidden">
         <Drawer>
           <DrawerTrigger asChild>

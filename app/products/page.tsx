@@ -1,7 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import ProductsClient from "@/components/ProductsClient";
-import Footer from "@/components/Footer";
-import type { Review } from "@/components/ProductCard";
 import { mapDisplayProducts, MockUiProduct, mockUiProducts } from "@/lib/products-mapper";
 
 const FALLBACK_IMAGE = "/images/placeholder.png";

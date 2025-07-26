@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -49,6 +50,7 @@
     "swr": "^2.3.4",
     "tailwind-merge": "^3.3.1",
     "tailwind-scrollbar": "^4.0.2",
+    "tsx": "^4.19.2",
     "uploadthing": "^7.7.3",
     "vaul": "^1.1.2",
     "zod": "^4.0.5",

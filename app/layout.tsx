@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { MainNavbar } from "@/components/MainNavbar";
-import { SessionProvider } from "next-auth/react";
+import { Providers } from "@/components/Providers";
+import { HydrationSafe } from "@/components/HydrationSafe";
 
 const inter = localFont({
   src: [
@@ -39,10 +40,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
-        <SessionProvider>
-          <MainNavbar />
-        {children}
-        </SessionProvider>
+        <Providers>
+          <HydrationSafe>
+            <MainNavbar />
+          </HydrationSafe>
+          {children}
+        </Providers>
       </body>
     </html>
   );

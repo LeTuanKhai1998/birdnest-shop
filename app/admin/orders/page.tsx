@@ -3,20 +3,17 @@ import { AdminTable } from "@/components/ui/AdminTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo, useEffect } from "react";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Card } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useState as useLocalState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown } from "lucide-react";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Image from "next/image";
 
 const STATUS = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"];
 
@@ -32,8 +29,6 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewId, setViewId] = useState<string | null>(null);
-  const [statusUpdate, setStatusUpdate] = useState<{ id: string; status: string } | null>(null);
-  const [showMoreMap, setShowMoreMap] = useState<Record<string, boolean>>({});
 
   // Debounce search input
   useEffect(() => {
@@ -297,7 +292,13 @@ export default function AdminOrdersPage() {
                   <div className="flex flex-col gap-4 divide-y">
                     {items.map(item => (
                       <div key={item.id} className="flex items-center gap-4 pt-2 first:pt-0">
-                        <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded border" />
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          width={56}
+                          height={56}
+                          className="w-14 h-14 object-cover rounded border"
+                        />
                         <div className="flex-1 min-w-0">
                           <div className="font-medium truncate">{item.name}</div>
                           <div className="text-xs text-gray-500">{item.quantity} × ₫{item.price.toLocaleString()} = <span className="font-semibold text-gray-900">₫{(item.price * item.quantity).toLocaleString()}</span></div>

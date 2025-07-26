@@ -8,7 +8,7 @@ interface SessionUser {
   email?: string;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

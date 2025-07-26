@@ -20,7 +20,7 @@ const productSchema = z.object({
 
 type ImageInput = { url: string; isPrimary?: boolean };
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const products = await prisma.product.findMany({
       include: {
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(products);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = productSchema.parse(body);
-    // Create product without images first
+    // Create product with images
     const { images, ...productData } = data;
     const product = await prisma.product.create({
       data: {
@@ -68,7 +68,7 @@ export async function PATCH(req: NextRequest) {
     // Validate product fields (partial)
     const data = productSchema.partial().omit({ images: true }).parse(rest);
     // Update product fields (excluding images)
-    const product = await prisma.product.update({ where: { id }, data });
+    await prisma.product.update({ where: { id }, data });
     // Handle images if provided
     if (Array.isArray(images)) {
       // Fetch current images

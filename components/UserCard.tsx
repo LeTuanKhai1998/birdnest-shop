@@ -2,7 +2,6 @@ import React from "react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export type UserCardProps = {
-  id: string;
   name?: string | null;
   email: string;
   isAdmin: boolean;
@@ -11,7 +10,7 @@ export type UserCardProps = {
   onRoleChange: (isAdmin: boolean) => void;
 };
 
-export function UserCard({ id, name, email, isAdmin, onEdit, onDelete, onRoleChange }: UserCardProps) {
+export function UserCard({ name, email, isAdmin, onEdit, onDelete, onRoleChange }: UserCardProps) {
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-4 flex flex-col gap-2">
       <div className="flex items-center justify-between">

@@ -2,17 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
   if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const userId = (session.user as { id: string }).id;
-  const wishlist = await prisma.wishlist.findMany({
-    where: { userId },
-    include: { product: true },
-  });
-  return NextResponse.json(wishlist);
+  try {
+    const wishlist = await prisma.wishlist.findMany({
+      where: { userId },
+      include: { product: true },
+    });
+    return NextResponse.json(wishlist);
+  } catch {
+    return NextResponse.json({ error: 'Failed to fetch wishlist' }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -34,15 +38,7 @@ export async function POST(req: NextRequest) {
       include: { product: true },
     });
     return NextResponse.json(wishlistItem, { status: 201 });
-  } catch (error: unknown) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code?: unknown }).code === 'P2002'
-    ) {
-      return NextResponse.json({ error: 'Already in wishlist' }, { status: 409 });
-    }
+  } catch {
     return NextResponse.json({ error: 'Failed to add to wishlist' }, { status: 500 });
   }
 }
@@ -65,7 +61,7 @@ export async function DELETE(req: NextRequest) {
       },
     });
     return NextResponse.json({ success: true });
-  } catch (error: unknown) {
+  } catch {
     return NextResponse.json({ error: 'Failed to remove from wishlist' }, { status: 500 });
   }
 } 

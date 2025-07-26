@@ -1,91 +1,42 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { AddToCartButton } from "@/components/AddToCartButton";
-import { Eye, ShoppingCart, Heart } from "lucide-react";
+import { Eye, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import ProductMeta from "@/components/ProductMeta";
-import { useWishlist } from "@/lib/wishlist-store";
-import { useSession } from "next-auth/react";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { useReducedMotion } from "framer-motion";
-
+export interface Product {
+  id: string;
+  slug: string;
+  name: string;
+  image?: string;
+  images?: string[];
+  price: number;
+  weight: number;
+  description: string;
+  type?: string;
+  quantity?: number;
+  reviews?: Review[];
+  sold?: number;
+}
 export interface Review {
   user: string;
   rating: number;
   comment: string;
 }
-
-export interface Product {
-  id: string; // Unique product ID
-  slug: string; // URL-safe unique slug for product detail page
-  name: string;
-  image?: string; // fallback for compatibility
-  images?: string[]; // new: array of images for gallery
-  price: number;
-  weight: number;
-  description: string;
-  type?: string; // Added for filtering and consistency
-  quantity?: number; // Stock quantity for status
-  reviews?: Review[]; // Mock reviews
-  sold?: number; // Added for sold count
-}
-
-export function ProductCard({ product }: { product: Product }) {
+type ProductCardProps = { product: Product; onClick?: () => void };
+export const ProductCard = ({ product }: ProductCardProps) => {
   const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
-  const { data: session } = useSession();
-  const { isInWishlist, add, remove, loading } = useWishlist();
-  const favorited = isInWishlist(product.id);
-  const shouldReduceMotion = useReducedMotion();
+  const avgRating = product.reviews && product.reviews.length > 0 ? product.reviews.reduce((sum: number, r: Review) => sum + r.rating, 0) / product.reviews.length : 0;
   return (
     <motion.div
       whileHover={{ scale: 1.03, boxShadow: "0 4px 24px 0 rgba(0,0,0,0.08)" }}
       transition={{ type: "spring", stiffness: 300, damping: 20, duration: 0.18 }}
-      className="group cursor-pointer"
     >
+      <div className="group cursor-pointer">
       <Card className="h-full flex flex-col transition-shadow duration-200 hover:shadow-lg min-w-0">
         <CardContent className="p-0 min-w-0 relative">
-          {/* Wishlist Heart Button */}
-          {session?.user && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label={favorited ? "Remove from Wishlist" : "Add to Wishlist"}
-                    className={`absolute top-2 right-2 z-10 rounded-full bg-white/90 shadow p-1.5 hover:bg-red-50 transition-colors border border-gray-200 ${favorited ? "text-red-600" : "text-gray-400 hover:text-red-500"}`}
-                    onClick={e => {
-                      e.preventDefault();
-                      if (loading) return;
-                      favorited ? remove(product.id) : add(product);
-                    }}
-                    disabled={loading}
-                  >
-                    <motion.span
-                      initial={false}
-                      animate={favorited ? {
-                        scale: [1, 1.3, 0.95, 1.1, 1],
-                        opacity: [1, 1, 1, 1, 1],
-                        rotate: [0, 10, -10, 0, 0],
-                        color: "#dc2626"
-                      } : {
-                        scale: [1, 0.8, 1],
-                        opacity: [1, 0.7, 1],
-                        rotate: [0, -10, 0],
-                        color: "#a3a3a3"
-                      }}
-                      transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.35, times: [0, 0.2, 0.5, 0.8, 1], ease: "easeInOut" }}
-                      whileTap={shouldReduceMotion ? {} : { scale: 0.85 }}
-                    >
-                      <Heart fill={favorited ? "#dc2626" : "none"} className="w-6 h-6" />
-                    </motion.span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>{favorited ? "Remove from Wishlist" : "Add to Wishlist"}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
           <Link href={`/products/${product.slug}`} prefetch={false} className="block min-w-0">
             <AspectRatio ratio={1/1} className="overflow-hidden rounded-t-xl bg-gradient-to-b from-white via-gray-50 to-gray-100 border border-gray-200 shadow-sm min-w-0">
               <Image
@@ -106,7 +57,7 @@ export function ProductCard({ product }: { product: Product }) {
             <span className="text-xs text-gray-500 font-medium flex-shrink-0">{product.weight}g</span>
           </div>
           {/* Product meta: rating, sold, reviews */}
-          <ProductMeta rating={product.reviews?.length ? (product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length) : 4.8} reviewCount={product.reviews?.length ?? 120} soldCount={product.sold ?? 1500} className="flex-wrap gap-x-2 gap-y-1 min-w-0" />
+          <ProductMeta rating={avgRating} reviewCount={product.reviews?.length ?? 120} soldCount={product.sold ?? 1500} className="flex-wrap gap-x-2 gap-y-1 min-w-0" />
           <div className="font-bold text-red-700 text-base sm:text-lg mb-1 whitespace-nowrap min-w-0">{currencyFormatter.format(product.price)}</div>
           <div className="flex flex-wrap gap-2 mt-2 w-full min-w-0">
             {/* Mobile: icon buttons, Desktop: text buttons */}
@@ -130,6 +81,7 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
       </Card>
+      </div>
     </motion.div>
   );
 } 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { mockOrders, Order } from "@/lib/mock-orders";
 import { formatVND, formatDate, statusColor } from "@/lib/order-utils";
+import Image from 'next/image';
 
 // API response type
 interface OrdersApiResponse {
@@ -67,7 +68,7 @@ export default function OrdersPage() {
       {/* Product(s) */}
       <div className="flex items-center gap-4 mb-3">
               {order.orderItems[0]?.product?.images?.[0] && (
-          <img src={order.orderItems[0].product.images[0]} alt={order.orderItems[0].product.name} className="w-16 h-16 object-cover rounded-lg border" />
+          <Image src={order.orderItems[0].product.images[0]} alt={order.orderItems[0].product.name} width={80} height={80} className="object-cover rounded-lg" />
               )}
               <div className="flex-1 min-w-0">
           <div className="font-medium text-base truncate text-gray-900">{order.orderItems[0]?.product?.name}</div>

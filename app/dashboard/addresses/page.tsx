@@ -57,31 +57,6 @@ function fetcher(url: string) {
   return fetch(url).then(r => r.json());
 }
 
-function getFullAddress(addr: Address, provinces: Province[]): string {
-  const province = provinces.find((p) => p.code === addr.province)?.name || addr.province || "";
-  const district = provinces.find((p) => p.code === addr.province)?.districts.find((d) => d.code === addr.district)?.name || addr.district || "";
-  const ward = provinces.find((p) => p.code === addr.province)?.districts.find((d) => d.code === addr.district)?.wards.find((w) => w.code === addr.ward)?.name || addr.ward || "";
-  return [
-    addr.address,
-    addr.apartment,
-    ward,
-    district,
-    province,
-    addr.country
-  ].filter(Boolean).join(", ");
-}
-
-function getShortAddress(addr: Address, provinces: Province[]): string {
-  const district = provinces.find((p) => p.code === addr.province)?.districts.find((d) => d.code === addr.district)?.name || addr.district || "";
-  const ward = provinces.find((p) => p.code === addr.province)?.districts.find((d) => d.code === addr.district)?.wards.find((w) => w.code === addr.ward)?.name || addr.ward || "";
-  return [
-    addr.address,
-    addr.apartment,
-    ward,
-    district
-  ].filter(Boolean).join(", ");
-}
-
 function getLine1(addr: Address): string {
   return [addr.address, addr.apartment].filter(Boolean).join(", ");
 }

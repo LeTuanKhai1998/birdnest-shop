@@ -9,21 +9,18 @@ import { Button } from "@/components/ui/button";
 import { useState, useMemo, useEffect } from "react";
 import { Upload, Trash2 } from "lucide-react";
 import { useRef } from "react";
-import ProductImageGallery from "@/components/ProductImageGallery";
 import { AdminTable } from "@/components/ui/AdminTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
-  DrawerTrigger,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerClose,
 } from "@/components/ui/drawer";
 import { Card } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useState as useLocalState } from "react";
+import Image from "next/image";
 
 const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -68,9 +65,7 @@ function setPrimaryImage(images: { url: string; isPrimary?: boolean }[], url: st
 export default function AdminProductsPage() {
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
-  const [editInitial, setEditInitial] = useState<ProductForm | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [images, setImages] = useState<{ url: string; isPrimary?: boolean }[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -80,7 +75,6 @@ export default function AdminProductsPage() {
   // Filter form
   const {
     register: filterRegister,
-    control: filterControl,
     watch: filterWatch,
     setValue: setFilterValue,
     reset: resetFilter,
@@ -110,7 +104,7 @@ export default function AdminProductsPage() {
   ];
 
   // Simulated product list (would be state/API in real app)
-  const [productList, setProductList] = useState(
+  const [productList] = useState(
     products.map(p => ({
       ...p,
       price: typeof p.price === 'string' ? Number(String(p.price ?? '').replace(/[^\d]/g, '')) : p.price,
@@ -121,7 +115,6 @@ export default function AdminProductsPage() {
   // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(searchValue);
       setFilterValue("search", searchValue);
     }, 300);
     return () => clearTimeout(handler);
@@ -151,20 +144,24 @@ export default function AdminProductsPage() {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1200));
     setLoading(false);
+    
+    // Prepare payload with form data and images
     const payload = {
       ...data,
-      images: images.map((img, i) => ({ url: img.url, isPrimary: img.isPrimary ?? i === 0 })),
+      images: images.map(img => ({ url: img.url, isPrimary: img.isPrimary }))
     };
+    
     if (editId) {
       // Edit mode
       // Call PATCH API with payload
+      console.log('Editing product:', editId, payload);
     } else {
       // Create mode
       // Call POST API with payload
+      console.log('Creating product:', payload);
     }
     reset();
     setEditId(null);
-    setEditInitial(null);
     setImages([]);
     setDrawerOpen(false); // Close drawer on successful submission
   };
@@ -175,22 +172,12 @@ export default function AdminProductsPage() {
   const handleEdit = (product: Product) => {
     setEditId(product.id);
     const sanitizedPrice = String(product.price ?? "").replace(/[^\d]/g, "");
-    setEditInitial({
-      name: product.name,
-      description: typeof product.description === 'string' ? product.description : '',
-      price: sanitizedPrice,
-      stock: String(product.stock ?? ""),
-      category: typeof product.category === 'string' ? product.category : '',
-      status: product.status === 'active' || product.status === 'inactive' ? product.status : 'active',
-    });
-    reset({
-      name: product.name,
-      description: typeof product.description === 'string' ? product.description : '',
-      price: sanitizedPrice,
-      stock: String(product.stock ?? ""),
-      category: typeof product.category === 'string' ? product.category : '',
-      status: product.status === 'active' || product.status === 'inactive' ? product.status : 'active',
-    });
+    setValue("name", product.name);
+    setValue("description", typeof product.description === 'string' ? product.description : '');
+    setValue("price", sanitizedPrice);
+    setValue("stock", String(product.stock ?? ""));
+    setValue("category", typeof product.category === 'string' ? product.category : '');
+    setValue("status", product.status === 'active' || product.status === 'inactive' ? product.status : 'active');
     // Load images from product.images (API shape)
     setImages((product.images || []).map((img: Image, i: number) => ({ url: img.url, isPrimary: img.isPrimary ?? i === 0 })));
     setDrawerOpen(true); // Open drawer for edit
@@ -199,7 +186,6 @@ export default function AdminProductsPage() {
   // Handle cancel edit
   const handleCancelEdit = () => {
     setEditId(null);
-    setEditInitial(null);
     reset();
   };
 
@@ -271,7 +257,7 @@ export default function AdminProductsPage() {
   };
 
   // Move this to the top level of the component, not inside a callback
-  const [showMore, setShowMore] = useLocalState(false);
+  const [showMore, setShowMore] = useState(false);
 
   return (
     <div>
@@ -323,7 +309,6 @@ export default function AdminProductsPage() {
       <div className="hidden md:flex justify-end mb-4">
         <Button onClick={() => {
           setEditId(null);
-          setEditInitial(null);
           setImages([]);
           reset({
             name: "",
@@ -470,7 +455,12 @@ export default function AdminProductsPage() {
                   <div className="flex gap-2 flex-wrap items-center">
                     {images.map((img, idx) => (
                       <div key={img.url + '-' + idx} className="relative group w-20 h-20 border rounded overflow-hidden">
-                        <img src={img.url} alt={`Product image ${idx + 1}`} className="object-cover w-full h-full" />
+                        <Image
+                          src={img.url}
+                          alt={`Product image ${idx + 1}`}
+                          layout="fill"
+                          objectFit="cover"
+                        />
                         <button
                           type="button"
                           className="absolute top-0 right-0 bg-black/60 text-white text-xs px-1 py-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition"
@@ -530,12 +520,12 @@ export default function AdminProductsPage() {
           data={filteredProducts.map(p => ({
             ...p,
             thumbnail: (
-              <img
+              <Image
                 src={(p.images && p.images[0]?.url) || FALLBACK_IMAGE}
                 alt={p.name}
-                className="w-16 h-16 object-cover rounded border"
                 width={64}
                 height={64}
+                className="w-16 h-16 object-cover rounded border"
               />
             ),
             price: (typeof p.price === "number"
@@ -575,12 +565,12 @@ export default function AdminProductsPage() {
           return (
             <Card key={p.id} className="flex flex-col gap-2 p-4 rounded-lg shadow border border-gray-200 transition hover:bg-gray-50 active:scale-[0.98]">
               <div className="flex items-start gap-4">
-                <img
+                <Image
                   src={(p.images && p.images[0]?.url) || FALLBACK_IMAGE}
                   alt={p.name}
-                  className="w-16 h-16 object-cover rounded border"
                   width={64}
                   height={64}
+                  className="w-16 h-16 object-cover rounded border"
                 />
                 <div className="flex-1 min-w-0 flex flex-col gap-1">
                   <div className="flex items-center justify-between gap-2">
@@ -633,7 +623,6 @@ export default function AdminProductsPage() {
         {/* Floating Add Product Button */}
         <Button className="fixed bottom-6 right-6 z-50 rounded-full h-14 w-14 p-0 shadow-lg bg-primary text-white text-2xl flex items-center justify-center" onClick={() => {
           setEditId(null);
-          setEditInitial(null);
           setImages([]);
           reset({
             name: "",

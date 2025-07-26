@@ -7,13 +7,11 @@ import { Search, User, Menu, X, LayoutDashboard, User2, ShoppingBag, LogOut, Hea
 import { CartIconWithBadge } from "@/components/CartIconWithBadge";
 import { useState, useRef } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { Avatar as ShadcnAvatar } from "@/components/ui/avatar";
 import { LogIn } from "lucide-react";
 import useSWR from "swr";
-import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export function MainNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -23,7 +21,6 @@ export function MainNavbar() {
   const pathname = usePathname();
   const userFromSession = session?.user;
   const { data: user } = useSWR(userFromSession ? "/api/profile" : null, url => fetch(url).then(r => r.json()), { fallbackData: userFromSession });
-  const firstName = user?.name?.split(" ")[0] || user?.name || "";
 
   // --- Notification dropdown state and mock data ---
   const [notifications, setNotifications] = useState([
@@ -38,10 +35,6 @@ export function MainNavbar() {
   function clearNotifications() {
     setNotifications([]);
   }
-
-  const [adminDrawerOpen, setAdminDrawerOpen] = useState(false);
-  // Show FAB only for admin users and on mobile
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
 
   return (
     <header className="w-full border-b bg-white/80 backdrop-blur sticky top-0 z-30">

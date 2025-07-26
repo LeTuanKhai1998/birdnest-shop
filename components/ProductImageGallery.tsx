@@ -1,8 +1,7 @@
 "use client";
-import { useState, useRef, useEffect, type RefObject } from "react";
+import { useState, useRef, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 
 export default function ProductImageGallery({ images, productName }: { images: string[]; productName: string }) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, skipSnaps: false });
@@ -15,7 +14,9 @@ export default function ProductImageGallery({ images, productName }: { images: s
     const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
     emblaApi.on('select', onSelect);
     return () => {
-      emblaApi && emblaApi.off('select', onSelect);
+      if (emblaApi) {
+        emblaApi.off('select', onSelect);
+      }
     };
   }, [emblaApi]);
 

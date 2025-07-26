@@ -51,44 +51,6 @@ function LoginPageInner() {
     setLoading(false);
   };
 
-  const handleDemoLogin = async () => {
-    setLoading(true);
-    const res = await signIn("credentials", {
-      email: "demo@demo.com",
-      password: "Demo@1234",
-      callbackUrl,
-      redirect: false,
-    });
-    setLoading(false);
-    console.log("[DEMO LOGIN] Response:", res);
-    if (res?.error) {
-      toast.error("Demo login failed: " + res.error);
-    } else if (!res?.ok) {
-      toast.error("Demo login failed: Unknown error");
-    } else if (res.url) {
-      router.push(res.url);
-    }
-  };
-
-  const handleTestLogin = async () => {
-    setLoading(true);
-    const res = await signIn("credentials", {
-      email: "user@example.com",
-      password: "123456",
-      callbackUrl,
-      redirect: false,
-    });
-    setLoading(false);
-    console.log("[TEST LOGIN] Response:", res);
-    if (res?.error) {
-      toast.error("Test login failed: " + res.error);
-    } else if (!res?.ok) {
-      toast.error("Test login failed: Unknown error");
-    } else if (res.url) {
-      router.push(res.url);
-    }
-  };
-
   return (
     <div className="flex justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 mt-16">

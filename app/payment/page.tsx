@@ -33,12 +33,6 @@ export default function PaymentPage() {
   const triggerCartBounce = useCartStore((s) => s.triggerCartBounce);
   const router = useRouter();
 
-  // Helper to format address
-  const formatAddress = (info: typeof checkoutInfo) => {
-    if (!info) return "";
-    return [info.province, info.district, info.ward, info.address, info.apartment].filter(Boolean).join(", ");
-  };
-
   const handleConfirm = async () => {
     setConfirming(true);
     try {

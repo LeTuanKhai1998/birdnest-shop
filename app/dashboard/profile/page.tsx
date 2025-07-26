@@ -144,8 +144,6 @@ export default function ProfilePage() {
     }
   }, [user, reset]);
 
-  const MotionDiv: React.FC<any> = motion.div;
-
   return (
     <div className="py-8 px-2 md:px-0 max-w-2xl mx-auto bg-gray-50 min-h-screen">
       {/* Sticky header for mobile */}
@@ -153,14 +151,15 @@ export default function ProfilePage() {
         <h2 className="text-2xl font-bold mb-2 md:mb-4 text-center md:text-left">Your Profile</h2>
       </div>
       <LoadingOrEmpty loading={isLoading}>
-        {/* Avatar + identity zone */}
-        <MotionDiv
-          key="avatar-section"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-col items-center gap-2 mb-6"
+        <motion.div
+          {...{
+            key: "avatar-section",
+            initial: { opacity: 0, y: 20 },
+            animate: { opacity: 1, y: 0 },
+            exit: { opacity: 0, y: 20 },
+            transition: { duration: 0.3 },
+            className: "flex flex-col items-center gap-2 mb-6"
+          } as any}
         >
           <div className="relative group">
             <Avatar
@@ -185,17 +184,17 @@ export default function ProfilePage() {
           {user?.createdAt && (
             <div className="text-xs text-gray-400 mt-1">Account created: {new Date(user.createdAt).toLocaleDateString()}</div>
           )}
-        </MotionDiv>
+        </motion.div>
         {/* Profile info card */}
         <AnimatePresence>
-          <MotionDiv
+          <motion.div
             {...{
               key: "profile-form",
               initial: { opacity: 0, y: 20 },
               animate: { opacity: 1, y: 0 },
               exit: { opacity: 0, y: 20 },
               transition: { duration: 0.3 },
-              className: "bg-white rounded-2xl shadow-lg p-6 border border-gray-100",
+              className: "bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
             } as any}
           >
             <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
@@ -240,17 +239,19 @@ export default function ProfilePage() {
               </div>
               <Button type="submit" disabled={saving} className="w-full mt-2">{saving ? "Saving..." : "Save Changes"}</Button>
             </form>
-          </MotionDiv>
+          </motion.div>
           {/* Divider */}
           <div className="h-2" />
           {/* Password change card */}
           <motion.div
-            key="password-form"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
+            {...{
+              key: "password-form",
+              initial: { opacity: 0, y: 20 },
+              animate: { opacity: 1, y: 0 },
+              exit: { opacity: 0, y: 20 },
+              transition: { duration: 0.3 },
+              className: "bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
+            } as any}
           >
             <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
               <span>Change Password</span>

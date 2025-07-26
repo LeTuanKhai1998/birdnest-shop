@@ -15,6 +15,7 @@ import { useCheckoutStore } from "@/lib/checkout-store";
 import { CartItem } from "@/lib/cart-store";
 import { useSession } from "next-auth/react";
 import useSWR from "swr";
+import Image from "next/image";
 
 function fetcher(url: string) {
   return fetch(url).then(r => r.json());
@@ -155,7 +156,7 @@ export default function CheckoutPage() {
       });
       lastResetId.current = "new";
     }
-  }, [selectedAddressId, savedAddresses, loadingProvinces]);
+  }, [selectedAddressId, savedAddresses, loadingProvinces, reset, setValue, user?.email]);
 
   const shippingFee = subtotal >= 2000000 ? 0 : 30000;
 
@@ -179,7 +180,7 @@ export default function CheckoutPage() {
             isDefault: savedAddresses.length === 0,
           }),
         });
-      } catch (e) { /* ignore for now */ }
+      } catch { /* ignore for now */ }
     }
     setCheckoutInfo({ ...data, email: data.email ?? "" });
     setProducts(items as CartItem[]);
@@ -198,7 +199,8 @@ export default function CheckoutPage() {
 
   // Remove local state for province, district, ward
   // When province changes, reset district/ward
-  const handleProvinceChange = (val: string) => {
+  const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
     setValue("province", val);
     setValue("district", "");
     setValue("ward", "");
@@ -206,7 +208,8 @@ export default function CheckoutPage() {
     setTimeout(() => setLoadingDistricts(false), 500); // mock loading
   };
   // When district changes, reset ward
-  const handleDistrictChange = (val: string) => {
+  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
     setValue("district", val);
     setValue("ward", "");
     setLoadingWards(true);
@@ -282,7 +285,7 @@ export default function CheckoutPage() {
                         {/* Province dropdown */}
                         <div>
                           <label className="block text-sm mb-1">Province/City</label>
-                          <select className="w-full border rounded px-2 py-2" {...register("province")} onChange={e => handleProvinceChange(e.target.value)} disabled={loadingProvinces}>
+                          <select className="w-full border rounded px-2 py-2" {...register("province")} onChange={handleProvinceChange} disabled={loadingProvinces}>
                             <option value="">{loadingProvinces ? "Loading..." : "Select province/city"}</option>
                             {provinces.map((p) => (
                               <option key={p.code} value={String(p.code)}>{p.name}</option>
@@ -292,7 +295,7 @@ export default function CheckoutPage() {
                         {/* District dropdown */}
                         <div>
                           <label className="block text-sm mb-1">District</label>
-                          <select className="w-full border rounded px-2 py-2" {...register("district")} onChange={e => handleDistrictChange(e.target.value)} disabled={!watch("province") || loadingDistricts}>
+                          <select className="w-full border rounded px-2 py-2" {...register("district")} onChange={handleDistrictChange} disabled={!watch("province") || loadingDistricts}>
                             <option value="">{loadingDistricts ? "Loading..." : "Select district"}</option>
                             {watch("province") && !loadingDistricts && provinces.find(p => String(p.code) === String(watch("province")))?.districts.map((d: District) => (
                               <option key={d.code} value={String(d.code)}>{d.name}</option>
@@ -366,7 +369,12 @@ export default function CheckoutPage() {
                 {items.map(({ product, quantity }) => (
                   <li key={product.id} className="py-2 flex items-center gap-3">
                     <div className="w-14 h-14 rounded bg-gray-50 border flex items-center justify-center overflow-hidden">
-                      <img src={product.image || (product.images && product.images[0]) || ''} alt={product.name} className="object-cover w-full h-full" />
+                      <Image
+                        src={product.image || (product.images && product.images[0]) || ''}
+                        alt={product.name}
+                        layout="fill"
+                        objectFit="cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm truncate">{product.name}</div>
