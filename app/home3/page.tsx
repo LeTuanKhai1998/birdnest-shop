@@ -30,9 +30,9 @@ export default function Home3Page() {
   const [chatIdx, setChatIdx] = useState(0);
 
   return (
-          <div className="w-full min-h-screen bg-[#FFF6E5] flex flex-col">
+          <div className="w-full min-h-screen bg-[#fbd8b0] flex flex-col">
       {/* Hero Banner - Desktop & Mobile Optimized */}
-      <section className="relative w-full bg-[#a10000] overflow-hidden" style={{ minHeight: '600px' }}>
+      <section className="relative w-full bg-[#a10000] overflow-hidden lg:bg-[#a10000] bg-gradient-to-b from-[#a10000] to-[#fbd8b0]" style={{ minHeight: '600px' }}>
         {/* Background Image - Desktop */}
         <Image
           src="/images/bg_banner_top.jpg"
@@ -115,88 +115,85 @@ export default function Home3Page() {
           </div>
         </div>
         
-        {/* Mobile Layout (Fixed) */}
-        <div className="lg:hidden relative z-10 flex flex-col items-center justify-start px-4 pt-8 pb-6" style={{ minHeight: 'calc(100vh - 80px)', alignItems: 'center' }}>
-          
-
-          
-
-          
+        {/* Mobile Layout (Fluid Responsive) */}
+        <div className="lg:hidden relative z-10 flex flex-col items-center justify-start px-[2vw] pt-[3vh] pb-[2vh]" style={{ minHeight: 'calc(100vh - 80px)', alignItems: 'center' }}>
           {/* Product Image Section - Mobile Only - Centered and Larger */}
-          <div className="relative w-full max-w-[300px] sm:max-w-[350px] mb-6">
+          <div className="relative w-full max-w-[90vw] mb-[4vh]" style={{height: 'clamp(180px, 38vw, 320px)'}}>
             <Image 
               src="/images/yen_banner_1.png" 
               alt="Yến Sào Kim Sang" 
-              width={550} 
-              height={550} 
-              className="object-contain w-full h-auto drop-shadow-2xl" 
+              fill
+              className="object-contain w-full h-full drop-shadow-2xl" 
+              sizes="90vw"
+              priority
             />
-            
             {/* Decor at top left of product image */}
-            <div className="absolute -top-2 -left-2 z-20 w-18 sm:w-22 animate-decor-slide drop-shadow-2xl">
-              <Image src="/images/banner_decor_2.png" alt="Decor" width={116} height={116} className="object-contain w-full h-auto" />
+            <div className="absolute -top-[3vw] left-[2vw] z-20 w-[15.6vw] min-w-[48px] max-w-[84px] animate-decor-slide drop-shadow-2xl">
+              <Image src="/images/banner_decor_2.png" alt="Decor" width={72} height={72} className="object-contain w-full h-auto" />
             </div>
-            
-
           </div>
-          
           {/* Content Section - Mobile Only - Centered */}
-          <div className="flex flex-col items-center text-white text-center max-w-[320px] sm:max-w-[350px] px-2 mt-8">
-            <h1 className="text-glossy text-3xl sm:text-4xl font-black italic" 
+          <div className="flex flex-col items-center text-white text-center w-full max-w-[96vw] px-[1vw] mt-[4vh]">
+            <h1 className="text-glossy font-black italic" 
                 style={{
                   fontWeight: 900, 
                   fontStyle: 'italic', 
                   fontFamily: 'Inter, sans-serif', 
-                  fontSize: 'clamp(2rem, 6.5vw, 3.5rem)',
+                  fontSize: 'clamp(2.2rem, 8.5vw, 3.2rem)',
                   lineHeight: 1.1,
-                  padding: '10px'
+                  padding: 'clamp(0.3em, 2vw, 0.7em) 0',
+                  marginBottom: 'clamp(0.2em, 1.5vw, 0.5em)'
                 }}>
               <span className="block">TỔ YẾN SÀO</span>
               <span className="block">NGUYÊN CHẤT</span>
             </h1>
-            
-            <p className="text-base sm:text-lg mb-5 font-medium italic" 
-               style={{fontFamily:'Inter, sans-serif', fontWeight:500, color:'#fff'}}>
+            <p className="font-medium italic" 
+               style={{
+                 fontFamily:'Inter, sans-serif', 
+                 fontWeight:500, 
+                 color:'#fff',
+                 fontSize: 'clamp(1.2rem, 4.5vw, 1.6rem)',
+                 marginBottom: 'clamp(0.5em, 2vw, 1em)'
+               }}>
               Cho sức khỏe gia đình bạn
             </p>
-            
             {/* Shipping Info Box */}
-            <div className="relative mb-5 drop-shadow-2xl">
-              <div className="relative bg-[#a10000] rounded-[16px] px-4 sm:px-5 py-3 sm:py-4 border-2 border-[#F0B000] min-w-[280px] sm:min-w-[300px]">
-                <div className="font-bold text-white text-sm sm:text-base" style={{lineHeight: 1.2}}>
+            <div className="relative mb-[2vh] drop-shadow-2xl w-full flex justify-center">
+              <div className="relative bg-[#a10000] rounded-[1.2em] px-[3vw] py-[2vw] border-2 border-[#F0B000] min-w-[65vw] max-w-[95vw]" style={{boxSizing:'border-box'}}>
+                <div className="font-bold text-white" style={{lineHeight: 1.2, fontSize: 'clamp(1.1rem, 4.2vw, 1.4rem)'}}>
                   Giao hàng <span className="text-yellow-300">MIỄN PHÍ</span>
                 </div>
-                <div className="text-white text-xs sm:text-sm mt-1">
+                <div className="text-white" style={{fontSize: 'clamp(0.95rem, 3.5vw, 1.2rem)', marginTop: '0.3em'}}>
                   Đơn hàng từ 1.000.000đ trở lên
                 </div>
-                
-
               </div>
             </div>
-            
-            {/* CTA Button */}
-            <a href="/products" 
-               className="inline-block bg-glossy text-red-900 font-bold px-6 sm:px-8 py-3 sm:py-4 rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 hover:shadow-3xl animate-button-zoom button-glow text-base sm:text-lg mt-8" 
-               style={{boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'}}>
-              ĐẶT MUA NGAY
-            </a>
-            
-            {/* Decor below button */}
-            <div className="mt-4 ml-32 z-20 w-16 sm:w-20 animate-decor-slide drop-shadow-2xl">
-              <Image src="/images/banner_decor_1.png" alt="Decor" width={192} height={192} className="object-contain w-full h-auto" />
+            {/* CTA Button and Decor Row */}
+            <div className="flex flex-row items-center justify-center w-full max-w-[96vw] mt-[6vh] gap-[1.5vw] relative">
+              {/* Button - center */}
+              <a href="/products" 
+                 className="inline-block bg-glossy text-red-900 font-bold rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 hover:shadow-3xl animate-button-zoom button-glow"
+                 style={{
+                   fontSize: 'clamp(1rem, 4vw, 1.3rem)',
+                   padding: 'clamp(0.7em, 3vw, 1.2em) clamp(2.2em, 7vw, 3em)',
+                   margin: 0,
+                   marginTop: '-2vh',
+                   boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'
+                 }}>
+                ĐẶT MUA NGAY
+              </a>
             </div>
-            
-            {/* EN image below button - left side */}
-            <div className="-mt-6 -ml-68 z-20 w-17 sm:w-20 drop-shadow-2xl">
-              <Image src="/images/en.png" alt="EN" width={202} height={202} className="object-contain w-full h-auto scale-x-[-1]" />
+            {/* Decor below button - left and right */}
+            <div className="flex justify-between items-center w-full mt-[0.5vh] px-[2vw]">
+              {/* EN image - left */}
+              <div className="relative" style={{width: 'clamp(57px, 19.5vw, 90px)', height: 'clamp(57px, 19.5vw, 90px)'}}>
+                <Image src="/images/en.png" alt="EN" fill className="object-contain w-full h-full scale-x-[-1] drop-shadow-2xl" />
+              </div>
+              {/* Decor - right */}
+              <div className="relative" style={{width: 'clamp(38px, 13vw, 60px)', height: 'clamp(38px, 13vw, 60px)'}}>
+                <Image src="/images/banner_decor_1.png" alt="Decor" fill className="object-contain w-full h-full animate-decor-slide drop-shadow-2xl" />
+              </div>
             </div>
-            
-
-          </div>
-          
-          {/* Bottom Right Decor */}
-          <div className="absolute bottom-2 right-4 z-20 w-12 sm:w-16 drop-shadow-2xl">
-            <Image src="/images/banner_decor_1.png" alt="Decor" width={64} height={64} className="object-contain w-full h-auto" />
           </div>
         </div>
         
@@ -318,7 +315,7 @@ export default function Home3Page() {
       </section>
 
       {/* Feature Icons Row */}
-      <section className="w-full bg-[#fff6e3] py-4 sm:py-6 flex flex-col items-center">
+      <section className="w-full bg-[#fbd8b0] py-4 sm:py-6 flex flex-col items-center">
         <div className="flex flex-wrap justify-center gap-4 sm:gap-8 px-4">
           {featureIcons.map((f, i) => (
             <div key={i} className="flex flex-col items-center min-w-[100px] sm:min-w-0">
@@ -330,17 +327,17 @@ export default function Home3Page() {
       </section>
 
       {/* Product Highlight */}
-      <section className="w-full bg-[#fff6e3] py-6 sm:py-8 flex flex-col items-center px-4">
+      <section className="w-full bg-[#fbd8b0] py-6 sm:py-8 flex flex-col items-center px-4">
         <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#a10000] mb-3 sm:mb-4 text-center">TỔ YẾN NGUYÊN CHẤT</h2>
         <Image src="/images/to-yen-nguyen-chat.jpg" alt="Tổ Yến Nguyên Chất" width={600} height={300} className="rounded-xl shadow-lg mx-auto w-full max-w-[600px]" />
         <div className="mt-3 sm:mt-4 text-center text-[#a10000] font-semibold text-base sm:text-lg px-2">Tổ yến nguyên chất - Dinh dưỡng vượt trội</div>
       </section>
 
       {/* Testimonial/Slider Section */}
-      <section className="w-full bg-[#fff6e3] py-6 sm:py-8 flex flex-col items-center px-4">
+      <section className="w-full bg-[#fbd8b0] py-6 sm:py-8 flex flex-col items-center px-4">
         <h3 className="text-base sm:text-lg md:text-xl font-bold text-[#a10000] mb-3 sm:mb-4 text-center">Thịnh Vượng một cách trọn vẹn</h3>
         <div className="relative w-full max-w-xl mx-auto">
-          <div className="bg-white rounded-xl shadow p-4 sm:p-6 flex flex-col md:flex-row items-center gap-3 sm:gap-4">
+          <div className="bg-[#fbd8b0] rounded-xl shadow p-4 sm:p-6 flex flex-col md:flex-row items-center gap-3 sm:gap-4">
             <Image src="/images/p1.png" alt="Testimonial" width={120} height={120} className="rounded-xl object-cover w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
             <div className="flex-1 text-[#a10000] text-sm sm:text-base md:text-lg font-medium text-center md:text-left">Sản phẩm yến sào Kim Sang mang lại may mắn và sức khỏe cho gia đình bạn!</div>
           </div>

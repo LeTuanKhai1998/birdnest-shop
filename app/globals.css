@@ -93,6 +93,7 @@ body {
   letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #fbd8b0 !important;
 }
 
 /* Apply inter to all headings and UI elements */
