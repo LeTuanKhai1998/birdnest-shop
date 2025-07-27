@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
   Carousel,
   CarouselContent,
@@ -529,35 +528,30 @@ export default function Home3Page() {
         </div>
       </section>
 
-      {/* Banner Carousel Section */}
-      <section className="w-full bg-[#fbd8b0] py-8 sm:py-12">
-        <div className="container mx-auto px-4 flex justify-center items-center">
-          <Carousel className="w-full max-w-6xl" setApi={setCarouselApi} opts={{ loop: true }}>
-            <CarouselContent>
-              {banners.map((banner, i) => (
-                <CarouselItem key={banner.src} className="flex justify-center items-center">
-                  <Card className="w-full rounded-2xl overflow-hidden shadow-xl border-0">
-                    <CardContent className="p-0 m-0 border-0">
-                      <AspectRatio ratio={16 / 7}>
-                        <Image
-                          src={banner.src}
-                          alt={banner.alt}
-                          fill
-                          className="object-contain object-center w-full h-full rounded-2xl"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1152px"
-                          priority={i === 0}
-                        />
-                      </AspectRatio>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-4 top-1/2 -translate-y-1/2" />
-            <CarouselNext className="right-4 top-1/2 -translate-y-1/2" />
-          </Carousel>
-        </div>
-      </section>
+      {/* Banner Carousel Section - Hidden */}
+      {/* <section className="w-full bg-[#fbd8b0]">
+        <Carousel className="w-full" setApi={setCarouselApi} opts={{ loop: true }}>
+          <CarouselContent>
+            {banners.map((banner, i) => (
+              <CarouselItem key={banner.src} className="w-full">
+                <div className="w-full">
+                  <Image
+                    src={banner.src}
+                    alt={banner.alt}
+                    width={1920}
+                    height={600}
+                    className="w-full h-auto object-cover"
+                    sizes="100vw"
+                    priority={i === 0}
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-4 top-1/2 -translate-y-1/2" />
+          <CarouselNext className="right-4 top-1/2 -translate-y-1/2" />
+        </Carousel>
+      </section> */}
 
       {/* Product Features Section */}
       <section className="w-full bg-[#fbd8b0] py-8 sm:py-12">
@@ -685,14 +679,7 @@ export default function Home3Page() {
         </div>
       </section>
 
-      {/* Copyright Section */}
-      <section className="w-full bg-[#fbd8b0] py-6 sm:py-8 text-center">
-        <div className="container mx-auto px-4">
-          <p className="text-gray-500 text-xs sm:text-sm">
-            ©2024 Allrights reserved yensaokimsang
-          </p>
-        </div>
-      </section>
+
     </div>
   );
 } 
