@@ -174,8 +174,15 @@
 #### Setup and Architecture
 - [X] Create new backend using the Go Fiber boilerplate:
   - [X] Clone https://github.com/indrayyana/go-fiber-boilerplate into `/backend`
-  - [ ] Initialize Go module; copy `.env.example` to `.env`
-  - [ ] Set up DB migrations using `golang-migrate` and configure PostgreSQL
+  - [X] Initialize Go module; copy `.env.example` to `.env`
+  - [X] Configure PostgreSQL connection with Neon database
+  - [X] Update database connection to use SSL mode
+  - [X] Set backend to run on port 8080
+  - [X] Set up DB migrations using `golang-migrate` and configure PostgreSQL
+  - [X] Create database schema migration files
+  - [X] Create Go models matching Prisma schema
+  - [X] Fix service layer to work with new models
+  - [X] Fix middleware to work with new models
   - [ ] Implement JWT auth for login/register
   - [ ] Add endpoints to replace current mock APIs:
     - `/api/products` (GET, POST, PUT, DELETE)
@@ -186,7 +193,7 @@
 - [ ] Generate Swagger docs accessible at `/swagger`
 - [ ] Include unit tests for services and handlers
 - [ ] Provide startup commands via `Makefile` or `Taskfile`
-- [ ] Make sure backend runs independently on port `8080` and frontend uses this base URL
+- [X] Make sure backend runs independently on port `8080` and frontend uses this base URL
 
 #### Auth and Middleware
 - [ ] Implement JWT authentication and middleware
