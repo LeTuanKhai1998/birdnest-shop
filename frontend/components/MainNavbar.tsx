@@ -37,23 +37,27 @@ export function MainNavbar() {
   }
 
   return (
-    <header className="w-full border-b bg-white/80 backdrop-blur sticky top-0 z-30">
-      <div className="w-full">
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between py-2 px-2 md:py-4">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-red-700 tracking-wide">
-            <Image src="/images/logo.png" alt="Birdnest Shop Logo" width={36} height={36} className="logo-img md:w-10 md:h-10 w-9 h-9" />
-            <span>Birdnest Shop</span>
-          </Link>
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex gap-6 text-lg">
-            <Link href="/" className="hover:text-yellow-600 transition">Home</Link>
-            <Link href="/products" className="hover:text-yellow-600 transition">Products</Link>
-            <Link href="/about" className="hover:text-yellow-600 transition">About</Link>
-            <Link href="/contact" className="hover:text-yellow-600 transition">Contact</Link>
-          </nav>
-          {/* Right actions */}
-          <div className="flex items-center gap-2 md:gap-4">
+    <header className="w-full border-b backdrop-blur sticky top-0 z-30">
+      <div className="w-full bg-[#fdf6ef] px-4 lg:px-6 xl:px-8">
+        <div className="max-w-7xl mx-auto flex justify-between items-center h-20">
+            {/* Left: Logo */}
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-red-700 tracking-wide">
+                <Image src="/images/logo.png" alt="Yến Sào Kim Sang Logo" width={36} height={36} className="logo-img md:w-10 md:h-10 w-9 h-9 border-2 border-yellow-400 rounded-full" />
+                <span>Yến Sào Kim Sang</span>
+              </Link>
+            </div>
+
+            {/* Middle: Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-8 text-lg">
+              <Link href="/" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Home</Link>
+              <Link href="/products" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Products</Link>
+              <Link href="/about" className="hover:text-yellow-600 transition-colors duration-200 font-medium">About</Link>
+              <Link href="/contact" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Contact</Link>
+            </nav>
+
+            {/* Right: Search, Icons, and User Info */}
+            <div className="flex items-center gap-3 md:gap-4">
             {/* Search Icon (mobile) */}
             <Button variant="ghost" size="icon" className="md:hidden" aria-label="Search" onClick={() => setShowSearch(true)}>
               <Search className="w-5 h-5 text-gray-500" />
@@ -214,8 +218,8 @@ export function MainNavbar() {
                 <DrawerTitle className="sr-only">Main Navigation</DrawerTitle>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                   <Link href="/" className="flex items-center gap-2 text-xl font-bold text-red-700 tracking-wide" onClick={() => setDrawerOpen(false)}>
-                    <Image src="/images/logo.png" alt="Birdnest Shop Logo" width={32} height={32} />
-                    Birdnest Shop
+                                  <Image src="/images/logo.png" alt="Yến Sào Kim Sang Logo" width={32} height={32} className="border-2 border-yellow-400 rounded-full" />
+              Yến Sào Kim Sang
                   </Link>
                   <DrawerClose asChild>
                     <Button variant="ghost" size="icon" aria-label="Close menu">
@@ -268,8 +272,8 @@ export function MainNavbar() {
               </DrawerContent>
             </Drawer>
           </div>
-        </div>
-      </div>
+            </div>
+          </div>
       {/* Mobile Search Modal */}
       {showSearch && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center">

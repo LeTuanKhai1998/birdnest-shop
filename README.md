@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Birdnest Shop - Monorepo
 
-## Getting Started
+This is a monorepo containing the frontend and backend for the Birdnest Shop application.
 
-First, run the development server:
+## Project Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+birdnest-shop/
+├── frontend/          # Next.js 15 frontend application
+├── backend/           # Backend API (future implementation)
+├── package.json       # Root package.json for monorepo
+└── README.md         # This file
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Quick Start
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js 18+ 
+- npm 8+
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. Install all dependencies:
+   ```bash
+   npm run install:all
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Build for production:
+   ```bash
+   npm run build
+   ```
 
-## Deploy on Vercel
+4. Start production server:
+   ```bash
+   npm run start
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Frontend
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The frontend is a Next.js 15 application located in the `frontend/` directory.
+
+### Features
+
+- Next.js 15 with App Router
+- TypeScript
+- Tailwind CSS
+- NextAuth.js for authentication
+- Prisma ORM with PostgreSQL
+- Stripe payment integration
+- Responsive design
+- Admin dashboard
+
+### Environment Variables
+
+Create a `.env.local` file in the `frontend/` directory:
+
+```env
+DATABASE_URL=your_database_url
+NEXTAUTH_SECRET=your_nextauth_secret
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+```
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+## Backend
+
+The backend directory is reserved for future backend API implementation.
+
+## Development
+
+### Working with the Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+### Working with the Backend
+
+```bash
+cd backend
+# Backend setup instructions will be added here
+```
+
+## Deployment
+
+### Frontend Deployment
+
+The frontend can be deployed to Vercel, Netlify, or any other Next.js-compatible platform.
+
+### Environment Variables for Production
+
+Make sure to set the following environment variables in your deployment platform:
+
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `NEXT_PUBLIC_API_URL`
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is private and proprietary. 
