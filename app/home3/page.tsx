@@ -60,16 +60,32 @@ export default function Home3Page() {
           <Image src="/images/banner_decor_1.png" alt="Decor" width={96} height={96} className="object-contain w-full h-auto" />
         </div>
         {/* Main Content - moved up */}
-        <div className="absolute top-[35%] left-1/2 -translate-y-1/2 translate-x-[10%] md:translate-x-[30%] z-30 flex flex-col items-center justify-center w-[411px] max-w-full py-12 md:py-20 text-white text-center px-4 bg-transparent">
-          <Image src="/images/logo.png" alt="Logo" width={109} height={109} className="mx-auto mb-4 rounded-full bg-white/80 p-2 shadow-lg" />
-          <h1 className="text-3xl md:text-5xl font-black mb-2 drop-shadow-lg italic" style={{textShadow:'0 2px 8px #a10000', color: '#FBDF58', fontWeight: 900}}>
-            TỔ YẾN SÀO<br />
-            NGUYÊN CHẤT
+        <div className="absolute top-[35%] left-1/2 -translate-y-1/2 translate-x-[10%] md:translate-x-[30%] z-20 flex flex-col items-center justify-center w-[411px] max-w-full py-12 md:py-20 text-white text-center px-4 bg-transparent">
+          <h1 className="text-3xl md:text-5xl font-black mb-2 drop-shadow-lg italic" style={{textShadow:'0 2px 8px #a10000', color: '#FBDF58', fontWeight: 900, fontStyle: 'italic', fontFamily: 'Inter, sans-serif', fontSize: '3.3rem'}}>
+            <span style={{whiteSpace: 'nowrap'}}>TỔ YẾN SÀO</span><br />
+            <span style={{whiteSpace: 'nowrap'}}>NGUYÊN CHẤT</span>
           </h1>
-          <p className="text-lg md:text-xl mb-4 font-medium drop-shadow" style={{fontFamily:'Dancing Script, cursive', fontWeight:500}}>Cho sức khỏe gia đình bạn</p>
-          <div className="inline-block bg-white/10 border border-yellow-400 rounded-full px-6 py-2 mb-3">
-            <span className="font-bold text-white">Giao hàng <span className="text-yellow-300">MIỄN PHÍ</span></span>
-            <span className="ml-2 text-yellow-200">Đơn hàng từ 1.000.000đ trở lên</span>
+          <p className="text-lg md:text-xl mb-4 font-medium drop-shadow italic" style={{fontFamily:'Inter, sans-serif', fontWeight:500, color:'#fff'}}>
+            Cho sức khỏe gia đình bạn
+          </p>
+          <div className="relative inline-block px-0 py-0 mb-3" style={{borderRadius: '16px'}}>
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '16px',
+              padding: '2px',
+              background: 'linear-gradient(90deg, #FFD700 0%, #FFF3B0 50%, #FFD700 100%)',
+              WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+              WebkitMaskComposite: 'xor',
+              pointerEvents: 'none',
+              zIndex: 1
+            }} />
+            <div className="relative z-10 flex flex-col items-center justify-center bg-[#a10000] rounded-[16px] px-6 py-3" style={{minWidth: '260px'}}>
+              <div className="font-bold text-white text-lg md:text-2xl" style={{lineHeight: 1.2}}>
+                Giao hàng <span className="text-yellow-300">MIỄN PHÍ</span>
+              </div>
+              <div className="text-white text-sm md:text-base mt-1">Đơn hàng từ 1.000.000đ trở lên</div>
+            </div>
           </div>
           <a href="#buy" className="inline-block bg-yellow-400 hover:bg-yellow-500 text-red-900 font-bold px-6 py-3 rounded-full shadow transition mt-2">ĐẶT MUA NGAY</a>
         </div>

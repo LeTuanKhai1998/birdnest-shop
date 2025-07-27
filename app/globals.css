@@ -1,12 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-roboto);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -44,7 +45,7 @@
 }
 
 :root {
-  --font-roboto: 'Roboto', 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', 'sans-serif';
+  --font-inter: 'Inter', 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', 'sans-serif';
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -80,13 +81,13 @@
 }
 
 html {
-  font-family: var(--font-roboto), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-size: 16px;
   line-height: 1.6;
 }
 
 body {
-  font-family: var(--font-roboto), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 400;
   font-size: 1rem;
   letter-spacing: 0;
@@ -94,36 +95,36 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Apply Roboto to all headings and UI elements */
+/* Apply inter to all headings and UI elements */
 h1, h2, h3, h4, h5, h6, .font-secondary, .product-title, .btn, button, .heading {
-  font-family: var(--font-roboto), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .btn, button, .font-secondary {
-  font-family: var(--font-roboto), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 500;
 }
 
 label, .label, .description, .text-body, .text-label {
-  font-family: var(--font-roboto), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 400;
 }
 
-/* Apply Roboto to all form elements */
+/* Apply inter to all form elements */
 input, textarea, select, option {
-  font-family: var(--font-roboto), sans-serif;
+  font-family: var(--font-inter), sans-serif;
 }
 
-/* Apply Roboto to all navigation elements */
+/* Apply inter to all navigation elements */
 nav, nav * {
-  font-family: var(--font-roboto), sans-serif;
+  font-family: var(--font-inter), sans-serif;
 }
 
-/* Apply Roboto to all card and component elements */
+/* Apply inter to all card and component elements */
 .card, .card *, .component, .component * {
-  font-family: var(--font-roboto), sans-serif;
+  font-family: var(--font-inter), sans-serif;
 }
 
 .dark {

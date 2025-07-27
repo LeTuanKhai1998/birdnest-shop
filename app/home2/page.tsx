@@ -286,7 +286,7 @@ export default function Home2Page() {
                   </div>
                 </div>
                 <Quote className="w-6 h-6 text-red-400 mb-2" />
-                <p className="text-gray-600 italic">"{testimonial.comment}"</p>
+                <p className="text-gray-600 italic">{"\""}{testimonial.comment}{"\""}</p>
               </CardContent>
             </Card>
           ))}
