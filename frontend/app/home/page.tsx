@@ -499,7 +499,7 @@ export default function Home3Page() {
       {/* Latest Products */}
       <section className="w-full bg-[#fbd8b0] py-8 sm:py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-red-700">Latest Products</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-red-700">Sản Phẩm Mới Nhất</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <ProductCardList products={latestProducts} />
           </div>
@@ -509,7 +509,7 @@ export default function Home3Page() {
       {/* Premium Combos */}
       <section className="w-full bg-[#fbd8b0] py-8 sm:py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-yellow-700">Premium Birdnest Combos</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-yellow-700">Combo Yến Sào Cao Cấp</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <ProductCardList products={comboProducts} />
           </div>

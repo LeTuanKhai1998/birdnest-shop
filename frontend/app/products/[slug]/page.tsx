@@ -3,7 +3,6 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { AddToCartButton } from "@/components/AddToCartButton";
-import Footer from "@/components/Footer";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
@@ -329,7 +328,6 @@ function ProductDetailClient({ product, allProducts }: { product: any, allProduc
         {/* Related Products Section */}
         <RelatedProducts currentProduct={product} products={uiAllProducts} />
       </main>
-      <Footer />
     </div>
   );
 }

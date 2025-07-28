@@ -5,9 +5,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const quickLinks = [
-  { label: "Delivery", href: "/delivery" },
-  { label: "Purchase Policy", href: "/policy" },
-  { label: "Return & Exchange", href: "/return" },
+  { label: "Giao hàng", href: "/delivery" },
+  { label: "Chính sách mua hàng", href: "/policy" },
+  { label: "Đổi trả & Hoàn tiền", href: "/return" },
 ];
 
 const contactLinks = [
@@ -45,7 +45,7 @@ const contactLinks = [
 const companyInfoDescription = "";
 const companyInfoDetails = [
   { 
-    label: "Address:", 
+    label: "Địa chỉ:", 
     value: "45 Trần Hưng Đạo, Đảo, Rạch Giá, Kiên Giang", 
     className: "text-[#e6b17a]",
     icon: <MapPin className="w-4 h-4 inline mr-1" />,
@@ -304,10 +304,10 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
             <p className="text-xs sm:text-sm text-gray-300 text-center sm:text-left">
-              © 2025 YẾN SÀO KIM SANG. All rights reserved.
+              © 2025 YẾN SÀO KIM SANG. Tất cả quyền được bảo lưu.
             </p>
             <div className="flex items-center space-x-4 text-xs sm:text-sm text-gray-300">
-              <span>Made with ❤️ in Vietnam</span>
+              <span>Được tạo với ❤️ tại Việt Nam</span>
             </div>
           </div>
         </div>

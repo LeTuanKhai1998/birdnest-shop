@@ -25,15 +25,15 @@ export default function SignupPage() {
       const response = await authApi.register({ name, email, password });
       
       if (response.code === 201 || response.code === 200) {
-        toast.success("Account created successfully! Please sign in.");
+        toast.success("Tài khoản đã được tạo thành công! Vui lòng đăng nhập.");
         router.push("/login");
       } else {
-        setError(response.message || "Signup failed");
-        toast.error(response.message || "Signup failed");
+        setError(response.message || "Đăng ký thất bại");
+        toast.error(response.message || "Đăng ký thất bại");
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      const errorMessage = error.message || "Signup failed";
+      const errorMessage = error.message || "Đăng ký thất bại";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -46,15 +46,15 @@ export default function SignupPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            Tạo tài khoản mới
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
+            Hoặc{" "}
             <a
               href="/login"
               className="font-medium text-red-600 hover:text-red-500"
             >
-              sign in to your existing account
+              đăng nhập vào tài khoản hiện có
             </a>
           </p>
         </div>
@@ -62,7 +62,7 @@ export default function SignupPage() {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="name" className="sr-only">
-                Full name
+                Họ tên đầy đủ
               </label>
               <Input
                 id="name"
@@ -73,12 +73,12 @@ export default function SignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
-                placeholder="Full name"
+                placeholder="Họ tên đầy đủ"
               />
             </div>
             <div>
               <label htmlFor="email" className="sr-only">
-                Email address
+                Địa chỉ email
               </label>
               <Input
                 id="email"
@@ -89,12 +89,12 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                placeholder="Địa chỉ email"
               />
             </div>
             <div className="relative">
               <label htmlFor="password" className="sr-only">
-                Password
+                Mật khẩu
               </label>
               <Input
                 id="password"
@@ -105,7 +105,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                placeholder="Mật khẩu"
               />
               <button
                 type="button"
@@ -136,18 +136,18 @@ export default function SignupPage() {
               ) : (
                 <Mail className="h-4 w-4 mr-2" />
               )}
-              Create account
+              Tạo tài khoản
             </Button>
           </div>
 
           <div className="text-center text-sm text-gray-600">
-            By creating an account, you agree to our{" "}
+            Bằng việc tạo tài khoản, bạn đồng ý với{" "}
             <a href="/terms" className="text-red-600 hover:text-red-500">
-              Terms of Service
+              Điều khoản dịch vụ
             </a>{" "}
-            and{" "}
+            và{" "}
             <a href="/privacy" className="text-red-600 hover:text-red-500">
-              Privacy Policy
+              Chính sách bảo mật
             </a>
           </div>
         </form>

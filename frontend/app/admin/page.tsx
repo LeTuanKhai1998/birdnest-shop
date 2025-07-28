@@ -101,7 +101,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Lỗi</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Bảng Điều Khiển Admin</h1>
         
         {dashboardData ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -128,7 +128,7 @@ export default function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                  <p className="text-sm font-medium text-gray-600">Tổng Doanh Thu</p>
                   <p className="text-2xl font-semibold text-gray-900">
                     ${dashboardData.totalRevenue.toLocaleString()}
                   </p>
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                  <p className="text-sm font-medium text-gray-600">Tổng Đơn Hàng</p>
                   <p className="text-2xl font-semibold text-gray-900">
                     {dashboardData.totalOrders.toLocaleString()}
                   </p>
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Customers</p>
+                  <p className="text-sm font-medium text-gray-600">Tổng Khách Hàng</p>
                   <p className="text-2xl font-semibold text-gray-900">
                     {dashboardData.totalCustomers.toLocaleString()}
                   </p>
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
+                  <p className="text-sm font-medium text-gray-600">Giá Trị Đơn Hàng TB</p>
                   <p className="text-2xl font-semibold text-gray-900">
                     ${dashboardData.averageOrderValue.toLocaleString()}
                   </p>
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500">Loading dashboard data...</p>
+            <p className="text-gray-500">Đang tải dữ liệu bảng điều khiển...</p>
           </div>
         )}
       </div>

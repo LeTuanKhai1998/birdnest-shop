@@ -15,21 +15,23 @@ import { useCheckoutStore } from "@/lib/checkout-store";
 import { CartItem } from "@/lib/cart-store";
 import { useSession } from "next-auth/react";
 import useSWR from "swr";
-import Image from "next/image";
+import { SafeImage } from "@/components/SafeImage";
 import { api } from "@/lib/api";
+import { useHydrationSafe } from "@/hooks/useHydrationSafe";
+import { AuthModal } from "@/components/AuthModal";
 
 function fetcher(url: string, session: any) {
   return api.get(url.replace('/v1', ''), session);
 }
 
 const schema = z.object({
-  fullName: z.string().min(2, "Full name is required"),
-  phone: z.string().regex(/^(0|\+84)[0-9]{9}$/, "Invalid Vietnamese phone number"),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
-  province: z.string(),
-  district: z.string(),
-  ward: z.string(),
-  address: z.string().min(5, "Delivery address is required"),
+  fullName: z.string().min(2, "Họ tên là bắt buộc"),
+  phone: z.string().regex(/^(0|\+84)[0-9]{9}$/, "Số điện thoại không hợp lệ"),
+  email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
+  province: z.string().min(1, "Tỉnh/Thành phố là bắt buộc"),
+  district: z.string().min(1, "Quận/Huyện là bắt buộc"),
+  ward: z.string().min(1, "Phường/Xã là bắt buộc"),
+  address: z.string().min(5, "Địa chỉ giao hàng là bắt buộc"),
   addressMode: z.enum(["manual", "map"]),
   apartment: z.string().optional(),
   note: z.string().optional(),
@@ -77,24 +79,37 @@ function getAddressDisplay(addr: Address, provinces: Province[]): string {
 }
 
 export default function CheckoutPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const user = session?.user;
+  const { isHydrated } = useHydrationSafe();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  // Only fetch addresses after component is mounted and user is authenticated
   const { data: savedAddresses = [] } = useSWR(
-    user ? ["/v1/users/addresses", session] : null, 
+    isHydrated && user ? ["/v1/users/addresses", session] : null, 
     ([url, session]) => fetcher(url, session)
   );
-  const [selectedAddressId, setSelectedAddressId] = useState<string | "new">(savedAddresses.length > 0 ? savedAddresses[0].id : "new");
+  
+  const [selectedAddressId, setSelectedAddressId] = useState<string | "new">("new");
   const items = useCartStore((s) => s.items);
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors }, watch, setValue, reset } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, watch, setValue, reset, trigger } = useForm<FormData>({
     resolver: zodResolver(schema),
-    mode: "onTouched",
+    mode: "onBlur",
     defaultValues: {
       addressMode: "manual",
-      email: user?.email || "",
+      email: "",
+      fullName: "",
+      phone: "",
+      province: "",
+      district: "",
+      ward: "",
+      address: "",
+      apartment: "",
+      note: "",
     },
   });
   const [addressMode, setAddressMode] = useState<"manual" | "map">("manual");
@@ -108,19 +123,38 @@ export default function CheckoutPage() {
   const setDeliveryFee = useCheckoutStore((s) => s.setDeliveryFee);
   const lastResetId = useRef<string | null>(null);
 
+  // Set default selected address after addresses are loaded
   useEffect(() => {
+    if (isHydrated && savedAddresses.length > 0 && selectedAddressId === "new") {
+      setSelectedAddressId(savedAddresses[0].id);
+    }
+  }, [isHydrated, savedAddresses, selectedAddressId]);
+
+  // Set email when user is available
+  useEffect(() => {
+    if (isHydrated && user?.email) {
+      setValue("email", user.email);
+    }
+  }, [isHydrated, user?.email, setValue]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     setLoadingProvinces(true);
     fetch("https://provinces.open-api.vn/api/?depth=3")
       .then(res => res.json())
       .then(data => {
         setProvinces(data);
         setLoadingProvinces(false);
+      })
+      .catch(() => {
+        setLoadingProvinces(false);
       });
-  }, []);
+  }, [isHydrated]);
 
   // Pre-fill form when address is selected
   useEffect(() => {
-    if (loadingProvinces) return;
+    if (!isHydrated || loadingProvinces) return;
     if (selectedAddressId && selectedAddressId !== "new") {
       if (lastResetId.current !== selectedAddressId) {
         const addr = savedAddresses.find((a: Address) => a.id === selectedAddressId);
@@ -160,11 +194,17 @@ export default function CheckoutPage() {
       });
       lastResetId.current = "new";
     }
-  }, [selectedAddressId, savedAddresses, loadingProvinces, reset, setValue, user?.email]);
+  }, [selectedAddressId, savedAddresses, loadingProvinces, reset, setValue, user?.email, isHydrated]);
 
   const shippingFee = subtotal >= 2000000 ? 0 : 30000;
 
   const onSubmit = async (data: FormData) => {
+    // Check if user is authenticated before proceeding
+    if (status === "unauthenticated") {
+      setShowAuthModal(true);
+      return;
+    }
+
     setLoading(true);
     // If user is logged in and selected 'new', auto-save address
     if (user && (selectedAddressId === "new" || !selectedAddressId)) {
@@ -191,13 +231,17 @@ export default function CheckoutPage() {
     }, 1200);
   };
 
+  const handleAuthSuccess = () => {
+    // Refresh the page to update session state
+    window.location.reload();
+  };
+
   // Register addressMode and set value on toggle
   const handleAddressModeChange = (mode: "manual" | "map") => {
     setAddressMode(mode);
     setValue("addressMode", mode);
   };
 
-  // Remove local state for province, district, ward
   // When province changes, reset district/ward
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -207,6 +251,7 @@ export default function CheckoutPage() {
     setLoadingDistricts(true);
     setTimeout(() => setLoadingDistricts(false), 500); // mock loading
   };
+  
   // When district changes, reset ward
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -218,30 +263,62 @@ export default function CheckoutPage() {
 
   const watchedAddress = watch("address");
 
+  // Show loading state until hydrated
+  if (!isHydrated) {
+    return (
+      <div className="flex flex-col min-h-screen bg-white">
+        <main className="flex-1 container mx-auto px-2 py-8 max-w-6xl">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // Always show the address form. If not logged in, show a sign-in link above the form.
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Toaster position="top-center" richColors />
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        onSuccess={handleAuthSuccess}
+        mode="quick"
+      />
       <main className="flex-1 container mx-auto px-2 py-8 max-w-6xl">
-        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+        <h1 className="text-2xl font-bold mb-6">Thanh Toán</h1>
         <div className="flex flex-col md:flex-row gap-8">
           {/* Form left, summary right on desktop */}
           <div className="flex-1 min-w-0">
             <form onSubmit={handleSubmit(onSubmit, (errors) => {
-              toast.error("Please fill all required fields correctly.");
-              console.log(errors);
+              console.log("Form validation errors:", errors);
+              toast.error("Vui lòng điền đầy đủ các trường bắt buộc.");
             })} className="space-y-6">
               <Card className="p-6 space-y-4">
-                <h2 className="text-lg font-semibold mb-2">Shipping Information</h2>
+                <h2 className="text-lg font-semibold mb-2">Thông Tin Giao Hàng</h2>
                 <div className="flex flex-col gap-4">
-                  {!user && (
-                    <div className="mb-2 text-center text-sm text-gray-600">
-                      <a href="/login?callbackUrl=/checkout" className="text-red-600 hover:underline">Sign in for faster checkout</a>
+                  {status === "unauthenticated" && (
+                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-blue-800 font-medium">Đăng nhập để có trải nghiệm tốt hơn</p>
+                          <p className="text-xs text-blue-600 mt-1">Lưu địa chỉ và theo dõi đơn hàng dễ dàng</p>
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setShowAuthModal(true)}
+                        >
+                          Đăng Nhập
+                        </Button>
+                      </div>
                     </div>
                   )}
-                  {user && savedAddresses.length > 0 && (
+                  {status === "authenticated" && savedAddresses.length > 0 && (
                     <div>
-                      <label className="block font-medium mb-1">Select Address</label>
+                      <label className="block font-medium mb-1">Chọn Địa Chỉ</label>
                       <select
                         className="w-full border rounded px-2 py-2 mb-2"
                         value={selectedAddressId}
@@ -249,84 +326,214 @@ export default function CheckoutPage() {
                       >
                         {[...savedAddresses].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)).map((a: Address) => (
                           <option key={a.id} value={a.id}>
-                            {getAddressDisplay(a, provinces)}{a.isDefault ? " (Default)" : ""}
+                            {getAddressDisplay(a, provinces)}{a.isDefault ? " (Mặc Định)" : ""}
                           </option>
                         ))}
-                        <option value="new">Add new address</option>
+                        <option value="new">Thêm địa chỉ mới</option>
                       </select>
                     </div>
                   )}
                   <div>
-                    <label className="block font-medium mb-1" htmlFor="fullName">Full Name</label>
-                    <Input id="fullName" {...register("fullName")}/>
-                    {errors.fullName && <p className="text-red-600 text-sm mt-1">{errors.fullName.message}</p>}
+                    <label className="block font-medium mb-1" htmlFor="fullName">
+                      Họ Tên <span className="text-red-500">*</span>
+                    </label>
+                    <Input 
+                      id="fullName" 
+                      {...register("fullName")}
+                      placeholder="Nhập họ tên của bạn"
+                      className={`${errors.fullName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-red-500 focus:ring-red-500'}`}
+                    />
+                    {errors.fullName && (
+                      <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-red-600 text-sm flex items-center">
+                          <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {errors.fullName.message}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <label className="block font-medium mb-1" htmlFor="phone">Phone Number</label>
-                    <Input id="phone" {...register("phone")}/>
-                    {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone.message}</p>}
+                    <label className="block font-medium mb-1" htmlFor="phone">
+                      Số Điện Thoại <span className="text-red-500">*</span>
+                    </label>
+                    <Input 
+                      id="phone" 
+                      {...register("phone")}
+                      placeholder="Nhập số điện thoại của bạn"
+                      className={`${errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-red-500 focus:ring-red-500'}`}
+                    />
+                    {errors.phone && (
+                      <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-red-600 text-sm flex items-center">
+                          <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {errors.phone.message}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <label className="block font-medium mb-1" htmlFor="email">Email Address (optional)</label>
-                    <Input id="email" type="email" {...register("email")}/>
-                    {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>}
+                    <label className="block font-medium mb-1" htmlFor="email">
+                      Email <span className="text-gray-400 text-sm">(tùy chọn)</span>
+                    </label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      {...register("email")}
+                      placeholder="Nhập địa chỉ email của bạn"
+                      className="border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    />
+                    {errors.email && (
+                      <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-red-600 text-sm flex items-center">
+                          <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {errors.email.message}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   {/* Address Mode Toggle */}
                   <div>
-                    <label className="block font-medium mb-1">Delivery Address</label>
+                    <label className="block font-medium mb-1">
+                      Địa Chỉ Giao Hàng <span className="text-red-500">*</span>
+                    </label>
                     <div className="flex gap-2 mb-2">
-                      <Button type="button" variant={addressMode === "manual" ? "default" : "outline"} size="sm" onClick={() => handleAddressModeChange("manual")}>Manual Entry</Button>
-                      <Button type="button" variant={addressMode === "map" ? "default" : "outline"} size="sm" onClick={() => handleAddressModeChange("map")}>Map Selection</Button>
+                      <Button type="button" variant={addressMode === "manual" ? "default" : "outline"} size="sm" onClick={() => handleAddressModeChange("manual")}>Nhập Thủ Công</Button>
+                      <Button type="button" variant={addressMode === "map" ? "default" : "outline"} size="sm" onClick={() => handleAddressModeChange("map")}>Chọn Trên Bản Đồ</Button>
                       <input type="hidden" {...register("addressMode")}/>
                     </div>
-                    {errors.addressMode && <p className="text-red-600 text-sm mt-1">{errors.addressMode.message}</p>}
+                    {errors.addressMode && (
+                      <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-red-600 text-sm flex items-center">
+                          <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {errors.addressMode.message}
+                        </p>
+                      </div>
+                    )}
                     {addressMode === "manual" ? (
                       <div className="space-y-2">
                         {/* Province dropdown */}
                         <div>
-                          <label className="block text-sm mb-1">Province/City</label>
-                          <select className="w-full border rounded px-2 py-2" {...register("province")} onChange={handleProvinceChange} disabled={loadingProvinces}>
-                            <option value="">{loadingProvinces ? "Loading..." : "Select province/city"}</option>
+                          <label className="block text-sm mb-1">
+                            Tỉnh/Thành Phố <span className="text-red-500">*</span>
+                          </label>
+                          <select 
+                            className={`w-full border rounded px-2 py-2 ${errors.province ? 'border-red-500' : 'border-gray-300'} focus:border-red-500 focus:ring-red-500`}
+                            {...register("province")} 
+                            onChange={handleProvinceChange} 
+                            disabled={loadingProvinces}
+                          >
+                            <option value="">{loadingProvinces ? "Đang tải..." : "Chọn tỉnh/thành phố"}</option>
                             {provinces.map((p) => (
                               <option key={p.code} value={String(p.code)}>{p.name}</option>
                             ))}
                           </select>
+                          {errors.province && (
+                            <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded-md">
+                              <p className="text-red-600 text-sm flex items-center">
+                                <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {errors.province.message}
+                              </p>
+                            </div>
+                          )}
                         </div>
                         {/* District dropdown */}
                         <div>
-                          <label className="block text-sm mb-1">District</label>
-                          <select className="w-full border rounded px-2 py-2" {...register("district")} onChange={handleDistrictChange} disabled={!watch("province") || loadingDistricts}>
-                            <option value="">{loadingDistricts ? "Loading..." : "Select district"}</option>
+                          <label className="block text-sm mb-1">
+                            Quận/Huyện <span className="text-red-500">*</span>
+                          </label>
+                          <select 
+                            className={`w-full border rounded px-2 py-2 ${errors.district ? 'border-red-500' : 'border-gray-300'} focus:border-red-500 focus:ring-red-500`}
+                            {...register("district")} 
+                            onChange={handleDistrictChange} 
+                            disabled={!watch("province") || loadingDistricts}
+                          >
+                            <option value="">{loadingDistricts ? "Đang tải..." : "Chọn quận/huyện"}</option>
                             {watch("province") && !loadingDistricts && provinces.find(p => String(p.code) === String(watch("province")))?.districts.map((d: District) => (
                               <option key={d.code} value={String(d.code)}>{d.name}</option>
                             ))}
                           </select>
+                          {errors.district && (
+                            <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded-md">
+                              <p className="text-red-600 text-sm flex items-center">
+                                <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {errors.district.message}
+                              </p>
+                            </div>
+                          )}
                         </div>
                         {/* Ward dropdown */}
                         <div>
-                          <label className="block text-sm mb-1">Ward/Commune</label>
-                          <select className="w-full border rounded px-2 py-2" {...register("ward")} onChange={e => setValue("ward", e.target.value)} disabled={!watch("district") || loadingWards}>
-                            <option value="">{loadingWards ? "Loading..." : "Select ward/commune"}</option>
+                          <label className="block text-sm mb-1">
+                            Phường/Xã <span className="text-red-500">*</span>
+                          </label>
+                          <select 
+                            className={`w-full border rounded px-2 py-2 ${errors.ward ? 'border-red-500' : 'border-gray-300'} focus:border-red-500 focus:ring-red-500`}
+                            {...register("ward")} 
+                            onChange={e => setValue("ward", e.target.value)} 
+                            disabled={!watch("district") || loadingWards}
+                          >
+                            <option value="">{loadingWards ? "Đang tải..." : "Chọn phường/xã"}</option>
                             {watch("province") && watch("district") && !loadingWards && provinces.find(p => String(p.code) === String(watch("province")))?.districts.find((d: District) => String(d.code) === String(watch("district")))?.wards.map((w: Ward) => (
                               <option key={w.code} value={String(w.code)}>{w.name}</option>
                             ))}
                           </select>
+                          {errors.ward && (
+                            <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded-md">
+                              <p className="text-red-600 text-sm flex items-center">
+                                <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {errors.ward.message}
+                              </p>
+                            </div>
+                          )}
                         </div>
                         {/* Street/house autocomplete */}
                         <div>
-                          <label className="block text-sm mb-1">Street/House Number</label>
+                          <label className="block text-sm mb-1">
+                            Số Nhà/Đường <span className="text-red-500">*</span>
+                          </label>
                           <Input
                             id="address"
-                            placeholder="Enter street/house number..."
+                            placeholder="Nhập số nhà và tên đường..."
                             autoComplete="off"
                             {...register("address")}
+                            className={`${errors.address ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-red-500 focus:ring-red-500'}`}
                           />
-                          {errors.address && <p className="text-red-600 text-sm mt-1">{errors.address.message}</p>}
+                          {errors.address && (
+                            <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded-md">
+                              <p className="text-red-600 text-sm flex items-center">
+                                <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {errors.address.message}
+                              </p>
+                            </div>
+                          )}
                         </div>
                         {/* Optional apartment/unit */}
                         <div>
-                          <label className="block text-sm mb-1">Apartment/Unit (optional)</label>
-                          <Input id="apartment" {...register("apartment")}/>
+                          <label className="block text-sm mb-1">
+                            Căn Hộ/Đơn Vị <span className="text-gray-400 text-xs">(tùy chọn)</span>
+                          </label>
+                          <Input 
+                            id="apartment" 
+                            {...register("apartment")}
+                            placeholder="Nhập số căn hộ/đơn vị"
+                            className="border-gray-300 focus:border-red-500 focus:ring-red-500"
+                          />
                         </div>
                       </div>
                     ) : (
@@ -338,64 +545,93 @@ export default function CheckoutPage() {
                             <circle cx="12" cy="10" r="3" fill="currentColor" />
                           </svg>
                         </div>
-                        <span className="text-xs text-gray-400 absolute bottom-2 left-2">(Mock map, click marker to move)</span>
+                        <span className="text-xs text-gray-400 absolute bottom-2 left-2">(Bản đồ mẫu, nhấp vào marker để di chuyển)</span>
                       </div>
                     )}
                     {/* Resolved address feedback */}
-                    {watchedAddress && <div className="text-green-700 text-sm mt-1">Resolved: {watchedAddress}</div>}
+                    {watchedAddress && <div className="text-green-700 text-sm mt-1">Đã xác định: {watchedAddress}</div>}
                   </div>
                   {/* Optional note */}
                   <div>
-                    <label className="block font-medium mb-1" htmlFor="note">Note (optional)</label>
-                    <Textarea id="note" rows={2} {...register("note")}/>
+                    <label className="block font-medium mb-1" htmlFor="note">
+                      Ghi Chú <span className="text-gray-400 text-sm">(tùy chọn)</span>
+                    </label>
+                    <Textarea 
+                      id="note" 
+                      rows={2} 
+                      {...register("note")}
+                      placeholder="Thêm hướng dẫn đặc biệt..."
+                      className="border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    />
                   </div>
                 </div>
               </Card>
               <Button type="submit" className="w-full text-base font-semibold py-3" disabled={loading || items.length === 0}>
-                {loading ? "Processing..." : "Proceed to Payment"}
+                {loading ? "Đang xử lý..." : "Tiến Hành Thanh Toán"}
               </Button>
               {items.length === 0 && (
                 <div className="text-center text-gray-500 mt-2">
-                  Your cart is empty. <Link href="/products" className="underline">Browse products</Link>
+                  Giỏ hàng của bạn trống. <Link href="/products" className="underline">Xem sản phẩm</Link>
                 </div>
               )}
             </form>
           </div>
           {/* Order Summary */}
-          <div className="md:w-[350px] w-full md:sticky md:top-24 flex-shrink-0">
-            <Card className="p-6 space-y-4">
-              <h2 className="text-lg font-semibold mb-2">Order Summary</h2>
-              <ul className="divide-y">
-                {items.map(({ product, quantity }) => (
-                  <li key={product.id} className="py-2 flex items-center gap-3">
-                    <div className="w-14 h-14 rounded bg-gray-50 border flex items-center justify-center overflow-hidden">
-                      <Image
-                        src={product.image || (product.images && product.images[0]) || ''}
-                        alt={product.name}
-                        layout="fill"
-                        objectFit="cover"
-                      />
+          <div className="md:w-[320px] w-full md:sticky md:top-24 flex-shrink-0">
+            <Card className="p-5 space-y-4">
+              <h2 className="text-lg font-semibold mb-3">Tóm Tắt Đơn Hàng</h2>
+              {items.length > 0 ? (
+                <ul className="divide-y divide-gray-100">
+                  {items.map(({ product, quantity }) => (
+                    <li key={product.id} className="py-3 flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gray-50 border flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+                        <SafeImage
+                          src={product.image || (product.images && product.images[0]) || ''}
+                          alt={product.name}
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm leading-tight line-clamp-2">{product.name}</div>
+                        <div className="text-xs text-gray-500 mt-1">SL: {quantity}</div>
+                      </div>
+                      <div className="font-semibold text-red-700 text-sm flex-shrink-0">{currencyFormatter.format(product.price * quantity)}</div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm">Giỏ hàng của bạn trống</p>
+                  <Link href="/products" className="text-red-600 hover:underline text-sm mt-1 inline-block">
+                    Xem sản phẩm
+                  </Link>
+                </div>
+              )}
+              {items.length > 0 && (
+                <>
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <span>Tạm tính</span>
+                      <span>{currencyFormatter.format(subtotal)}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">{product.name}</div>
-                      <div className="text-xs text-gray-500">x{quantity}</div>
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <span>Phí vận chuyển</span>
+                      <span>{shippingFee === 0 ? <span className="text-green-600 font-semibold">Miễn phí</span> : currencyFormatter.format(shippingFee)}</span>
                     </div>
-                    <div className="font-semibold text-red-700 text-sm">{currencyFormatter.format(product.price * quantity)}</div>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex items-center justify-between pt-2 text-base">
-                <span>Subtotal</span>
-                <span>{currencyFormatter.format(subtotal)}</span>
-              </div>
-              <div className="flex items-center justify-between text-base">
-                <span>Shipping</span>
-                <span>{shippingFee === 0 ? <span className="text-green-600 font-semibold">Free</span> : currencyFormatter.format(shippingFee)}</span>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t font-bold text-lg">
-                <span>Total</span>
-                <span className="text-red-700">{currencyFormatter.format(subtotal + shippingFee)}</span>
-              </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-200 font-bold text-lg">
+                    <span>Tổng cộng</span>
+                    <span className="text-red-700">{currencyFormatter.format(subtotal + shippingFee)}</span>
+                  </div>
+                </>
+              )}
             </Card>
           </div>
         </div>

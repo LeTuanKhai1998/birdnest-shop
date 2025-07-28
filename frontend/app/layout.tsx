@@ -4,7 +4,9 @@ import "./globals.css";
 import { MainNavbar } from "@/components/MainNavbar";
 import { Providers } from "@/components/Providers";
 import { HydrationSafe } from "@/components/HydrationSafe";
+import { HydrationFix } from "@/components/HydrationFix";
 import Footer from "@/components/Footer";
+import Script from "next/script";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -26,7 +28,55 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} font-sans`}>
+      <head>
+        <Script id="fix-hydration-issues" strategy="beforeInteractive">
+          {`
+            // Fix hydration issues caused by browser extensions
+            (function() {
+              // Remove browser extension attributes that cause hydration mismatches
+              function removeExtensionAttributes() {
+                const body = document.body;
+                if (body && body.hasAttribute('cz-shortcut-listen')) {
+                  body.removeAttribute('cz-shortcut-listen');
+                }
+                
+                // Remove other common extension attributes
+                const elements = document.querySelectorAll('[data-extension-attribute]');
+                elements.forEach(el => {
+                  el.removeAttribute('data-extension-attribute');
+                });
+              }
+              
+              // Run immediately
+              removeExtensionAttributes();
+              
+              // Also run after DOM is ready
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', removeExtensionAttributes);
+              } else {
+                removeExtensionAttributes();
+              }
+              
+              // Run periodically to catch any new attributes
+              setInterval(removeExtensionAttributes, 1000);
+            })();
+            
+            // Suppress browser extension errors
+            const originalError = console.error;
+            console.error = (...args) => {
+              if (args[0] && typeof args[0] === 'string' && 
+                  (args[0].includes('runtime.lastError') || 
+                   args[0].includes('Could not establish connection') ||
+                   args[0].includes('cz-shortcut-listen'))) {
+                return;
+              }
+              originalError.apply(console, args);
+            };
+          `}
+        </Script>
+      </head>
       <body>
+        <HydrationFix />
         <Providers>
           <HydrationSafe>
             <MainNavbar />

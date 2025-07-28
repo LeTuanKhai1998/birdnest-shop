@@ -34,23 +34,23 @@ function LoginPageInner() {
       
       if (res?.error) {
         if (res.error === "CredentialsSignin") {
-          setError("Invalid email or password. Please try again.");
-          toast.error("Invalid email or password. Please try again.");
+          setError("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
+          toast.error("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
         } else {
           setError(res.error);
-          toast.error("Sign in failed: " + res.error);
+          toast.error("Đăng nhập thất bại: " + res.error);
         }
       } else if (!res?.ok) {
-        setError("Sign in failed: Unknown error");
-        toast.error("Sign in failed: Unknown error");
+        setError("Đăng nhập thất bại: Lỗi không xác định");
+        toast.error("Đăng nhập thất bại: Lỗi không xác định");
       } else if (res.url) {
-        toast.success("Login successful!");
+        toast.success("Đăng nhập thành công!");
         router.push(res.url);
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("An unexpected error occurred");
-      toast.error("An unexpected error occurred");
+      setError("Đã xảy ra lỗi không mong muốn");
+      toast.error("Đã xảy ra lỗi không mong muốn");
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ function LoginPageInner() {
       await signIn(provider, { callbackUrl });
     } catch (error) {
       console.error("Social login error:", error);
-      toast.error("Social login failed");
+      toast.error("Đăng nhập bằng mạng xã hội thất bại");
     } finally {
       setLoading(false);
     }
@@ -73,15 +73,15 @@ function LoginPageInner() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Đăng nhập vào tài khoản
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
+            Hoặc{" "}
             <a
               href="/signup"
               className="font-medium text-red-600 hover:text-red-500"
             >
-              create a new account
+              tạo tài khoản mới
             </a>
           </p>
         </div>
@@ -89,7 +89,7 @@ function LoginPageInner() {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
-                Email address
+                Địa chỉ email
               </label>
               <Input
                 id="email"
@@ -100,12 +100,12 @@ function LoginPageInner() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                placeholder="Địa chỉ email"
               />
             </div>
             <div className="relative">
               <label htmlFor="password" className="sr-only">
-                Password
+                Mật khẩu
               </label>
               <Input
                 id="password"
@@ -116,7 +116,7 @@ function LoginPageInner() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                placeholder="Mật khẩu"
               />
               <button
                 type="button"
@@ -147,7 +147,7 @@ function LoginPageInner() {
               ) : (
                 <Mail className="h-4 w-4 mr-2" />
               )}
-              Sign in
+              Đăng nhập
             </Button>
           </div>
 
@@ -158,7 +158,7 @@ function LoginPageInner() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-gray-50 text-gray-500">
-                  Or continue with
+                  Hoặc tiếp tục với
                 </span>
               </div>
             </div>
@@ -210,7 +210,7 @@ function LoginPageInner() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Đang tải...</div>}>
       <LoginPageInner />
     </Suspense>
   );

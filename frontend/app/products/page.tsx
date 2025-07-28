@@ -6,14 +6,15 @@ const FALLBACK_IMAGE = "/images/placeholder.png";
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { page?: string; search?: string };
+  searchParams: Promise<{ page?: string; search?: string }>;
 }) {
   try {
     console.log('🔍 Fetching products from API...');
     
-    // Get search parameters
-    const page = searchParams.page ? parseInt(searchParams.page) : 1;
-    const search = searchParams.search || '';
+    // Await searchParams before accessing its properties
+    const params = await searchParams;
+    const page = params.page ? parseInt(params.page) : 1;
+    const search = params.search || '';
     
     // Fetch products from the API with pagination
     const response = await productsApi.getProducts({
