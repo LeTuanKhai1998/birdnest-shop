@@ -16,7 +16,7 @@
 
 ## Scratchpad
 
-### 1. Project Setup and Configuration []
+### 1. Project Setup and Configuration [X]
 
 - [X] Initialize Next.js 15 project with TypeScript
 - [X] Set up project structure and folders
@@ -34,7 +34,7 @@
   - NextAuth.js beta for authentication
   - Stripe for payments
 
-### 2. Database and Authentication []
+### 2. Database and Authentication [X]
 
 - [X] Set up PostgreSQL database
 - [X] Configure Prisma schema:
@@ -50,7 +50,7 @@
   - JWT handling
   - Protected routes
 
-### 3. Core Features - Customer Side [ ]
+### 3. Core Features - Customer Side [X]
 
 - [X] Home Layout:
   - Create `(home)` folder in the `app` directory  
@@ -104,7 +104,7 @@
   - Wishlist (favorite products)
 
 
-### 4. Admin Dashboard [ ]
+### 4. Admin Dashboard [X]
 
 - [X] Admin authentication and authorization (Implemented: /admin route, only accessible by isAdmin users, unauthorized users redirected)
 - [X] Dashboard overview:
@@ -267,10 +267,32 @@
   - [X] Created API documentation guide and best practices
   - [X] Added `make swagger` command for easy documentation regeneration
   - [X] Created test script to verify Swagger functionality
-- [ ] Prepare Makefile or Taskfile for dev tools
+- [X] Prepare Makefile or Taskfile for dev tools
 
+### 6. Frontend Authentication Integration [X]
 
-### 6. Advanced Features [ ]
+#### Authentication Token Management
+- [X] Update API configuration to automatically include auth tokens
+- [X] Create token management utilities in `api-config.ts`
+- [X] Update auth service to properly handle backend tokens
+- [X] Create `useAuth` hook for NextAuth integration
+- [X] Update NextAuth configuration to store backend tokens
+- [X] Update API service to remove token parameters (automatic inclusion)
+- [X] Update admin dashboard to use new authentication system
+- [X] Update login and signup pages for better UX
+- [X] Create test page to verify authentication integration
+- [X] Add `run` command to backend Makefile
+
+#### Key Features Implemented
+- [X] Automatic token inclusion in API requests
+- [X] Token storage in localStorage and session
+- [X] Token refresh functionality
+- [X] Proper error handling and user feedback
+- [X] Integration with NextAuth session management
+- [X] Admin role verification
+- [X] Secure logout with backend token invalidation
+
+### 7. Advanced Features [ ]
 
 - [ ] Real-time notifications
 - [ ] Email system (Resend):
@@ -284,7 +306,7 @@
   - API optimization
 - [ ] Analytics and reporting
 
-### 7. Testing and Deployment [ ]
+### 8. Testing and Deployment [ ]
 
 - [ ] Unit testing
 - [ ] Integration testing
@@ -296,7 +318,7 @@
   - Monitoring
   - Backup strategy
 
-### 8. Documentation [ ]
+### 9. Documentation [ ]
 
 - [ ] API documentation
 - [ ] User guide

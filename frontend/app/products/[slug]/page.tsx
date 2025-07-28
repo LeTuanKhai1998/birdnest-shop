@@ -200,21 +200,21 @@ function ProductDetailClient({ product, allProducts }: { product: any, allProduc
                         </motion.span>
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent>{favorited ? "Remove from Wishlist" : "Add to Wishlist"}</TooltipContent>
+                    <TooltipContent>{favorited ? "Xóa khỏi danh sách yêu thích" : "Thêm vào danh sách yêu thích"}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
             </div>
             {/* Info row: Sold, Reviews, Weight */}
             <div className="flex items-center gap-3 text-sm text-gray-500 mb-1">
-              <span className="flex items-center gap-1"><span className="text-orange-500"><svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 016 6c0 4.418-6 10-6 10S4 12.418 4 8a6 6 0 016-6zm0 8.5A2.5 2.5 0 1010 5a2.5 2.5 0 000 5.5z"/></svg></span>{product.sold ?? 0} Sold</span>
-              <span className="flex items-center gap-1"><span className="text-yellow-500"><svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z"/></svg></span>{product.reviews?.length ?? 0} Reviews</span>
+              <span className="flex items-center gap-1"><span className="text-orange-500"><svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 016 6c0 4.418-6 10-6 10S4 12.418 4 8a6 6 0 016-6zm0 8.5A2.5 2.5 0 1010 5a2.5 2.5 0 000 5.5z"/></svg></span>{product.sold ?? 0} Đã bán</span>
+              <span className="flex items-center gap-1"><span className="text-yellow-500"><svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z"/></svg></span>{product.reviews?.length ?? 0} Đánh giá</span>
               <span className="flex items-center gap-1"><span className="text-blue-500"><svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><text x="10" y="15" textAnchor="middle" fontSize="10" fill="#fff">{product.weight}g</text></svg></span>{product.weight}g</span>
             </div>
             {/* Price and stock badge */}
             <div className="flex items-end gap-2 bg-gray-50 rounded-lg px-3 py-2 mb-2">
               <span className="text-3xl font-bold text-red-700">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(product.price)}</span>
-              <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${product.quantity === 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>{product.quantity === 0 ? 'Out of stock' : `In stock: ${product.quantity}`}</span>
+              <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${product.quantity === 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>{product.quantity === 0 ? 'Hết hàng' : `Còn hàng: ${product.quantity}`}</span>
             </div>
             {/* Tabbed Details Section */}
             <ProductDetailsTabs product={product} />
@@ -225,12 +225,12 @@ function ProductDetailClient({ product, allProducts }: { product: any, allProduc
             {/* Sticky Add to Cart Button for mobile */}
             <div className="block md:hidden fixed bottom-0 left-0 w-full z-40 px-4 pb-4 pointer-events-none">
               <div className="pointer-events-auto">
-                <AddToCartButton product={product} className="w-full rounded-xl shadow-lg py-4 text-lg font-semibold" disabled={product.quantity === 0}>Add to Cart</AddToCartButton>
+                <AddToCartButton product={product} className="w-full rounded-xl shadow-lg py-4 text-lg font-semibold" disabled={product.quantity === 0}>Thêm vào giỏ</AddToCartButton>
               </div>
             </div>
             {/* Add to Cart for desktop */}
             <div className="hidden md:block">
-              <AddToCartButton product={product} className="w-full md:w-auto" disabled={product.quantity === 0}>Add to Cart</AddToCartButton>
+              <AddToCartButton product={product} className="w-full md:w-auto" disabled={product.quantity === 0}>Thêm vào giỏ</AddToCartButton>
             </div>
           </div>
         </Card>
@@ -240,7 +240,7 @@ function ProductDetailClient({ product, allProducts }: { product: any, allProduc
             Đánh giá sản phẩm
             {localReviews.length > 0 && (
               <span className="flex items-center gap-1 text-yellow-500 text-lg">
-                {(localReviews.reduce((sum, r) => sum + r.rating, 0) / localReviews.length).toFixed(1)}
+                {(localReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / localReviews.length).toFixed(1)}
                 <Star className="w-5 h-5 fill-yellow-400 stroke-yellow-500" />
                 <span className="text-gray-500 text-base">({localReviews.length} đánh giá)</span>
               </span>
@@ -248,7 +248,7 @@ function ProductDetailClient({ product, allProducts }: { product: any, allProduc
           </h2>
           {localReviews.length > 0 ? (
             <ul className="space-y-4">
-              {localReviews.map((review, idx) => (
+              {localReviews.map((review: any, idx: number) => (
                 <li key={idx} className="border-b pb-4 last:border-b-0 last:pb-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-gray-800">{review.user}</span>
@@ -391,20 +391,18 @@ function MoreImagesGallery({ product }: { product: Product }) {
               <div className="relative w-full flex-1 flex items-center justify-center select-none">
                 <AnimatePresence initial={false} custom={selectedIdx}>
                   <motion.div
-                    {...{
-                      key: selectedIdx,
-                      className: "absolute inset-0 flex items-center justify-center w-full h-full",
-                      drag: "x",
-                      dragConstraints: { left: 0, right: 0 },
-                      onDragEnd: (event, info) => {
-                        if (info.offset.x < -80) setSelectedIdx((selectedIdx + 1) % moreImages.length);
-                        else if (info.offset.x > 80) setSelectedIdx((selectedIdx - 1 + moreImages.length) % moreImages.length);
-                      },
-                      initial: { opacity: 0, x: 100 },
-                      animate: { opacity: 1, x: 0 },
-                      exit: { opacity: 0, x: -100 },
-                      transition: { type: "spring", stiffness: 300, damping: 30 }
+                    key={selectedIdx}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={(event, info) => {
+                      if (info.offset.x < -80) setSelectedIdx((selectedIdx + 1) % moreImages.length);
+                      else if (info.offset.x > 80) setSelectedIdx((selectedIdx - 1 + moreImages.length) % moreImages.length);
                     }}
+                    initial={{ opacity: 0, x: 100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
                   >
                     <Image src={moreImages[selectedIdx]} alt="Zoomed" fill className="object-contain w-full h-full rounded-xl transition-transform duration-300" />
                   </motion.div>

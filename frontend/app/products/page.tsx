@@ -3,12 +3,24 @@ import { productsApi, Product } from "@/lib/api-service";
 
 const FALLBACK_IMAGE = "/images/placeholder.png";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: { page?: string; search?: string };
+}) {
   try {
     console.log('🔍 Fetching products from API...');
     
-    // Fetch products from the API
-    const response = await productsApi.getProducts();
+    // Get search parameters
+    const page = searchParams.page ? parseInt(searchParams.page) : 1;
+    const search = searchParams.search || '';
+    
+    // Fetch products from the API with pagination
+    const response = await productsApi.getProducts({
+      page,
+      limit: 8,
+      search: search || undefined,
+    });
     console.log('📦 API Response:', response);
     
     const products = response.products || response.data?.products || [];
@@ -40,10 +52,10 @@ export default async function ProductsPage() {
     }));
 
     console.log('🎯 UI Products mapped:', uiProducts.length);
-    return <ProductsClient products={uiProducts} />;
+    return <ProductsClient initialProducts={uiProducts} />;
   } catch (error) {
     console.error('❌ Failed to fetch products:', error);
     // Return empty products on error
-    return <ProductsClient products={[]} />;
+    return <ProductsClient initialProducts={[]} />;
   }
 } 

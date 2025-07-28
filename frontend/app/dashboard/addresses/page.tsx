@@ -11,16 +11,17 @@ import * as z from "zod";
 import useSWR, { mutate } from "swr";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 const addressSchema = z.object({
-  fullName: z.string().min(2, "Full name is required"),
-  phone: z.string().regex(/^(0|\+84)[0-9]{9}$/, "Invalid Vietnamese phone number"),
-  province: z.string().min(1, "Province is required"),
-  district: z.string().min(1, "District is required"),
-  ward: z.string().min(1, "Ward is required"),
-  address: z.string().min(5, "Street/house is required"),
+  fullName: z.string().min(2, "Họ tên là bắt buộc"),
+  phone: z.string().regex(/^(0|\+84)[0-9]{9}$/, "Số điện thoại Việt Nam không hợp lệ"),
+  province: z.string().min(1, "Tỉnh/thành phố là bắt buộc"),
+  district: z.string().min(1, "Quận/huyện là bắt buộc"),
+  ward: z.string().min(1, "Phường/xã là bắt buộc"),
+  address: z.string().min(5, "Đường/số nhà là bắt buộc"),
   apartment: z.string().optional(),
-  country: z.string().min(2, "Country is required"),
+  country: z.string().min(2, "Quốc gia là bắt buộc"),
   isDefault: z.boolean().optional(),
 });
 
@@ -69,7 +70,18 @@ function getLine2(addr: Address, provinces: Province[]): string {
 }
 
 export default function AddressesPage() {
-  const { data: addresses = [], isLoading } = useSWR("/v1/users/addresses", fetcher);
+  const { data: session } = useSession();
+  const { data: addressesResponse, mutate, isLoading } = useSWR(
+    session?.user ? ["/v1/users/addresses", session] : null,
+    ([url, session]) => api.get(url.replace('/v1', ''), session),
+    {
+      fallbackData: { addresses: [] },
+      revalidateOnFocus: false
+    }
+  );
+  
+  // Extract addresses from response with fallback
+  const addresses = addressesResponse?.addresses || addressesResponse?.data?.addresses || [];
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -78,7 +90,7 @@ export default function AddressesPage() {
   const [loadingProvinces, setLoadingProvinces] = useState(true);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingWards, setLoadingWards] = useState(false);
-  const editing = editId ? addresses.find((a: Address) => a.id === editId) : null;
+  const editing = editId && addresses ? addresses.find((a: Address) => a.id === editId) : null;
 
   const {
     register,
@@ -129,73 +141,52 @@ export default function AddressesPage() {
   }, [editing, reset, setValue]);
 
   // Create or update address
-  async function onSubmit(data: AddressForm) {
-    if (!data.province || !data.district || !data.ward) {
-      toast.error("Please select province, district, and ward.");
-      return;
-    }
+  const addAddress = async (data: AddressForm) => {
     setSaving(true);
     try {
-      // Ensure district and ward are saved as strings
-      const cleanData = {
-        ...data,
-        province: String(data.province),
-        district: String(data.district),
-        ward: String(data.ward),
-      };
-      const method = editing ? "PUT" : "POST";
-      const url = editing ? `/v1/users/addresses/${editing.id}` : "/v1/users/addresses";
-      const body = editing ? cleanData : cleanData;
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error((await res.json()).error || "Failed to save address");
-      mutate("/v1/users/addresses");
-      toast.success(editing ? "Address updated!" : "Address added!");
-      setShowForm(false);
-      setEditId(null);
+      await api.post("/users/addresses", data, session);
+      mutate();
+      toast.success("Địa chỉ đã được thêm!");
+      reset();
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);
       } else {
-        toast.error("An unknown error occurred");
+        toast.error("Đã xảy ra lỗi không xác định");
       }
     } finally {
       setSaving(false);
     }
-  }
+  };
 
-  // Delete address
-  async function handleDelete(id: string) {
-    if (!window.confirm("Are you sure you want to delete this address?")) return;
-    setDeleting(id);
+  const deleteAddress = async (id: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) return;
     try {
-      await api.delete(`/users/addresses/${id}`);
-      mutate("/v1/users/addresses");
-      toast.success("Address deleted!");
+      await api.delete(`/users/addresses/${id}`, session);
+      mutate();
+      toast.success("Địa chỉ đã được xóa!");
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);
       } else {
         toast.error("An unknown error occurred");
       }
-    } finally {
-      setDeleting(null);
     }
-  }
+  };
 
-  // Set default address
-  async function handleSetDefault(id: string) {
+  const setDefaultAddress = async (id: string) => {
     try {
-      await api.put(`/users/addresses/${id}/default`);
-      mutate("/v1/users/addresses");
-      toast.success("Default address updated!");
+      await api.put(`/users/addresses/${id}/default`, {}, session);
+      mutate();
+      toast.success("Địa chỉ mặc định đã được cập nhật!");
     } catch (e: unknown) {
-      toast.error("Failed to update default address");
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("Đã xảy ra lỗi không xác định");
+      }
     }
-  }
+  };
 
   // Province/district/ward change handlers
   const handleProvinceChange = (val: string) => {
@@ -215,19 +206,19 @@ export default function AddressesPage() {
   return (
     <div className="py-8 max-w-2xl mx-auto px-2 md:px-0">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Your Addresses</h2>
+        <h2 className="text-2xl font-bold">Địa chỉ của bạn</h2>
         <Button variant="outline" size="sm" onClick={() => { setEditId(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-1" /> Add Address
+          <Plus className="w-4 h-4 mr-1" /> Thêm địa chỉ
         </Button>
       </div>
-      <LoadingOrEmpty loading={isLoading} empty={addresses.length === 0} emptyText="No addresses saved yet.">
+      <LoadingOrEmpty loading={isLoading} empty={!addresses || addresses.length === 0} emptyText="Chưa có địa chỉ nào được lưu.">
         <div className="flex flex-col gap-4">
-          {addresses.map((addr: Address) => (
+          {addresses?.map((addr: Address) => (
             <Card key={addr.id} className={`relative p-4 flex flex-col md:flex-row md:items-center gap-2 border ${addr.isDefault ? 'border-primary' : 'border-gray-200'}`}>
               <div className="flex-1">
                 <div className="font-semibold text-base flex items-center gap-2">
                   {addr.fullName}
-                  {addr.isDefault && <span className="inline-flex items-center px-2 py-0.5 text-xs bg-primary/10 text-primary rounded ml-2"><Star className="w-4 h-4 mr-1" /> Default</span>}
+                  {addr.isDefault && <span className="inline-flex items-center px-2 py-0.5 text-xs bg-primary/10 text-primary rounded ml-2"><Star className="w-4 h-4 mr-1" /> Mặc định</span>}
                 </div>
                 <div className="text-gray-500 text-sm">{addr.phone}</div>
                 <div className="text-gray-700 text-sm mt-1">
@@ -237,14 +228,14 @@ export default function AddressesPage() {
               </div>
               <div className="flex gap-2 mt-2 md:mt-0">
                 {!addr.isDefault && (
-                  <Button variant="ghost" size="icon" title="Set as default" onClick={() => handleSetDefault(addr.id)}>
+                  <Button variant="ghost" size="icon" title="Đặt làm mặc định" onClick={() => setDefaultAddress(addr.id)}>
                     <StarOff className="w-5 h-5" />
                   </Button>
                 )}
-                <Button variant="ghost" size="icon" title="Edit" onClick={() => { setEditId(addr.id); setShowForm(true); }}>
+                <Button variant="ghost" size="icon" title="Chỉnh sửa" onClick={() => { setEditId(addr.id); setShowForm(true); }}>
                   <Edit2 className="w-5 h-5" />
                 </Button>
-                <Button variant="ghost" size="icon" title="Delete" className="text-red-500 hover:bg-red-50" onClick={() => handleDelete(addr.id)} disabled={deleting === addr.id}>
+                <Button variant="ghost" size="icon" title="Xóa" className="text-red-500 hover:bg-red-50" onClick={() => deleteAddress(addr.id)} disabled={deleting === addr.id}>
                   <Trash2 className="w-5 h-5" />
                 </Button>
               </div>
@@ -259,26 +250,26 @@ export default function AddressesPage() {
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-600" onClick={() => { setShowForm(false); setEditId(null); }}>
               <X className="w-6 h-6" />
             </button>
-            <h3 className="text-lg font-semibold mb-4">{editing ? "Edit Address" : "Add Address"}</h3>
-            <form className="grid grid-cols-1 gap-4" onSubmit={handleSubmit(onSubmit)}>
+            <h3 className="text-lg font-semibold mb-4">{editing ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ"}</h3>
+            <form className="grid grid-cols-1 gap-4" onSubmit={handleSubmit(addAddress)}>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="fullName">Full Name</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="fullName">Họ tên</label>
                 <Input id="fullName" {...register("fullName")}
-                  placeholder="Full name" required disabled={saving} />
+                  placeholder="Họ tên" required disabled={saving} />
                 {errors.fullName && <div className="text-red-500 text-xs mt-1">{errors.fullName.message}</div>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="phone">Phone</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="phone">Số điện thoại</label>
                 <Input id="phone" {...register("phone")}
-                  placeholder="Phone number" required disabled={saving} />
+                  placeholder="Số điện thoại" required disabled={saving} />
                 {errors.phone && <div className="text-red-500 text-xs mt-1">{errors.phone.message}</div>}
               </div>
               {/* Province dropdown */}
               <div>
-                <label className="block text-sm mb-1">Province/City</label>
+                <label className="block text-sm mb-1">Tỉnh/Thành phố</label>
                 <select className="w-full border rounded px-2 py-2" {...register("province")} onChange={e => handleProvinceChange(e.target.value)} disabled={loadingProvinces || saving}>
-                  <option value="">{loadingProvinces ? "Loading..." : "Select province/city"}</option>
-                  {provinces.map((p) => (
+                  <option value="">{loadingProvinces ? "Đang tải..." : "Chọn tỉnh/thành phố"}</option>
+                  {provinces?.map((p) => (
                     <option key={p.code} value={String(p.code)}>{p.name}</option>
                   ))}
                 </select>
@@ -286,10 +277,10 @@ export default function AddressesPage() {
               </div>
               {/* District dropdown */}
               <div>
-                <label className="block text-sm mb-1">District</label>
+                <label className="block text-sm mb-1">Quận/Huyện</label>
                 <select className="w-full border rounded px-2 py-2" {...register("district")} onChange={e => handleDistrictChange(e.target.value)} disabled={!provinceCode || loadingDistricts || saving}>
-                  <option value="">{loadingDistricts ? "Loading..." : "Select district"}</option>
-                  {provinceCode && !loadingDistricts && selectedProvince?.districts.map((d: District) => (
+                  <option value="">{loadingDistricts ? "Đang tải..." : "Chọn quận/huyện"}</option>
+                  {provinceCode && !loadingDistricts && selectedProvince?.districts?.map((d: District) => (
                     <option key={d.code} value={String(d.code)}>{d.name}</option>
                   ))}
                 </select>
@@ -297,10 +288,10 @@ export default function AddressesPage() {
               </div>
               {/* Ward dropdown */}
               <div>
-                <label className="block text-sm mb-1">Ward/Commune</label>
+                <label className="block text-sm mb-1">Phường/Xã</label>
                 <select className="w-full border rounded px-2 py-2" {...register("ward")} disabled={!districtCode || loadingWards || saving}>
-                  <option value="">{loadingWards ? "Loading..." : "Select ward/commune"}</option>
-                  {provinceCode && districtCode && !loadingWards && selectedDistrict?.wards.map((w: Ward) => (
+                  <option value="">{loadingWards ? "Đang tải..." : "Chọn phường/xã"}</option>
+                  {provinceCode && districtCode && !loadingWards && selectedDistrict?.wards?.map((w: Ward) => (
                     <option key={w.code} value={String(w.code)}>{w.name}</option>
                   ))}
                 </select>
@@ -308,23 +299,23 @@ export default function AddressesPage() {
               </div>
               {/* Street/house */}
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="address">Street/House Number</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="address">Đường/Số nhà</label>
                 <Input id="address" {...register("address")}
-                  placeholder="Enter street/house number..." required disabled={saving} />
+                  placeholder="Nhập đường/số nhà..." required disabled={saving} />
                 {errors.address && <div className="text-red-500 text-xs mt-1">{errors.address.message}</div>}
               </div>
               {/* Apartment/unit */}
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="apartment">Apartment/Unit (optional)</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="apartment">Căn hộ/Đơn vị (tùy chọn)</label>
                 <Input id="apartment" {...register("apartment")}
-                  placeholder="Apartment, suite, etc." disabled={saving} />
+                  placeholder="Căn hộ, suite, v.v." disabled={saving} />
                 {errors.apartment && <div className="text-red-500 text-xs mt-1">{errors.apartment.message}</div>}
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <input type="checkbox" id="isDefault" {...register("isDefault")} disabled={saving} className="w-4 h-4" />
-                <label htmlFor="isDefault" className="text-sm">Set as default address</label>
+                <label htmlFor="isDefault" className="text-sm">Đặt làm địa chỉ mặc định</label>
               </div>
-              <Button type="submit" className="w-full mt-2" disabled={saving}>{editing ? "Save Changes" : "Add Address"}</Button>
+              <Button type="submit" className="w-full mt-2" disabled={saving}>{editing ? "Lưu thay đổi" : "Thêm địa chỉ"}</Button>
             </form>
           </div>
         </div>

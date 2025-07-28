@@ -24,8 +24,8 @@ export function MainNavbar() {
   
   // Only fetch user profile if we have a session
   const { data: user, error: userError } = useSWR(
-    userFromSession ? "/users/profile" : null, 
-    (url: string) => api.get(url), 
+    userFromSession ? ["/users/profile", userFromSession] : null, 
+    ([url, session]) => api.get(url, session), 
     { 
       fallbackData: userFromSession,
       revalidateOnFocus: false,
@@ -65,17 +65,17 @@ export function MainNavbar() {
             </div>
 
             {/* Middle: Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-8 text-lg">
-              <Link href="/" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Home</Link>
-              <Link href="/products" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Products</Link>
-              <Link href="/about" className="hover:text-yellow-600 transition-colors duration-200 font-medium">About</Link>
-              <Link href="/contact" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Contact</Link>
+            <nav className="hidden lg:flex items-center gap-6 text-base whitespace-nowrap">
+              <Link href="/" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Trang chủ</Link>
+              <Link href="/products" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Sản phẩm</Link>
+              <Link href="/about" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Giới thiệu</Link>
+              <Link href="/contact" className="hover:text-yellow-600 transition-colors duration-200 font-medium">Liên hệ</Link>
             </nav>
 
             {/* Right: Search, Icons, and User Info */}
             <div className="flex items-center gap-3 md:gap-4">
             {/* Search Icon (mobile) */}
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Search" onClick={() => setShowSearch(true)}>
+            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Tìm kiếm" onClick={() => setShowSearch(true)}>
               <Search className="w-5 h-5 text-gray-500" />
             </Button>
             {/* Search Bar (desktop) */}
@@ -88,7 +88,7 @@ export function MainNavbar() {
               <input
                 type="text"
                 name="query"
-                placeholder="Search..."
+                placeholder="Tìm kiếm..."
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-600 transition"
               />
               <Button type="submit" size="icon" variant="ghost" className="ml-2">
@@ -100,7 +100,7 @@ export function MainNavbar() {
             {/* Notification Bell */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="relative p-2 rounded-full hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none" aria-label="Notifications">
+                <button className="relative p-2 rounded-full hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none" aria-label="Thông báo">
                   <Bell className="w-5 h-5 text-gray-500" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5 font-bold shadow">
@@ -111,14 +111,14 @@ export function MainNavbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80 max-w-xs p-2 rounded-xl shadow-lg">
                 <div className="flex items-center justify-between px-2 py-1">
-                  <span className="font-semibold text-base">Notifications</span>
+                  <span className="font-semibold text-base">Thông báo</span>
                   {notifications.length > 0 && (
-                    <button onClick={markAllRead} className="text-xs text-blue-600 hover:underline focus:outline-none">Mark all as read</button>
+                    <button onClick={markAllRead} className="text-xs text-blue-600 hover:underline focus:outline-none">Đánh dấu đã đọc</button>
                   )}
                 </div>
                 <div className="max-h-60 overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-800">
                   {notifications.length === 0 ? (
-                    <div className="text-center text-gray-400 py-6">No notifications</div>
+                    <div className="text-center text-gray-400 py-6">Không có thông báo</div>
                   ) : (
                     notifications.map(n => (
                       <div key={n.id} className={`flex items-start gap-2 px-2 py-3 ${n.read ? "bg-white dark:bg-neutral-800" : "bg-red-50 dark:bg-red-900"}`}>
@@ -128,14 +128,14 @@ export function MainNavbar() {
                           <div className="text-xs text-gray-400 mt-1">{n.time}</div>
                         </div>
                         {!n.read && (
-                          <button onClick={() => setNotifications(notifications.map(notif => notif.id === n.id ? { ...notif, read: true } : notif))} className="text-xs text-blue-600 hover:underline focus:outline-none">Mark read</button>
+                          <button onClick={() => setNotifications(notifications.map(notif => notif.id === n.id ? { ...notif, read: true } : notif))} className="text-xs text-blue-600 hover:underline focus:outline-none">Đánh dấu đã đọc</button>
                         )}
                       </div>
                     ))
                   )}
                 </div>
                 {notifications.length > 0 && (
-                  <button onClick={clearNotifications} className="w-full mt-2 py-1 rounded bg-gray-100 dark:bg-neutral-700 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-neutral-600 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none">Clear all</button>
+                  <button onClick={clearNotifications} className="w-full mt-2 py-1 rounded bg-gray-100 dark:bg-neutral-700 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-neutral-600 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none">Xóa tất cả</button>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -148,9 +148,9 @@ export function MainNavbar() {
                   size="sm"
                   className="flex items-center gap-2 px-4 py-2 rounded-full font-medium text-base border border-gray-300 shadow-sm hover:bg-gray-100 transition"
                 >
-                  <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`} aria-label="Sign In">
+                  <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`} aria-label="Đăng nhập">
                     <LogIn className="w-5 h-5" />
-                    <span className="hidden sm:inline">Sign in</span>
+                    <span className="hidden sm:inline">Đăng nhập</span>
                   </Link>
                 </Button>
               ) : (
@@ -188,26 +188,26 @@ export function MainNavbar() {
                     <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
                       <Link href="/dashboard/profile">
                         <User2 className="w-4 h-4" />
-                        <span className="i18n-profile">My Profile</span>
+                        <span className="i18n-profile">Hồ sơ của tôi</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
                       <Link href="/dashboard/orders">
                         <ShoppingBag className="w-4 h-4" />
-                        <span className="i18n-orders">Orders</span>
+                        <span className="i18n-orders">Đơn hàng</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
                       <Link href="/dashboard/wishlist">
                         <Heart className="w-4 h-4" />
-                        <span className="i18n-wishlist">Wishlist</span>
+                        <span className="i18n-wishlist">Danh sách yêu thích</span>
                       </Link>
                     </DropdownMenuItem>
                     {session && (session.user && session.user.isAdmin) && (
                       <DropdownMenuItem asChild className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-primary/10 focus:bg-primary/20 transition">
                         <Link href="/admin">
                           <LayoutDashboard className="w-4 h-4" />
-                          <span className="i18n-admin-dashboard">Admin Dashboard</span>
+                          <span className="i18n-admin-dashboard">Bảng điều khiển Admin</span>
                         </Link>
                       </DropdownMenuItem>
                     )}
@@ -217,7 +217,7 @@ export function MainNavbar() {
                       className="flex items-center gap-2 rounded-lg px-3 py-2 text-red-600 hover:bg-red-50 focus:bg-red-100 transition"
                     >
                       <LogOut className="w-4 h-4" />
-                      <span className="i18n-logout">Logout</span>
+                      <span className="i18n-logout">Đăng xuất</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -245,42 +245,42 @@ export function MainNavbar() {
                 </div>
                 <nav className="flex flex-col gap-2 px-4 py-4 text-lg">
                   <Link href="/" className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                    <HomeIcon className="w-5 h-5" /> Home
+                    <HomeIcon className="w-5 h-5" /> Trang chủ
                   </Link>
                   <Link href="/products" className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                    <Box className="w-5 h-5" /> Products
+                    <Box className="w-5 h-5" /> Sản phẩm
                   </Link>
                   <Link href="/about" className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                    <Info className="w-5 h-5" /> About
+                    <Info className="w-5 h-5" /> Giới thiệu
                   </Link>
                   <Link href="/contact" className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                    <Mail className="w-5 h-5" /> Contact
+                    <Mail className="w-5 h-5" /> Liên hệ
                   </Link>
-                  {!session && <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`} className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}><LogIn className="w-5 h-5" /> Login</Link>}
-                  {!session && <Link href="/signup" className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}><User className="w-5 h-5" /> Sign up</Link>}
-                  {session && <Link href="/dashboard" className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}><LayoutDashboard className="w-5 h-5" /> Dashboard</Link>}
-                  {session && <button onClick={() => { setDrawerOpen(false); signOut(); }} className="text-left py-2 hover:text-yellow-600 transition w-full flex items-center gap-2"><LogOut className="w-5 h-5" /> <span>Sign out</span></button>}
+                  {!session && <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`} className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}><LogIn className="w-5 h-5" /> Đăng nhập</Link>}
+                  {!session && <Link href="/signup" className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}><User className="w-5 h-5" /> Đăng ký</Link>}
+                  {session && <Link href="/dashboard" className="hover:text-yellow-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}><LayoutDashboard className="w-5 h-5" /> Bảng điều khiển</Link>}
+                  {session && <button onClick={() => { setDrawerOpen(false); signOut(); }} className="text-left py-2 hover:text-yellow-600 transition w-full flex items-center gap-2"><LogOut className="w-5 h-5" /> <span>Đăng xuất</span></button>}
                 </nav>
                 {/* Admin section if user is admin */}
                 {session && session.user && session.user.isAdmin && (
                   <>
                     <div className="my-2 border-t" />
-                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Admin</div>
+                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Quản trị</div>
                     <nav className="flex flex-col gap-2 px-4 pb-4 text-lg">
                       <Link href="/admin" className="hover:text-red-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                        <LayoutDashboard className="w-5 h-5" /> Dashboard
+                        <LayoutDashboard className="w-5 h-5" /> Bảng điều khiển
                       </Link>
                       <Link href="/admin/orders" className="hover:text-red-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                        <ShoppingBag className="w-5 h-5" /> Orders
+                        <ShoppingBag className="w-5 h-5" /> Đơn hàng
                       </Link>
                       <Link href="/admin/products" className="hover:text-red-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                        <Box className="w-5 h-5" /> Products
+                        <Box className="w-5 h-5" /> Sản phẩm
                       </Link>
                       <Link href="/admin/users" className="hover:text-red-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                        <Users className="w-5 h-5" /> Customers
+                        <Users className="w-5 h-5" /> Khách hàng
                       </Link>
                       <Link href="/admin/settings" className="hover:text-red-600 transition py-2 flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                        <Settings className="w-5 h-5" /> Settings
+                        <Settings className="w-5 h-5" /> Cài đặt
                       </Link>
                     </nav>
                   </>
@@ -298,11 +298,11 @@ export function MainNavbar() {
               ref={searchInputRef}
               type="text"
               name="query"
-              placeholder="Search..."
+                              placeholder="Tìm kiếm..."
               className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-600 transition"
             />
-            <Button type="button" variant="outline" onClick={() => setShowSearch(false)}>
-              Close
+                          <Button type="button" variant="outline" onClick={() => setShowSearch(false)}>
+              Đóng
             </Button>
           </div>
         </div>

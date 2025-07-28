@@ -1,38 +1,42 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DollarSign,
-  ShoppingBag,
-  Users,
-  Package,
-  ArrowUpRight,
-  ArrowDownRight,
-  TrendingUp,
-  TrendingDown,
-  Trash2,
-  Plus
-} from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { dashboardApi } from "@/lib/api-service";
+import { toast } from "sonner";
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
+// Types
 interface DashboardData {
   totalRevenue: number;
   totalOrders: number;
   totalCustomers: number;
   averageOrderValue: number;
-  revenueData: Array<{ name: string; value: number }>;
-  orderData: Array<{ name: string; orders: number }>;
-  productData: Array<{ name: string; value: number }>;
+  recentOrders: Array<{
+    id: string;
+    user: { name: string; email: string };
+    total: number;
+    status: string;
+    createdAt: string;
+  }>;
+  revenueChart: Array<{
+    date: string;
+    revenue: number;
+  }>;
+  orderStats: Array<{
+    status: string;
+    count: number;
+  }>;
+  topProducts: Array<{
+    id: string;
+    name: string;
+    totalSold: number;
+    revenue: number;
+  }>;
 }
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession();
+  const { isAuthenticated, isAdmin, status } = useAuth();
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,272 +45,153 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push('/login');
-    } else if (status === "authenticated" && !session?.user?.isAdmin) {
+    } else if (status === "authenticated" && !isAdmin) {
       router.push('/dashboard');
     }
-  }, [session, status, router]);
+  }, [isAuthenticated, isAdmin, status, router]);
 
   // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
+      if (!isAuthenticated || !isAdmin) return;
+
       try {
         setLoading(true);
         setError(null);
         
-        // For now, get admin token directly for testing
-        let token = (session as any)?.accessToken || (session as any)?.token;
-        
-        if (!token) {
-          // Try to get admin token directly
-          try {
-            const loginResponse = await fetch('http://localhost:8080/v1/auth/login', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: 'admin@birdnest.com',
-                password: 'admin123'
-              })
-            });
-            
-            if (loginResponse.ok) {
-              const loginData = await loginResponse.json();
-              token = loginData.data?.tokens?.access?.token || loginData.tokens?.access?.token;
-            }
-          } catch (loginErr) {
-            console.error('Failed to get admin token:', loginErr);
-          }
-        }
-        
-        if (!token) {
-          console.error('No access token available');
-          setError('Authentication required');
-          return;
-        }
-        
-        const response = await dashboardApi.getDashboardStats(token);
+        const response = await dashboardApi.getDashboardStats();
         console.log('Dashboard response:', response);
         
         // Transform backend data to match frontend interface
         const backendData = response.data || response;
+        
         const transformedData: DashboardData = {
           totalRevenue: backendData.totalRevenue || 0,
           totalOrders: backendData.totalOrders || 0,
           totalCustomers: backendData.totalCustomers || 0,
           averageOrderValue: backendData.averageOrderValue || 0,
-          revenueData: [], // Will be populated from separate API call
-          orderData: [], // Will be populated from separate API call
-          productData: [] // Will be populated from separate API call
+          recentOrders: backendData.recentOrders || [],
+          revenueChart: backendData.revenueChart || [],
+          orderStats: backendData.orderStats || [],
+          topProducts: backendData.topProducts || [],
         };
         
         setDashboardData(transformedData);
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
         setError('Failed to load dashboard data');
+        toast.error('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
     };
 
-    if (status === "authenticated" && session?.user?.isAdmin) {
-      fetchDashboardData();
-    }
-  }, [session, status]);
+    fetchDashboardData();
+  }, [isAuthenticated, isAdmin]);
 
   if (status === "loading" || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
       </div>
     );
-  }
-
-  if (!session?.user?.isAdmin) {
-    return null;
   }
 
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-600 text-lg mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-600">{error}</p>
         </div>
       </div>
     );
   }
 
-  // Use real data or fallback to empty data
-  const data = dashboardData || {
-    totalRevenue: 0,
-    totalOrders: 0,
-    totalCustomers: 0,
-    averageOrderValue: 0,
-    revenueData: [],
-    orderData: [],
-    productData: []
-  };
+  if (!isAuthenticated || !isAdmin) {
+    return null;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back, {session?.user?.name || session?.user?.email}</p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₫{data.totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-                Real-time data
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{data.totalOrders}</div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-                Real-time data
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{data.totalCustomers}</div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-                Real-time data
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₫{data.averageOrderValue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-                Real-time data
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Revenue Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue Trend</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {data.revenueData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={data.revenueData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-[300px] text-gray-500">
-                  No revenue data available
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+        
+        {dashboardData ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Total Revenue */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Orders Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Order Volume</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {data.orderData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={data.orderData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="orders" fill="#82ca9d" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-[300px] text-gray-500">
-                  No order data available
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    ${dashboardData.totalRevenue.toLocaleString()}
+                  </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Product Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Product Category Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data.productData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={data.productData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {data.productData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-[300px] text-gray-500">
-                No product data available
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+
+            {/* Total Orders */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {dashboardData.totalOrders.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Customers */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Customers</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {dashboardData.totalCustomers.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Average Order Value */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    ${dashboardData.averageOrderValue.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Loading dashboard data...</p>
+          </div>
+        )}
       </div>
     </div>
   );

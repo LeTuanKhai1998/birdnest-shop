@@ -7,10 +7,10 @@ import { User, ListOrdered, MapPin, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Orders", href: "/dashboard/orders", icon: ListOrdered },
-  { label: "Profile", href: "/dashboard/profile", icon: User },
-  { label: "Addresses", href: "/dashboard/addresses", icon: MapPin },
-  { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
+  { label: "Đơn hàng", href: "/dashboard/orders", icon: ListOrdered },
+  { label: "Hồ sơ", href: "/dashboard/profile", icon: User },
+  { label: "Địa chỉ", href: "/dashboard/addresses", icon: MapPin },
+  { label: "Danh sách yêu thích", href: "/dashboard/wishlist", icon: Heart },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -25,7 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [status, router]);
 
   if (status === "loading") {
-    return <div className="flex-1 flex items-center justify-center h-screen">Loading...</div>;
+    return <div className="flex-1 flex items-center justify-center h-screen">Đang tải...</div>;
   }
 
   if (!session) return null;
@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r shadow-sm py-8 px-4 sticky top-0 h-screen">
-        <div className="mb-8 text-2xl font-bold tracking-tight">User Dashboard</div>
+        <div className="mb-8 text-2xl font-bold tracking-tight">Bảng điều khiển</div>
         <nav className="flex flex-col gap-2">
           {navItems.map(({ label, href, icon: Icon }) => (
             <Link

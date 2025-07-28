@@ -17,10 +17,9 @@ func UserRoutes(v1 fiber.Router, u service.UserService, t service.TokenService) 
 	user.Post("/", m.Auth(u, "manageUsers"), userController.CreateUser)
 
 	// Profile routes (must be defined before parameterized routes)
-	// Temporarily removing Auth middleware to test
-	user.Get("/profile", userController.GetProfile)
-	user.Put("/profile", userController.UpdateProfile)
-	user.Put("/profile/password", userController.UpdatePassword)
+	user.Get("/profile", m.Auth(u), userController.GetProfile)
+	user.Put("/profile", m.Auth(u), userController.UpdateProfile)
+	user.Put("/profile/password", m.Auth(u), userController.UpdatePassword)
 
 	// Parameterized routes (must be defined after specific routes)
 	user.Get("/:userId", m.Auth(u, "getUsers"), userController.GetUserByID)

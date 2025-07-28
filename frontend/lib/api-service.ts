@@ -112,8 +112,8 @@ export const productsApi = {
     if (params?.minPrice) searchParams.append('minPrice', params.minPrice.toString());
     if (params?.maxPrice) searchParams.append('maxPrice', params.maxPrice.toString());
 
-    const endpoint = `/products${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    return apiClient.get(endpoint);
+    const query = searchParams.toString();
+    return apiClient.get(`/products${query ? `?${query}` : ''}`);
   },
 
   // Get single product
@@ -126,59 +126,47 @@ export const productsApi = {
     return apiClient.get('/categories');
   },
 
-  // Admin: Create product
-  async createProduct(data: Partial<Product>, token: string) {
-    return apiClient.post('/admin/products', data, {
-      headers: getAuthHeaders(token),
-    });
+  // Create product (admin only)
+  async createProduct(data: Partial<Product>) {
+    return apiClient.post('/products', data);
   },
 
-  // Admin: Update product
-  async updateProduct(id: string, data: Partial<Product>, token: string) {
-    return apiClient.put(`/admin/products/${id}`, data, {
-      headers: getAuthHeaders(token),
-    });
+  // Update product (admin only)
+  async updateProduct(id: string, data: Partial<Product>) {
+    return apiClient.put(`/products/${id}`, data);
   },
 
-  // Admin: Delete product
-  async deleteProduct(id: string, token: string) {
-    return apiClient.delete(`/admin/products/${id}`, {
-      headers: getAuthHeaders(token),
-    });
+  // Delete product (admin only)
+  async deleteProduct(id: string) {
+    return apiClient.delete(`/products/${id}`);
   },
 
-  // Admin: Create category
-  async createCategory(data: Partial<Category>, token: string) {
-    return apiClient.post('/admin/categories', data, {
-      headers: getAuthHeaders(token),
-    });
+  // Create category (admin only)
+  async createCategory(data: Partial<Category>) {
+    return apiClient.post('/categories', data);
   },
 };
 
 // Orders API
 export const ordersApi = {
-  // Get user orders or all orders (admin)
+  // Get orders (admin gets all, user gets their own)
   async getOrders(params?: {
     page?: number;
     limit?: number;
     status?: string;
-  }, token?: string) {
+  }) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     if (params?.status) searchParams.append('status', params.status);
 
-    const endpoint = `/orders${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    return apiClient.get(endpoint, {
-      headers: getAuthHeaders(token),
-    });
+    const query = searchParams.toString();
+    return apiClient.get(`/orders${query ? `?${query}` : ''}`);
   },
 
   // Get single order
-  async getOrder(id: string, token?: string) {
-    return apiClient.get(`/orders/${id}`, {
-      headers: getAuthHeaders(token),
-    });
+  async getOrder(id: string) {
+    return apiClient.get(`/orders/${id}`);
   },
 
   // Create order
@@ -189,73 +177,55 @@ export const ordersApi = {
     }>;
     shippingAddress: string;
     paymentMethod: Order['paymentMethod'];
-  }, token: string) {
-    return apiClient.post('/orders', data, {
-      headers: getAuthHeaders(token),
-    });
+  }) {
+    return apiClient.post('/orders', data);
   },
 
-  // Admin: Update order status
-  async updateOrderStatus(id: string, status: Order['status'], token: string) {
-    return apiClient.put(`/admin/orders/${id}/status`, { status }, {
-      headers: getAuthHeaders(token),
-    });
+  // Update order status (admin only)
+  async updateOrderStatus(id: string, status: Order['status']) {
+    return apiClient.put(`/orders/${id}/status`, { status });
   },
 
-  // Admin: Delete order
-  async deleteOrder(id: string, token: string) {
-    return apiClient.delete(`/admin/orders/${id}`, {
-      headers: getAuthHeaders(token),
-    });
+  // Delete order (admin only)
+  async deleteOrder(id: string) {
+    return apiClient.delete(`/orders/${id}`);
   },
 
-  // Admin: Get order statistics
-  async getOrderStats(period?: string, token?: string) {
-    const endpoint = `/admin/orders/stats${period ? `?period=${period}` : ''}`;
-    return apiClient.get(endpoint, {
-      headers: getAuthHeaders(token),
-    });
+  // Get order statistics (admin only)
+  async getOrderStats(period?: string) {
+    const query = period ? `?period=${period}` : '';
+    return apiClient.get(`/orders/stats${query}`);
   },
 };
 
 // Cart API
 export const cartApi = {
   // Get cart items
-  async getCartItems(token: string) {
-    return apiClient.get('/cart', {
-      headers: getAuthHeaders(token),
-    });
+  async getCartItems() {
+    return apiClient.get('/cart');
   },
 
   // Add item to cart
   async addToCart(data: {
     productId: string;
     quantity: number;
-  }, token: string) {
-    return apiClient.post('/cart', data, {
-      headers: getAuthHeaders(token),
-    });
+  }) {
+    return apiClient.post('/cart', data);
   },
 
   // Update cart item
-  async updateCartItem(id: string, data: { quantity: number }, token: string) {
-    return apiClient.put(`/cart/${id}`, data, {
-      headers: getAuthHeaders(token),
-    });
+  async updateCartItem(id: string, data: { quantity: number }) {
+    return apiClient.put(`/cart/${id}`, data);
   },
 
   // Remove item from cart
-  async removeFromCart(id: string, token: string) {
-    return apiClient.delete(`/cart/${id}`, {
-      headers: getAuthHeaders(token),
-    });
+  async removeFromCart(id: string) {
+    return apiClient.delete(`/cart/${id}`);
   },
 
   // Clear cart
-  async clearCart(token: string) {
-    return apiClient.delete('/cart', {
-      headers: getAuthHeaders(token),
-    });
+  async clearCart() {
+    return apiClient.delete('/cart');
   },
 };
 
@@ -270,50 +240,42 @@ export const reviewsApi = {
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.limit) searchParams.append('limit', params.limit.toString());
 
-    const endpoint = `/products/${productId}/reviews${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    return apiClient.get(endpoint);
+    const query = searchParams.toString();
+    return apiClient.get(`/products/${productId}/reviews${query ? `?${query}` : ''}`);
   },
 
   // Create review
   async createReview(productId: string, data: {
     rating: number;
     comment?: string;
-  }, token: string) {
-    return apiClient.post(`/products/${productId}/reviews`, data, {
-      headers: getAuthHeaders(token),
-    });
+  }) {
+    return apiClient.post(`/products/${productId}/reviews`, data);
   },
 
   // Update review
   async updateReview(id: string, data: {
     rating: number;
     comment?: string;
-  }, token: string) {
-    return apiClient.put(`/reviews/${id}`, data, {
-      headers: getAuthHeaders(token),
-    });
+  }) {
+    return apiClient.put(`/reviews/${id}`, data);
   },
 
   // Delete review
-  async deleteReview(id: string, token: string) {
-    return apiClient.delete(`/reviews/${id}`, {
-      headers: getAuthHeaders(token),
-    });
+  async deleteReview(id: string) {
+    return apiClient.delete(`/reviews/${id}`);
   },
 
   // Get user reviews
   async getUserReviews(params?: {
     page?: number;
     limit?: number;
-  }, token?: string) {
+  }) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.limit) searchParams.append('limit', params.limit.toString());
 
-    const endpoint = `/users/reviews${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    return apiClient.get(endpoint, {
-      headers: getAuthHeaders(token),
-    });
+    const query = searchParams.toString();
+    return apiClient.get(`/reviews${query ? `?${query}` : ''}`);
   },
 };
 
@@ -343,7 +305,7 @@ export const authApi = {
 
   // Refresh tokens
   async refreshTokens(data: { refreshToken: string }) {
-    return apiClient.post('/auth/refresh', data);
+    return apiClient.post('/auth/refresh-tokens', data);
   },
 
   // Forgot password
@@ -357,44 +319,34 @@ export const authApi = {
   },
 };
 
-// Dashboard API
+// Dashboard API (admin only)
 export const dashboardApi = {
   // Get dashboard statistics
-  async getDashboardStats(token?: string) {
-    return apiClient.get('/dashboard/metrics', {
-      headers: getAuthHeaders(token),
-    });
+  async getDashboardStats() {
+    return apiClient.get('/dashboard/stats');
   },
 
   // Get revenue data
-  async getRevenueData(period?: string, token?: string) {
-    const endpoint = `/dashboard/revenue-chart${period ? `?period=${period}` : ''}`;
-    return apiClient.get(endpoint, {
-      headers: getAuthHeaders(token),
-    });
+  async getRevenueData(period?: string) {
+    const query = period ? `?period=${period}` : '';
+    return apiClient.get(`/dashboard/revenue${query}`);
   },
 
   // Get order statistics
-  async getOrderStats(period?: string, token?: string) {
-    const endpoint = `/dashboard/order-statistics${period ? `?period=${period}` : ''}`;
-    return apiClient.get(endpoint, {
-      headers: getAuthHeaders(token),
-    });
+  async getOrderStats(period?: string) {
+    const query = period ? `?period=${period}` : '';
+    return apiClient.get(`/dashboard/orders${query}`);
   },
 
   // Get customer statistics
-  async getCustomerStats(period?: string, token?: string) {
-    const endpoint = `/dashboard/customer-insights${period ? `?period=${period}` : ''}`;
-    return apiClient.get(endpoint, {
-      headers: getAuthHeaders(token),
-    });
+  async getCustomerStats(period?: string) {
+    const query = period ? `?period=${period}` : '';
+    return apiClient.get(`/dashboard/customers${query}`);
   },
 
   // Get product statistics
-  async getProductStats(period?: string, token?: string) {
-    const endpoint = `/dashboard/top-products${period ? `?limit=${period}` : ''}`;
-    return apiClient.get(endpoint, {
-      headers: getAuthHeaders(token),
-    });
+  async getProductStats(period?: string) {
+    const query = period ? `?period=${period}` : '';
+    return apiClient.get(`/dashboard/products${query}`);
   },
 }; 

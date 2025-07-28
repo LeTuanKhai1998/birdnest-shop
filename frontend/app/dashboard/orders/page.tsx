@@ -26,7 +26,7 @@ export default function OrdersPage() {
         setOrders(fetchedOrders);
       } catch (err) {
         console.error('Failed to fetch orders:', err);
-        setError("Failed to load orders");
+        setError("Không thể tải đơn hàng");
       } finally {
         setLoading(false);
       }
@@ -51,7 +51,7 @@ export default function OrdersPage() {
       {/* Header: Order ID, status, date */}
       <div className="flex items-center justify-between mb-3 gap-2">
         <div className="flex flex-col gap-0.5">
-          <span className="font-mono text-xs text-gray-400">Order #{order.id.slice(0, 8)}</span>
+          <span className="font-mono text-xs text-gray-400">Đơn hàng #{order.id.slice(0, 8)}</span>
           <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
         </div>
         <span
@@ -77,14 +77,14 @@ export default function OrdersPage() {
         )}
         <div className="flex-1 min-w-0">
           <div className="font-medium text-base truncate text-gray-900">
-            {order.orderItems?.[0]?.product?.name || "Product"}
+            {order.orderItems?.[0]?.product?.name || "Sản phẩm"}
           </div>
           <div className="text-xs text-gray-500">
             x{order.orderItems?.[0]?.quantity || 0}
           </div>
           {order.orderItems && order.orderItems.length > 1 && (
             <div className="text-xs text-gray-400 mt-1">
-              +{order.orderItems.length - 1} more item(s)
+              +{order.orderItems.length - 1} sản phẩm khác
             </div>
           )}
         </div>
@@ -96,10 +96,10 @@ export default function OrdersPage() {
           variant="outline"
           size="sm"
           className="group-hover:border-primary group-hover:text-primary transition flex items-center gap-1 px-3 py-2 rounded-md"
-          aria-label="View order details"
+          aria-label="Xem chi tiết đơn hàng"
           onClick={() => handleViewOrder(order.id)}
         >
-          <Eye className="w-4 h-4 mr-1" /> View
+          <Eye className="w-4 h-4 mr-1" /> Xem
         </Button>
       </div>
     </Card>
@@ -110,7 +110,7 @@ export default function OrdersPage() {
     return (
       <div className="py-16 text-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-        <p className="mt-4 text-lg">Loading your orders...</p>
+        <p className="mt-4 text-lg">Đang tải đơn hàng của bạn...</p>
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function OrdersPage() {
     return (
       <div className="py-16 text-center">
         <p className="text-red-500 text-lg mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()}>Retry</Button>
+        <Button onClick={() => window.location.reload()}>Thử lại</Button>
       </div>
     );
   }
@@ -129,10 +129,10 @@ export default function OrdersPage() {
   if (orders.length === 0) {
     return (
       <div className="py-16 text-center">
-        <h2 className="text-2xl font-bold mb-6 text-center">Your Orders</h2>
-        <div className="text-gray-500 text-lg mb-4">You haven't placed any orders yet.</div>
+        <h2 className="text-2xl font-bold mb-6 text-center">Đơn hàng của bạn</h2>
+        <div className="text-gray-500 text-lg mb-4">Bạn chưa đặt đơn hàng nào.</div>
         <Button asChild>
-          <Link href="/products">Start Shopping</Link>
+          <Link href="/products">Bắt đầu mua sắm</Link>
         </Button>
       </div>
     );
@@ -140,7 +140,7 @@ export default function OrdersPage() {
 
   return (
     <div className="py-8">
-      <h2 className="text-2xl font-bold mb-6 text-center">Your Orders</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Đơn hàng của bạn</h2>
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-x-auto px-1">
         {orders.map(renderOrderCard)}
       </div>

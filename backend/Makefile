@@ -3,6 +3,7 @@ export $(shell sed 's/=.*//' .env)
 
 start:
 	@go run src/main.go
+run: start
 lint:
 	@golangci-lint run
 tests:

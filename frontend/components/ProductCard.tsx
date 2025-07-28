@@ -68,15 +68,15 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               <Eye className="w-5 h-5" />
             </Link>
             <AddToCartButton product={product} className="flex-1 py-2 text-xs sm:text-sm hidden md:block min-w-[120px] basis-0">
-              Add to Cart
+              Thêm vào giỏ
             </AddToCartButton>
             <Link
               href={`/products/${product.slug}`}
               prefetch={false}
               className="flex-1 py-2 text-xs sm:text-sm hidden md:block border rounded-md bg-white flex items-center justify-center text-center font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 h-10 min-w-[120px] basis-0"
-              aria-label="View Details"
+              aria-label="Xem chi tiết"
             >
-              View Details
+              Xem chi tiết
             </Link>
           </div>
         </div>

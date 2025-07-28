@@ -27,7 +27,7 @@ export default function ProductMeta({ rating, reviewCount, soldCount, className 
         <span className="flex items-center gap-1">
           <span className="hidden sm:inline">|</span>
           <span className="sm:ml-0">🔥</span>
-          <span>Sold: {formatSold(soldCount)}</span>
+          <span>Đã bán: {formatSold(soldCount)}</span>
         </span>
       )}
       {reviewCount !== undefined && (
@@ -35,7 +35,7 @@ export default function ProductMeta({ rating, reviewCount, soldCount, className 
           <span className="hidden sm:inline">|</span>
           <MessageCircle className="w-4 h-4" />
           <span>{reviewCount}</span>
-          <span className="hidden sm:inline">reviews</span>
+          <span className="hidden sm:inline">đánh giá</span>
         </span>
       )}
     </div>

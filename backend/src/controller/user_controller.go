@@ -265,13 +265,13 @@ func (u *UserController) UpdateProfile(c *fiber.Ctx) error {
 // @Description  Update the current authenticated user's password
 // @Security BearerAuth
 // @Produce      json
-// @Param        request  body  validation.UpdatePassOrVerify  true  "Request body"
+// @Param        request  body  validation.UpdatePassword  true  "Request body"
 // @Router       /users/profile/password [put]
 // @Success      200  {object}  response.Common
 // @Failure      401  {object}  example.Unauthorized  "Unauthorized"
 // @Failure      400  {object}  example.Unauthorized  "Bad request"
 func (u *UserController) UpdatePassword(c *fiber.Ctx) error {
-	req := new(validation.UpdatePassOrVerify)
+	req := new(validation.UpdatePassword)
 
 	// Get user from context (set by auth middleware)
 	user := c.Locals("user").(*model.User)
@@ -283,7 +283,7 @@ func (u *UserController) UpdatePassword(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	if err := u.UserService.UpdatePassOrVerify(c, req, user.ID); err != nil {
+	if err := u.UserService.UpdatePassword(c, req, user.ID); err != nil {
 		return err
 	}
 

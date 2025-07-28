@@ -1,10 +1,11 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "./lib/prisma";
-import bcrypt from "bcryptjs";
+import Credentials from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
-import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { setStoredToken } from "@/lib/api-config";
 
 export const runtime = "nodejs";
 
@@ -28,7 +29,52 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         console.log("[DEBUG] Received credentials:", credentials);
-        // Mock user for dev
+        
+        try {
+          // First, try to authenticate with the backend API
+          const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1'}/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
+
+          if (backendResponse.ok) {
+            const backendData = await backendResponse.json();
+            console.log("[DEBUG] Backend auth successful:", backendData);
+            
+            // Store the backend token in localStorage for API calls
+            const accessToken = backendData.tokens?.access?.token;
+            if (accessToken) {
+              // Note: This will be called on the server side, so we need to handle token storage differently
+              console.log("[DEBUG] Backend token received:", accessToken.substring(0, 20) + "...");
+            }
+            
+            // Store the backend token in the user object
+            const user: AuthUser & { backendToken?: string; refreshToken?: string } = {
+              id: backendData.user?.id || "backend-user-id",
+              email: credentials.email?.toString() || "",
+              name: backendData.user?.name || credentials.email?.toString() || "",
+              isAdmin: backendData.user?.isAdmin || false,
+              backendToken: accessToken,
+              refreshToken: backendData.tokens?.refresh?.token,
+            };
+            
+            return user;
+          } else {
+            console.log("[DEBUG] Backend auth failed:", backendResponse.status);
+            const errorData = await backendResponse.json().catch(() => ({}));
+            console.log("[DEBUG] Backend error:", errorData);
+          }
+        } catch (error) {
+          console.log("[DEBUG] Backend auth failed, falling back to local auth:", error);
+        }
+
+        // Mock user for dev (fallback)
         if (
           (credentials.email === "test@demo.com" && credentials.password === "Test@1234") ||
           (credentials.email === "demo@demo.com" && credentials.password === "Demo@1234") ||
@@ -38,21 +84,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           console.log("[DEBUG] Using mock/demo user branch");
           return {
             id: "mock-demo-id",
-            email: credentials.email,
+            email: credentials.email!,
             name: credentials.email === "demo@demo.com" ? "Demo User" : 
                   credentials.email === "user@example.com" ? "Test User" : 
                   credentials.email === "admin@birdnest.com" ? "Admin User" : "Test User",
             isAdmin: credentials.email === "admin@birdnest.com",
           };
         }
-        // Real DB logic
+        
+        // Real DB logic (fallback)
         console.log("[DEBUG] Using real DB user branch");
         const email = credentials.email?.toString() || "";
         const user = await prisma.user.findUnique({ where: { email } });
         console.log("[DEBUG] DB user found:", user);
         if (!user || !user.password) {
           console.log("[DEBUG] No user or password found");
-          await new Promise(res => setTimeout(res, 5000));
           return null;
         }
         const password = credentials.password?.toString() || "";
@@ -61,7 +107,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         console.log("[DEBUG] Password valid:", isValid);
         if (!isValid) {
           console.log("[DEBUG] Password invalid");
-          await new Promise(res => setTimeout(res, 5000));
           return null;
         }
         // Update lastLoginAt
@@ -92,6 +137,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = (user as AuthUser).id;
         token.isAdmin = (user as AuthUser).isAdmin;
+        // Store backend token in JWT
+        if ((user as any).backendToken) {
+          token.backendToken = (user as any).backendToken;
+        }
+        if ((user as any).refreshToken) {
+          token.refreshToken = (user as any).refreshToken;
+        }
       }
       return token;
     },
@@ -99,6 +151,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         (session.user as AuthUser).id = token.id as string;
         (session.user as AuthUser).isAdmin = token.isAdmin as boolean;
+        // Store backend token in session
+        if (token.backendToken) {
+          (session as any).backendToken = token.backendToken;
+        }
+        if (token.refreshToken) {
+          (session as any).refreshToken = token.refreshToken;
+        }
       }
       return session;
     },

@@ -1,10 +1,20 @@
-import jwt from "jsonwebtoken";
+import { setStoredToken, removeStoredToken, getStoredToken } from './api-config';
 
+// Types
 export interface User {
   id: string;
   email: string;
   name?: string;
+  phone?: string;
+  address?: string;
   isAdmin: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
 }
 
 export interface AuthResponse {
@@ -24,38 +34,27 @@ export interface AuthResponse {
   };
 }
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  name?: string;
-  phone?: string;
-}
-
 class AuthService {
   private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1';
-  private tokenKey = 'birdnest_token';
 
   // Get stored token
   getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.tokenKey);
+    return getStoredToken();
   }
 
-  // Set token in localStorage
+  // Set token
   setToken(token: string): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(this.tokenKey, token);
+    setStoredToken(token);
   }
 
-  // Remove token from localStorage
+  // Remove token
   removeToken(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(this.tokenKey);
+    removeStoredToken();
+  }
+
+  // Check if user is authenticated
+  isAuthenticated(): boolean {
+    return !!this.getToken();
   }
 
   // Get current user from token
@@ -64,33 +63,21 @@ class AuthService {
     if (!token) return null;
 
     try {
-      const decoded = jwt.decode(token) as any;
+      // Decode JWT token to get user info
+      const payload = JSON.parse(atob(token.split('.')[1]));
       return {
-        id: decoded.sub, // JWT subject is user ID
-        email: decoded.email || '',
-        name: decoded.name || '',
-        isAdmin: decoded.is_admin || false,
+        id: payload.sub,
+        email: payload.email || '',
+        name: payload.name,
+        phone: payload.phone,
+        address: payload.address,
+        isAdmin: payload.isAdmin || false,
+        createdAt: new Date(payload.iat * 1000).toISOString(),
+        updatedAt: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error decoding token:', error);
-      this.removeToken();
       return null;
-    }
-  }
-
-  // Check if user is authenticated
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-
-    try {
-      const decoded = jwt.decode(token) as any;
-      const currentTime = Date.now() / 1000;
-      return decoded.exp > currentTime;
-    } catch (error) {
-      console.error('Error checking token validity:', error);
-      this.removeToken();
-      return false;
     }
   }
 
@@ -107,8 +94,12 @@ class AuthService {
 
       const data = await response.json();
 
-      if (data.code === 200 && data.tokens?.access?.token) {
+      if (response.ok && data.tokens?.access?.token) {
         this.setToken(data.tokens.access.token);
+        // Store refresh token for future use
+        if (data.tokens.refresh?.token) {
+          localStorage.setItem('birdnest_refresh_token', data.tokens.refresh.token);
+        }
       }
 
       return data;
@@ -123,7 +114,7 @@ class AuthService {
   }
 
   // Register user
-  async register(userData: RegisterData): Promise<AuthResponse> {
+  async register(userData: { email: string; password: string; name?: string; phone?: string }): Promise<AuthResponse> {
     try {
       const response = await fetch(`${this.baseURL}/auth/register`, {
         method: 'POST',
@@ -135,8 +126,12 @@ class AuthService {
 
       const data = await response.json();
 
-      if (data.code === 200 && data.tokens?.access?.token) {
+      if (response.ok && data.tokens?.access?.token) {
         this.setToken(data.tokens.access.token);
+        // Store refresh token for future use
+        if (data.tokens.refresh?.token) {
+          localStorage.setItem('birdnest_refresh_token', data.tokens.refresh.token);
+        }
       }
 
       return data;
@@ -151,29 +146,99 @@ class AuthService {
   }
 
   // Logout user
-  logout(): void {
-    this.removeToken();
+  async logout(): Promise<void> {
+    try {
+      const refreshToken = localStorage.getItem('birdnest_refresh_token');
+      if (refreshToken) {
+        await fetch(`${this.baseURL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      this.removeToken();
+      localStorage.removeItem('birdnest_refresh_token');
+    }
   }
 
-  // Get authenticated request headers
-  getAuthHeaders(): Record<string, string> {
-    const token = this.getToken();
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    };
+  // Refresh token
+  async refreshToken(): Promise<boolean> {
+    try {
+      const refreshToken = localStorage.getItem('birdnest_refresh_token');
+      if (!refreshToken) return false;
+
+      const response = await fetch(`${this.baseURL}/auth/refresh-tokens`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.tokens?.access?.token) {
+          this.setToken(data.tokens.access.token);
+          if (data.tokens.refresh?.token) {
+            localStorage.setItem('birdnest_refresh_token', data.tokens.refresh.token);
+          }
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      return false;
+    }
   }
 
-  // Make authenticated API request
-  async authenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
-    const headers = this.getAuthHeaders();
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...headers,
-        ...options.headers,
-      },
-    });
+  // Forgot password
+  async forgotPassword(email: string): Promise<AuthResponse> {
+    try {
+      const response = await fetch(`${this.baseURL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      return await response.json();
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      return {
+        code: 500,
+        status: 'error',
+        message: 'Network error occurred',
+      };
+    }
+  }
+
+  // Reset password
+  async resetPassword(token: string, password: string): Promise<AuthResponse> {
+    try {
+      const response = await fetch(`${this.baseURL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      return await response.json();
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return {
+        code: 500,
+        status: 'error',
+        message: 'Network error occurred',
+      };
+    }
   }
 }
 

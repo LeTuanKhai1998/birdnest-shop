@@ -18,6 +18,7 @@ type UserService interface {
 	GetUserByEmail(c *fiber.Ctx, email string) (*model.User, error)
 	CreateUser(c *fiber.Ctx, req *validation.CreateUser) (*model.User, error)
 	UpdatePassOrVerify(c *fiber.Ctx, req *validation.UpdatePassOrVerify, id string) error
+	UpdatePassword(c *fiber.Ctx, req *validation.UpdatePassword, id string) error
 	UpdateUser(c *fiber.Ctx, req *validation.UpdateUser, id string) (*model.User, error)
 	DeleteUser(c *fiber.Ctx, id string) error
 	CreateGoogleUser(c *fiber.Ctx, req *validation.GoogleLogin) (*model.User, error)
@@ -135,7 +136,7 @@ func (s *userService) UpdateUser(c *fiber.Ctx, req *validation.UpdateUser, id st
 		return nil, err
 	}
 
-	if req.Email == "" && req.Name == "" && req.Password == "" {
+	if req.Email == "" && req.Name == "" && req.Password == "" && req.Phone == "" && req.Bio == "" {
 		return nil, fiber.NewError(fiber.StatusBadRequest, "Invalid Request")
 	}
 
@@ -151,6 +152,8 @@ func (s *userService) UpdateUser(c *fiber.Ctx, req *validation.UpdateUser, id st
 		Name:     &req.Name,
 		Password: req.Password,
 		Email:    req.Email,
+		Phone:    &req.Phone,
+		Bio:      &req.Bio,
 	}
 
 	result := s.DB.WithContext(c.Context()).Where("id = ?", id).Updates(updateBody)
@@ -194,6 +197,45 @@ func (s *userService) UpdatePassOrVerify(c *fiber.Ctx, req *validation.UpdatePas
 
 	updateBody := &model.User{
 		Password: req.Password,
+	}
+
+	result := s.DB.WithContext(c.Context()).Where("id = ?", id).Updates(updateBody)
+
+	if result.RowsAffected == 0 {
+		return fiber.NewError(fiber.StatusNotFound, "User not found")
+	}
+
+	if result.Error != nil {
+		s.Log.Errorf("Failed to update user password: %+v", result.Error)
+	}
+
+	return result.Error
+}
+
+func (s *userService) UpdatePassword(c *fiber.Ctx, req *validation.UpdatePassword, id string) error {
+	if err := s.Validate.Struct(req); err != nil {
+		return err
+	}
+
+	// Get current user to verify current password
+	user, err := s.GetUserByID(c, id)
+	if err != nil {
+		return err
+	}
+
+	// Verify current password
+	if !utils.CheckPasswordHash(req.CurrentPassword, user.Password) {
+		return fiber.NewError(fiber.StatusBadRequest, "Current password is incorrect")
+	}
+
+	// Hash new password
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		return err
+	}
+
+	updateBody := &model.User{
+		Password: hashedPassword,
 	}
 
 	result := s.DB.WithContext(c.Context()).Where("id = ?", id).Updates(updateBody)

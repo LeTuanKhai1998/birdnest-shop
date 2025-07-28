@@ -17,27 +17,27 @@ import { Avatar } from "@/components/ui/avatar";
 import { api } from "@/lib/api";
 
 const profileSchema = z.object({
-  name: z.string().min(2, "Name is too short"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(8, "Phone is too short"),
-  bio: z.string().max(120, "Bio must be 120 characters or less").optional(),
+  name: z.string().min(2, "Tên quá ngắn"),
+  email: z.string().email("Địa chỉ email không hợp lệ"),
+  phone: z.string().min(8, "Số điện thoại quá ngắn"),
+  bio: z.string().max(120, "Tiểu sử phải ít hơn 120 ký tự").optional(),
 });
 
 type ProfileForm = z.infer<typeof profileSchema>;
 
 const passwordSchema = z.object({
-  currentPassword: z.string().min(6, "Required"),
-  newPassword: z.string().min(6, "At least 6 characters"),
+  currentPassword: z.string().min(6, "Bắt buộc"),
+  newPassword: z.string().min(6, "Ít nhất 6 ký tự"),
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords do not match",
+  message: "Mật khẩu không khớp",
   path: ["confirmPassword"],
 });
 
 type PasswordForm = z.infer<typeof passwordSchema>;
 
-function fetcher(url: string) {
-  return api.get(url.replace('/v1', ''));
+function fetcher(url: string, session: any) {
+  return api.get(url.replace('/v1', ''), session);
 }
 
 function getPasswordStrength(password: string) {
@@ -52,9 +52,13 @@ function getPasswordStrength(password: string) {
 
 export default function ProfilePage() {
   const { data: session } = useSession();
-  const { data: user, isLoading } = useSWR(session?.user ? "/v1/users/profile" : null, fetcher, {
-    fallbackData: session?.user,
-  });
+  const { data: user, isLoading } = useSWR(
+    session?.user ? ["/v1/users/profile", session] : null, 
+    ([url, session]) => fetcher(url, session), 
+    {
+      fallbackData: session?.user,
+    }
+  );
   const [saving, setSaving] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
   const [showCurrentPw, setShowCurrentPw] = useState(false);
@@ -94,14 +98,18 @@ export default function ProfilePage() {
   async function onSubmitProfile(data: ProfileForm) {
     setSaving(true);
     try {
-      const result = await api.put("/users/profile", data);
-      mutate("/v1/users/profile");
-      toast.success("Profile updated!");
+      console.log("🔐 Session:", session);
+      console.log("📝 Profile data:", data);
+      const result = await api.put("/users/profile", data, session);
+      console.log("✅ Profile update result:", result);
+      mutate(["/v1/users/profile", session]);
+      toast.success("Hồ sơ đã được cập nhật!");
     } catch (e: unknown) {
+      console.error("❌ Profile update error:", e);
       if (e instanceof Error) {
         toast.error(e.message);
       } else {
-        toast.error("An unknown error occurred");
+        toast.error("Đã xảy ra lỗi không xác định");
       }
     } finally {
       setSaving(false);
@@ -112,14 +120,14 @@ export default function ProfilePage() {
   async function onSubmitPassword(data: PasswordForm) {
     setPwSaving(true);
     try {
-      const result = await api.put("/users/profile/password", data);
+      const result = await api.put("/users/profile/password", data, session);
       resetPw();
-      toast.success("Password updated!");
+      toast.success("Mật khẩu đã được cập nhật!");
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);
       } else {
-        toast.error("An unknown error occurred");
+        toast.error("Đã xảy ra lỗi không xác định");
       }
     } finally {
       setPwSaving(false);
@@ -137,7 +145,7 @@ export default function ProfilePage() {
     <div className="py-8 px-2 md:px-0 max-w-2xl mx-auto bg-gray-50 min-h-screen">
       {/* Sticky header for mobile */}
       <div className="sticky top-0 z-10 bg-gray-50 pb-2 pt-2 md:pt-0">
-        <h2 className="text-2xl font-bold mb-2 md:mb-4 text-center md:text-left">Your Profile</h2>
+        <h2 className="text-2xl font-bold mb-2 md:mb-4 text-center md:text-left">Hồ sơ của bạn</h2>
       </div>
       <LoadingOrEmpty loading={isLoading}>
         <motion.div
@@ -160,7 +168,7 @@ export default function ProfilePage() {
             />
             <button
               className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 hover:bg-gray-100 transition flex items-center"
-              title="Edit avatar (coming soon)"
+              title="Chỉnh sửa ảnh đại diện (sắp ra mắt)"
               type="button"
               tabIndex={-1}
             >
@@ -171,7 +179,7 @@ export default function ProfilePage() {
           <div className="text-gray-500 text-sm">{user?.email}</div>
           {user?.bio && <div className="text-gray-600 text-sm mt-1 text-center max-w-xs">{user.bio}</div>}
           {user?.createdAt && (
-            <div className="text-xs text-gray-400 mt-1">Account created: {new Date(user.createdAt).toLocaleDateString()}</div>
+            <div className="text-xs text-gray-400 mt-1">Tài khoản được tạo: {new Date(user.createdAt).toLocaleDateString()}</div>
           )}
         </motion.div>
         {/* Profile info card */}
@@ -187,13 +195,13 @@ export default function ProfilePage() {
             } as any}
           >
             <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
-              <span>Personal Information</span>
+              <span>Thông tin cá nhân</span>
             </h3>
             <form onSubmit={handleSubmit(onSubmitProfile)} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="name">Name</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="name">Tên</label>
                 <Input id="name" {...register("name")}
-                  placeholder="Your name"
+                  placeholder="Tên của bạn"
                   disabled={saving}
                   autoComplete="name"
                 />
@@ -202,31 +210,31 @@ export default function ProfilePage() {
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="email">Email</label>
                 <Input id="email" {...register("email")}
-                  placeholder="you@example.com"
+                  placeholder="ban@example.com"
                   disabled={saving}
                   autoComplete="email"
                 />
                 {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email.message}</div>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="phone">Phone</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="phone">Số điện thoại</label>
                 <Input id="phone" {...register("phone")}
-                  placeholder="Phone number"
+                  placeholder="Số điện thoại"
                   disabled={saving}
                   autoComplete="tel"
                 />
                 {errors.phone && <div className="text-red-500 text-xs mt-1">{errors.phone.message}</div>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="bio">Bio / Tagline</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="bio">Tiểu sử / Mô tả</label>
                 <Input id="bio" {...register("bio")}
-                  placeholder="Short bio or tagline (optional)"
+                  placeholder="Tiểu sử ngắn hoặc mô tả (tùy chọn)"
                   disabled={saving}
                   maxLength={120}
                 />
                 {errors.bio && <div className="text-red-500 text-xs mt-1">{errors.bio.message}</div>}
               </div>
-              <Button type="submit" disabled={saving} className="w-full mt-2">{saving ? "Saving..." : "Save Changes"}</Button>
+              <Button type="submit" disabled={saving} className="w-full mt-2">{saving ? "Đang lưu..." : "Lưu thay đổi"}</Button>
             </form>
           </motion.div>
           {/* Divider */}
@@ -243,14 +251,14 @@ export default function ProfilePage() {
             } as any}
           >
             <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
-              <span>Change Password</span>
+              <span>Đổi mật khẩu</span>
             </h3>
             <form onSubmit={handlePwSubmit(onSubmitPassword)} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="currentPassword">Current Password</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="currentPassword">Mật khẩu hiện tại</label>
                 <div className="relative">
                   <Input type={showCurrentPw ? "text" : "password"} id="currentPassword" {...pwRegister("currentPassword")}
-                    placeholder="Current password"
+                    placeholder="Mật khẩu hiện tại"
                     disabled={pwSaving}
                     autoComplete="current-password"
                   />
@@ -261,10 +269,10 @@ export default function ProfilePage() {
                 {pwErrors.currentPassword && <div className="text-red-500 text-xs mt-1">{pwErrors.currentPassword.message}</div>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="newPassword">New Password</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="newPassword">Mật khẩu mới</label>
                 <div className="relative">
                   <Input type={showNewPw ? "text" : "password"} id="newPassword" {...pwRegister("newPassword")}
-                    placeholder="New password"
+                    placeholder="Mật khẩu mới"
                     disabled={pwSaving}
                     autoComplete="new-password"
                   />
@@ -288,20 +296,20 @@ export default function ProfilePage() {
                     </div>
                     <span className="text-xs text-gray-500">
                       {pwStrength === 0 ? "" :
-                        pwStrength === 1 ? "Weak" :
-                        pwStrength === 2 ? "Fair" :
-                        pwStrength === 3 ? "Good" :
-                        "Strong"}
+                        pwStrength === 1 ? "Yếu" :
+                        pwStrength === 2 ? "Trung bình" :
+                        pwStrength === 3 ? "Tốt" :
+                        "Mạnh"}
                     </span>
                   </div>
                 )}
                 {pwErrors.newPassword && <div className="text-red-500 text-xs mt-1">{pwErrors.newPassword.message}</div>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="confirmPassword">Confirm New Password</label>
+                <label className="block text-sm font-medium mb-1" htmlFor="confirmPassword">Xác nhận mật khẩu mới</label>
                 <div className="relative">
                   <Input type={showConfirmPw ? "text" : "password"} id="confirmPassword" {...pwRegister("confirmPassword")}
-                    placeholder="Confirm new password"
+                    placeholder="Xác nhận mật khẩu mới"
                     disabled={pwSaving}
                     autoComplete="new-password"
                   />
@@ -311,7 +319,7 @@ export default function ProfilePage() {
                 </div>
                 {pwErrors.confirmPassword && <div className="text-red-500 text-xs mt-1">{pwErrors.confirmPassword.message}</div>}
               </div>
-              <Button type="submit" disabled={pwSaving} className="w-full mt-2">{pwSaving ? "Saving..." : "Change Password"}</Button>
+              <Button type="submit" disabled={pwSaving} className="w-full mt-2">{pwSaving ? "Đang lưu..." : "Đổi mật khẩu"}</Button>
             </form>
           </motion.div>
         </AnimatePresence>

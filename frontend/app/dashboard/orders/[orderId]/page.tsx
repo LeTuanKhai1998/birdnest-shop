@@ -58,7 +58,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-        <p className="mt-4 text-lg">Loading order details...</p>
+        <p className="mt-4 text-lg">Đang tải chi tiết đơn hàng...</p>
       </div>
     );
   }
@@ -66,9 +66,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   if (error || !order) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-red-500 font-semibold">{error || "Order not found."}</div>
+        <div className="text-red-500 font-semibold">{error || "Không tìm thấy đơn hàng."}</div>
         <Link href="/dashboard/orders">
-          <Button className="mt-4">Back to Orders</Button>
+          <Button className="mt-4">Quay lại đơn hàng</Button>
         </Link>
       </div>
     );
@@ -77,12 +77,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   return (
     <div className="max-w-2xl mx-auto py-8 px-2">
       <Link href="/dashboard/orders">
-        <Button variant="ghost" className="mb-4">← Back to Orders</Button>
+        <Button variant="ghost" className="mb-4">← Quay lại đơn hàng</Button>
       </Link>
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="font-mono text-xs text-gray-500">Order ID: {order.id}</div>
+            <div className="font-mono text-xs text-gray-500">Mã đơn hàng: {order.id}</div>
             <div className="text-sm text-gray-400">{formatDate(order.createdAt)}</div>
           </div>
           <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${statusColor[order.status] || "bg-gray-100 text-gray-800"}`}>
@@ -105,7 +105,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                 />
               )}
               <div className="flex-1 min-w-0">
-                <div className="font-semibold">{item.product?.name || "Product"}</div>
+                <div className="font-semibold">{item.product?.name || "Sản phẩm"}</div>
                 <div className="text-gray-500 text-sm">
                   x{item.quantity || 0} &middot; {formatVND(Number(item.price || 0))}
                 </div>

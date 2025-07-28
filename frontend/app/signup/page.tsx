@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
 import { authApi } from "@/lib/api-service";
 
 export default function SignupPage() {
@@ -22,11 +22,18 @@ export default function SignupPage() {
     setError("");
     
     try {
-      await authApi.register({ name, email, password });
-      toast.success("Account created! Please sign in.");
-      router.push("/login");
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Signup failed";
+      const response = await authApi.register({ name, email, password });
+      
+      if (response.code === 201 || response.code === 200) {
+        toast.success("Account created successfully! Please sign in.");
+        router.push("/login");
+      } else {
+        setError(response.message || "Signup failed");
+        toast.error(response.message || "Signup failed");
+      }
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      const errorMessage = error.message || "Signup failed";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -35,40 +42,115 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 mt-16">
-        <h1 className="text-2xl font-bold mb-6 text-center">Create your account</h1>
-        <form className="space-y-4" onSubmit={handleSignup}>
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
-            <Input id="name" type="text" autoComplete="name" required value={name} onChange={e => setName(e.target.value)} disabled={loading} />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-            <Input id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} disabled={loading} />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Create your account
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Or{" "}
+            <a
+              href="/login"
+              className="font-medium text-red-600 hover:text-red-500"
+            >
+              sign in to your existing account
+            </a>
+          </p>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSignup}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="name" className="sr-only">
+                Full name
+              </label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
+                placeholder="Full name"
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+              />
+            </div>
             <div className="relative">
-              <Input id="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required value={password} onChange={e => setPassword(e.target.value)} disabled={loading} />
-              <button type="button" className="absolute right-2 top-2 text-gray-500" tabIndex={-1} onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400" />
+                )}
               </button>
             </div>
           </div>
+
           {error && (
-            <div className="bg-red-100 text-red-700 px-4 py-2 rounded text-sm border border-red-200 animate-fade-in">
-              {error}
-            </div>
+            <div className="text-red-600 text-sm text-center">{error}</div>
           )}
-          <Button type="submit" className="w-full text-base font-semibold py-3 mt-2" disabled={loading}>
-            {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
-            Sign up
-          </Button>
+
+          <div>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Mail className="h-4 w-4 mr-2" />
+              )}
+              Create account
+            </Button>
+          </div>
+
+          <div className="text-center text-sm text-gray-600">
+            By creating an account, you agree to our{" "}
+            <a href="/terms" className="text-red-600 hover:text-red-500">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="text-red-600 hover:text-red-500">
+              Privacy Policy
+            </a>
+          </div>
         </form>
-        <div className="mt-6 text-center text-sm text-gray-600">
-          Already have an account? <a href="/login" className="text-red-600 hover:underline">Sign in</a>
-        </div>
       </div>
     </div>
   );

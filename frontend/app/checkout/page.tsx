@@ -18,8 +18,8 @@ import useSWR from "swr";
 import Image from "next/image";
 import { api } from "@/lib/api";
 
-function fetcher(url: string) {
-  return fetch(url).then(r => r.json());
+function fetcher(url: string, session: any) {
+  return api.get(url.replace('/v1', ''), session);
 }
 
 const schema = z.object({
@@ -79,7 +79,10 @@ function getAddressDisplay(addr: Address, provinces: Province[]): string {
 export default function CheckoutPage() {
   const { data: session } = useSession();
   const user = session?.user;
-  const { data: savedAddresses = [] } = useSWR(user ? "/v1/users/addresses" : null, fetcher);
+  const { data: savedAddresses = [] } = useSWR(
+    user ? ["/v1/users/addresses", session] : null, 
+    ([url, session]) => fetcher(url, session)
+  );
   const [selectedAddressId, setSelectedAddressId] = useState<string | "new">(savedAddresses.length > 0 ? savedAddresses[0].id : "new");
   const items = useCartStore((s) => s.items);
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
@@ -176,7 +179,7 @@ export default function CheckoutPage() {
           apartment: data.apartment,
           country: "Vietnam",
           isDefault: savedAddresses.length === 0,
-        });
+        }, session);
       } catch { /* ignore for now */ }
     }
     setCheckoutInfo({ ...data, email: data.email ?? "" });
