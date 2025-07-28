@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from 'next/font/google';
 import "./globals.css";
-import { ResponsiveNavbar } from "@/components/ResponsiveNavbar";
+import { MainNavbar } from "@/components/MainNavbar";
 import { Providers } from "@/components/Providers";
 import { HydrationSafe } from "@/components/HydrationSafe";
 import Footer from "@/components/Footer";
@@ -29,7 +29,7 @@ export default function RootLayout({
       <body>
         <Providers>
           <HydrationSafe>
-            <ResponsiveNavbar />
+            <MainNavbar />
           </HydrationSafe>
           {children}
           <Footer />

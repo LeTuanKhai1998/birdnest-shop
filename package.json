@@ -14,9 +14,11 @@
     "lint": "npm run lint --workspace=frontend",
     "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "jwt-decode": "^4.0.0"
   }
-} 
+}

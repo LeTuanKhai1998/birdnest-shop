@@ -10,7 +10,14 @@ import Image from 'next/image';
 
 // API response type
 interface OrdersApiResponse {
-  orders?: Order[];
+  data?: {
+    orders?: Order[];
+    pagination?: {
+      page: number;
+      limit: number;
+      total: number;
+    };
+  };
   error?: string;
 }
 
@@ -23,10 +30,10 @@ export default function OrdersPage() {
   // Fetch orders from API
   useEffect(() => {
     setLoading(true);
-    fetch("/api/orders")
+    fetch("/v1/orders")
       .then(res => res.json())
       .then((data: OrdersApiResponse) => {
-        if (data.orders) setOrders(data.orders);
+        if (data.data?.orders) setOrders(data.data.orders);
         else setError(data.error || "Failed to load orders");
         setLoading(false);
       })

@@ -1,814 +1,283 @@
 "use client";
-import { useSession } from "next-auth/react";
+
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, TrendingDown, DollarSign, ShoppingBag, Users, BarChart2, Loader } from "lucide-react";
-import { useMemo } from "react";
-import { mockOrders } from "@/lib/mock-orders";
-import dynamic from "next/dynamic";
-import { formatVND, formatDate, statusColor } from "@/lib/order-utils";
-import { MoreHorizontal } from "lucide-react";
-import useSWR from "swr/immutable";
-import { fetcher } from "@/lib/utils";
-import type { Order } from "@/lib/mock-orders";
-import { toast } from "sonner";
-import { BarChart, Bar, Tooltip as RechartsTooltip, Cell, PieChart, Pie, Cell as RechartsCell, Legend as RechartsLegend } from "recharts";
-import Papa from "papaparse";
-import "jspdf-autotable";
-import { format, parseISO, isAfter, isBefore } from "date-fns";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import type { Product } from "@/components/ProductCard";
-import Image from "next/image";
+import { useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Users, 
+  ShoppingBag, 
+  DollarSign, 
+  TrendingUp, 
+  Package, 
+  Star,
+  ArrowUpRight,
+  ArrowDownRight,
+  Eye,
+  Edit,
+  Trash2,
+  Plus
+} from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
 
-const ResponsiveContainer = dynamic(() => import("recharts").then(m => m.ResponsiveContainer), { ssr: false });
-const LineChart = dynamic(() => import("recharts").then(m => m.LineChart), { ssr: false });
-const Line = dynamic(() => import("recharts").then(m => m.Line), { ssr: false });
-const XAxis = dynamic(() => import("recharts").then(m => m.XAxis), { ssr: false });
-const YAxis = dynamic(() => import("recharts").then(m => m.YAxis), { ssr: false });
-const Tooltip = dynamic(() => import("recharts").then(m => m.Tooltip), { ssr: false });
-const CartesianGrid = dynamic(() => import("recharts").then(m => m.CartesianGrid), { ssr: false });
-
-const metrics = [
-  {
-    label: "Total Revenue",
-    value: "$12,400",
-    icon: DollarSign,
-    trend: 5.2,
-    positive: true,
-  },
-  {
-    label: "Total Orders",
-    value: "1,230",
-    icon: ShoppingBag,
-    trend: -2.1,
-    positive: false,
-  },
-  {
-    label: "Total Customers",
-    value: "980",
-    icon: Users,
-    trend: 1.8,
-    positive: true,
-  },
-  {
-    label: "Avg. Order Value",
-    value: "$45.20",
-    icon: BarChart2,
-    trend: 0.7,
-    positive: true,
-  },
+// Mock data for charts
+const revenueData = [
+  { name: 'Jan', value: 4000 },
+  { name: 'Feb', value: 3000 },
+  { name: 'Mar', value: 2000 },
+  { name: 'Apr', value: 2780 },
+  { name: 'May', value: 1890 },
+  { name: 'Jun', value: 2390 },
 ];
 
-const FILTERS = [
-  { label: "Daily", value: "daily" },
-  { label: "Weekly", value: "weekly" },
-  { label: "Monthly", value: "monthly" },
+const orderData = [
+  { name: 'Jan', orders: 65 },
+  { name: 'Feb', orders: 59 },
+  { name: 'Mar', orders: 80 },
+  { name: 'Apr', orders: 81 },
+  { name: 'May', orders: 56 },
+  { name: 'Jun', orders: 55 },
 ];
 
-function groupOrders(orders: typeof mockOrders, filter: string) {
-  const map = new Map<string, number>();
-  orders.forEach((order) => {
-    const date = new Date(order.createdAt);
-    let key: string;
-    if (filter === "daily") {
-      key = date.toISOString().slice(0, 10);
-    } else if (filter === "weekly") {
-      const week = `${date.getFullYear()}-W${Math.ceil((date.getDate() - date.getDay() + 1) / 7)}`;
-      key = week;
-    } else {
-      key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    }
-    map.set(key, (map.get(key) || 0) + order.total);
-  });
-  return Array.from(map.entries()).map(([date, revenue]) => ({ date, revenue }));
-}
+const productData = [
+  { name: 'Refined Nest', value: 400 },
+  { name: 'Raw Nest', value: 300 },
+  { name: 'Feather-removed', value: 300 },
+  { name: 'Combo', value: 200 },
+];
 
-// Replace showToast with sonner toast
-function showToast(message: string, type: 'success' | 'error' = 'success') {
-  toast[type](message);
-}
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-// --- Export helpers for tables ---
-function exportOrdersCSV(data: (Order & { customer: string })[]) {
-  const rows = data.map((o) => ({
-    ID: o.id,
-    Customer: o.customer,
-    Total: o.total,
-    Status: o.status,
-    Date: format(parseISO(o.createdAt), "yyyy-MM-dd HH:mm"),
-  }));
-  const csv = Papa.unparse(rows);
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `orders-${Date.now()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-async function exportOrdersPDF(data: (Order & { customer: string })[]) {
-  const { default: jsPDF } = await import("jspdf");
-  const autoTable = (await import("jspdf-autotable")).default;
-  const doc = new jsPDF();
-  doc.text("Recent Orders", 14, 16);
-  autoTable(doc, {
-    head: [["ID", "Customer", "Total", "Status", "Date"]],
-    body: data.map((o) => [
-      o.id,
-      o.customer,
-      formatVND(o.total),
-      o.status,
-      format(parseISO(o.createdAt), "yyyy-MM-dd HH:mm"),
-    ]),
-    startY: 22,
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [220, 38, 38] },
-  });
-  doc.save(`orders-${Date.now()}.pdf`);
-}
-function exportLowStockCSV(data: Product[]) {
-  const rows = data.map((p) => ({
-    Product: p.name,
-    Stock: p.quantity,
-    Status: (p.quantity ?? 0) < 3 ? "Critical" : "Low",
-  }));
-  const csv = Papa.unparse(rows);
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `low-stock-${Date.now()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-async function exportLowStockPDF(data: Product[]) {
-  const { default: jsPDF } = await import("jspdf");
-  const autoTable = (await import("jspdf-autotable")).default;
-  const doc = new jsPDF();
-  doc.text("Low Stock Alerts", 14, 16);
-  autoTable(doc, {
-    head: [["Product", "Stock", "Status"]],
-    body: data.map((p) => [
-      p.name,
-      p.quantity ?? 0,
-      (p.quantity ?? 0) < 3 ? "Critical" : "Low",
-    ]),
-    startY: 22,
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [234, 179, 8] },
-  });
-  doc.save(`low-stock-${Date.now()}.pdf`);
-}
-function exportTopProductsCSV(data: { name: string; unitsSold: number; revenue: number; stock: number; image: string }[]) {
-  const rows = data.map((p) => ({
-    Product: p.name,
-    "Units Sold": p.unitsSold,
-    Revenue: p.revenue,
-    Stock: p.stock < 3 ? "Critical" : p.stock < 10 ? "Low" : "In Stock",
-  }));
-  const csv = Papa.unparse(rows);
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `top-products-${Date.now()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-async function exportTopProductsPDF(data: { name: string; unitsSold: number; revenue: number; stock: number; image: string }[]) {
-  const { default: jsPDF } = await import("jspdf");
-  const autoTable = (await import("jspdf-autotable")).default;
-  const doc = new jsPDF();
-  doc.text("Top Products", 14, 16);
-  autoTable(doc, {
-    head: [["Product", "Units Sold", "Revenue", "Stock"]],
-    body: data.map((p) => [
-      p.name,
-      p.unitsSold,
-      formatVND(p.revenue),
-      p.stock < 3 ? "Critical" : p.stock < 10 ? "Low" : "In Stock",
-    ]),
-    startY: 22,
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [34, 197, 94] },
-  });
-  doc.save(`top-products-${Date.now()}.pdf`);
-}
-
-export default function AdminDashboardPage() {
-  // All hooks at the top, before any return
-  const { data: session, status } = useSession();
+export default function AdminDashboard() {
+  const { user, isAuthenticated, loading } = useAuth();
   const router = useRouter();
-  const [filter, setFilter] = useState("monthly");
-  const chartData = useMemo(() => groupOrders(mockOrders, filter), [filter]);
-  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
-  const prevOrderIds = useRef<Set<string>>(new Set<string>());
-  const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(null);
-  const { data: ordersData, error: ordersError } = useSWR(
-    session && session.user && session.user.isAdmin ? "/api/orders" : null,
-    fetcher,
-    { refreshInterval: 5000 }
-  );
-  const { data: productsData } = useSWR("/api/products", fetcher, { refreshInterval: 10000 });
-  const realOrders = useMemo(() => ordersData?.orders || [], [ordersData]);
-  function isRealOrder(orderId: string) {
-    return realOrders.some((o: Order) => o.id === orderId);
-  }
-  const [orderSort, setOrderSort] = useState({ key: "createdAt", dir: "desc" });
-  const [statusFilter, setStatusFilter] = useState("");
-  const ordersWithCustomer = (realOrders.length > 0 ? realOrders : mockOrders).map((o: Order, i: number) => ({ ...o, customer: i % 2 === 0 ? "Nguyen Van A" : "Tran Thi B" }));
-  let filteredOrders = statusFilter ? ordersWithCustomer.filter((o: Order & { customer: string }) => o.status === statusFilter) : ordersWithCustomer;
-  filteredOrders = [...filteredOrders].sort((a: Order & { customer: string }, b: Order & { customer: string }) => {
-    if (orderSort.key === "createdAt") {
-      return orderSort.dir === "desc"
-        ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    } else if (orderSort.key === "total") {
-      return orderSort.dir === "desc" ? b.total - a.total : a.total - b.total;
-    }
-    return 0;
-  });
+
   useEffect(() => {
-    if (!realOrders.length) return;
-    const currentIds = new Set<string>(realOrders.map((o: Order) => o.id));
-    if (prevOrderIds.current.size) {
-      for (const id of currentIds) {
-        if (!prevOrderIds.current.has(id)) {
-          setHighlightedOrderId(id);
-          showToast("New order received!", "success");
-          setTimeout(() => setHighlightedOrderId(null), 3000);
-          break;
-        }
-      }
+    if (!loading && (!isAuthenticated || !user?.isAdmin)) {
+      router.push('/login');
     }
-    prevOrderIds.current = currentIds;
-  }, [realOrders]);
-  const products = productsData || [];
-  const LOW_STOCK_THRESHOLD = 10;
-  const lowStockProducts = (products as Product[]).filter((p) => typeof p.quantity === 'number' && p.quantity < LOW_STOCK_THRESHOLD);
-  const allOrders = realOrders.length > 0 ? realOrders : mockOrders;
-  const productSalesMap = new Map<string, { name: string; image: string; unitsSold: number; revenue: number; stock: number }>();
-  allOrders.forEach((order: Order) => {
-    order.orderItems.forEach((item) => {
-      const key = item.product.id;
-      if (!productSalesMap.has(key)) {
-        const prod = (products as Product[]).find((p) => p.id === key);
-        productSalesMap.set(key, {
-          name: item.product.name,
-          image: item.product.images[0],
-          unitsSold: 0,
-          revenue: 0,
-          stock: prod ? prod.quantity ?? 0 : 0,
-        });
-      }
-      const entry = productSalesMap.get(key)!;
-      entry.unitsSold += item.quantity;
-      entry.revenue += item.price * item.quantity;
-    });
-  });
-  const topProducts = Array.from(productSalesMap.values()).sort((a, b) => b.unitsSold - a.unitsSold).slice(0, 5);
-  const topCustomers = [
-    { name: "Nguyễn Văn Quang", email: "user1@birdnest.vn", revenue: 12000000 },
-    { name: "Trần Thị Mai", email: "user2@birdnest.vn", revenue: 9500000 },
-    { name: "Lê Minh Tuấn", email: "user3@birdnest.vn", revenue: 7200000 },
-    { name: "Phạm Thị Hồng", email: "user4@birdnest.vn", revenue: 5400000 },
-  ];
-  const acquisitionSources = [
-    { name: "Organic", value: 40 },
-    { name: "Facebook", value: 30 },
-    { name: "Google", value: 20 },
-    { name: "Referral", value: 10 },
-  ];
-  // Reports & Export state
-  const [exportStart, setExportStart] = useState<string>("");
-  const [exportEnd, setExportEnd] = useState<string>("");
-  const filteredExportOrders = filteredOrders.filter((order: Order & { customer: string }) => {
-    if (!exportStart && !exportEnd) return true;
-    const date = parseISO(order.createdAt);
-    if (exportStart && isBefore(date, parseISO(exportStart))) return false;
-    if (exportEnd && isAfter(date, parseISO(exportEnd))) return false;
-    return true;
-  });
-  function handleExportCSV() {
-    const data = filteredExportOrders.map((o: Order & { customer: string }) => ({
-      ID: o.id,
-      Customer: o.customer,
-      Total: o.total,
-      Status: o.status,
-      Date: format(parseISO(o.createdAt), "yyyy-MM-dd HH:mm"),
-    }));
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `orders-${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-  async function handleExportPDF() {
-    const { default: jsPDF } = await import("jspdf");
-    const autoTable = (await import("jspdf-autotable")).default;
-    const doc = new jsPDF();
-    doc.text("Orders Report", 14, 16);
-    autoTable(doc, {
-      head: [["ID", "Customer", "Total", "Status", "Date"]],
-      body: filteredExportOrders.map((o: Order & { customer: string }) => [
-        o.id,
-        o.customer,
-        formatVND(o.total),
-        o.status,
-        format(parseISO(o.createdAt), "yyyy-MM-dd HH:mm"),
-      ]),
-      startY: 22,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [220, 38, 38] },
-    });
-    doc.save(`orders-${Date.now()}.pdf`);
-  }
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.replace("/login?callbackUrl=/admin");
-    } else if (status === "authenticated" && !(session?.user && session.user.isAdmin)) {
-      router.replace("/unauthorized");
-    }
-  }, [status, session, router]);
-  // Loading states for SWR
-  const ordersLoading = !ordersData && !ordersError;
-  if (status === "loading") {
-    // Global loading state
-    return <div className="flex-1 flex items-center justify-center h-screen"><Skeleton className="w-32 h-32 rounded-full" /></div>;
-  }
-  if (!session || !(session.user && session.user.isAdmin)) return null;
+  }, [isAuthenticated, user, loading, router]);
 
-  // Add a deterministic color palette for products
-  const PRODUCT_COLORS = [
-    '#2563eb', // blue-600
-    '#16a34a', // green-600
-    '#dc2626', // red-600
-    '#9333ea', // purple-600
-    '#f59e42', // orange-400
-    '#0d9488', // teal-600
-    '#eab308', // yellow-500
-    '#f43f5e', // pink-500
-    '#64748b', // slate-500
-    '#a21caf', // fuchsia-700
-  ];
-
-  function hashStringToColorIdx(str: string) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return Math.abs(hash) % PRODUCT_COLORS.length;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Define a color palette for acquisition sources
-  const ACQUISITION_COLORS = [
-    '#fbbf24', // yellow-400 (Facebook)
-    '#ef4444', // red-500 (Google)
-    '#10b981', // green-500 (Organic)
-    '#f59e42', // orange-400 (Referral)
-    '#6366f1', // indigo-500 (extra)
-    '#a21caf', // fuchsia-700 (extra)
-  ];
+  if (!isAuthenticated || !user?.isAdmin) {
+    return null;
+  }
 
   return (
-    <div className="space-y-12 pb-12"> {/* More vertical spacing between sections */}
-      {/* Metrics Grid */}
-      <section aria-label="Key Metrics" className="px-2 sm:px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-          {metrics.map((m) => (
-            <Card key={m.label} className="p-5 flex flex-col gap-2 shadow-sm rounded-xl border border-gray-100 dark:border-neutral-800">
-              <div className="flex items-center gap-3">
-                <m.icon className="w-7 h-7 text-red-600" aria-hidden="true" />
-                <span className="text-lg font-semibold text-gray-700 dark:text-gray-100">{m.label}</span>
-              </div>
-              <div className="flex items-end gap-2 mt-2">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">{m.value}</span>
-                <span className={m.positive ? "text-green-600 flex items-center gap-1" : "text-red-600 flex items-center gap-1"}>
-                  {m.positive ? <TrendingUp className="w-4 h-4" aria-hidden="true" /> : <TrendingDown className="w-4 h-4" aria-hidden="true" />}
-                  {m.trend}%
-                </span>
-              </div>
-            </Card>
-          ))}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-2">Welcome back, {user.name || user.email}</p>
         </div>
-      </section>
-      {/* Revenue Chart */}
-      <section aria-label="Revenue Analytics" className="px-2 sm:px-4">
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 mt-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-            <h2 className="text-lg font-bold">Revenue</h2>
-            <div className="flex gap-2">
-              {FILTERS.map(f => (
-                <button
-                  key={f.value}
-                  className={`px-3 py-1 rounded font-medium text-sm border transition focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none ${filter === f.value ? "bg-red-600 text-white border-red-600" : "bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-neutral-700 hover:bg-red-50 dark:hover:bg-neutral-600"}`}
-                  onClick={() => setFilter(f.value)}
-                  aria-pressed={filter === f.value}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`}/>
-                <Tooltip formatter={v => `$${v}`} labelClassName="font-semibold" />
-                <Line type="monotone" dataKey="revenue" stroke="#dc2626" strokeWidth={3} dot={false} activeDot={{ r: 6 }} fillOpacity={0.2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">$45,231.89</div>
+              <p className="text-xs text-muted-foreground flex items-center">
+                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                +20.1% from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">+2,350</div>
+              <p className="text-xs text-muted-foreground flex items-center">
+                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                +180.1% from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">+12,234</div>
+              <p className="text-xs text-muted-foreground flex items-center">
+                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                +19% from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">$19.25</div>
+              <p className="text-xs text-muted-foreground flex items-center">
+                <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
+                -2.1% from last month
+              </p>
+            </CardContent>
+          </Card>
         </div>
-      </section>
-      {/* Recent Orders Table */}
-      <section aria-label="Recent Orders" className="px-2 sm:px-4">
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 mt-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-            <h2 className="text-lg font-bold">Recent Orders</h2>
-            <div className="flex gap-2 items-center">
-              <label htmlFor="order-status-filter" className="sr-only">Filter by status</label>
-              <select
-                id="order-status-filter"
-                className="border rounded px-2 py-1 text-sm bg-gray-50 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none"
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-              >
-                <option value="">All Statuses</option>
-                <option value="PENDING">Pending</option>
-                <option value="PAID">Paid</option>
-                <option value="SHIPPED">Shipped</option>
-                <option value="DELIVERED">Delivered</option>
-                <option value="CANCELLED">Cancelled</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex gap-2 mb-2">
-            <button onClick={() => exportOrdersCSV(filteredOrders)} className="px-3 py-1 rounded bg-green-600 text-white text-xs font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 focus:outline-none">Export CSV</button>
-            <button onClick={() => exportOrdersPDF(filteredOrders)} className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus:outline-none">Export PDF</button>
-          </div>
-          <div className="overflow-x-auto" role="table" aria-label="Orders Table">
-            {ordersLoading ? (
-              <div className="flex justify-center py-12"><Loader className="w-8 h-8 animate-spin text-red-600" aria-label="Loading orders" /></div>
-            ) : (
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b text-gray-600 dark:text-gray-300">
-                  <th scope="col" className="py-2 px-3 text-left align-middle cursor-pointer" onClick={() => setOrderSort(s => ({ key: "id", dir: s.dir === "asc" ? "desc" : "asc" }))} tabIndex={0}>Order ID</th>
-                  <th scope="col" className="py-2 px-3">Customer Name</th>
-                  <th scope="col" className="py-2 px-3 cursor-pointer" onClick={() => setOrderSort(s => ({ key: "total", dir: s.dir === "asc" ? "desc" : "asc" }))} tabIndex={0}>Total</th>
-                  <th scope="col" className="py-2 px-3">Status</th>
-                  <th scope="col" className="py-2 px-3 cursor-pointer" onClick={() => setOrderSort(s => ({ key: "createdAt", dir: s.dir === "asc" ? "desc" : "asc" }))} tabIndex={0}>Date</th>
-                  <th scope="col" className="py-2 px-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-400">No orders found.</td>
-                  </tr>
-                ) : (
-                  filteredOrders.map((order: Order & { customer: string }) => (
-                    <tr
-                      key={order.id}
-                      className={`border-b hover:bg-red-50 dark:hover:bg-neutral-700 transition ${highlightedOrderId === order.id ? "bg-green-100 dark:bg-green-900 animate-pulse" : ""}`}
-                    >
-                      <td className="py-2 px-3 font-mono text-xs">{order.id}</td>
-                      <td className="py-2 px-3 text-left align-middle">{order.customer}</td>
-                      <td className="py-2 px-3 font-semibold text-left align-middle">{formatVND(order.total)}</td>
-                      <td className="py-2 px-3 text-left align-middle">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor[order.status] || "bg-gray-100 text-gray-700"}`}>{order.status}</span>
-                      </td>
-                      <td className="py-2 px-3 text-left align-middle">{formatDate(order.createdAt)}</td>
-                      <td className="py-2 px-3">
-                        <div className="flex gap-2">
-                          <button
-                            className="px-2 py-1 rounded bg-gray-100 dark:bg-neutral-700 hover:bg-red-100 dark:hover:bg-neutral-600 text-xs font-medium text-red-600 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none"
-                            onClick={() => {
-                              // setSelectedOrder(order); // Removed as per edit hint
-                              // setDrawerOpen(true); // Removed as per edit hint
-                            }}
-                            aria-label={`View order ${order.id}`}
-                          >
-                            View
-                          </button>
-                          <div className="relative group">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button
-                                  className="px-2 py-1 rounded bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 text-xs font-medium flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none"
-                                  aria-label="Update Status"
-                                >
-                                  Update <MoreHorizontal className="w-3 h-3" aria-hidden="true" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent sideOffset={8} align="start" className="min-w-[140px]">
-                                {[
-                                  "PENDING",
-                                  "PAID",
-                                  "SHIPPED",
-                                  "DELIVERED",
-                                  "CANCELLED",
-                                ].map((s) => (
-                                  <DropdownMenuItem
-                                    key={s}
-                                    disabled={order.status === s || updatingOrderId === order.id || !isRealOrder(order.id)}
-                                    onSelect={async () => {
-                                      if (!isRealOrder(order.id)) {
-                                        showToast("Cannot update status for mock orders.", "error");
-                                        return;
-                                      }
-                                      setUpdatingOrderId(order.id);
-                                      // setSelectedOrder((sel) => (sel && sel.id === order.id ? { ...sel, status: s } : sel)); // Removed as per edit hint
-                                      filteredOrders = filteredOrders.map((o: Order & { customer: string }) => o.id === order.id ? { ...o, status: s } : o);
-                                      try {
-                                        const res = await fetch("/api/orders", {
-                                          method: "PATCH",
-                                          headers: { "Content-Type": "application/json" },
-                                          body: JSON.stringify({ id: order.id, status: s }),
-                                        });
-                                        if (!res.ok) throw new Error("Failed to update");
-                                        showToast("Order status updated!", "success");
-                                        // setDrawerOpen(false); // Removed as per edit hint
-                                      } catch {
-                                        // setSelectedOrder((sel) => (sel && sel.id === order.id ? { ...sel, status: prevStatus } : sel)); // Removed as per edit hint
-                                        showToast("Failed to update order status", "error");
-                                      } finally {
-                                        setUpdatingOrderId(null);
-                                      }
-                                    }}
-                                    aria-label={`Set status to ${s}`}
-                                  >
-                                    {updatingOrderId === order.id && <Loader className="w-3 h-3 animate-spin mr-1" aria-label="Updating" />}
-                                    {s}
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-            )}
-          </div>
-        </div>
-      </section>
-      {/* Low Stock Alerts */}
-      <section aria-label="Low Stock Alerts" className="px-2 sm:px-4">
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 mt-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-            <h2 className="text-lg font-bold">Low Stock Alerts</h2>
-          </div>
-          <div className="flex gap-2 mb-2">
-            <button onClick={() => exportLowStockCSV(lowStockProducts)} className="px-3 py-1 rounded bg-green-600 text-white text-xs font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 focus:outline-none">Export CSV</button>
-            <button onClick={() => exportLowStockPDF(lowStockProducts)} className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus:outline-none">Export PDF</button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b text-gray-600 dark:text-gray-300">
-                  <th className="py-2 px-3 text-left align-middle">Product</th>
-                  <th className="py-2 px-3">Current Stock</th>
-                  <th className="py-2 px-3">Status</th>
-                  <th className="py-2 px-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lowStockProducts.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="text-center py-8 text-gray-400">No low stock products.</td>
-                  </tr>
-                ) : (
-                  lowStockProducts.map((product) => (
-                    <tr key={product.id} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
-                      <td className="py-2 px-3 flex items-center gap-3">
-                        <Image src={product.images?.[0] || '/fallback.png'} alt={product.name} width={40} height={40} className="rounded object-cover border" />
-                        <span className="font-semibold">{product.name}</span>
-                      </td>
-                      <td className="py-2 px-3 font-semibold">{product.quantity ?? 0}</td>
-                      <td className="py-2 px-3 text-left align-middle">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${(product.quantity ?? 0) < 3 ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"}`}>
-                          {(product.quantity ?? 0) < 3 ? "Critical" : "Low"}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3">
-                        <button className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition">Restock</button>
-                        <button className="ml-2 px-3 py-1 rounded bg-gray-100 dark:bg-neutral-700 text-xs font-medium hover:bg-gray-200 dark:hover:bg-neutral-600 transition">Edit</button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-      {/* Top Products */}
-      <section aria-label="Top Products" className="px-2 sm:px-4">
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 mt-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-            <h2 className="text-lg font-bold">Top Products</h2>
-          </div>
-          <div className="flex gap-2 mb-2">
-            <button onClick={() => exportTopProductsCSV(topProducts)} className="px-3 py-1 rounded bg-green-600 text-white text-xs font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 focus:outline-none">Export CSV</button>
-            <button onClick={() => exportTopProductsPDF(topProducts)} className="px-3 py-1 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus:outline-none">Export PDF</button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b text-gray-600 dark:text-gray-300">
-                  <th className="py-2 px-3 text-left align-middle">Product</th>
-                  <th className="py-2 px-3">Units Sold</th>
-                  <th className="py-2 px-3">Revenue</th>
-                  <th className="py-2 px-3">Stock</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topProducts.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="text-center py-8 text-gray-400">No sales data.</td>
-                  </tr>
-                ) : (
-                  topProducts.map((product) => (
-                    <tr key={product.name} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
-                      <td className="py-2 px-3 flex items-center gap-3">
-                        <Image src={product.image || '/fallback.png'} alt={product.name} width={40} height={40} className="rounded object-cover border" />
-                        <span className="font-semibold">{product.name}</span>
-                      </td>
-                      <td className="py-2 px-3 font-semibold">{product.unitsSold}</td>
-                      <td className="py-2 px-3 font-semibold text-green-700">{formatVND(product.revenue)}</td>
-                      <td className="py-2 px-3 text-left align-middle">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${product.stock < 3 ? "bg-red-100 text-red-800" : product.stock < 10 ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}`}>
-                          {product.stock < 3 ? "Critical" : product.stock < 10 ? "Low" : "In Stock"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {/* Optional: Horizontal bar chart for revenue */}
-          {topProducts.length > 0 && (
-            <div className="h-56 w-full mt-8">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topProducts.slice().reverse()} layout="vertical" margin={{ left: 40, right: 24, top: 8, bottom: 8 }}>
-                  <XAxis type="number" dataKey="revenue" hide />
-                  <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 13 }} />
-                  <RechartsTooltip formatter={v => formatVND(Number(v))} />
-                  <Bar dataKey="revenue" radius={[0, 8, 8, 0]} isAnimationActive={false}>
-                    {topProducts.slice().reverse().map((product) => (
-                      <Cell
-                        key={product.name}
-                        fill={PRODUCT_COLORS[hashStringToColorIdx(product.name)]}
-                        aria-label={`Color for ${product.name}`}
-                      />
-                    ))}
-                  </Bar>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue Overview</CardTitle>
+              <CardDescription>Monthly revenue trends</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Volume</CardTitle>
+              <CardDescription>Monthly order trends</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={orderData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="orders" fill="#8884d8" />
                 </BarChart>
               </ResponsiveContainer>
-              {/* Color legend for accessibility */}
-              <div className="flex flex-wrap gap-3 mt-4">
-                {topProducts.map((product) => (
-                  <div key={product.name} className="flex items-center gap-2 text-xs">
-                    <span
-                      className="inline-block w-4 h-4 rounded"
-                      style={{ background: PRODUCT_COLORS[hashStringToColorIdx(product.name)] }}
-                      aria-label={`Color for ${product.name}`}
-                    />
-                    <span>{product.name}</span>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Product Performance */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Product Performance</CardTitle>
+            <CardDescription>Sales by product category</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={productData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {productData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              
+              <div className="space-y-4">
+                {productData.map((product, index) => (
+                  <div key={product.name} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-4 h-4 rounded-full" 
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      />
+                      <span className="text-sm font-medium">{product.name}</span>
+                    </div>
+                    <span className="text-sm text-gray-600">{product.value} units</span>
                   </div>
                 ))}
               </div>
             </div>
-          )}
-        </div>
-      </section>
-      {/* Customer Insights */}
-      <section aria-label="Customer Insights" className="px-2 sm:px-4">
-        {/* Revenue Trend Chart (full width) */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 mt-8 mb-8">
-          <h2 className="text-lg font-bold mb-4">Revenue Trend</h2>
-          {/* TODO: Insert Revenue Trend Chart component here */}
-        </div>
-        {/* 2-column grid for Top Customers and Acquisition Sources */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Top Customers by Revenue */}
-          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6">
-            <h2 className="text-lg font-bold mb-4">Top Customers by Revenue</h2>
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b text-gray-600 dark:text-gray-300">
-                  <th className="py-2 px-3 text-left align-middle">Name</th>
-                  <th className="py-2 px-3 text-left align-middle">Email</th>
-                  <th className="py-2 px-3 text-left align-middle">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topCustomers.map((c) => (
-                  <tr key={c.email} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
-                    <td className="py-2 px-3 font-semibold text-left align-middle">{c.name}</td>
-                    <td className="py-2 px-3 text-left align-middle">{c.email}</td>
-                    <td className="py-2 px-3 font-semibold text-green-700 text-left align-middle">{formatVND(c.revenue)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* Customer Acquisition Sources Pie Chart */}
-          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 flex flex-col items-center overflow-visible min-h-[320px]">
-            <h2 className="text-lg font-bold mb-4">Customer Acquisition Sources</h2>
-            <PieChart width={340} height={260}>
-              <Pie
-                data={acquisitionSources}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={110}
-                innerRadius={60}
-                label={false}
-              >
-                {acquisitionSources.map((entry, idx) => (
-                  <RechartsCell key={`cell-src-${idx}`} fill={ACQUISITION_COLORS[idx % ACQUISITION_COLORS.length]} />
-                ))}
-              </Pie>
-              <RechartsTooltip formatter={(value, name, props) => [value, props.payload.name]} />
-              <RechartsLegend layout="vertical" align="right" verticalAlign="middle" />
-            </PieChart>
-          </div>
-        </div>
-      </section>
-      {/* Reports & Export */}
-      <section aria-label="Reports & Export" className="px-2 sm:px-4">
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 mt-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-            <h2 className="text-lg font-bold">Reports & Export</h2>
-          </div>
-          <div className="flex flex-col md:flex-row md:items-end gap-4 mb-4">
-            <div>
-              <label htmlFor="export-start-date" className="block text-sm font-medium mb-1">Start Date</label>
-              <input type="date" id="export-start-date" value={exportStart} onChange={e => setExportStart(e.target.value)} className="border rounded px-2 py-1 text-sm bg-gray-50 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none" />
+          </CardContent>
+        </Card>
+
+        {/* Recent Orders */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Orders</CardTitle>
+                <CardDescription>Latest customer orders</CardDescription>
+              </div>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                View All
+              </Button>
             </div>
-            <div>
-              <label htmlFor="export-end-date" className="block text-sm font-medium mb-1">End Date</label>
-              <input type="date" id="export-end-date" value={exportEnd} onChange={e => setExportEnd(e.target.value)} className="border rounded px-2 py-1 text-sm bg-gray-50 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 focus-visible:ring-2 focus-visible:ring-red-500 focus:outline-none" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { id: "ORD-001", customer: "John Doe", amount: "$299.00", status: "Delivered", date: "2024-01-15" },
+                { id: "ORD-002", customer: "Jane Smith", amount: "$199.00", status: "Processing", date: "2024-01-14" },
+                { id: "ORD-003", customer: "Bob Johnson", amount: "$399.00", status: "Shipped", date: "2024-01-13" },
+                { id: "ORD-004", customer: "Alice Brown", amount: "$149.00", status: "Pending", date: "2024-01-12" },
+              ].map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div>
+                      <p className="font-medium">{order.id}</p>
+                      <p className="text-sm text-gray-600">{order.customer}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">{order.amount}</p>
+                      <p className="text-sm text-gray-600">{order.date}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={
+                      order.status === "Delivered" ? "success" :
+                      order.status === "Processing" ? "secondary" :
+                      order.status === "Shipped" ? "secondary" : "secondary"
+                    }>
+                      {order.status}
+                    </Badge>
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex gap-2 mt-4 md:mt-0">
-              <button onClick={handleExportCSV} className="px-4 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 focus:outline-none">Export CSV</button>
-              <button onClick={() => handleExportPDF()} className="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus:outline-none">Export PDF</button>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b text-gray-600 dark:text-gray-300">
-                  <th className="py-2 px-3 text-left align-middle">Order ID</th>
-                  <th className="py-2 px-3">Customer</th>
-                  <th className="py-2 px-3">Total</th>
-                  <th className="py-2 px-3">Status</th>
-                  <th className="py-2 px-3">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredExportOrders.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-8 text-gray-400">No orders in range.</td>
-                  </tr>
-                ) : (
-                  filteredExportOrders.map((o: Order & { customer: string }) => (
-                    <tr key={o.id} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
-                      <td className="py-2 px-3 font-mono text-xs">{o.id}</td>
-                      <td className="py-2 px-3 text-left align-middle">{o.customer}</td>
-                      <td className="py-2 px-3 font-semibold text-left align-middle">{formatVND(o.total)}</td>
-                      <td className="py-2 px-3 text-left align-middle">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor[o.status] || "bg-gray-100 text-gray-700"}`}>{o.status}</span>
-                      </td>
-                      <td className="py-2 px-3 text-left align-middle">{format(parseISO(o.createdAt), "yyyy-MM-dd HH:mm")}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

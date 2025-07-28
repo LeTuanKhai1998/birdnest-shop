@@ -19,7 +19,7 @@ export function NewNavbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const userFromSession = session?.user;
-  const { data: user } = useSWR(userFromSession ? "/api/profile" : null, url => fetch(url).then(r => r.json()), { fallbackData: userFromSession });
+  const { data: user } = useSWR(userFromSession ? "/v1/users/profile" : null, url => fetch(url).then(r => r.json()), { fallbackData: userFromSession });
 
   // Notification state
   const [notifications, setNotifications] = useState([

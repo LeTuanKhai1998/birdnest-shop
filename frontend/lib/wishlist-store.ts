@@ -27,7 +27,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     const prev = get().items;
     set({ items: [...prev, { id: "optimistic-" + product.id, product, productId: product.id }] });
     try {
-      const res = await fetch("/api/wishlist", {
+      const res = await fetch("/v1/users/wishlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId: product.id }),
@@ -45,10 +45,9 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     const prev = get().items;
     set({ items: prev.filter((item) => item.productId !== productId) });
     try {
-      const res = await fetch("/api/wishlist", {
+      const res = await fetch(`/v1/users/wishlist/${productId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId }),
       });
       if (!res.ok) throw new Error(await res.text());
       mutate();

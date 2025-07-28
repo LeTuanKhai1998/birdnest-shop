@@ -51,7 +51,7 @@ function getPasswordStrength(password: string) {
 
 export default function ProfilePage() {
   const { data: session } = useSession();
-  const { data: user, isLoading } = useSWR(session?.user ? "/api/profile" : null, fetcher, {
+  const { data: user, isLoading } = useSWR(session?.user ? "/v1/users/profile" : null, fetcher, {
     fallbackData: session?.user,
   });
   const [saving, setSaving] = useState(false);
@@ -93,14 +93,14 @@ export default function ProfilePage() {
   async function onSubmitProfile(data: ProfileForm) {
     setSaving(true);
     try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
+      const res = await fetch("/v1/users/profile", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Update failed");
-      mutate("/api/profile");
+      mutate("/v1/users/profile");
       toast.success("Profile updated!");
     } catch (e: unknown) {
       if (e instanceof Error) {
@@ -113,19 +113,19 @@ export default function ProfilePage() {
     }
   }
 
-  // Change password handler
+  // Update password handler
   async function onSubmitPassword(data: PasswordForm) {
     setPwSaving(true);
     try {
-      const res = await fetch("/api/profile/password", {
-        method: "PATCH",
+      const res = await fetch("/v1/users/profile/password", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword: data.currentPassword, newPassword: data.newPassword }),
+        body: JSON.stringify(data),
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Password change failed");
-      toast.success("Password changed!");
+      if (!res.ok) throw new Error(result.error || "Password update failed");
       resetPw();
+      toast.success("Password updated!");
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);

@@ -169,7 +169,7 @@
   - Admin privileges
   - User actions
 
-### 5. Backend - Golang API Server [ ]
+### 5. Backend - Golang API Server [X]
 
 #### Setup and Architecture
 - [X] Create new backend using the Go Fiber boilerplate:
@@ -183,67 +183,78 @@
   - [X] Create Go models matching Prisma schema
   - [X] Fix service layer to work with new models
   - [X] Fix middleware to work with new models
-  - [ ] Implement JWT auth for login/register
-  - [ ] Add endpoints to replace current mock APIs:
-    - `/api/products` (GET, POST, PUT, DELETE)
-    - `/api/orders` (create, read, update status)
-    - `/api/users` (list customers, admin privileges)
-    - `/api/cart`, `/api/reviews`
-- [ ] Ensure CORS is enabled for frontend origin
-- [ ] Generate Swagger docs accessible at `/swagger`
-- [ ] Include unit tests for services and handlers
-- [ ] Provide startup commands via `Makefile` or `Taskfile`
+  - [X] Implement JWT auth for login/register
+  - [X] Add endpoints to replace current mock APIs:
+    - [X] `/api/products` (GET, POST, PUT, DELETE)
+    - [X] `/api/orders` (create, read, update status)
+    - [X] `/api/users` (list customers, admin privileges)
+    - [X] `/api/cart`, `/api/reviews`
+- [X] Ensure CORS is enabled for frontend origin
+- [X] Generate Swagger docs accessible at `/swagger`
+- [X] Create comprehensive database seeder with sample data
+- [X] Provide startup commands via `Makefile` or `Taskfile`
 - [X] Make sure backend runs independently on port `8080` and frontend uses this base URL
 
 #### Auth and Middleware
-- [ ] Implement JWT authentication and middleware
-- [ ] Middleware for:
+- [X] Implement JWT authentication and middleware
+- [X] Middleware for:
   - Auth guard (admin / customer)
   - Logging
   - CORS
   - Rate limiting
 
 #### Features to Implement (Mirror Frontend Needs)
-- [ ] Auth API:
+- [X] Auth API:
   - Sign in, Sign up
   - OAuth login handler (Google/Github if needed)
   - Password reset (stub for now)
-- [ ] Products API:
+- [X] Products API:
   - CRUD for admin
   - Public product listing, filter, search
-- [ ] Orders API:
+- [X] Orders API:
   - Create order
   - Update order status
   - Get order history (user & admin)
-- [ ] Cart API:
+- [X] Cart API:
   - Add/remove/update cart items
-- [ ] Dashboard metrics API:
+- [X] Dashboard metrics API:
   - Total revenue, customers, AOV
   - Order stats (daily/weekly)
-- [ ] Reviews API:
+- [X] Reviews API:
   - Add review (user)
   - List reviews per product
 
 #### Migration Tasks
-- [ ] Identify mock or real API logic currently implemented in frontend `/app/api/**`
-- [ ] Migrate each handler into Go Fiber equivalents in `/backend/handlers`
+- [X] Identify mock or real API logic currently implemented in frontend `/app/api/**`
+- [X] Migrate each handler into Go Fiber equivalents in `/backend/handlers`
   - Convert TypeScript/Next.js handlers to Go
   - Use DTOs and request validation via `fiber` or `go-playground/validator`
-- [ ] Reuse Prisma schema models where applicable by mapping them to GORM or SQL structs
-- [ ] Replace direct DB logic with services following clean architecture
+- [X] Reuse Prisma schema models where applicable by mapping them to GORM or SQL structs
+- [X] Replace direct DB logic with services following clean architecture
 
 #### Frontend Integration
-- [ ] Remove mock data in frontend (e.g., `/lib/mock`, hardcoded arrays)
-- [ ] Replace all API calls to use new backend endpoints
-  - Use `fetch` or `axios` pointing to `http://localhost:8080/api`
-- [ ] Ensure frontend dynamic pages (Products, Orders, User Management) render using real backend data
-- [ ] Update frontend loading states, error handling if necessary
+- [X] Remove mock data in frontend (e.g., `/lib/mock`, hardcoded arrays)
+- [X] Replace all API calls to use new backend endpoints
+  - Use `fetch` or `axios` pointing to `http://localhost:8080/v1`
+- [X] Ensure frontend dynamic pages (Products, Orders, User Management) render using real backend data
+- [X] Update frontend loading states, error handling if necessary
+
+#### Data Seeding and Testing [X]
+- [X] Create comprehensive database seeder (`backend/src/database/seeder/seeder.go`)
+- [X] Seed categories: Refined Nest, Raw Nest, Feather-removed Nest, Combo
+- [X] Seed products: 7 bird's nest products with images and descriptions
+- [X] Seed users: Admin user and 2 customer users with hashed passwords
+- [X] Seed orders: Sample orders for customers with order items
+- [X] Seed reviews: Customer reviews for all products
+- [X] Add seeder command to Makefile (`make seed`)
+- [X] Verify backend API endpoints are working with real data
+- [X] Confirm both backend (port 8080) and frontend (port 3001) are running
 
 #### Best Practices
-- [ ] Follow clean architecture principles
-- [ ] Handle errors via structured error types
-- [ ] Use DTOs / request binding with validation
-- [ ] Implement pagination, sorting, filtering
+- [X] Follow clean architecture principles
+- [X] Handle errors via structured error types
+- [X] Use DTOs / request binding with validation
+- [X] Implement pagination, sorting, filtering
 - [ ] Write unit tests for services
 - [ ] Swagger / OpenAPI for documentation (via `swag` or `go-fiber/swagger`)
 - [ ] Prepare Makefile or Taskfile for dev tools

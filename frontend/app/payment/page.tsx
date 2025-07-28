@@ -7,6 +7,8 @@ import { useCartStore } from "@/lib/cart-store";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCheckoutStore } from "@/lib/checkout-store";
+import { ordersApi } from "@/lib/api-service";
+import { useSession } from "next-auth/react";
 
 const PAYMENT_METHODS = [
   { value: "stripe", label: "Credit/Debit Card (Stripe)" },
@@ -32,22 +34,27 @@ export default function PaymentPage() {
   const clearCart = useCartStore((s) => s.clearCart);
   const triggerCartBounce = useCartStore((s) => s.triggerCartBounce);
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleConfirm = async () => {
     setConfirming(true);
     try {
-      const res = await fetch("/api/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          info: checkoutInfo,
-          products: items,
-          deliveryFee: shippingFee,
-          paymentMethod: method,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Order failed");
+      // Create order using backend API
+      if (!checkoutInfo) {
+        throw new Error("Checkout information is missing");
+      }
+      
+      const orderData = {
+        items: items.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity
+        })),
+        shippingAddress: `${checkoutInfo.address}, ${checkoutInfo.ward}, ${checkoutInfo.district}, ${checkoutInfo.province}`,
+        paymentMethod: method.toUpperCase() as any
+      };
+
+      await ordersApi.createOrder(orderData, session?.user?.id || "");
+      
       clearCart();
       triggerCartBounce();
       setConfirming(false);

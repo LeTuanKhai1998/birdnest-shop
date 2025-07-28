@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { authApi } from "@/lib/api-service";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -19,20 +20,18 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const res = await fetch("/api/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
-    setLoading(false);
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || "Signup failed");
-      toast.error(data.error || "Signup failed");
-      return;
+    
+    try {
+      await authApi.register({ name, email, password });
+      toast.success("Account created! Please sign in.");
+      router.push("/login");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Signup failed";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
-    toast.success("Account created! Please sign in.");
-    router.push("/login");
   };
 
   return (

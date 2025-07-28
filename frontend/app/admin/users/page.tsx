@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { UserCard } from "@/components/UserCard";
 import { UserTable } from "@/components/UserTable";
 import { toast } from "sonner";
+import { fetcher } from "@/lib/utils";
 
 type AdminUser = {
   id: string;
@@ -16,37 +17,42 @@ type AdminUser = {
   lastLoginAt?: string | null;
 };
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
-
 export default function AdminUsersPage() {
-  const { data, mutate, isLoading } = useSWR("/api/users", fetcher);
-  const users = data?.users || [];
+  const { data, mutate, isLoading } = useSWR("/v1/users", fetcher);
+  const users = data?.data?.results || [];
 
   const handleRoleChange = async (id: string, isAdmin: boolean) => {
-    const res = await fetch("/api/users", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, isAdmin }),
-    });
-    if (res.ok) {
-      toast.success("Role updated");
-      mutate();
-    } else {
+    try {
+      const res = await fetch(`/v1/users/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isAdmin }),
+      });
+      if (res.ok) {
+        toast.success("Role updated");
+        mutate();
+      } else {
+        toast.error("Failed to update role");
+      }
+    } catch (error) {
       toast.error("Failed to update role");
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
-    const res = await fetch("/api/users", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    if (res.ok) {
-      toast.success("User deleted");
-      mutate();
-    } else {
+    try {
+      const res = await fetch(`/v1/users/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        toast.success("User deleted");
+        mutate();
+      } else {
+        toast.error("Failed to delete user");
+      }
+    } catch (error) {
       toast.error("Failed to delete user");
     }
   };

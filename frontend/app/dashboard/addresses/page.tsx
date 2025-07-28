@@ -68,7 +68,7 @@ function getLine2(addr: Address, provinces: Province[]): string {
 }
 
 export default function AddressesPage() {
-  const { data: addresses = [], isLoading } = useSWR("/api/addresses", fetcher);
+  const { data: addresses = [], isLoading } = useSWR("/v1/users/addresses", fetcher);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -142,15 +142,16 @@ export default function AddressesPage() {
         district: String(data.district),
         ward: String(data.ward),
       };
-      const method = editing ? "PATCH" : "POST";
-      const body = editing ? { ...cleanData, id: editing.id } : cleanData;
-      const res = await fetch("/api/addresses", {
+      const method = editing ? "PUT" : "POST";
+      const url = editing ? `/v1/users/addresses/${editing.id}` : "/v1/users/addresses";
+      const body = editing ? cleanData : cleanData;
+      const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error((await res.json()).error || "Failed to save address");
-      mutate("/api/addresses");
+      mutate("/v1/users/addresses");
       toast.success(editing ? "Address updated!" : "Address added!");
       setShowForm(false);
       setEditId(null);
@@ -167,15 +168,15 @@ export default function AddressesPage() {
 
   // Delete address
   async function handleDelete(id: string) {
+    if (!window.confirm("Are you sure you want to delete this address?")) return;
     setDeleting(id);
     try {
-      const res = await fetch("/api/addresses", {
+      const res = await fetch(`/v1/users/addresses/${id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
       });
       if (!res.ok) throw new Error((await res.json()).error || "Failed to delete address");
-      mutate("/api/addresses");
+      mutate("/v1/users/addresses");
       toast.success("Address deleted!");
     } catch (e: unknown) {
       if (e instanceof Error) {
@@ -188,24 +189,17 @@ export default function AddressesPage() {
     }
   }
 
-  // Set as default
+  // Set default address
   async function handleSetDefault(id: string) {
     try {
-      const addr = addresses.find((a: Address) => a.id === id);
-      if (!addr) return;
-      await fetch("/api/addresses", {
-        method: "PATCH",
+      await fetch(`/v1/users/addresses/${id}/default`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...addr, isDefault: true, id }),
       });
-      mutate("/api/addresses");
-      toast.success("Default address set!");
+      mutate("/v1/users/addresses");
+      toast.success("Default address updated!");
     } catch (e: unknown) {
-      if (e instanceof Error) {
-        toast.error(e.message);
-      } else {
-        toast.error("An unknown error occurred");
-      }
+      toast.error("Failed to update default address");
     }
   }
 

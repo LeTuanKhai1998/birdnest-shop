@@ -78,7 +78,7 @@ function getAddressDisplay(addr: Address, provinces: Province[]): string {
 export default function CheckoutPage() {
   const { data: session } = useSession();
   const user = session?.user;
-  const { data: savedAddresses = [] } = useSWR(user ? "/api/addresses" : null, fetcher);
+  const { data: savedAddresses = [] } = useSWR(user ? "/v1/users/addresses" : null, fetcher);
   const [selectedAddressId, setSelectedAddressId] = useState<string | "new">(savedAddresses.length > 0 ? savedAddresses[0].id : "new");
   const items = useCartStore((s) => s.items);
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
@@ -165,7 +165,7 @@ export default function CheckoutPage() {
     // If user is logged in and selected 'new', auto-save address
     if (user && (selectedAddressId === "new" || !selectedAddressId)) {
       try {
-        await fetch("/api/addresses", {
+        await fetch("/v1/users/addresses", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
