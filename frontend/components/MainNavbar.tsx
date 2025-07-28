@@ -20,7 +20,7 @@ export function MainNavbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const userFromSession = session?.user;
-  const { data: user } = useSWR(userFromSession ? "/api/profile" : null, url => fetch(url).then(r => r.json()), { fallbackData: userFromSession });
+  const { data: user } = useSWR(userFromSession ? "/v1/users/profile" : null, url => fetch(url).then(r => r.json()), { fallbackData: userFromSession });
 
   // --- Notification dropdown state and mock data ---
   const [notifications, setNotifications] = useState([
@@ -38,13 +38,13 @@ export function MainNavbar() {
 
   return (
     <header className="w-full border-b backdrop-blur sticky top-0 z-30">
-      <div className="w-full bg-[#fdf6ef] px-4 lg:px-6 xl:px-8">
+      <div className="w-full bg-white px-4 lg:px-6 xl:px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center h-20">
             {/* Left: Logo */}
             <div className="flex items-center">
-              <Link href="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-red-700 tracking-wide">
+              <Link href="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold tracking-wide" style={{ color: '#C10008' }}>
                 <Image src="/images/logo.png" alt="Yến Sào Kim Sang Logo" width={36} height={36} className="logo-img md:w-10 md:h-10 w-9 h-9 border-2 border-yellow-400 rounded-full" />
-                <span>Yến Sào Kim Sang</span>
+                <span className="hidden md:inline">Yến Sào Kim Sang</span>
               </Link>
             </div>
 
@@ -217,7 +217,7 @@ export function MainNavbar() {
               <DrawerContent className="p-0 w-64 max-w-[90vw]">
                 <DrawerTitle className="sr-only">Main Navigation</DrawerTitle>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
-                  <Link href="/" className="flex items-center gap-2 text-xl font-bold text-red-700 tracking-wide" onClick={() => setDrawerOpen(false)}>
+                  <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-wide" style={{ color: '#C10008' }} onClick={() => setDrawerOpen(false)}>
                                   <Image src="/images/logo.png" alt="Yến Sào Kim Sang Logo" width={32} height={32} className="border-2 border-yellow-400 rounded-full" />
               Yến Sào Kim Sang
                   </Link>
