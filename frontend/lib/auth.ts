@@ -11,9 +11,16 @@ export interface AuthResponse {
   code: number;
   status: string;
   message: string;
-  data?: {
-    user: User;
-    token: string;
+  user?: User;
+  tokens?: {
+    access: {
+      token: string;
+      expires: string;
+    };
+    refresh: {
+      token: string;
+      expires: string;
+    };
   };
 }
 
@@ -59,9 +66,9 @@ class AuthService {
     try {
       const decoded = jwt.decode(token) as any;
       return {
-        id: decoded.user_id,
-        email: decoded.email,
-        name: decoded.name,
+        id: decoded.sub, // JWT subject is user ID
+        email: decoded.email || '',
+        name: decoded.name || '',
         isAdmin: decoded.is_admin || false,
       };
     } catch (error) {
@@ -100,8 +107,8 @@ class AuthService {
 
       const data = await response.json();
 
-      if (data.code === 200 && data.data?.token) {
-        this.setToken(data.data.token);
+      if (data.code === 200 && data.tokens?.access?.token) {
+        this.setToken(data.tokens.access.token);
       }
 
       return data;
@@ -128,8 +135,8 @@ class AuthService {
 
       const data = await response.json();
 
-      if (data.code === 200 && data.data?.token) {
-        this.setToken(data.data.token);
+      if (data.code === 200 && data.tokens?.access?.token) {
+        this.setToken(data.tokens.access.token);
       }
 
       return data;

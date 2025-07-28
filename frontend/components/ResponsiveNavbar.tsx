@@ -92,7 +92,7 @@ export function ResponsiveNavbar() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div>
             <Button
               variant="ghost"
               size="sm"

@@ -51,8 +51,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authService.login({ email, password });
       
-      if (response.code === 200 && response.data) {
-        setUser(response.data.user);
+      if (response.code === 200 && response.user) {
+        setUser(response.user);
         return { success: true, message: 'Login successful' };
       } else {
         return { success: false, message: response.message || 'Login failed' };
@@ -67,8 +67,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authService.register(userData);
       
-      if (response.code === 200 && response.data) {
-        setUser(response.data.user);
+      if (response.code === 200 && response.user) {
+        setUser(response.user);
         return { success: true, message: 'Registration successful' };
       } else {
         return { success: false, message: response.message || 'Registration failed' };

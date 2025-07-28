@@ -1,8 +1,56 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Create admin user
+  const adminPassword = await bcrypt.hash('admin123', 10);
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@birdnest.com' },
+    update: {},
+    create: {
+      email: 'admin@birdnest.com',
+      password: adminPassword,
+      name: 'Admin User',
+      phone: '+84901234567',
+      address: '123 Admin Street, Ho Chi Minh City',
+      isAdmin: true,
+    },
+  });
+
+  console.log(`Created admin user: ${adminUser.email}`);
+
+  // Create customer users
+  const customerPassword = await bcrypt.hash('password123', 10);
+  const customer1 = await prisma.user.upsert({
+    where: { email: 'customer1@example.com' },
+    update: {},
+    create: {
+      email: 'customer1@example.com',
+      password: customerPassword,
+      name: 'Nguyen Van A',
+      phone: '+84901234568',
+      address: '456 Customer Street, Hanoi',
+      isAdmin: false,
+    },
+  });
+
+  const customer2 = await prisma.user.upsert({
+    where: { email: 'customer2@example.com' },
+    update: {},
+    create: {
+      email: 'customer2@example.com',
+      password: customerPassword,
+      name: 'Tran Thi B',
+      phone: '+84901234569',
+      address: '789 Customer Street, Da Nang',
+      isAdmin: false,
+    },
+  });
+
+  console.log(`Created customer users: ${customer1.email}, ${customer2.email}`);
+
   // Create categories
   const refinedCategory = await prisma.category.upsert({
     where: { name: 'Refined Nest' },

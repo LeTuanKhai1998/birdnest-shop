@@ -2,6 +2,7 @@ import { create } from "zustand";
 import useSWR from "swr/immutable";
 import { fetcher } from "@/lib/utils";
 import { Product } from "@/components/ProductCard";
+import { api } from "@/lib/api";
 
 export interface WishlistItem {
   id: string;
@@ -27,12 +28,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     const prev = get().items;
     set({ items: [...prev, { id: "optimistic-" + product.id, product, productId: product.id }] });
     try {
-      const res = await fetch("/v1/users/wishlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id }),
-      });
-      if (!res.ok) throw new Error(await res.text());
+      await api.post("/users/wishlist", { productId: product.id });
       mutate();
     } catch (e: unknown) {
       set({ items: prev, error: e instanceof Error ? e.message : String(e) });
@@ -45,11 +41,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     const prev = get().items;
     set({ items: prev.filter((item) => item.productId !== productId) });
     try {
-      const res = await fetch(`/v1/users/wishlist/${productId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) throw new Error(await res.text());
+      await api.delete(`/users/wishlist/${productId}`);
       mutate();
     } catch (e: unknown) {
       set({ items: prev, error: e instanceof Error ? e.message : String(e) });

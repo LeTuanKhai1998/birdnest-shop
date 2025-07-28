@@ -265,7 +265,7 @@ export function NewNavbar() {
               {/* Mobile Menu Button */}
               <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
                 <DrawerTrigger asChild>
-                  <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Button variant="ghost" size="icon">
                     <Menu className="w-5 h-5" />
                   </Button>
                 </DrawerTrigger>

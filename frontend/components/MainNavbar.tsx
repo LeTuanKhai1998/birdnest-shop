@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 import { Avatar as ShadcnAvatar } from "@/components/ui/avatar";
 import { LogIn } from "lucide-react";
 import useSWR from "swr";
+import { api } from "@/lib/api";
 
 export function MainNavbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -20,7 +21,7 @@ export function MainNavbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const userFromSession = session?.user;
-  const { data: user } = useSWR(userFromSession ? "/v1/users/profile" : null, url => fetch(url).then(r => r.json()), { fallbackData: userFromSession });
+  const { data: user } = useSWR(userFromSession ? "/v1/users/profile" : null, url => api.get(url.replace('/v1', '')), { fallbackData: userFromSession });
 
   // --- Notification dropdown state and mock data ---
   const [notifications, setNotifications] = useState([
@@ -210,7 +211,7 @@ export function MainNavbar() {
             {/* Hamburger menu (mobile, top right) */}
             <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="left">
               <DrawerTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Open menu" className="md:hidden">
+                <Button variant="outline" size="icon" aria-label="Open menu">
                   <Menu className="w-6 h-6" />
                 </Button>
               </DrawerTrigger>

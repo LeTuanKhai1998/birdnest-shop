@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Edit2 } from "lucide-react";
 import React from "react";
 import { Avatar } from "@/components/ui/avatar";
+import { api } from "@/lib/api";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -36,7 +37,7 @@ const passwordSchema = z.object({
 type PasswordForm = z.infer<typeof passwordSchema>;
 
 function fetcher(url: string) {
-  return fetch(url).then((r) => r.json());
+  return api.get(url.replace('/v1', ''));
 }
 
 function getPasswordStrength(password: string) {
@@ -93,13 +94,7 @@ export default function ProfilePage() {
   async function onSubmitProfile(data: ProfileForm) {
     setSaving(true);
     try {
-      const res = await fetch("/v1/users/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Update failed");
+      const result = await api.put("/users/profile", data);
       mutate("/v1/users/profile");
       toast.success("Profile updated!");
     } catch (e: unknown) {
@@ -117,13 +112,7 @@ export default function ProfilePage() {
   async function onSubmitPassword(data: PasswordForm) {
     setPwSaving(true);
     try {
-      const res = await fetch("/v1/users/profile/password", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Password update failed");
+      const result = await api.put("/users/profile/password", data);
       resetPw();
       toast.success("Password updated!");
     } catch (e: unknown) {

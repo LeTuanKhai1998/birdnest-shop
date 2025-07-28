@@ -255,8 +255,18 @@
 - [X] Handle errors via structured error types
 - [X] Use DTOs / request binding with validation
 - [X] Implement pagination, sorting, filtering
-- [ ] Write unit tests for services
-- [ ] Swagger / OpenAPI for documentation (via `swag` or `go-fiber/swagger`)
+- [X] Write unit tests for services
+  - [X] Created unit test structure for user, order, and service patterns
+  - [X] Implemented table-driven tests with proper test cases
+  - [X] Added test documentation and best practices
+  - [X] Set up test dependencies (testify, gorm, fiber)
+- [X] Swagger / OpenAPI for documentation (via `swag` or `go-fiber/swagger`)
+  - [X] Installed and configured swag command-line tool
+  - [X] Generated comprehensive API documentation with Swagger annotations
+  - [X] Set up Swagger UI accessible at `/docs` and `/swagger`
+  - [X] Created API documentation guide and best practices
+  - [X] Added `make swagger` command for easy documentation regeneration
+  - [X] Created test script to verify Swagger functionality
 - [ ] Prepare Makefile or Taskfile for dev tools
 
 

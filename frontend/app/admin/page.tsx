@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,16 +51,18 @@ const productData = [
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export default function AdminDashboard() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!isAuthenticated || !user?.isAdmin)) {
+    if (status === "unauthenticated") {
       router.push('/login');
+    } else if (status === "authenticated" && !session?.user?.isAdmin) {
+      router.push('/dashboard');
     }
-  }, [isAuthenticated, user, loading, router]);
+  }, [session, status, router]);
 
-  if (loading) {
+  if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -71,7 +73,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!isAuthenticated || !user?.isAdmin) {
+  if (!session?.user?.isAdmin) {
     return null;
   }
 
@@ -80,7 +82,7 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back, {user.name || user.email}</p>
+          <p className="text-gray-600 mt-2">Welcome back, {session?.user?.name || session?.user?.email}</p>
         </div>
 
         {/* Stats Cards */}

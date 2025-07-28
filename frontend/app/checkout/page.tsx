@@ -16,6 +16,7 @@ import { CartItem } from "@/lib/cart-store";
 import { useSession } from "next-auth/react";
 import useSWR from "swr";
 import Image from "next/image";
+import { api } from "@/lib/api";
 
 function fetcher(url: string) {
   return fetch(url).then(r => r.json());
@@ -165,20 +166,16 @@ export default function CheckoutPage() {
     // If user is logged in and selected 'new', auto-save address
     if (user && (selectedAddressId === "new" || !selectedAddressId)) {
       try {
-        await fetch("/v1/users/addresses", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fullName: data.fullName,
-            phone: data.phone,
-            province: String(data.province),
-            district: String(data.district),
-            ward: String(data.ward),
-            address: data.address,
-            apartment: data.apartment,
-            country: "Vietnam",
-            isDefault: savedAddresses.length === 0,
-          }),
+        await api.post("/users/addresses", {
+          fullName: data.fullName,
+          phone: data.phone,
+          province: String(data.province),
+          district: String(data.district),
+          ward: String(data.ward),
+          address: data.address,
+          apartment: data.apartment,
+          country: "Vietnam",
+          isDefault: savedAddresses.length === 0,
         });
       } catch { /* ignore for now */ }
     }

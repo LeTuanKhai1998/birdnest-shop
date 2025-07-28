@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import useSWR, { mutate } from "swr";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 
 const addressSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -54,7 +55,7 @@ interface Ward {
 }
 
 function fetcher(url: string) {
-  return fetch(url).then(r => r.json());
+  return api.get(url.replace('/v1', ''));
 }
 
 function getLine1(addr: Address): string {
@@ -171,11 +172,7 @@ export default function AddressesPage() {
     if (!window.confirm("Are you sure you want to delete this address?")) return;
     setDeleting(id);
     try {
-      const res = await fetch(`/v1/users/addresses/${id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) throw new Error((await res.json()).error || "Failed to delete address");
+      await api.delete(`/users/addresses/${id}`);
       mutate("/v1/users/addresses");
       toast.success("Address deleted!");
     } catch (e: unknown) {
@@ -192,10 +189,7 @@ export default function AddressesPage() {
   // Set default address
   async function handleSetDefault(id: string) {
     try {
-      await fetch(`/v1/users/addresses/${id}/default`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-      });
+      await api.put(`/users/addresses/${id}/default`);
       mutate("/v1/users/addresses");
       toast.success("Default address updated!");
     } catch (e: unknown) {

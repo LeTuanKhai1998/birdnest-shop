@@ -32,14 +32,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (
           (credentials.email === "test@demo.com" && credentials.password === "Test@1234") ||
           (credentials.email === "demo@demo.com" && credentials.password === "Demo@1234") ||
-          (credentials.email === "user@example.com" && credentials.password === "123456")
+          (credentials.email === "user@example.com" && credentials.password === "123456") ||
+          (credentials.email === "admin@birdnest.com" && credentials.password === "admin123")
         ) {
           console.log("[DEBUG] Using mock/demo user branch");
           return {
             id: "mock-demo-id",
             email: credentials.email,
-            name: credentials.email === "demo@demo.com" ? "Demo User" : credentials.email === "user@example.com" ? "Test User" : "Test User",
-            isAdmin: false,
+            name: credentials.email === "demo@demo.com" ? "Demo User" : 
+                  credentials.email === "user@example.com" ? "Test User" : 
+                  credentials.email === "admin@birdnest.com" ? "Admin User" : "Test User",
+            isAdmin: credentials.email === "admin@birdnest.com",
           };
         }
         // Real DB logic

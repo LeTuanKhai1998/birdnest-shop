@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { mockOrders, Order } from "@/lib/mock-orders";
 import { formatVND, formatDate, statusColor } from "@/lib/order-utils";
 import Image from 'next/image';
+import { api } from "@/lib/api";
 
 // API response type
 interface OrdersApiResponse {
@@ -30,8 +31,7 @@ export default function OrdersPage() {
   // Fetch orders from API
   useEffect(() => {
     setLoading(true);
-    fetch("/v1/orders")
-      .then(res => res.json())
+    api.get("/orders")
       .then((data: OrdersApiResponse) => {
         if (data.data?.orders) setOrders(data.data.orders);
         else setError(data.error || "Failed to load orders");

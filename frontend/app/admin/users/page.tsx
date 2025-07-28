@@ -5,6 +5,7 @@ import { UserCard } from "@/components/UserCard";
 import { UserTable } from "@/components/UserTable";
 import { toast } from "sonner";
 import { fetcher } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 type AdminUser = {
   id: string;
@@ -18,22 +19,14 @@ type AdminUser = {
 };
 
 export default function AdminUsersPage() {
-  const { data, mutate, isLoading } = useSWR("/v1/users", fetcher);
+  const { data, mutate, isLoading } = useSWR("/v1/users", url => api.get(url.replace('/v1', '')));
   const users = data?.data?.results || [];
 
   const handleRoleChange = async (id: string, isAdmin: boolean) => {
     try {
-      const res = await fetch(`/v1/users/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isAdmin }),
-      });
-      if (res.ok) {
-        toast.success("Role updated");
-        mutate();
-      } else {
-        toast.error("Failed to update role");
-      }
+      await api.put(`/users/${id}`, { isAdmin });
+      toast.success("Role updated");
+      mutate();
     } catch (error) {
       toast.error("Failed to update role");
     }
@@ -42,16 +35,9 @@ export default function AdminUsersPage() {
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
-      const res = await fetch(`/v1/users/${id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (res.ok) {
-        toast.success("User deleted");
-        mutate();
-      } else {
-        toast.error("Failed to delete user");
-      }
+      await api.delete(`/users/${id}`);
+      toast.success("User deleted");
+      mutate();
     } catch (error) {
       toast.error("Failed to delete user");
     }
