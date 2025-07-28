@@ -1,0 +1,2326 @@
+basePath: /v1
+definitions:
+  example.CreateUserResponse:
+    properties:
+      code:
+        example: 201
+        type: integer
+      message:
+        example: Create user successfully
+        type: string
+      status:
+        example: success
+        type: string
+      user:
+        $ref: '#/definitions/example.User'
+    type: object
+  example.DeleteUserResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: Delete user successfully
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  example.DuplicateEmail:
+    properties:
+      code:
+        example: 409
+        type: integer
+      message:
+        example: Email already taken
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  example.FailedLogin:
+    properties:
+      code:
+        example: 401
+        type: integer
+      message:
+        example: Invalid email or password
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  example.FailedResetPassword:
+    properties:
+      code:
+        example: 401
+        type: integer
+      message:
+        example: Password reset failed
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  example.FailedVerifyEmail:
+    properties:
+      code:
+        example: 401
+        type: integer
+      message:
+        example: Verify email failed
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  example.Forbidden:
+    properties:
+      code:
+        example: 403
+        type: integer
+      message:
+        example: You don't have permission to access this resource
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  example.ForgotPasswordResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: A password reset link has been sent to your email address.
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  example.GetAllUserResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      limit:
+        example: 10
+        type: integer
+      message:
+        example: Get all users successfully
+        type: string
+      page:
+        example: 1
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/example.User'
+        type: array
+      status:
+        example: success
+        type: string
+      total_pages:
+        example: 1
+        type: integer
+      total_results:
+        example: 1
+        type: integer
+    type: object
+  example.GetUserResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: Get user successfully
+        type: string
+      status:
+        example: success
+        type: string
+      user:
+        $ref: '#/definitions/example.User'
+    type: object
+  example.GoogleLoginResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: Login successfully
+        type: string
+      status:
+        example: success
+        type: string
+      tokens:
+        $ref: '#/definitions/example.Tokens'
+      user:
+        $ref: '#/definitions/example.GoogleUser'
+    type: object
+  example.GoogleUser:
+    properties:
+      email:
+        example: fake@example.com
+        type: string
+      id:
+        example: e088d183-9eea-4a11-8d5d-74d7ec91bdf5
+        type: string
+      name:
+        example: fake name
+        type: string
+      role:
+        example: user
+        type: string
+      verified_email:
+        example: true
+        type: boolean
+    type: object
+  example.HealthCheck:
+    properties:
+      is_up:
+        example: true
+        type: boolean
+      name:
+        example: Postgre
+        type: string
+      status:
+        example: Up
+        type: string
+    type: object
+  example.HealthCheckError:
+    properties:
+      is_up:
+        example: false
+        type: boolean
+      message:
+        example: 'failed to connect to ''host=localhost user=postgres database=wrongdb'':
+          server error (FATAL: database "wrongdb" does not exist (SQLSTATE 3D000))'
+        type: string
+      name:
+        example: Postgre
+        type: string
+      status:
+        example: Down
+        type: string
+    type: object
+  example.HealthCheckResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      is_healthy:
+        example: true
+        type: boolean
+      message:
+        example: Health check completed
+        type: string
+      result:
+        items:
+          $ref: '#/definitions/example.HealthCheck'
+        type: array
+      status:
+        example: success
+        type: string
+    type: object
+  example.HealthCheckResponseError:
+    properties:
+      code:
+        example: 500
+        type: integer
+      is_healthy:
+        example: false
+        type: boolean
+      message:
+        example: Health check completed
+        type: string
+      result:
+        items:
+          $ref: '#/definitions/example.HealthCheckError'
+        type: array
+      status:
+        example: error
+        type: string
+    type: object
+  example.LoginResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: Login successfully
+        type: string
+      status:
+        example: success
+        type: string
+      tokens:
+        $ref: '#/definitions/example.Tokens'
+      user:
+        $ref: '#/definitions/example.User'
+    type: object
+  example.LogoutResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: Logout successfully
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  example.NotFound:
+    properties:
+      code:
+        example: 404
+        type: integer
+      message:
+        example: Not found
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  example.RefreshToken:
+    properties:
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZWJhYzUzNDk1NGI1NDEzOTgwNmMxMTIiLCJpYXQiOjE1ODkyOTg0ODQsImV4cCI6MTU4OTMwMDI4NH0.m1U63blB0MLej_WfB7yC2FTMnCziif9X8yzwDEfJXAg
+        type: string
+    type: object
+  example.RefreshTokenResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      status:
+        example: success
+        type: string
+      tokens:
+        $ref: '#/definitions/example.Tokens'
+    type: object
+  example.RegisterResponse:
+    properties:
+      code:
+        example: 201
+        type: integer
+      message:
+        example: Register successfully
+        type: string
+      status:
+        example: success
+        type: string
+      tokens:
+        $ref: '#/definitions/example.Tokens'
+      user:
+        $ref: '#/definitions/example.User'
+    type: object
+  example.ResetPasswordResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: Update password successfully
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  example.SendVerificationEmailResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: Please check your email for a link to verify your account
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  example.TokenExpires:
+    properties:
+      expires:
+        example: "2024-10-07T11:56:46.618180553Z"
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZWJhYzUzNDk1NGI1NDEzOTgwNmMxMTIiLCJpYXQiOjE1ODkyOTg0ODQsImV4cCI6MTU4OTMwMDI4NH0.m1U63blB0MLej_WfB7yC2FTMnCziif9X8yzwDEfJXAg
+        type: string
+    type: object
+  example.Tokens:
+    properties:
+      access:
+        $ref: '#/definitions/example.TokenExpires'
+      refresh:
+        $ref: '#/definitions/example.TokenExpires'
+    type: object
+  example.Unauthorized:
+    properties:
+      code:
+        example: 401
+        type: integer
+      message:
+        example: Please authenticate
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  example.UpdateUserResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: Update user successfully
+        type: string
+      status:
+        example: success
+        type: string
+      user:
+        $ref: '#/definitions/example.User'
+    type: object
+  example.User:
+    properties:
+      email:
+        example: fake@example.com
+        type: string
+      id:
+        example: e088d183-9eea-4a11-8d5d-74d7ec91bdf5
+        type: string
+      name:
+        example: fake name
+        type: string
+      role:
+        example: user
+        type: string
+      verified_email:
+        example: false
+        type: boolean
+    type: object
+  example.VerifyEmailResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: Verify email successfully
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  model.Address:
+    properties:
+      address:
+        type: string
+      apartment:
+        type: string
+      country:
+        type: string
+      createdAt:
+        type: string
+      district:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      isDefault:
+        type: boolean
+      phone:
+        type: string
+      province:
+        type: string
+      updatedAt:
+        type: string
+      user:
+        $ref: '#/definitions/model.User'
+      userId:
+        type: string
+      ward:
+        type: string
+    type: object
+  model.CartItem:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      product:
+        $ref: '#/definitions/model.Product'
+      productId:
+        type: string
+      quantity:
+        type: integer
+      updatedAt:
+        type: string
+      user:
+        $ref: '#/definitions/model.User'
+      userId:
+        type: string
+    type: object
+  model.Category:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      products:
+        items:
+          $ref: '#/definitions/model.Product'
+        type: array
+      slug:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Image:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      isPrimary:
+        type: boolean
+      product:
+        $ref: '#/definitions/model.Product'
+      productId:
+        type: string
+      url:
+        type: string
+    type: object
+  model.Order:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      orderItems:
+        items:
+          $ref: '#/definitions/model.OrderItem'
+        type: array
+      paymentMethod:
+        $ref: '#/definitions/model.PaymentMethod'
+      shippingAddress:
+        type: string
+      status:
+        $ref: '#/definitions/model.OrderStatus'
+      total:
+        type: number
+      updatedAt:
+        type: string
+      user:
+        $ref: '#/definitions/model.User'
+      userId:
+        type: string
+    type: object
+  model.OrderItem:
+    properties:
+      id:
+        type: string
+      order:
+        $ref: '#/definitions/model.Order'
+      orderId:
+        type: string
+      price:
+        type: number
+      product:
+        $ref: '#/definitions/model.Product'
+      productId:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  model.OrderStatus:
+    enum:
+    - PENDING
+    - PAID
+    - SHIPPED
+    - DELIVERED
+    - CANCELLED
+    type: string
+    x-enum-varnames:
+    - OrderStatusPending
+    - OrderStatusPaid
+    - OrderStatusShipped
+    - OrderStatusDelivered
+    - OrderStatusCancelled
+  model.PaymentMethod:
+    enum:
+    - COD
+    - BANK_TRANSFER
+    - STRIPE
+    - MOMO
+    - VNPAY
+    type: string
+    x-enum-varnames:
+    - PaymentMethodCOD
+    - PaymentMethodBankTransfer
+    - PaymentMethodStripe
+    - PaymentMethodMomo
+    - PaymentMethodVnpay
+  model.Product:
+    properties:
+      cartItems:
+        items:
+          $ref: '#/definitions/model.CartItem'
+        type: array
+      category:
+        $ref: '#/definitions/model.Category'
+      categoryId:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      discount:
+        type: number
+      id:
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/model.Image'
+        type: array
+      name:
+        type: string
+      orderItems:
+        items:
+          $ref: '#/definitions/model.OrderItem'
+        type: array
+      price:
+        type: number
+      quantity:
+        type: integer
+      reviews:
+        items:
+          $ref: '#/definitions/model.Review'
+        type: array
+      slug:
+        type: string
+      updatedAt:
+        type: string
+      wishlist:
+        items:
+          $ref: '#/definitions/model.Wishlist'
+        type: array
+    type: object
+  model.Review:
+    properties:
+      comment:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      product:
+        $ref: '#/definitions/model.Product'
+      productId:
+        type: string
+      rating:
+        type: integer
+      user:
+        $ref: '#/definitions/model.User'
+      userId:
+        type: string
+    type: object
+  model.User:
+    properties:
+      address:
+        type: string
+      addresses:
+        items:
+          $ref: '#/definitions/model.Address'
+        type: array
+      bio:
+        type: string
+      cartItems:
+        items:
+          $ref: '#/definitions/model.CartItem'
+        type: array
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      isAdmin:
+        type: boolean
+      lastLoginAt:
+        type: string
+      name:
+        type: string
+      orders:
+        items:
+          $ref: '#/definitions/model.Order'
+        type: array
+      password:
+        type: string
+      phone:
+        type: string
+      reviews:
+        items:
+          $ref: '#/definitions/model.Review'
+        type: array
+      updatedAt:
+        type: string
+      wishlist:
+        items:
+          $ref: '#/definitions/model.Wishlist'
+        type: array
+    type: object
+  model.Wishlist:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      product:
+        $ref: '#/definitions/model.Product'
+      productId:
+        type: string
+      user:
+        $ref: '#/definitions/model.User'
+      userId:
+        type: string
+    type: object
+  response.Common:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  service.ChartData:
+    properties:
+      date:
+        type: string
+      orders:
+        type: integer
+      revenue:
+        type: number
+    type: object
+  service.DashboardMetrics:
+    properties:
+      aovTrend:
+        type: number
+      averageOrderValue:
+        type: number
+      customersTrend:
+        type: number
+      ordersTrend:
+        type: number
+      revenueTrend:
+        type: number
+      totalCustomers:
+        type: integer
+      totalOrders:
+        type: integer
+      totalRevenue:
+        type: number
+    type: object
+  validation.CreateUser:
+    properties:
+      email:
+        example: fake@example.com
+        maxLength: 50
+        type: string
+      name:
+        example: fake name
+        maxLength: 50
+        type: string
+      password:
+        example: password1
+        maxLength: 20
+        minLength: 8
+        type: string
+      role:
+        enum:
+        - user
+        - admin
+        example: user
+        maxLength: 50
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - role
+    type: object
+  validation.ForgotPassword:
+    properties:
+      email:
+        example: fake@example.com
+        maxLength: 50
+        type: string
+    required:
+    - email
+    type: object
+  validation.Login:
+    properties:
+      email:
+        example: fake@example.com
+        maxLength: 50
+        type: string
+      password:
+        example: password1
+        maxLength: 20
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  validation.Register:
+    properties:
+      email:
+        example: fake@example.com
+        maxLength: 50
+        type: string
+      name:
+        example: fake name
+        maxLength: 50
+        type: string
+      password:
+        example: password1
+        maxLength: 20
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  validation.UpdatePassOrVerify:
+    properties:
+      password:
+        example: password1
+        maxLength: 20
+        minLength: 8
+        type: string
+    type: object
+  validation.UpdateUser:
+    properties:
+      email:
+        example: fake@example.com
+        maxLength: 50
+        type: string
+      name:
+        example: fake name
+        maxLength: 50
+        type: string
+      password:
+        example: password1
+        maxLength: 20
+        minLength: 8
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@birdnest.vn
+    name: API Support
+  description: BirdNest Shop REST API for e-commerce platform
+  license:
+    name: MIT
+    url: https://github.com/indrayyana/go-fiber-boilerplate/blob/main/LICENSE
+  termsOfService: http://swagger.io/terms/
+  title: BirdNest Shop API
+  version: 1.0.0
+paths:
+  /admin/categories:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.Category'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Category created successfully
+          schema:
+            $ref: '#/definitions/model.Category'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden - Admin access required
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new category (Admin only)
+      tags:
+      - Categories
+  /admin/orders/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden - Admin access required
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Order not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an order (admin only)
+      tags:
+      - Orders
+  /admin/orders/{id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status update data
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order status updated successfully
+          schema:
+            $ref: '#/definitions/model.Order'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden - Admin access required
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Order not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update order status (admin only)
+      tags:
+      - Orders
+  /admin/orders/stats:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: daily
+        description: Statistics period (daily, weekly, monthly, yearly)
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order statistics
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden - Admin access required
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get order statistics (admin only)
+      tags:
+      - Orders
+  /admin/products:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.Product'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Product created successfully
+          schema:
+            $ref: '#/definitions/model.Product'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden - Admin access required
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new product (Admin only)
+      tags:
+      - Products
+  /admin/products/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden - Admin access required
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Product not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a product (Admin only)
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated product data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.Product'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product updated successfully
+          schema:
+            $ref: '#/definitions/model.Product'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden - Admin access required
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Product not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an existing product (Admin only)
+      tags:
+      - Products
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: An email will be sent to reset password.
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validation.ForgotPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.ForgotPasswordResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/example.NotFound'
+      summary: Forgot password
+      tags:
+      - Auth
+  /auth/google:
+    get:
+      description: This route initiates the Google OAuth2 login flow. Please try this
+        in your browser.
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.GoogleLoginResponse'
+      summary: Login with google
+      tags:
+      - Auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validation.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.LoginResponse'
+        "401":
+          description: Invalid email or password
+          schema:
+            $ref: '#/definitions/example.FailedLogin'
+      summary: Login
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/example.RefreshToken'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.LogoutResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/example.NotFound'
+      summary: Logout
+      tags:
+      - Auth
+  /auth/refresh-tokens:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/example.RefreshToken'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.RefreshTokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+      summary: Refresh auth tokens
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validation.Register'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/example.RegisterResponse'
+        "409":
+          description: Email already taken
+          schema:
+            $ref: '#/definitions/example.DuplicateEmail'
+      summary: Register as user
+      tags:
+      - Auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: The reset password token
+        in: query
+        name: token
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validation.UpdatePassOrVerify'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.ResetPasswordResponse'
+        "401":
+          description: Password reset failed
+          schema:
+            $ref: '#/definitions/example.FailedResetPassword'
+      summary: Reset password
+      tags:
+      - Auth
+  /auth/send-verification-email:
+    post:
+      description: An email will be sent to verify email.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.SendVerificationEmailResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+      security:
+      - BearerAuth: []
+      summary: Send verification email
+      tags:
+      - Auth
+  /auth/verify-email:
+    post:
+      parameters:
+      - description: The verify email token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.VerifyEmailResponse'
+        "401":
+          description: Verify email failed
+          schema:
+            $ref: '#/definitions/example.FailedVerifyEmail'
+      summary: Verify email
+      tags:
+      - Auth
+  /cart:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cart cleared successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Clear all cart items
+      tags:
+      - Cart
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cart items
+          schema:
+            items:
+              $ref: '#/definitions/model.CartItem'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user's cart items
+      tags:
+      - Cart
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Cart item data with productId and quantity
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Item added to cart successfully
+          schema:
+            $ref: '#/definitions/model.CartItem'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Add item to cart
+      tags:
+      - Cart
+  /cart/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Cart item ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item removed from cart successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Cart item not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Remove item from cart
+      tags:
+      - Cart
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Cart item ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Quantity update data
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cart item updated successfully
+          schema:
+            $ref: '#/definitions/model.CartItem'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Cart item not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update cart item quantity
+      tags:
+      - Cart
+  /categories:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of categories
+          schema:
+            items:
+              $ref: '#/definitions/model.Category'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all categories
+      tags:
+      - Categories
+  /dashboard/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Get key dashboard metrics including total revenue, orders, customers,
+        and trends
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.DashboardMetrics'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Common'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard metrics
+      tags:
+      - Dashboard
+  /dashboard/revenue-chart:
+    get:
+      consumes:
+      - application/json
+      description: Get revenue and order data for charts with period filtering
+      parameters:
+      - default: daily
+        description: Period (daily, weekly, monthly, yearly)
+        in: query
+        name: period
+        type: string
+      - default: 30
+        description: Number of days to look back
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/service.ChartData'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Common'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Common'
+      security:
+      - BearerAuth: []
+      summary: Get revenue chart data
+      tags:
+      - Dashboard
+  /health-check:
+    get:
+      consumes:
+      - application/json
+      description: Check the status of services and database connections
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.HealthCheckResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/example.HealthCheckResponseError'
+      summary: Health Check
+      tags:
+      - Health
+  /orders:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Order status filter
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Orders with pagination
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user's orders or all orders (admin)
+      tags:
+      - Orders
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order data with items, shipping address, and payment method
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Order created successfully
+          schema:
+            $ref: '#/definitions/model.Order'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new order
+      tags:
+      - Orders
+  /orders/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order details
+          schema:
+            $ref: '#/definitions/model.Order'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Order not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a specific order
+      tags:
+      - Orders
+  /products:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Category ID filter
+        in: query
+        name: categoryId
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      - description: Minimum price
+        in: query
+        name: minPrice
+        type: number
+      - description: Maximum price
+        in: query
+        name: maxPrice
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Products with pagination
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all products with filtering and pagination
+      tags:
+      - Products
+  /products/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product details
+          schema:
+            $ref: '#/definitions/model.Product'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Product not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a single product by ID
+      tags:
+      - Products
+  /products/{id}/reviews:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reviews with pagination
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get reviews for a product
+      tags:
+      - Reviews
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Review data with rating and optional comment
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Review created successfully
+          schema:
+            $ref: '#/definitions/model.Review'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a review for a product
+      tags:
+      - Reviews
+  /reviews:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User reviews with pagination
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user's reviews
+      tags:
+      - Reviews
+  /reviews/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Review deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Review not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a review
+      tags:
+      - Reviews
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated review data
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Review updated successfully
+          schema:
+            $ref: '#/definitions/model.Review'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Review not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a review
+      tags:
+      - Reviews
+  /users:
+    get:
+      description: Only admins can retrieve all users.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Maximum number of users
+        in: query
+        name: limit
+        type: integer
+      - description: Search by name or email or role
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.GetAllUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/example.Forbidden'
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - Users
+    post:
+      description: Only admins can create other users.
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validation.CreateUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/example.CreateUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/example.Forbidden'
+        "409":
+          description: Email already taken
+          schema:
+            $ref: '#/definitions/example.DuplicateEmail'
+      security:
+      - BearerAuth: []
+      summary: Create a user
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      description: Logged in users can delete only themselves. Only admins can delete
+        other users.
+      parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.DeleteUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/example.Forbidden'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/example.NotFound'
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - Users
+    get:
+      description: Logged in users can fetch only their own user information. Only
+        admins can fetch other users.
+      parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.GetUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/example.Forbidden'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/example.NotFound'
+      security:
+      - BearerAuth: []
+      summary: Get a user
+      tags:
+      - Users
+    patch:
+      description: Logged in users can only update their own information. Only admins
+        can update other users.
+      parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validation.UpdateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.UpdateUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/example.Forbidden'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/example.NotFound'
+        "409":
+          description: Email already taken
+          schema:
+            $ref: '#/definitions/example.DuplicateEmail'
+      security:
+      - BearerAuth: []
+      summary: Update a user
+      tags:
+      - Users
+  /users/profile:
+    get:
+      description: Get the current authenticated user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.GetUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/example.NotFound'
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - Users
+    put:
+      description: Update the current authenticated user's profile information
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validation.UpdateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.UpdateUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/example.NotFound'
+        "409":
+          description: Email already taken
+          schema:
+            $ref: '#/definitions/example.DuplicateEmail'
+      security:
+      - BearerAuth: []
+      summary: Update current user profile
+      tags:
+      - Users
+  /users/profile/password:
+    put:
+      description: Update the current authenticated user's password
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validation.UpdatePassOrVerify'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Common'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/example.Unauthorized'
+      security:
+      - BearerAuth: []
+      summary: Update current user password
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    description: 'Example Value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
