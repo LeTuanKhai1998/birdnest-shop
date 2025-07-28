@@ -42,6 +42,8 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   lastLoginAt DateTime?
+
+  @@map("users")
 }
 
 model Product {
@@ -61,6 +63,8 @@ model Product {
   wishlist    Wishlist[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  @@map("products")
 }
 
 model Category {
@@ -70,6 +74,8 @@ model Category {
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@map("categories")
 }
 
 model Order {
@@ -83,6 +89,8 @@ model Order {
   orderItems      OrderItem[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  @@map("orders")
 }
 
 model OrderItem {
@@ -93,6 +101,8 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   price     Decimal @db.Decimal(10, 2)
+
+  @@map("order_items")
 }
 
 model Review {
@@ -104,6 +114,8 @@ model Review {
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
+
+  @@map("reviews")
 }
 
 model CartItem {
@@ -115,6 +127,8 @@ model CartItem {
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("cart_items")
 }
 
 model Address {
@@ -132,6 +146,8 @@ model Address {
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("addresses")
 }
 
 model Wishlist {
@@ -143,6 +159,7 @@ model Wishlist {
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+  @@map("wishlist")
 }
 
 model Image {
@@ -152,4 +169,6 @@ model Image {
   product   Product  @relation(fields: [productId], references: [id])
   productId String
   createdAt DateTime @default(now())
+
+  @@map("images")
 }

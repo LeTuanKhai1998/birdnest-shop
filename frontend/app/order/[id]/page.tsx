@@ -1,17 +1,71 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import React from "react";
+import { ordersApi, Order } from "@/lib/api-service";
 
 export default function OrderConfirmationPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params);
-  // Optionally, fetch order details here in the future
+  const [orderId, setOrderId] = useState<string>("");
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    params.then(({ id }) => {
+      setOrderId(id);
+    });
+  }, [params]);
+
+  useEffect(() => {
+    if (!orderId) return;
+
+    const fetchOrder = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await ordersApi.getOrder(orderId);
+        const fetchedOrder = response.data?.order || response.order;
+        setOrder(fetchedOrder);
+      } catch (err) {
+        console.error('Failed to fetch order:', err);
+        setError('Failed to load order details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderId]);
 
   useEffect(() => {
     // Scroll to top on mount
     window.scrollTo(0, 0);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-white items-center justify-center py-12 px-2">
+        <div className="max-w-md w-full mx-auto bg-white rounded-xl shadow-lg p-8 flex flex-col items-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg">Loading order details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="flex flex-col min-h-screen bg-white items-center justify-center py-12 px-2">
+        <div className="max-w-md w-full mx-auto bg-white rounded-xl shadow-lg p-8 flex flex-col items-center">
+          <div className="text-red-500 font-semibold mb-4">{error || "Order not found."}</div>
+          <Button asChild>
+            <Link href="/products">Continue Shopping</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-white items-center justify-center py-12 px-2">
@@ -27,14 +81,15 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ id
         <p className="text-lg text-gray-700 text-center mb-4">Your order has been placed successfully.</p>
         <div className="bg-gray-50 rounded-lg px-4 py-2 mb-4 w-full text-center">
           <span className="text-gray-500 text-sm">Order ID:</span>
-          <span className="ml-2 font-mono font-semibold text-base">{id}</span>
+          <span className="ml-2 font-mono font-semibold text-base">{orderId}</span>
         </div>
-        {/* Mock summary */}
+        {/* Order summary */}
         <div className="w-full mb-6">
           <div className="flex flex-col gap-1 text-sm text-gray-700">
-            <div><span className="font-medium">Name:</span> (mock) Nguyễn Văn A</div>
-            <div><span className="font-medium">Address:</span> (mock) 123 Đường ABC, Quận 1, TP.HCM</div>
-            <div><span className="font-medium">Total Paid:</span> <span className="text-red-700 font-bold">2.500.000 ₫</span></div>
+            <div><span className="font-medium">Status:</span> {order.status}</div>
+            <div><span className="font-medium">Date:</span> {new Date(order.createdAt).toLocaleDateString("vi-VN")}</div>
+            <div><span className="font-medium">Items:</span> {order.orderItems?.length || 0} item(s)</div>
+            <div><span className="font-medium">Total Paid:</span> <span className="text-red-700 font-bold">{Number(order.total).toLocaleString("vi-VN")} ₫</span></div>
           </div>
         </div>
         <Button asChild className="w-full mt-2">

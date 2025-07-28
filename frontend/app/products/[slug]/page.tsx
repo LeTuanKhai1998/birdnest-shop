@@ -5,28 +5,109 @@ import { Card } from "@/components/ui/card";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import Footer from "@/components/Footer";
 import Image from "next/image";
-import { products } from "@/lib/products-data";
 import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
 import ProductImageGallery from "@/components/ProductImageGallery";
 import RelatedProducts from "@/components/RelatedProducts";
-import { products as allProducts } from "@/lib/products-data";
 import { useWishlist } from "@/lib/wishlist-store";
 import { useSession } from "next-auth/react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useReducedMotion } from "framer-motion";
 import { Product } from "@/components/ProductCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, X, ChevronLeft, ChevronRight } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { productsApi } from "@/lib/api-service";
+
+const FALLBACK_IMAGE = "/images/placeholder.png";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = React.use(params);
-  const decodedSlug = decodeURIComponent(slug);
-  const product = products.find(
-    p => p.slug === decodedSlug
-  );
+  const [slug, setSlug] = React.useState<string>("");
+  const [decodedSlug, setDecodedSlug] = React.useState<string>("");
+  
+  React.useEffect(() => {
+    params.then(({ slug: resolvedSlug }) => {
+      const decoded = decodeURIComponent(resolvedSlug);
+      setSlug(resolvedSlug);
+      setDecodedSlug(decoded);
+    });
+  }, [params]);
+  const [product, setProduct] = React.useState<any>(null);
+  const [allProducts, setAllProducts] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(false);
+
+  useEffect(() => {
+    if (!decodedSlug) return; // Don't fetch until we have the slug
+    
+    const fetchData = async () => {
+      try {
+        console.log('🔍 Fetching products for slug:', decodedSlug);
+        const response = await productsApi.getProducts();
+        console.log('📦 API Response:', response);
+        const products = response.data?.products || response.products || [];
+        console.log('📋 Products found:', products.length);
+        console.log('🔍 Looking for product with slug:', decodedSlug);
+        const foundProduct = products.find((p: any) => p.slug === decodedSlug);
+        console.log('✅ Found product:', foundProduct ? foundProduct.name : 'NOT FOUND');
+        
+        if (!foundProduct) {
+          setError(true);
+          return;
+        }
+
+        // Map API product to UI format
+        const uiProduct = {
+          id: foundProduct.id,
+          slug: foundProduct.slug,
+          name: foundProduct.name,
+          images: foundProduct.images?.map((img: { url: string }) => img.url) || [FALLBACK_IMAGE],
+          price: foundProduct.price,
+          description: foundProduct.description,
+          weight: (() => {
+            if (foundProduct.name.includes("50g")) return 50;
+            if (foundProduct.name.includes("100g")) return 100;
+            if (foundProduct.name.includes("200g")) return 200;
+            return 50;
+          })(),
+          type: (() => {
+            if (foundProduct.name.includes("tinh chế")) return "Yến tinh chế";
+            if (foundProduct.name.includes("rút lông")) return "Yến rút lông";
+            if (foundProduct.name.includes("thô")) return "Tổ yến thô";
+            return "Khác";
+          })(),
+          quantity: foundProduct.quantity || 0,
+          reviews: foundProduct.reviews || [],
+          sold: 0,
+        };
+
+        setProduct(uiProduct);
+        setAllProducts(products);
+      } catch (error) {
+        console.error('Failed to fetch product:', error);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [decodedSlug]);
+
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  }
+
+  if (error || !product) {
+    return notFound();
+  }
+
+  return <ProductDetailClient product={product} allProducts={allProducts} />;
+}
+
+// Client component for interactive features
+function ProductDetailClient({ product, allProducts }: { product: any, allProducts: any[] }) {
   // Move all hooks here, before any return
   const images = product?.images || (product?.image ? [product.image] : []);
   // Review form state (mocked, local only)
@@ -40,7 +121,30 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const favorited = product ? isInWishlist(product.id) : false;
   const shouldReduceMotion = useReducedMotion();
 
-  if (!product) return notFound();
+  // Map all products to UI format for related products
+  const uiAllProducts = allProducts.map((p: any) => ({
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    images: p.images?.map((img: { url: string }) => img.url) || [FALLBACK_IMAGE],
+    price: p.price,
+    description: p.description,
+    weight: (() => {
+      if (p.name.includes("50g")) return 50;
+      if (p.name.includes("100g")) return 100;
+      if (p.name.includes("200g")) return 200;
+      return 50;
+    })(),
+    type: (() => {
+      if (p.name.includes("tinh chế")) return "Yến tinh chế";
+      if (p.name.includes("rút lông")) return "Yến rút lông";
+      if (p.name.includes("thô")) return "Tổ yến thô";
+      return "Khác";
+    })(),
+    quantity: p.quantity || 0,
+    reviews: p.reviews || [],
+    sold: 0,
+  }));
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -223,7 +327,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           </form>
         </div>
         {/* Related Products Section */}
-        <RelatedProducts currentProduct={product} products={allProducts} />
+        <RelatedProducts currentProduct={product} products={uiAllProducts} />
       </main>
       <Footer />
     </div>

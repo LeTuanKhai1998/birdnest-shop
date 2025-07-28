@@ -1,11 +1,11 @@
 "use client";
-import { use } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Truck, XCircle } from "lucide-react";
 import Link from "next/link";
-import { mockOrders, Order } from "@/lib/mock-orders";
 import Image from 'next/image';
+import { ordersApi, Order } from "@/lib/api-service";
 
 const statusColor: Record<string, string> = {
   DELIVERED: "bg-green-100 text-green-700",
@@ -22,19 +22,51 @@ function formatDate(date: string) {
 }
 
 export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
-  const { orderId } = use(params);
+  const [orderId, setOrderId] = useState<string>("");
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Use mock data for mock orders
-  let order: Order | null = null;
-  if (orderId.startsWith("mock")) {
-    order = mockOrders.find((o) => o.id === orderId) || null;
-  }
-  // TODO: Fetch real order from API if not mock
+  useEffect(() => {
+    params.then(({ orderId: resolvedOrderId }) => {
+      setOrderId(resolvedOrderId);
+    });
+  }, [params]);
 
-  if (!order) {
+  useEffect(() => {
+    if (!orderId) return;
+
+    const fetchOrder = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await ordersApi.getOrder(orderId);
+        const fetchedOrder = response.data?.order || response.order;
+        setOrder(fetchedOrder);
+      } catch (err) {
+        console.error('Failed to fetch order:', err);
+        setError('Failed to load order details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderId]);
+
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-red-500 font-semibold">Order not found.</div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-4 text-lg">Loading order details...</p>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-red-500 font-semibold">{error || "Order not found."}</div>
         <Link href="/dashboard/orders">
           <Button className="mt-4">Back to Orders</Button>
         </Link>
@@ -61,14 +93,22 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
           </span>
         </div>
         <div className="divide-y">
-          {order.orderItems.map((item) => (
+          {order.orderItems?.map((item) => (
             <div key={item.id} className="flex items-center gap-4 py-4">
-              {item.product?.images?.[0] && (
-                <Image src={item.product.images[0]} alt={item.product.name} width={80} height={80} className="object-cover rounded-lg" />
+              {item.product?.images?.[0]?.url && (
+                <Image 
+                  src={item.product.images[0].url} 
+                  alt={item.product.name} 
+                  width={80} 
+                  height={80} 
+                  className="object-cover rounded-lg" 
+                />
               )}
               <div className="flex-1 min-w-0">
-                <div className="font-semibold">{item.product?.name}</div>
-                <div className="text-gray-500 text-sm">x{item.quantity} &middot; {formatVND(Number(item.price))}</div>
+                <div className="font-semibold">{item.product?.name || "Product"}</div>
+                <div className="text-gray-500 text-sm">
+                  x{item.quantity || 0} &middot; {formatVND(Number(item.price || 0))}
+                </div>
               </div>
             </div>
           ))}

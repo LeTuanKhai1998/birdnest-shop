@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/drawer";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
+import { productsApi, Product as ApiProduct } from "@/lib/api-service";
 
 const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -51,7 +52,7 @@ const filterSchema = z.object({
 type ProductForm = z.infer<typeof productSchema>;
 type FilterForm = z.infer<typeof filterSchema>;
 
-const CATEGORIES = ["Tinh chế", "Thô", "Combo"];
+const CATEGORIES = ["Refined Nest", "Raw Nest", "Feather-removed Nest", "Combo"];
 const STATUS = ["active", "inactive"];
 
 // Add a fallback image path
@@ -71,6 +72,11 @@ export default function AdminProductsPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Real data state
+  const [productList, setProductList] = useState<ApiProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Filter form
   const {
@@ -97,20 +103,26 @@ export default function AdminProductsPage() {
     mode: "onTouched",
   });
 
-  const products = [
-    { id: 'p1', name: 'Tổ yến tinh chế 100g', sku: 'SKU001', price: 3500000, stock: 12, category: 'Tinh chế', status: 'active', description: 'Tổ yến tinh chế 100g là sản phẩm cao cấp, đã được làm sạch lông và tạp chất, thích hợp cho mọi đối tượng sử dụng.' },
-    { id: 'p2', name: 'Tổ yến thô 50g', sku: 'SKU002', price: 1800000, stock: 8, category: 'Thô', status: 'inactive', description: 'Tổ yến thô 50g giữ nguyên hương vị tự nhiên, cần làm sạch trước khi chế biến, phù hợp cho người thích trải nghiệm.' },
-    { id: 'p3', name: 'Combo quà tặng 200g', sku: 'SKU003', price: 7000000, stock: 3, category: 'Combo', status: 'active', description: 'Combo quà tặng 200g gồm nhiều sản phẩm yến chất lượng, đóng gói sang trọng, thích hợp làm quà biếu.' },
-  ];
+  // Fetch products from API
+  const fetchProducts = async () => {
+    try {
+      setLoadingProducts(true);
+      setError(null);
+      const response = await productsApi.getProducts();
+      const products = response.data?.products || response.products || [];
+      setProductList(products);
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+      setError('Failed to load products');
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
-  // Simulated product list (would be state/API in real app)
-  const [productList] = useState(
-    products.map(p => ({
-      ...p,
-      price: typeof p.price === 'string' ? Number(String(p.price ?? '').replace(/[^\d]/g, '')) : p.price,
-      images: [{ url: FALLBACK_IMAGE }],
-    }))
-  );
+  // Load products on component mount
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -132,9 +144,9 @@ export default function AdminProductsPage() {
         !filterSearch ||
         p.name.toLowerCase().includes(filterSearch.toLowerCase()) ||
         p.id.toLowerCase().includes(filterSearch.toLowerCase()) ||
-        (p.sku && p.sku.toLowerCase().includes(filterSearch.toLowerCase()));
-      const matchesCategory = !filterCategory || p.category === filterCategory;
-      const matchesStatus = !filterStatus || p.status === filterStatus;
+        p.slug.toLowerCase().includes(filterSearch.toLowerCase());
+      const matchesCategory = !filterCategory || p.category?.name === filterCategory;
+      const matchesStatus = !filterStatus || (p.quantity > 0 ? 'active' : 'inactive') === filterStatus;
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [productList, filterSearch, filterCategory, filterStatus]);
@@ -142,45 +154,61 @@ export default function AdminProductsPage() {
   // On submit, send images array (with url and isPrimary) to API
   const onSubmit = async (data: ProductForm) => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    
-    // Prepare payload with form data and images
-    const payload = {
-      ...data,
-      images: images.map(img => ({ url: img.url, isPrimary: img.isPrimary }))
-    };
-    
-    if (editId) {
-      // Edit mode
-      // Call PATCH API with payload
-      console.log('Editing product:', editId, payload);
-    } else {
-      // Create mode
-      // Call POST API with payload
-      console.log('Creating product:', payload);
+    try {
+      // Prepare payload with form data and images
+      const payload = {
+        name: data.name,
+        description: data.description,
+        price: Number(data.price),
+        quantity: Number(data.stock),
+        categoryId: data.category, // This should be category ID, not name
+        images: images.map(img => ({ 
+          url: img.url, 
+          isPrimary: img.isPrimary || false 
+        }))
+      };
+      
+      if (editId) {
+        // Edit mode
+        await productsApi.updateProduct(editId, payload, "admin-token"); // TODO: Get real token
+        console.log('Product updated:', editId);
+      } else {
+        // Create mode
+        await productsApi.createProduct(payload, "admin-token"); // TODO: Get real token
+        console.log('Product created');
+      }
+      
+      // Refresh products list
+      await fetchProducts();
+      
+      reset();
+      setEditId(null);
+      setImages([]);
+      setDrawerOpen(false);
+    } catch (err) {
+      console.error('Failed to save product:', err);
+      setError('Failed to save product');
+    } finally {
+      setLoading(false);
     }
-    reset();
-    setEditId(null);
-    setImages([]);
-    setDrawerOpen(false); // Close drawer on successful submission
   };
 
   // Handle edit button
-  type Product = { id: string; name: string; images: Image[]; [key: string]: unknown };
-  type Image = { url: string; isPrimary?: boolean };
-  const handleEdit = (product: Product) => {
+  const handleEdit = (product: ApiProduct) => {
     setEditId(product.id);
     const sanitizedPrice = String(product.price ?? "").replace(/[^\d]/g, "");
     setValue("name", product.name);
-    setValue("description", typeof product.description === 'string' ? product.description : '');
+    setValue("description", product.description || '');
     setValue("price", sanitizedPrice);
-    setValue("stock", String(product.stock ?? ""));
-    setValue("category", typeof product.category === 'string' ? product.category : '');
-    setValue("status", product.status === 'active' || product.status === 'inactive' ? product.status : 'active');
+    setValue("stock", String(product.quantity ?? ""));
+    setValue("category", product.category?.name || '');
+    setValue("status", (product.quantity || 0) > 0 ? 'active' : 'inactive');
     // Load images from product.images (API shape)
-    setImages((product.images || []).map((img: Image, i: number) => ({ url: img.url, isPrimary: img.isPrimary ?? i === 0 })));
-    setDrawerOpen(true); // Open drawer for edit
+    setImages((product.images || []).map((img, i) => ({ 
+      url: img.url, 
+      isPrimary: img.isPrimary ?? i === 0 
+    })));
+    setDrawerOpen(true);
   };
 
   // Handle cancel edit
@@ -244,10 +272,15 @@ export default function AdminProductsPage() {
   // Handle confirm delete
   const handleConfirmDelete = async () => {
     if (!productToDelete) return;
-    // TODO: Call API to delete product
-    setDeleteModalOpen(false);
-    setProductToDelete(null);
-    // TODO: Remove product from UI (refetch or update state)
+    try {
+      await productsApi.deleteProduct(productToDelete, "admin-token"); // TODO: Get real token
+      await fetchProducts(); // Refresh the list
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete product:', err);
+      setError('Failed to delete product');
+    }
   };
 
   // Handle cancel delete
@@ -259,13 +292,37 @@ export default function AdminProductsPage() {
   // Move this to the top level of the component, not inside a callback
   const [showMore, setShowMore] = useState(false);
 
+  // Show loading state
+  if (loadingProducts) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 text-lg mb-4">{error}</p>
+          <Button onClick={fetchProducts}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Product Management</h2>
       {/* Filter Bar */}
       <form className="mb-6 flex flex-wrap gap-4 items-end bg-white p-4 rounded shadow-sm" onSubmit={e => e.preventDefault()} aria-label="Product Filters">
         <div className="flex-1 min-w-[200px]">
-          <label htmlFor="search" className="block text-xs font-medium mb-1">Search (Name, SKU, ID)</label>
+          <label htmlFor="search" className="block text-xs font-medium mb-1">Search (Name, Slug, ID)</label>
           <Input
             id="search"
             placeholder="Search products..."
@@ -341,7 +398,7 @@ export default function AdminProductsPage() {
                   <Controller
                     name="price"
                     control={control}
-                    render={({ field }) => {
+                    render={({ field }: { field: any }) => {
                       const displayValue = field.value
                         ? Number(field.value.replace(/[^\d]/g, "")).toLocaleString()
                         : "";
@@ -403,7 +460,7 @@ export default function AdminProductsPage() {
                   <Controller
                     name="status"
                     control={control}
-                    render={({ field }) => (
+                    render={({ field }: { field: any }) => (
                       <select
                         id="status"
                         className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
@@ -511,14 +568,15 @@ export default function AdminProductsPage() {
             { key: "id", label: "ID" },
             { key: "name", label: "Name" },
             { key: "thumbnail", label: "Thumbnail" },
-            { key: "sku", label: "SKU" },
+            { key: "slug", label: "Slug" },
             { key: "price", label: "Price" },
             { key: "stock", label: "Stock" },
             { key: "category", label: "Category" },
             { key: "status", label: "Status" },
           ]}
           data={filteredProducts.map(p => ({
-            ...p,
+            id: p.id,
+            name: p.name,
             thumbnail: (
               <Image
                 src={(p.images && p.images[0]?.url) || FALLBACK_IMAGE}
@@ -528,14 +586,21 @@ export default function AdminProductsPage() {
                 className="w-16 h-16 object-cover rounded border"
               />
             ),
-            price: (typeof p.price === "number"
-              ? p.price.toLocaleString()
-              : Number(String(p.price ?? '').replace(/[^\d]/g, "")).toLocaleString()) + " ₫",
-            status: <StatusBadge status={p.status} />,
+            slug: p.slug,
+            price: p.price.toLocaleString() + " ₫",
+            stock: p.quantity,
+            category: p.category?.name || "N/A",
+            status: <StatusBadge status={(p.quantity || 0) > 0 ? 'active' : 'inactive'} />,
           }))}
-          actions={p => (
+          actions={(p: any) => (
             <div className="flex gap-2 justify-end">
-              <Button type="button" size="sm" variant="outline" className="rounded-full px-4 py-1 text-sm font-semibold" onClick={() => { handleEdit(p); setDrawerOpen(true); }}>
+              <Button type="button" size="sm" variant="outline" className="rounded-full px-4 py-1 text-sm font-semibold" onClick={() => { 
+                const product = filteredProducts.find(prod => prod.id === p.id);
+                if (product) {
+                  handleEdit(product);
+                  setDrawerOpen(true);
+                }
+              }}>
                 Edit
               </Button>
               <Button
@@ -559,8 +624,7 @@ export default function AdminProductsPage() {
       {/* Mobile Card List */}
       <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24">
         {filteredProducts.map((p) => {
-          const fullProduct = productList.find(prod => prod.id === p.id);
-          const desc = (fullProduct && typeof fullProduct.description === 'string' ? fullProduct.description : '') || "";
+          const desc = p.description || "";
           const isLong = desc.length > 80;
           return (
             <Card key={p.id} className="flex flex-col gap-2 p-4 rounded-lg shadow border border-gray-200 transition hover:bg-gray-50 active:scale-[0.98]">
@@ -575,19 +639,17 @@ export default function AdminProductsPage() {
                 <div className="flex-1 min-w-0 flex flex-col gap-1">
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-bold text-lg text-gray-900 truncate">{p.name}</div>
-                    <Badge variant={p.status === 'active' ? 'success' : 'secondary'} className={p.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'}>
-                      {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                    <Badge variant={(p.quantity || 0) > 0 ? 'success' : 'secondary'} className={(p.quantity || 0) > 0 ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'}>
+                      {(p.quantity || 0) > 0 ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-red-700 text-base">{typeof p.price === "number"
-                      ? `₫${p.price.toLocaleString()}`
-                      : `₫${Number(String(p.price ?? '').replace(/[^\d]/g, "")).toLocaleString()}`}</span>
-                    <span className="text-xs text-gray-500">Stock: {p.stock}</span>
+                    <span className="font-bold text-red-700 text-base">₫{p.price.toLocaleString()}</span>
+                    <span className="text-xs text-gray-500">Stock: {p.quantity}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">SKU: {p.sku}</span>
-                    <span className="text-xs text-gray-500">Category: {p.category}</span>
+                    <span className="text-xs text-gray-500">Slug: {p.slug}</span>
+                    <span className="text-xs text-gray-500">Category: {p.category?.name || 'N/A'}</span>
                   </div>
                   <div className="text-xs text-gray-700 whitespace-pre-line">
                     <span>

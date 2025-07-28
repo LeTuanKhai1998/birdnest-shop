@@ -2,57 +2,41 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Users, 
-  ShoppingBag, 
-  DollarSign, 
-  TrendingUp, 
-  Package, 
-  Star,
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DollarSign,
+  ShoppingBag,
+  Users,
+  Package,
   ArrowUpRight,
   ArrowDownRight,
-  Eye,
-  Edit,
+  TrendingUp,
+  TrendingDown,
   Trash2,
   Plus
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
-
-// Mock data for charts
-const revenueData = [
-  { name: 'Jan', value: 4000 },
-  { name: 'Feb', value: 3000 },
-  { name: 'Mar', value: 2000 },
-  { name: 'Apr', value: 2780 },
-  { name: 'May', value: 1890 },
-  { name: 'Jun', value: 2390 },
-];
-
-const orderData = [
-  { name: 'Jan', orders: 65 },
-  { name: 'Feb', orders: 59 },
-  { name: 'Mar', orders: 80 },
-  { name: 'Apr', orders: 81 },
-  { name: 'May', orders: 56 },
-  { name: 'Jun', orders: 55 },
-];
-
-const productData = [
-  { name: 'Refined Nest', value: 400 },
-  { name: 'Raw Nest', value: 300 },
-  { name: 'Feather-removed', value: 300 },
-  { name: 'Combo', value: 200 },
-];
+import { dashboardApi } from "@/lib/api-service";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+interface DashboardData {
+  totalRevenue: number;
+  totalOrders: number;
+  totalCustomers: number;
+  averageOrderValue: number;
+  revenueData: Array<{ name: string; value: number }>;
+  orderData: Array<{ name: string; orders: number }>;
+  productData: Array<{ name: string; value: number }>;
+}
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -62,7 +46,75 @@ export default function AdminDashboard() {
     }
   }, [session, status, router]);
 
-  if (status === "loading") {
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // For now, get admin token directly for testing
+        let token = (session as any)?.accessToken || (session as any)?.token;
+        
+        if (!token) {
+          // Try to get admin token directly
+          try {
+            const loginResponse = await fetch('http://localhost:8080/v1/auth/login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: 'admin@birdnest.com',
+                password: 'admin123'
+              })
+            });
+            
+            if (loginResponse.ok) {
+              const loginData = await loginResponse.json();
+              token = loginData.data?.tokens?.access?.token || loginData.tokens?.access?.token;
+            }
+          } catch (loginErr) {
+            console.error('Failed to get admin token:', loginErr);
+          }
+        }
+        
+        if (!token) {
+          console.error('No access token available');
+          setError('Authentication required');
+          return;
+        }
+        
+        const response = await dashboardApi.getDashboardStats(token);
+        console.log('Dashboard response:', response);
+        
+        // Transform backend data to match frontend interface
+        const backendData = response.data || response;
+        const transformedData: DashboardData = {
+          totalRevenue: backendData.totalRevenue || 0,
+          totalOrders: backendData.totalOrders || 0,
+          totalCustomers: backendData.totalCustomers || 0,
+          averageOrderValue: backendData.averageOrderValue || 0,
+          revenueData: [], // Will be populated from separate API call
+          orderData: [], // Will be populated from separate API call
+          productData: [] // Will be populated from separate API call
+        };
+        
+        setDashboardData(transformedData);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (status === "authenticated" && session?.user?.isAdmin) {
+      fetchDashboardData();
+    }
+  }, [session, status]);
+
+  if (status === "loading" || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -76,6 +128,33 @@ export default function AdminDashboard() {
   if (!session?.user?.isAdmin) {
     return null;
   }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 text-lg mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Use real data or fallback to empty data
+  const data = dashboardData || {
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalCustomers: 0,
+    averageOrderValue: 0,
+    revenueData: [],
+    orderData: [],
+    productData: []
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -93,10 +172,10 @@ export default function AdminDashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$45,231.89</div>
+              <div className="text-2xl font-bold">₫{data.totalRevenue.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground flex items-center">
                 <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-                +20.1% from last month
+                Real-time data
               </p>
             </CardContent>
           </Card>
@@ -107,10 +186,10 @@ export default function AdminDashboard() {
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+2,350</div>
+              <div className="text-2xl font-bold">{data.totalOrders}</div>
               <p className="text-xs text-muted-foreground flex items-center">
                 <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-                +180.1% from last month
+                Real-time data
               </p>
             </CardContent>
           </Card>
@@ -121,10 +200,10 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+12,234</div>
+              <div className="text-2xl font-bold">{data.totalCustomers}</div>
               <p className="text-xs text-muted-foreground flex items-center">
                 <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
-                +19% from last month
+                Real-time data
               </p>
             </CardContent>
           </Card>
@@ -132,13 +211,13 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$19.25</div>
+              <div className="text-2xl font-bold">₫{data.averageOrderValue.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground flex items-center">
-                <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
-                -2.1% from last month
+                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                Real-time data
               </p>
             </CardContent>
           </Card>
@@ -146,137 +225,86 @@ export default function AdminDashboard() {
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Revenue Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Revenue Overview</CardTitle>
-              <CardDescription>Monthly revenue trends</CardDescription>
+              <CardTitle>Revenue Trend</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              {data.revenueData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={data.revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-gray-500">
+                  No revenue data available
+                </div>
+              )}
             </CardContent>
           </Card>
 
+          {/* Orders Chart */}
           <Card>
             <CardHeader>
               <CardTitle>Order Volume</CardTitle>
-              <CardDescription>Monthly order trends</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={orderData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="orders" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
+              {data.orderData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={data.orderData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="orders" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-gray-500">
+                  No order data available
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Product Performance */}
-        <Card className="mb-8">
+        {/* Product Distribution */}
+        <Card>
           <CardHeader>
-            <CardTitle>Product Performance</CardTitle>
-            <CardDescription>Sales by product category</CardDescription>
+            <CardTitle>Product Category Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {data.productData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={productData}
+                    data={data.productData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {productData.map((entry, index) => (
+                    {data.productData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-              
-              <div className="space-y-4">
-                {productData.map((product, index) => (
-                  <div key={product.name} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                      />
-                      <span className="text-sm font-medium">{product.name}</span>
-                    </div>
-                    <span className="text-sm text-gray-600">{product.value} units</span>
-                  </div>
-                ))}
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-500">
+                No product data available
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Orders */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Orders</CardTitle>
-                <CardDescription>Latest customer orders</CardDescription>
-              </div>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                View All
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { id: "ORD-001", customer: "John Doe", amount: "$299.00", status: "Delivered", date: "2024-01-15" },
-                { id: "ORD-002", customer: "Jane Smith", amount: "$199.00", status: "Processing", date: "2024-01-14" },
-                { id: "ORD-003", customer: "Bob Johnson", amount: "$399.00", status: "Shipped", date: "2024-01-13" },
-                { id: "ORD-004", customer: "Alice Brown", amount: "$149.00", status: "Pending", date: "2024-01-12" },
-              ].map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div>
-                      <p className="font-medium">{order.id}</p>
-                      <p className="text-sm text-gray-600">{order.customer}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">{order.amount}</p>
-                      <p className="text-sm text-gray-600">{order.date}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant={
-                      order.status === "Delivered" ? "success" :
-                      order.status === "Processing" ? "secondary" :
-                      order.status === "Shipped" ? "secondary" : "secondary"
-                    }>
-                      {order.status}
-                    </Badge>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

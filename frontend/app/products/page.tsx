@@ -5,9 +5,14 @@ const FALLBACK_IMAGE = "/images/placeholder.png";
 
 export default async function ProductsPage() {
   try {
+    console.log('🔍 Fetching products from API...');
+    
     // Fetch products from the API
     const response = await productsApi.getProducts();
-    const products = response.products || [];
+    console.log('📦 API Response:', response);
+    
+    const products = response.products || response.data?.products || [];
+    console.log('📋 Products found:', products.length);
     
     // Map API products to UI format
     const uiProducts = products.map((product: Product) => ({
@@ -34,9 +39,10 @@ export default async function ProductsPage() {
       sold: 0,
     }));
 
+    console.log('🎯 UI Products mapped:', uiProducts.length);
     return <ProductsClient products={uiProducts} />;
   } catch (error) {
-    console.error('Failed to fetch products:', error);
+    console.error('❌ Failed to fetch products:', error);
     // Return empty products on error
     return <ProductsClient products={[]} />;
   }

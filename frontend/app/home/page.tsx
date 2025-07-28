@@ -1,22 +1,15 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
+import React from "react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/components/ui/carousel";
-import { useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Star, ShoppingCart, Heart, Award, Shield, Quote, Users } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { productsApi, Product as ApiProduct } from "@/lib/api-service";
 import { ProductCardList } from "@/components/ProductCardList";
-import { Star, Quote, Users, Award, Shield, Heart } from "lucide-react";
 
-// Types for products
 interface TransformedProduct {
   id: string;
   slug: string;
@@ -32,6 +25,21 @@ interface TransformedProduct {
   sold: number;
 }
 
+const banners = [
+  {
+    src: "/images/banner1.png",
+    alt: "Yến sào HVNEST - Premium Bird's Nest Products"
+  },
+  {
+    src: "/images/banner2.png",
+    alt: "Yến sào HVNEST - Premium Bird's Nest Products"
+  },
+  {
+    src: "/images/banner3.png",
+    alt: "Yến sào HVNEST - Premium Bird's Nest Products"
+  }
+];
+
 const featureIcons = [
   {
     icon: "/images/banner_decor_1.png",
@@ -45,116 +53,6 @@ const featureIcons = [
     icon: "/images/logo.png",
     label: "Thương Hiệu Uy Tín",
   },
-];
-
-// Banner carousel data
-const banners = [
-  {
-    src: "/images/banner1.png",
-    alt: "Yến sào HVNEST - Premium Bird's Nest Products"
-  },
-  {
-    src: "/images/banner2.png", 
-    alt: "Yến chưng hũ HVNEST - Jarred Bird's Nest Products"
-  },
-  {
-    src: "/images/banner3.png",
-    alt: "Yến sào HVNEST - Premium Bird's Nest Products"
-  }
-];
-
-// Mock product data
-const latestProducts: TransformedProduct[] = [
-  {
-    id: "1",
-    slug: "premium-birds-nest",
-    name: "Premium Bird's Nest",
-    image: "/images/p1.png",
-    images: ["/images/p1.png"],
-    price: 1500000,
-    weight: 100,
-    description: "High-quality bird's nest",
-    type: "Refined Nest",
-    quantity: 50,
-    reviews: [],
-    sold: 0
-  },
-  {
-    id: "2",
-    slug: "raw-birds-nest",
-    name: "Raw Bird's Nest",
-    image: "/images/p2.png",
-    images: ["/images/p2.png"],
-    price: 1200000,
-    weight: 100,
-    description: "Natural raw bird's nest",
-    type: "Raw Nest",
-    quantity: 30,
-    reviews: [],
-    sold: 0
-  }
-];
-
-const comboProducts: TransformedProduct[] = [
-  {
-    id: "3",
-    slug: "premium-combo",
-    name: "Premium Combo Set",
-    image: "/images/p3.png",
-    images: ["/images/p3.png"],
-    price: 2500000,
-    weight: 200,
-    description: "Premium bird's nest combo",
-    type: "Combo",
-    quantity: 20,
-    reviews: [],
-    sold: 0
-  }
-];
-
-const kimSangProducts: TransformedProduct[] = [
-  {
-    id: "4",
-    slug: "yen-sao-kim-sang-premium",
-    name: "Yến Sào Kim Sang Premium",
-    image: "/images/p1.png",
-    images: ["/images/p1.png"],
-    price: 2500000,
-    weight: 100,
-    description: "Yến sào cao cấp Kim Sang - Thịnh vượng trọn vẹn",
-    type: "Yến tinh chế",
-    quantity: 50,
-    reviews: [],
-    sold: 0
-  },
-  {
-    id: "5",
-    slug: "yen-sao-kim-sang-raw",
-    name: "Yến Sào Kim Sang Raw",
-    image: "/images/p2.png",
-    images: ["/images/p2.png"],
-    price: 1800000,
-    weight: 100,
-    description: "Yến sào thô Kim Sang - Tự nhiên nguyên chất",
-    type: "Tổ yến thô",
-    quantity: 30,
-    reviews: [],
-    sold: 0
-  },
-  {
-    id: "6",
-    slug: "yen-sao-kim-sang-combo",
-    name: "Combo Yến Sào Kim Sang",
-    image: "/images/p3.png",
-    images: ["/images/p3.png"],
-    price: 3500000,
-    weight: 200,
-    description: "Bộ sản phẩm Yến Sào Kim Sang - Thanh tẩy nhà cửa",
-    type: "Combo",
-    quantity: 20,
-    reviews: [],
-    sold: 0
-  }
 ];
 
 const customerTestimonials = [
@@ -179,57 +77,76 @@ const customerTestimonials = [
 ];
 
 export default function Home3Page() {
-  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
-  const [current, setCurrent] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [latestProducts, setLatestProducts] = React.useState<TransformedProduct[]>([]);
+  const [comboProducts, setComboProducts] = React.useState<TransformedProduct[]>([]);
+  const [kimSangProducts, setKimSangProducts] = React.useState<TransformedProduct[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  useEffect(() => {
-    if (!carouselApi) return;
+  // Fetch products from API
+  React.useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await productsApi.getProducts();
+        const products = response.data?.products || response.products || [];
+        
+        // Transform API products to UI format
+        const transformedProducts: TransformedProduct[] = products.map((product: ApiProduct) => ({
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          image: product.images?.[0]?.url || "/images/placeholder.png",
+          images: product.images?.map(img => img.url) || ["/images/placeholder.png"],
+          price: product.price,
+          weight: (() => {
+            if (product.name.includes("50g")) return 50;
+            if (product.name.includes("100g")) return 100;
+            if (product.name.includes("200g")) return 200;
+            return 50;
+          })(),
+          description: product.description,
+          type: (() => {
+            if (product.name.includes("tinh chế")) return "Yến tinh chế";
+            if (product.name.includes("rút lông")) return "Yến rút lông";
+            if (product.name.includes("thô")) return "Tổ yến thô";
+            return "Khác";
+          })(),
+          quantity: product.quantity || 0,
+          reviews: product.reviews || [],
+          sold: 0,
+        }));
 
-    carouselApi.on("select", () => {
-      setCurrent(carouselApi.selectedScrollSnap());
-    });
-  }, [carouselApi]);
+        // Categorize products
+        const refined = transformedProducts.filter(p => p.type.includes("tinh chế")).slice(0, 4);
+        const combos = transformedProducts.filter(p => p.type.includes("Combo") || p.name.includes("Combo")).slice(0, 3);
+        const premium = transformedProducts.filter(p => p.name.includes("Premium") || p.name.includes("Kim Sang")).slice(0, 3);
 
-  useEffect(() => {
-    if (!carouselApi) return;
-
-    // Auto-play functionality
-    const startAutoPlay = () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      intervalRef.current = setInterval(() => {
-        carouselApi.scrollNext();
-      }, 8000); // 8 seconds
-    };
-
-    startAutoPlay();
-
-    // Pause on hover
-    const handleMouseEnter = () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+        setLatestProducts(refined);
+        setComboProducts(combos);
+        setKimSangProducts(premium);
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+        setError('Failed to load products');
+      } finally {
+        setLoading(false);
       }
     };
 
-    const handleMouseLeave = () => {
-      startAutoPlay();
-    };
+    fetchProducts();
+  }, []);
 
-    const carouselElement = carouselApi.rootNode();
-    if (carouselElement) {
-      carouselElement.addEventListener('mouseenter', handleMouseEnter);
-      carouselElement.addEventListener('mouseleave', handleMouseLeave);
-    }
+  const startAutoPlay = () => {
+    // Auto-play logic can be implemented here
+  };
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (carouselElement) {
-        carouselElement.removeEventListener('mouseenter', handleMouseEnter);
-        carouselElement.removeEventListener('mouseleave', handleMouseLeave);
-      }
-    };
-  }, [carouselApi]);
+  const handleMouseEnter = () => {
+    // Pause auto-play on hover
+  };
+
+  const handleMouseLeave = () => {
+    // Resume auto-play on leave
+  };
 
   return (
     <div className="w-full min-h-screen bg-[#fbd8b0] flex flex-col">
@@ -255,7 +172,7 @@ export default function Home3Page() {
           className="object-contain sm:object-cover md:object-cover w-full h-full lg:hidden"
           priority
           quality={100}
-          sizes="100vw"
+          sizes="(max-width: 1024px) 100vw, 0vw"
           style={{ zIndex: 0, objectPosition: 'center top' }}
         />
         
@@ -263,14 +180,14 @@ export default function Home3Page() {
         <div className="hidden lg:block relative z-10" style={{ minHeight: '600px' }}>
           {/* Left Product Image - Desktop positioning */}
           <div className="absolute top-[40%] left-1/2 -translate-y-1/2 -translate-x-[75%] 2xl:top-[45%] 2xl:-translate-x-[110%] z-10 w-[34.2vw] max-w-[495px] min-w-[108px]">
-            <Image src="/images/yen_banner_1.png" alt="Yến Sào Kim Sang Left" width={495} height={495} className="object-contain w-full h-auto drop-shadow-2xl" />
+            <Image src="/images/yen_banner_1.png" alt="Yến Sào Kim Sang Left" width={495} height={495} className="object-contain w-full h-auto drop-shadow-2xl" style={{ height: 'auto' }} />
             {/* Decor at top left of product image */}
             <div className="absolute -top-4 -left-4 z-20 w-20 md:w-32 animate-decor-slide drop-shadow-2xl">
               <Image src="/images/banner_decor_2.png" alt="Decor" width={125} height={125} className="object-contain w-full h-auto" />
             </div>
             {/* EN image at bottom left of product image */}
             <div className="absolute -bottom-16 -left-16 z-20 w-22 md:w-25 2xl:w-29 drop-shadow-2xl">
-              <Image src="/images/en.png" alt="EN" width={101} height={101} className="object-contain w-full h-auto scale-x-[-1]" />
+              <Image src="/images/en.png" alt="EN" width={101} height={101} className="object-contain w-full h-auto scale-x-[-1]" style={{ height: 'auto' }} />
             </div>
           </div>
           
@@ -303,7 +220,7 @@ export default function Home3Page() {
               </div>
               {/* Decor to the right of shipping info */}
               <div className="absolute -top-4 -right-45 z-20 w-16 md:w-24 animate-decor-slide drop-shadow-2xl">
-                <Image src="/images/banner_decor_1.png" alt="Decor" width={96} height={96} className="object-contain w-full h-auto" />
+                <Image src="/images/banner_decor_1.png" alt="Decor" width={96} height={96} className="object-contain w-full h-auto" style={{ height: 'auto' }} />
               </div>
             </div>
             <Link href="/products" className="inline-block bg-glossy text-red-900 font-bold px-8 py-4 rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 hover:shadow-3xl animate-button-zoom mt-6 button-glow text-sm sm:text-base" style={{boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'}}>
@@ -313,7 +230,7 @@ export default function Home3Page() {
           
           {/* Decor bottom left - Desktop positioning */}
           <div className="absolute left-10 bottom-8 z-20 w-16 md:w-24 drop-shadow-2xl">
-            <Image src="/images/banner_decor_1.png" alt="Decor" width={96} height={96} className="object-contain w-full h-auto" />
+            <Image src="/images/banner_decor_1.png" alt="Decor" width={96} height={96} className="object-contain w-full h-auto" style={{ height: 'auto' }} />
           </div>
         </div>
         
@@ -389,11 +306,11 @@ export default function Home3Page() {
             <div className="flex justify-between items-center w-full mt-[0.5vh] px-[2vw]">
               {/* EN image - left */}
               <div className="relative" style={{width: 'clamp(57px, 19.5vw, 90px)', height: 'clamp(57px, 19.5vw, 90px)'}}>
-                <Image src="/images/en.png" alt="EN" fill className="object-contain w-full h-full scale-x-[-1] drop-shadow-2xl" />
+                <Image src="/images/en.png" alt="EN" fill className="object-contain w-full h-full scale-x-[-1] drop-shadow-2xl" sizes="(max-width: 768px) 19.5vw, 90px" />
               </div>
               {/* Decor - right */}
               <div className="relative" style={{width: 'clamp(38px, 13vw, 60px)', height: 'clamp(38px, 13vw, 60px)'}}>
-                <Image src="/images/banner_decor_1.png" alt="Decor" fill className="object-contain w-full h-full animate-decor-slide drop-shadow-2xl" />
+                <Image src="/images/banner_decor_1.png" alt="Decor" fill className="object-contain w-full h-full animate-decor-slide drop-shadow-2xl" sizes="(max-width: 768px) 13vw, 60px" />
               </div>
             </div>
           </div>
@@ -612,7 +529,7 @@ export default function Home3Page() {
       {/* Product Highlight */}
       <section className="w-full bg-[#fbd8b0] py-6 sm:py-8 flex flex-col items-center px-4">
         <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#a10000] mb-3 sm:mb-4 text-center">TỔ YẾN NGUYÊN CHẤT</h2>
-        <Image src="/images/to-yen-nguyen-chat.jpg" alt="Tổ Yến Nguyên Chất" width={600} height={300} className="rounded-xl shadow-lg mx-auto w-full max-w-[600px]" />
+        <Image src="/images/to-yen-nguyen-chat.jpg" alt="Tổ Yến Nguyên Chất" width={600} height={300} className="rounded-xl shadow-lg mx-auto w-full max-w-[600px]" style={{ height: 'auto' }} />
         <div className="mt-3 sm:mt-4 text-center text-[#a10000] font-semibold text-base sm:text-lg px-2">Tổ yến nguyên chất - Dinh dưỡng vượt trội</div>
       </section>
 

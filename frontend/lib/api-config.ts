@@ -78,7 +78,7 @@ export const apiClient = {
 };
 
 // Auth helper to get token from session
-export const getAuthHeaders = (token?: string) => {
+export const getAuthHeaders = (token?: string): Record<string, string> => {
   if (token) {
     return {
       'Authorization': `Bearer ${token}`,

@@ -15,7 +15,7 @@ export interface Product {
     slug: string;
   };
   images: {
-    id: string;
+    id?: string; // Make id optional for create/update operations
     url: string;
     isPrimary: boolean;
   }[];
@@ -319,7 +319,7 @@ export const reviewsApi = {
 
 // Auth API
 export const authApi = {
-  // Register
+  // Register user
   async register(data: {
     name: string;
     email: string;
@@ -328,7 +328,7 @@ export const authApi = {
     return apiClient.post('/auth/register', data);
   },
 
-  // Login
+  // Login user
   async login(data: {
     email: string;
     password: string;
@@ -336,14 +336,14 @@ export const authApi = {
     return apiClient.post('/auth/login', data);
   },
 
-  // Logout
+  // Logout user
   async logout(data: { refreshToken: string }) {
     return apiClient.post('/auth/logout', data);
   },
 
   // Refresh tokens
   async refreshTokens(data: { refreshToken: string }) {
-    return apiClient.post('/auth/refresh-tokens', data);
+    return apiClient.post('/auth/refresh', data);
   },
 
   // Forgot password
@@ -354,5 +354,47 @@ export const authApi = {
   // Reset password
   async resetPassword(token: string, data: { password: string }) {
     return apiClient.post(`/auth/reset-password?token=${token}`, data);
+  },
+};
+
+// Dashboard API
+export const dashboardApi = {
+  // Get dashboard statistics
+  async getDashboardStats(token?: string) {
+    return apiClient.get('/dashboard/metrics', {
+      headers: getAuthHeaders(token),
+    });
+  },
+
+  // Get revenue data
+  async getRevenueData(period?: string, token?: string) {
+    const endpoint = `/dashboard/revenue-chart${period ? `?period=${period}` : ''}`;
+    return apiClient.get(endpoint, {
+      headers: getAuthHeaders(token),
+    });
+  },
+
+  // Get order statistics
+  async getOrderStats(period?: string, token?: string) {
+    const endpoint = `/dashboard/order-statistics${period ? `?period=${period}` : ''}`;
+    return apiClient.get(endpoint, {
+      headers: getAuthHeaders(token),
+    });
+  },
+
+  // Get customer statistics
+  async getCustomerStats(period?: string, token?: string) {
+    const endpoint = `/dashboard/customer-insights${period ? `?period=${period}` : ''}`;
+    return apiClient.get(endpoint, {
+      headers: getAuthHeaders(token),
+    });
+  },
+
+  // Get product statistics
+  async getProductStats(period?: string, token?: string) {
+    const endpoint = `/dashboard/top-products${period ? `?limit=${period}` : ''}`;
+    return apiClient.get(endpoint, {
+      headers: getAuthHeaders(token),
+    });
   },
 }; 

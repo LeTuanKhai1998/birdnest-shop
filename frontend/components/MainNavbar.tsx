@@ -21,7 +21,22 @@ export function MainNavbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const userFromSession = session?.user;
-  const { data: user } = useSWR(userFromSession ? "/v1/users/profile" : null, url => api.get(url.replace('/v1', '')), { fallbackData: userFromSession });
+  
+  // Only fetch user profile if we have a session
+  const { data: user, error: userError } = useSWR(
+    userFromSession ? "/users/profile" : null, 
+    (url: string) => api.get(url), 
+    { 
+      fallbackData: userFromSession,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 60000, // 1 minute
+      errorRetryCount: 1,
+      onError: (err: Error) => {
+        console.warn('Failed to fetch user profile:', err);
+      }
+    }
+  );
 
   // --- Notification dropdown state and mock data ---
   const [notifications, setNotifications] = useState([
