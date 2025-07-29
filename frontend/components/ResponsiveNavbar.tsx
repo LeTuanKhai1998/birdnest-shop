@@ -346,7 +346,7 @@ export function ResponsiveNavbar() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="lg:hidden p-2"
+                    className="lg:hidden p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                     aria-label="Open menu"
                   >
                     <Menu className="w-5 h-5" />

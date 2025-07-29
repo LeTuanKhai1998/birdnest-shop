@@ -21,6 +21,10 @@ import {
 } from '@/components/ui/drawer';
 import { Card } from '@/components/ui/card';
 import Image from 'next/image';
+import useSWR from 'swr';
+import { apiService } from '@/lib/api';
+import type { Product } from '@/lib/types';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -38,21 +42,20 @@ const productSchema = z.object({
       message: 'Stock must be a non-negative number',
     }),
   category: z.string().min(2, 'Category is required'),
-  status: z.enum(['active', 'inactive']),
   // images: z.array(z.string()).optional(), // Placeholder for now
 });
 
 const filterSchema = z.object({
   search: z.string().optional(),
   category: z.string().optional(),
-  status: z.string().optional(),
+  // status: z.string().optional(), // Removed status filter
 });
 
 type ProductForm = z.infer<typeof productSchema>;
 type FilterForm = z.infer<typeof filterSchema>;
 
 const CATEGORIES = ['Tinh chế', 'Thô', 'Combo'];
-const STATUS = ['active', 'inactive'];
+// const STATUS = ['active', 'inactive']; // Removed STATUS
 
 // Add a fallback image path
 const FALLBACK_IMAGE = '/images/banner1.png';
@@ -63,6 +66,17 @@ function setPrimaryImage(
   url: string,
 ) {
   return images.map((img) => ({ ...img, isPrimary: img.url === url }));
+}
+
+// Create a proper type for admin table data
+interface AdminTableRowData {
+  id: string;
+  name: string;
+  thumbnail: React.ReactNode;
+  price: string;
+  quantity: number;
+  category: string;
+  _original: Product;
 }
 
 export default function AdminProductsPage() {
@@ -85,7 +99,7 @@ export default function AdminProductsPage() {
     reset: resetFilter,
   } = useForm<FilterForm>({
     resolver: zodResolver(filterSchema),
-    defaultValues: { search: '', category: '', status: '' },
+    defaultValues: { search: '', category: '' },
   });
 
   // Product form
@@ -104,58 +118,12 @@ export default function AdminProductsPage() {
       price: '1000',
       stock: '0',
       category: '',
-      status: 'active',
+      // status: 'active', // Removed status field
     },
     mode: 'onTouched',
   });
 
-  const products = [
-    {
-      id: 'p1',
-      name: 'Tổ yến tinh chế 100g',
-      sku: 'SKU001',
-      price: 3500000,
-      stock: 12,
-      category: 'Tinh chế',
-      status: 'active',
-      description:
-        'Tổ yến tinh chế 100g là sản phẩm cao cấp, đã được làm sạch lông và tạp chất, thích hợp cho mọi đối tượng sử dụng.',
-    },
-    {
-      id: 'p2',
-      name: 'Tổ yến thô 50g',
-      sku: 'SKU002',
-      price: 1800000,
-      stock: 8,
-      category: 'Thô',
-      status: 'inactive',
-      description:
-        'Tổ yến thô 50g giữ nguyên hương vị tự nhiên, cần làm sạch trước khi chế biến, phù hợp cho người thích trải nghiệm.',
-    },
-    {
-      id: 'p3',
-      name: 'Combo quà tặng 200g',
-      sku: 'SKU003',
-      price: 7000000,
-      stock: 3,
-      category: 'Combo',
-      status: 'active',
-      description:
-        'Combo quà tặng 200g gồm nhiều sản phẩm yến chất lượng, đóng gói sang trọng, thích hợp làm quà biếu.',
-    },
-  ];
-
-  // Simulated product list (would be state/API in real app)
-  const [productList, setProductList] = useState(
-    products.map((p) => ({
-      ...p,
-      price:
-        typeof p.price === 'string'
-          ? Number(String(p.price ?? '').replace(/[^\d]/g, ''))
-          : p.price,
-      images: [{ url: FALLBACK_IMAGE }],
-    })),
-  );
+  const { data: products, isLoading, mutate } = useSWR('admin-products', () => apiService.getProducts());
 
   // Debounce search input
   useEffect(() => {
@@ -167,22 +135,21 @@ export default function AdminProductsPage() {
 
   // Watch filter values
   const filterCategory = filterWatch('category');
-  const filterStatus = filterWatch('status');
+  // const filterStatus = filterWatch('status'); // Removed status filter
   const filterSearch = filterWatch('search');
 
   // Filter products in-memory
   const filteredProducts = useMemo(() => {
-    return productList.filter((p) => {
+    if (!products) return [];
+    return products.filter((p) => {
       const matchesSearch =
         !filterSearch ||
         p.name.toLowerCase().includes(filterSearch.toLowerCase()) ||
-        p.id.toLowerCase().includes(filterSearch.toLowerCase()) ||
-        (p.sku && p.sku.toLowerCase().includes(filterSearch.toLowerCase()));
-      const matchesCategory = !filterCategory || p.category === filterCategory;
-      const matchesStatus = !filterStatus || p.status === filterStatus;
-      return matchesSearch && matchesCategory && matchesStatus;
+        p.id.toLowerCase().includes(filterSearch.toLowerCase());
+      const matchesCategory = !filterCategory || p.category?.name === filterCategory;
+      return matchesSearch && matchesCategory;
     });
-  }, [productList, filterSearch, filterCategory, filterStatus]);
+  }, [products, filterSearch, filterCategory]);
 
   // On submit, send images array (with url and isPrimary) to API
   const onSubmit = async (data: ProductForm) => {
@@ -212,13 +179,6 @@ export default function AdminProductsPage() {
   };
 
   // Handle edit button
-  type Product = {
-    id: string;
-    name: string;
-    images: Image[];
-    [key: string]: unknown;
-  };
-  type Image = { url: string; isPrimary?: boolean };
   const handleEdit = (product: Product) => {
     setEditId(product.id);
     const sanitizedPrice = String(product.price ?? '').replace(/[^\d]/g, '');
@@ -228,20 +188,20 @@ export default function AdminProductsPage() {
       typeof product.description === 'string' ? product.description : '',
     );
     setValue('price', sanitizedPrice);
-    setValue('stock', String(product.stock ?? ''));
+    setValue('stock', String(product.quantity ?? ''));
     setValue(
       'category',
       typeof product.category === 'string' ? product.category : '',
     );
-    setValue(
-      'status',
-      product.status === 'active' || product.status === 'inactive'
-        ? product.status
-        : 'active',
-    );
+    // setValue(
+    //   'status',
+    //   product.status === 'active' || product.status === 'inactive'
+    //     ? product.status
+    //     : 'active',
+    // );
     // Load images from product.images (API shape)
     setImages(
-      (product.images || []).map((img: Image, i: number) => ({
+      (product.images || []).map((img: { url: string; isPrimary?: boolean }, i: number) => ({
         url: img.url,
         isPrimary: img.isPrimary ?? i === 0,
       })),
@@ -322,7 +282,7 @@ export default function AdminProductsPage() {
       }
       
       // Remove product from UI by updating state
-      setProductList(prev => prev.filter(product => product.id !== productToDelete));
+      mutate(); // Re-fetch products to update the list
       
       setDeleteModalOpen(false);
       setProductToDelete(null);
@@ -340,6 +300,33 @@ export default function AdminProductsPage() {
 
   // Move this to the top level of the component, not inside a callback
   const [showMore, setShowMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const totalPages = Math.ceil((filteredProducts || []).length / pageSize);
+  const paginatedData = (filteredProducts || []).slice((page - 1) * pageSize, page * pageSize);
+console.log('paginatedData:', paginatedData); // Debug log
+
+  // For AdminTable, keep a separate array for display (adminTableData) and use the original Product object for actions
+  const adminTableData: AdminTableRowData[] = paginatedData.map((p) => {
+    console.log('Processing product:', p); // Debug log
+    return {
+      id: p.id,
+      name: p.name || 'Unknown',
+      thumbnail: (
+        <Image
+          src={p.images?.[0]?.url || FALLBACK_IMAGE}
+          alt={p.name || 'Product'}
+          width={64}
+          height={64}
+          className="w-16 h-16 object-cover rounded border"
+        />
+      ),
+      price: (parseFloat(p.price) || 0).toLocaleString() + ' ₫',
+      quantity: p.quantity || 0,
+      category: p.category?.name || 'Unknown', // Convert category object to string
+      _original: p, // keep reference to original Product
+    };
+  });
 
   return (
     <div>
@@ -380,7 +367,8 @@ export default function AdminProductsPage() {
             ))}
           </select>
         </div>
-        <div>
+        {/* In the filter form, remove the status select entirely */}
+        {/* <div>
           <label htmlFor="status" className="block text-xs font-medium mb-1">
             Status
           </label>
@@ -396,7 +384,7 @@ export default function AdminProductsPage() {
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
         <div>
           <Button
             type="button"
@@ -422,7 +410,7 @@ export default function AdminProductsPage() {
               price: '1000',
               stock: '0',
               category: '',
-              status: 'active',
+              // status: 'active', // Removed status field
             });
             setDrawerOpen(true);
           }}
@@ -548,7 +536,8 @@ export default function AdminProductsPage() {
                     </span>
                   )}
                 </div>
-                <div>
+                {/* Removed status field from form */}
+                {/* <div>
                   <label
                     htmlFor="status"
                     className="block text-sm font-medium mb-1"
@@ -578,7 +567,7 @@ export default function AdminProductsPage() {
                       {errors.status.message}
                     </span>
                   )}
-                </div>
+                </div> */}
                 <div className="md:col-span-2">
                   <label
                     htmlFor="description"
@@ -718,57 +707,72 @@ export default function AdminProductsPage() {
             { key: 'id', label: 'ID' },
             { key: 'name', label: 'Name' },
             { key: 'thumbnail', label: 'Thumbnail' },
-            { key: 'sku', label: 'SKU' },
             { key: 'price', label: 'Price' },
-            { key: 'stock', label: 'Stock' },
+            { key: 'quantity', label: 'Stock' },
             { key: 'category', label: 'Category' },
-            { key: 'status', label: 'Status' },
           ]}
-          data={filteredProducts.map((p) => ({
-            ...p,
-            thumbnail: (
-              <Image
-                src={(p.images && p.images[0]?.url) || FALLBACK_IMAGE}
-                alt={p.name}
-                width={64}
-                height={64}
-                className="w-16 h-16 object-cover rounded border"
-              />
-            ),
-            price:
-              (typeof p.price === 'number'
-                ? p.price.toLocaleString()
-                : Number(
-                    String(p.price ?? '').replace(/[^\d]/g, ''),
-                  ).toLocaleString()) + ' ₫',
-            status: <StatusBadge status={p.status} />,
-          }))}
-          actions={(p) => (
-            <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="rounded-full px-4 py-1 text-sm font-semibold"
-                onClick={() => {
-                  handleEdit(p);
-                  setDrawerOpen(true);
-                }}
-              >
-                Edit
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="rounded-full px-4 py-1 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
-                onClick={() => handleDeleteClick(p.id)}
-                aria-label="Delete product"
-              >
-                <Trash2 className="w-5 h-5" />
-              </Button>
+          data={adminTableData}
+          pagination={
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <label htmlFor="page-size" className="mr-2 text-sm">Rows per page:</label>
+                <select
+                  id="page-size"
+                  value={pageSize}
+                  onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  {[10, 20, 50].map(size => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious onClick={() => setPage(p => Math.max(1, p - 1))} aria-disabled={page === 1} />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink isActive={page === i + 1} onClick={() => setPage(i + 1)}>{i + 1}</PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext onClick={() => setPage(p => Math.min(totalPages, p + 1))} aria-disabled={page === totalPages} />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
-          )}
+          }
+          actions={(row) => {
+            const p = row._original;
+            return (
+              <div className="flex gap-2 justify-end">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full px-4 py-1 text-sm font-semibold"
+                  onClick={() => {
+                    handleEdit(p);
+                    setDrawerOpen(true);
+                  }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="rounded-full px-4 py-1 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
+                  onClick={() => handleDeleteClick(p.id)}
+                  aria-label="Delete product"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </div>
+            );
+          }}
           exportButtons={[
             <Button
               key="csv"
@@ -789,8 +793,8 @@ export default function AdminProductsPage() {
       </div>
       {/* Mobile Card List */}
       <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24">
-        {filteredProducts.map((p) => {
-          const fullProduct = productList.find((prod) => prod.id === p.id);
+        {(filteredProducts || []).map((p) => {
+          const fullProduct = products?.find((prod) => prod.id === p.id);
           const desc =
             (fullProduct && typeof fullProduct.description === 'string'
               ? fullProduct.description
@@ -814,7 +818,8 @@ export default function AdminProductsPage() {
                     <div className="font-bold text-lg text-gray-900 truncate">
                       {p.name}
                     </div>
-                    <Badge
+                    {/* In AdminTable and mobile card, remove any status display */}
+                    {/* <Badge
                       variant={p.status === 'active' ? 'success' : 'secondary'}
                       className={
                         p.status === 'active'
@@ -822,23 +827,20 @@ export default function AdminProductsPage() {
                           : 'bg-gray-100 text-gray-800 border-gray-200'
                       }
                     >
-                      {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
-                    </Badge>
+                      {p.status?.charAt(0).toUpperCase() + p.status?.slice(1) || 'N/A'}
+                    </Badge> */}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-red-700 text-base">
-                      {typeof p.price === 'number'
-                        ? `₫${p.price.toLocaleString()}`
-                        : `₫${Number(String(p.price ?? '').replace(/[^\d]/g, '')).toLocaleString()}`}
+                      {'₫' + ((parseFloat(p.price) || 0).toLocaleString())}
                     </span>
                     <span className="text-xs text-gray-500">
-                      Stock: {p.stock}
+                      Stock: {p.quantity}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">SKU: {p.sku}</span>
                     <span className="text-xs text-gray-500">
-                      Category: {p.category}
+                      Category: {p.category?.name}
                     </span>
                   </div>
                   <div className="text-xs text-gray-700 whitespace-pre-line">
@@ -897,7 +899,7 @@ export default function AdminProductsPage() {
               price: '1000',
               stock: '0',
               category: '',
-              status: 'active',
+              // status: 'active', // Removed status field
             });
             setDrawerOpen(true);
           }}

@@ -14,7 +14,6 @@ import {
   Loader,
 } from 'lucide-react';
 import { useMemo } from 'react';
-import { mockOrders } from '@/lib/mock-orders';
 import { formatVND, formatDate, statusColor } from '@/lib/order-utils';
 import { MoreHorizontal } from 'lucide-react';
 import useSWR from 'swr/immutable';
@@ -50,46 +49,15 @@ import {
 import type { Product } from '@/components/ProductCard';
 import Image from 'next/image';
 
-const metrics = [
-  {
-    label: 'Total Revenue',
-    value: '$12,400',
-    icon: DollarSign,
-    trend: 5.2,
-    positive: true,
-  },
-  {
-    label: 'Total Orders',
-    value: '1,230',
-    icon: ShoppingBag,
-    trend: -2.1,
-    positive: false,
-  },
-  {
-    label: 'Total Customers',
-    value: '980',
-    icon: Users,
-    trend: 1.8,
-    positive: true,
-  },
-  {
-    label: 'Avg. Order Value',
-    value: '$45.20',
-    icon: BarChart2,
-    trend: 0.7,
-    positive: true,
-  },
-];
-
 const FILTERS = [
   { label: 'Daily', value: 'daily' },
   { label: 'Weekly', value: 'weekly' },
   { label: 'Monthly', value: 'monthly' },
 ];
 
-function groupOrders(orders: typeof mockOrders, filter: string) {
+function groupOrders(orders: any[], filter: string) {
   const map = new Map<string, number>();
-  orders.forEach((order) => {
+  orders.forEach((order: any) => {
     const date = new Date(order.createdAt);
     let key: string;
     if (filter === 'daily') {
@@ -100,12 +68,9 @@ function groupOrders(orders: typeof mockOrders, filter: string) {
     } else {
       key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     }
-    map.set(key, (map.get(key) || 0) + order.total);
+    map.set(key, (map.get(key) || 0) + parseFloat(order.total));
   });
-  return Array.from(map.entries()).map(([date, revenue]) => ({
-    date,
-    revenue,
-  }));
+  return Array.from(map.entries()).map(([date, revenue]) => ({ date, revenue }));
 }
 
 // Replace showToast with sonner toast
@@ -238,34 +203,97 @@ async function exportTopProductsPDF(
 
 export default function AdminDashboardPage() {
   // All hooks at the top, before any return
+  const { data: ordersData, error: ordersError } = useSWR('/api/orders', fetcher, { refreshInterval: 5000 });
+  const { data: productsData, error: productsError } = useSWR('/api/products', fetcher, { refreshInterval: 10000 });
+  const { data: usersData, error: usersError } = useSWR('/api/users', fetcher);
+  const orders = ordersData?.orders || [];
+  const products = productsData || [];
+  const users = usersData?.users || [];
+
+  // Error/unauthorized handling
   const { data: session, status } = useSession();
   const router = useRouter();
+  if (!session || !session.user || !session.user.isAdmin || (ordersError && ordersError.message?.includes('401'))) {
+    if (typeof window !== 'undefined') {
+      router.replace('/login?callbackUrl=/admin');
+    }
+    return <div className="flex items-center justify-center h-screen text-xl">You are not authorized. Please <a href="/login" className="text-blue-600 underline ml-2">login</a>.</div>;
+  }
+  if (ordersError && !ordersError.message?.includes('401')) {
+    return <div className="flex items-center justify-center h-screen text-xl text-red-600">Failed to load orders: {ordersError.message}</div>;
+  }
+  if (productsError) {
+    return <div className="flex items-center justify-center h-screen text-xl text-red-600">Failed to load products: {productsError.message}</div>;
+  }
+  if (usersError) {
+    return <div className="flex items-center justify-center h-screen text-xl text-red-600">Failed to load users: {usersError.message}</div>;
+  }
   const [filter, setFilter] = useState('monthly');
-  const chartData = useMemo(() => groupOrders(mockOrders, filter), [filter]);
+  const chartData = useMemo(() => groupOrders(orders, filter), [filter]);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const prevOrderIds = useRef<Set<string>>(new Set<string>());
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(
     null,
   );
-  const { data: ordersData, error: ordersError } = useSWR(
-    session && session.user && session.user.isAdmin ? '/api/orders' : null,
-    fetcher,
-    { refreshInterval: 5000 },
-  );
-  const { data: productsData } = useSWR('/api/products', fetcher, {
-    refreshInterval: 10000,
-  });
-  const realOrders = useMemo(() => ordersData?.orders || [], [ordersData]);
-  function isRealOrder(orderId: string) {
-    return realOrders.some((o: Order) => o.id === orderId);
+  // Metrics
+  const totalRevenue = orders.reduce((sum: number, o: any) => sum + parseFloat(o.total), 0);
+  const totalOrders = orders.length;
+  const uniqueCustomerIds = new Set(orders.map((o: any) => o.userId));
+  const totalCustomers = uniqueCustomerIds.size;
+  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const metrics = [
+    {
+      label: 'Total Revenue',
+      value: totalRevenue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }),
+      icon: DollarSign,
+      trend: 0, // Placeholder, can be calculated if needed
+      positive: true,
+    },
+    {
+      label: 'Total Orders',
+      value: totalOrders.toLocaleString(),
+      icon: ShoppingBag,
+      trend: 0,
+      positive: true,
+    },
+    {
+      label: 'Total Customers',
+      value: totalCustomers.toLocaleString(),
+      icon: Users,
+      trend: 0,
+      positive: true,
+    },
+    {
+      label: 'Avg. Order Value',
+      value: averageOrderValue.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }),
+      icon: BarChart2,
+      trend: 0,
+      positive: true,
+    },
+  ];
+  // Revenue chart data
+  function groupOrders(orders: any[], filter: string) {
+    const map = new Map<string, number>();
+    orders.forEach((order: any) => {
+      const date = new Date(order.createdAt);
+      let key: string;
+      if (filter === 'daily') {
+        key = date.toISOString().slice(0, 10);
+      } else if (filter === 'weekly') {
+        const week = `${date.getFullYear()}-W${Math.ceil((date.getDate() - date.getDay() + 1) / 7)}`;
+        key = week;
+      } else {
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      }
+      map.set(key, (map.get(key) || 0) + parseFloat(order.total));
+    });
+    return Array.from(map.entries()).map(([date, revenue]) => ({ date, revenue }));
   }
   const [orderSort, setOrderSort] = useState({ key: 'createdAt', dir: 'desc' });
   const [statusFilter, setStatusFilter] = useState('');
-  const ordersWithCustomer = (
-    realOrders.length > 0 ? realOrders : mockOrders
-  ).map((o: Order, i: number) => ({
+  const ordersWithCustomer = orders.map((o: any) => ({
     ...o,
-    customer: i % 2 === 0 ? 'Nguyen Van A' : 'Tran Thi B',
+    customer: users.find((u: any) => u.id === o.userId)?.name || 'Unknown',
   }));
   let filteredOrders = statusFilter
     ? ordersWithCustomer.filter(
@@ -285,8 +313,8 @@ export default function AdminDashboardPage() {
     },
   );
   useEffect(() => {
-    if (!realOrders.length) return;
-    const currentIds = new Set<string>(realOrders.map((o: Order) => o.id));
+    if (!orders.length) return;
+    const currentIds = new Set<string>(orders.map((o: Order) => o.id));
     if (prevOrderIds.current.size) {
       for (const id of currentIds) {
         if (!prevOrderIds.current.has(id)) {
@@ -298,50 +326,62 @@ export default function AdminDashboardPage() {
       }
     }
     prevOrderIds.current = currentIds;
-  }, [realOrders]);
-  const products = productsData || [];
+  }, [orders]);
   const LOW_STOCK_THRESHOLD = 10;
   const lowStockProducts = (products as Product[]).filter(
     (p) => typeof p.quantity === 'number' && p.quantity < LOW_STOCK_THRESHOLD,
   );
-  const allOrders = realOrders.length > 0 ? realOrders : mockOrders;
-  const productSalesMap = new Map<
-    string,
-    {
-      name: string;
-      image: string;
-      unitsSold: number;
-      revenue: number;
-      stock: number;
-    }
-  >();
-  allOrders.forEach((order: Order) => {
-    order.orderItems.forEach((item) => {
-      const key = item.product.id;
-      if (!productSalesMap.has(key)) {
-        const prod = (products as Product[]).find((p) => p.id === key);
-        productSalesMap.set(key, {
-          name: item.product.name,
-          image: item.product.images[0],
+  const allOrders = orders.length > 0 ? orders : [];
+  // Remove duplicate/redeclared variables (productSalesMap, topProducts, etc.)
+  // Only keep one block for topProducts and productSalesMap, using only real API data
+  const productSalesMap = new Map<string, {
+    name: string;
+    image: string;
+    unitsSold: number;
+    revenue: number;
+    stock: number;
+  }>();
+  allOrders.forEach((order: any) => {
+    (order.items || []).forEach((item: any) => {
+      if (!item.productId) return;
+      if (!productSalesMap.has(item.productId)) {
+        const prod = products.find((p: any) => p.id === item.productId);
+        productSalesMap.set(item.productId, {
+          name: prod?.name || 'Unknown',
+          image: prod?.images?.[0]?.url || '',
           unitsSold: 0,
           revenue: 0,
-          stock: prod ? (prod.quantity ?? 0) : 0,
+          stock: prod?.quantity ?? 0,
         });
       }
-      const entry = productSalesMap.get(key)!;
-      entry.unitsSold += item.quantity;
-      entry.revenue += item.price * item.quantity;
+      const entry = productSalesMap.get(item.productId);
+      if (entry) {
+        entry.unitsSold += item.quantity;
+        entry.revenue += parseFloat(item.price) * item.quantity;
+      }
     });
   });
   const topProducts = Array.from(productSalesMap.values())
     .sort((a, b) => b.unitsSold - a.unitsSold)
     .slice(0, 5);
-  const topCustomers = [
-    { name: 'Nguyễn Văn Quang', email: 'user1@birdnest.vn', revenue: 12000000 },
-    { name: 'Trần Thị Mai', email: 'user2@birdnest.vn', revenue: 9500000 },
-    { name: 'Lê Minh Tuấn', email: 'user3@birdnest.vn', revenue: 7200000 },
-    { name: 'Phạm Thị Hồng', email: 'user4@birdnest.vn', revenue: 5400000 },
-  ];
+  // Top customers
+  const customerRevenueMap = new Map<string, { name: string; email: string; revenue: number }>();
+  orders.forEach((order: any) => {
+    if (!order.userId) return;
+    if (!customerRevenueMap.has(order.userId)) {
+      const user = users.find((u: any) => u.id === order.userId);
+      customerRevenueMap.set(order.userId, {
+        name: user?.name || 'Unknown',
+        email: user?.email || '',
+        revenue: 0,
+      });
+    }
+    customerRevenueMap.get(order.userId)!.revenue += parseFloat(order.total);
+  });
+  const topCustomers = Array.from(customerRevenueMap.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+  // Top products
   const acquisitionSources = [
     { name: 'Organic', value: 40 },
     { name: 'Facebook', value: 30 },
@@ -733,19 +773,10 @@ export default function AdminDashboardPage() {
                                         key={s}
                                         disabled={
                                           order.status === s ||
-                                          updatingOrderId === order.id ||
-                                          !isRealOrder(order.id)
+                                          updatingOrderId === order.id
                                         }
                                         onSelect={async () => {
-                                          if (!isRealOrder(order.id)) {
-                                            showToast(
-                                              'Cannot update status for mock orders.',
-                                              'error',
-                                            );
-                                            return;
-                                          }
                                           setUpdatingOrderId(order.id);
-                                          // setSelectedOrder((sel) => (sel && sel.id === order.id ? { ...sel, status: s } : sel)); // Removed as per edit hint
                                           filteredOrders = filteredOrders.map(
                                             (
                                               o: Order & { customer: string },
@@ -777,9 +808,7 @@ export default function AdminDashboardPage() {
                                               'Order status updated!',
                                               'success',
                                             );
-                                            // setDrawerOpen(false); // Removed as per edit hint
                                           } catch {
-                                            // setSelectedOrder((sel) => (sel && sel.id === order.id ? { ...sel, status: prevStatus } : sel)); // Removed as per edit hint
                                             showToast(
                                               'Failed to update order status',
                                               'error',

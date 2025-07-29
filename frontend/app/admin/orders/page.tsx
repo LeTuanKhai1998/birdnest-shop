@@ -19,34 +19,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import Image from 'next/image';
+import useSWR from 'swr';
+import { apiService } from '@/lib/api';
 
 const STATUS = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
 export default function AdminOrdersPage() {
-  const orders = [
-    {
-      id: 'o1',
-      customer: 'Nguyễn Văn A',
-      total: 3500000,
-      status: 'PAID',
-      date: '2024-07-24',
-    },
-    {
-      id: 'o2',
-      customer: 'Trần Thị B',
-      total: 1800000,
-      status: 'PENDING',
-      date: '2024-07-23',
-    },
-    {
-      id: 'o3',
-      customer: 'Lê Minh C',
-      total: 7000000,
-      status: 'DELIVERED',
-      date: '2024-07-22',
-    },
-  ];
-  const [orderList, setOrderList] = useState(orders);
+  const { data: orders, isLoading, mutate } = useSWR('admin-orders', () => apiService.getOrders());
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -63,19 +42,19 @@ export default function AdminOrdersPage() {
 
   // Filter orders in-memory
   const filteredOrders = useMemo(() => {
-    return orderList.filter((o) => {
+    return orders?.filter((o) => {
       const matchesSearch =
         !debouncedSearch ||
         o.id.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        o.customer.toLowerCase().includes(debouncedSearch.toLowerCase());
+        o.user?.name.toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchesStatus = !statusFilter || o.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [orderList, debouncedSearch, statusFilter]);
+  }, [orders, debouncedSearch, statusFilter]);
 
   // Status change handler
   const onStatusChange = (orderId: string, newStatus: string) => {
-    setOrderList((prev) =>
+    mutate((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
     );
   };
@@ -161,22 +140,22 @@ export default function AdminOrdersPage() {
             { key: 'status', label: 'Status' },
             { key: 'date', label: 'Date' },
           ]}
-          data={filteredOrders.map((o) => ({
+          data={(filteredOrders || []).map((o) => ({
             ...o,
-            total: o.total.toLocaleString() + ' ₫',
+            total: parseFloat(o.total).toLocaleString() + ' ₫',
             status: (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild aria-label="Change order status">
                   <button className="flex items-center gap-1 min-w-[90px] px-2 py-1 outline-none">
                     <Badge
                       className={
-                        o.status === 'PAID' || o.status === 'DELIVERED'
+                        o.status === 'paid' || o.status === 'delivered'
                           ? 'bg-green-100 text-green-800 border-green-200'
-                          : o.status === 'PENDING'
+                          : o.status === 'pending'
                             ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                            : o.status === 'CANCELLED'
+                            : o.status === 'cancelled'
                               ? 'bg-red-100 text-red-800 border-red-200'
-                              : o.status === 'SHIPPED'
+                              : o.status === 'shipped'
                                 ? 'bg-blue-100 text-blue-800 border-blue-200'
                                 : 'bg-gray-100 text-gray-800 border-gray-200'
                       }
@@ -242,15 +221,15 @@ export default function AdminOrdersPage() {
       </div>
       {/* Mobile Card List */}
       <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24 max-w-2xl mx-auto">
-        {filteredOrders.map((o) => {
+        {(filteredOrders || []).map((o) => {
           let badgeColor = 'bg-gray-100 text-gray-800 border-gray-200';
-          if (o.status === 'PAID' || o.status === 'DELIVERED')
+          if (o.status === 'paid' || o.status === 'delivered')
             badgeColor = 'bg-green-100 text-green-800 border-green-200';
-          else if (o.status === 'PENDING')
+          else if (o.status === 'pending')
             badgeColor = 'bg-yellow-100 text-yellow-800 border-yellow-200';
-          else if (o.status === 'CANCELLED')
+          else if (o.status === 'cancelled')
             badgeColor = 'bg-red-100 text-red-800 border-red-200';
-          else if (o.status === 'SHIPPED')
+          else if (o.status === 'shipped')
             badgeColor = 'bg-blue-100 text-blue-800 border-blue-200';
           return (
             <div
@@ -273,15 +252,15 @@ export default function AdminOrdersPage() {
               {/* Name and Price Row */}
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-gray-900">
-                  {o.customer}
+                  {o.user?.name}
                 </span>
                 <span className="font-bold text-red-600 text-lg">
-                  ₫{o.total.toLocaleString()}
+                  ₫{parseFloat(o.total).toLocaleString()}
                 </span>
               </div>
               {/* Date Row */}
               <div className="text-sm text-gray-500 mb-2">
-                {formatFullDate(o.date)}
+                {formatFullDate(o.createdAt)}
               </div>
               {/* Actions */}
               <div className="flex gap-2 mt-2">
@@ -346,8 +325,8 @@ export default function AdminOrdersPage() {
                       throw new Error('Failed to delete order');
                     }
                     
-                    // Remove order from UI by updating state
-                    setOrderList(prev => prev.filter(order => order.id !== deleteId));
+                    // After deleting or updating an order, just call mutate() to revalidate, do not use mutate with a callback.
+                    mutate();
                     
                     setDeleteId(null);
                   } catch (error) {
@@ -371,16 +350,16 @@ export default function AdminOrdersPage() {
       >
         <DialogContent className="w-full sm:max-w-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto p-6">
           {(() => {
-            const order = orderList.find((o) => o.id === viewId);
+            const order = orders?.find((o) => o.id === viewId);
             if (!order) return null;
             let badgeColor = 'bg-gray-100 text-gray-800 border-gray-200';
-            if (order.status === 'PAID' || order.status === 'DELIVERED')
+            if (order.status === 'paid' || order.status === 'delivered')
               badgeColor = 'bg-green-100 text-green-800 border-green-200';
-            else if (order.status === 'PENDING')
+            else if (order.status === 'pending')
               badgeColor = 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            else if (order.status === 'CANCELLED')
+            else if (order.status === 'cancelled')
               badgeColor = 'bg-red-100 text-red-800 border-red-200';
-            else if (order.status === 'SHIPPED')
+            else if (order.status === 'shipped')
               badgeColor = 'bg-blue-100 text-blue-800 border-blue-200';
             const items = [
               {
@@ -438,15 +417,15 @@ export default function AdminOrdersPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
                   <div>
                     <span className="font-semibold">Customer:</span>{' '}
-                    {order.customer}
+                    {order.user?.name}
                   </div>
                   <div>
-                    <span className="font-semibold">Date:</span> {order.date}
+                    <span className="font-semibold">Date:</span> {order.createdAt}
                   </div>
                   <div>
                     <span className="font-semibold">Total:</span>{' '}
                     <span className="font-bold text-red-700">
-                      ₫{order.total.toLocaleString()}
+                      ₫{parseFloat(order.total).toLocaleString()}
                     </span>
                   </div>
                   <div>
