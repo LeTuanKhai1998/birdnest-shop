@@ -1034,7 +1034,13 @@ export default function AdminDashboardPage() {
         {/* Revenue Trend Chart (full width) */}
         <div className="bg-white dark:bg-neutral-800 rounded-xl shadow p-4 sm:p-6 mt-8 mb-8">
           <h2 className="text-lg font-bold mb-4">Revenue Trend</h2>
-          {/* TODO: Insert Revenue Trend Chart component here */}
+          <div className="h-80 flex items-center justify-center">
+            <div className="text-center">
+              <BarChart2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">Revenue trend chart will be implemented here</p>
+              <p className="text-sm text-gray-400 mt-2">Showing daily/weekly/monthly revenue trends</p>
+            </div>
+          </div>
         </div>
         {/* 2-column grid for Top Customers and Acquisition Sources */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

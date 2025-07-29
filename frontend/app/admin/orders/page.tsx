@@ -333,8 +333,27 @@ export default function AdminOrdersPage() {
               </Button>
               <Button
                 variant="destructive"
-                onClick={() => {
-                  setDeleteId(null); /* TODO: Delete logic */
+                onClick={async () => {
+                  if (!deleteId) return;
+                  
+                  try {
+                    // Call API to delete order
+                    const response = await fetch(`/api/orders/${deleteId}`, {
+                      method: 'DELETE',
+                    });
+                    
+                    if (!response.ok) {
+                      throw new Error('Failed to delete order');
+                    }
+                    
+                    // Remove order from UI by updating state
+                    setOrderList(prev => prev.filter(order => order.id !== deleteId));
+                    
+                    setDeleteId(null);
+                  } catch (error) {
+                    console.error('Error deleting order:', error);
+                    // You could add a toast notification here
+                  }
                 }}
                 className="bg-red-600 text-white hover:bg-red-700"
               >

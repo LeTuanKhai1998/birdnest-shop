@@ -146,7 +146,7 @@ export default function AdminProductsPage() {
   ];
 
   // Simulated product list (would be state/API in real app)
-  const [productList] = useState(
+  const [productList, setProductList] = useState(
     products.map((p) => ({
       ...p,
       price:
@@ -310,10 +310,26 @@ export default function AdminProductsPage() {
   // Handle confirm delete
   const handleConfirmDelete = async () => {
     if (!productToDelete) return;
-    // TODO: Call API to delete product
-    setDeleteModalOpen(false);
-    setProductToDelete(null);
-    // TODO: Remove product from UI (refetch or update state)
+    
+    try {
+      // Call API to delete product
+      const response = await fetch(`/api/products/${productToDelete}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+      
+      // Remove product from UI by updating state
+      setProductList(prev => prev.filter(product => product.id !== productToDelete));
+      
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      // You could add a toast notification here
+    }
   };
 
   // Handle cancel delete

@@ -1,27 +1,14 @@
 import * as React from 'react';
 import { LoadingOrEmpty } from '@/components/ui/LoadingOrEmpty';
-// TODO: Replace with shadcn/ui Table primitives if available
-const Table = (props: React.HTMLAttributes<HTMLTableElement>) => (
-  <table {...props} />
-);
-const TableHead = (props: React.ThHTMLAttributes<HTMLTableCellElement>) => (
-  <th {...props} />
-);
-const TableHeader = (props: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <thead {...props} />
-);
-const TableRow = (props: React.HTMLAttributes<HTMLTableRowElement>) => (
-  <tr {...props} />
-);
-const TableBody = (props: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <tbody {...props} />
-);
-const TableCell = (props: React.TdHTMLAttributes<HTMLTableCellElement>) => (
-  <td {...props} />
-);
-const TableFooter = (props: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <tfoot {...props} />
-);
+import {
+  Table,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableFooter,
+} from '@/components/ui/table';
 
 interface AdminTableProps<T> {
   columns: {

@@ -1,5 +1,5 @@
 'use client';
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Truck, XCircle } from 'lucide-react';
@@ -35,13 +35,40 @@ export default function OrderDetailPage({
   params: Promise<{ orderId: string }>;
 }) {
   const { orderId } = use(params);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Use mock data for mock orders
-  let order: Order | null = null;
-  if (orderId.startsWith('mock')) {
-    order = mockOrders.find((o) => o.id === orderId) || null;
+  useEffect(() => {
+    const fetchOrder = async () => {
+      // Use mock data for mock orders or fetch from API
+      if (orderId.startsWith('mock')) {
+        const mockOrder = mockOrders.find((o) => o.id === orderId) || null;
+        setOrder(mockOrder);
+      } else {
+        // Fetch real order from API
+        try {
+          const response = await fetch(`/api/orders/${orderId}`);
+          if (response.ok) {
+            const realOrder = await response.json();
+            setOrder(realOrder);
+          }
+        } catch (error) {
+          console.error('Error fetching order:', error);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchOrder();
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-gray-500">Loading order...</div>
+      </div>
+    );
   }
-  // TODO: Fetch real order from API if not mock
 
   if (!order) {
     return (
