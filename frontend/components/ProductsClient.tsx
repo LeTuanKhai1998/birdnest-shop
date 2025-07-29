@@ -284,7 +284,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
           </div>
           
           {/* Filter Button - Mobile and Tablet */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <Drawer>
               <DrawerTrigger asChild>
                 <Button 

@@ -130,9 +130,9 @@ export function ResponsiveNavbar() {
 
   return (
     <>
-      {/* Static Left Sidebar - Desktop Only */}
+      {/* Static Left Sidebar - Tablet and Desktop */}
       <div className={cn(
-        "hidden lg:block fixed left-0 top-0 h-full w-20 bg-white border-r border-gray-200 z-[60] transition-all duration-500 ease-in-out group",
+        "hidden md:block fixed left-0 top-0 h-full w-20 bg-white border-r border-gray-200 z-[60] transition-all duration-500 ease-in-out group",
         isLeftMenuVisible ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Hover trigger area */}
