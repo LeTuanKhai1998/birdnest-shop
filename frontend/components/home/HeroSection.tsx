@@ -124,7 +124,7 @@ export function HeroSection() {
                 className="font-bold text-white text-lg md:text-2xl"
                 style={{ lineHeight: 1.2 }}
               >
-                {HOME_CONSTANTS.shipping.message} <span className="text-yellow-300">MIỄN PHÍ</span>
+                {HOME_CONSTANTS.shipping.message}
               </div>
               <div className="text-white text-sm md:text-base mt-1">
                 {HOME_CONSTANTS.shipping.subtitle}
@@ -236,7 +236,7 @@ export function HeroSection() {
                   fontSize: 'clamp(1.1rem, 4.2vw, 1.4rem)',
                 }}
               >
-                {HOME_CONSTANTS.shipping.message} <span className="text-yellow-300">MIỄN PHÍ</span>
+                {HOME_CONSTANTS.shipping.message}
               </div>
               <div
                 className="text-white"
