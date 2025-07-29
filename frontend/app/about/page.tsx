@@ -11,92 +11,80 @@ import {
   Star,
   MapPin,
   Phone,
-  Mail
+  Mail,
+  CheckCircle,
+  Leaf,
+  FlaskConical,
+  Gift
 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'About Us - Birdnest Shop',
-  description: 'Discover our story, mission, and the team behind Birdnest Shop. We specialize in premium bird&apos;s nest products from Kien Giang, Vietnam.',
+  title: 'About Us - Yến Sào Kim Sang',
+  description: 'Yến Sào Kim Sang - Thương hiệu uy tín hàng đầu trong lĩnh vực cung cấp yến sào nguyên chất từ Kiên Giang, Việt Nam.',
   openGraph: {
-    title: 'About Us - Birdnest Shop',
-    description: 'Discover our story, mission, and the team behind Birdnest Shop. We specialize in premium bird&apos;s nest products from Kien Giang, Vietnam.',
+    title: 'About Us - Yến Sào Kim Sang',
+    description: 'Yến Sào Kim Sang - Thương hiệu uy tín hàng đầu trong lĩnh vực cung cấp yến sào nguyên chất.',
     images: ['/images/logo.png'],
   },
 }
 
-const teamMembers = [
+const features = [
   {
-    name: 'Nguyen Van Yen',
-    role: 'Founder & CEO',
-    image: '/images/to-yen-nguyen-chat.jpg',
-    bio: 'With over 15 years of experience in the bird&apos;s nest industry, Yen leads our mission to bring premium quality products to customers worldwide.',
+    icon: CheckCircle,
+    title: '100% Tự Nhiên',
+    description: 'Yến sào 100% tự nhiên, được chọn lọc kỹ lưỡng từ những tổ yến tốt nhất'
   },
   {
-    name: 'Tran Thi Mai',
-    role: 'Quality Control Manager',
-    image: '/images/user.jpeg',
-    bio: 'Ensuring every product meets our strict quality standards through rigorous testing and inspection processes.',
+    icon: Shield,
+    title: 'Kiểm Định Chất Lượng',
+    description: 'Được kiểm định chất lượng, đảm bảo vệ sinh an toàn thực phẩm'
   },
   {
-    name: 'Le Van Minh',
-    role: 'Operations Director',
-    image: '/images/user.jpeg',
-    bio: 'Managing our supply chain and ensuring smooth operations from harvest to delivery.',
-  },
-]
-
-const milestones = [
-  {
-    year: '2010',
-    title: 'Company Founded',
-    description: 'Started as a small family business in Kien Giang, Vietnam',
-    icon: Heart,
-  },
-  {
-    year: '2015',
-    title: 'Quality Certification',
-    description: 'Achieved international quality standards and certifications',
-    icon: Award,
-  },
-  {
-    year: '2018',
-    title: 'Market Expansion',
-    description: 'Expanded to serve customers across Vietnam and Asia',
     icon: MapPin,
+    title: 'Giao Hàng Toàn Quốc',
+    description: 'Dịch vụ giao hàng nhanh chóng, tận nơi trên toàn quốc'
   },
   {
-    year: '2023',
-    title: 'Digital Transformation',
-    description: 'Launched online platform to reach global customers',
-    icon: Star,
-  },
+    icon: Award,
+    title: 'Bảo Hành Chính Hãng',
+    description: 'Cam kết chất lượng và bảo hành chính hãng cho mọi sản phẩm'
+  }
 ]
 
-const testimonials = [
+const products = [
   {
-    name: 'Sarah Johnson',
-    role: 'Health Enthusiast',
-    content: 'The quality of bird&apos;s nest from Birdnest Shop is exceptional. I&apos;ve been a loyal customer for 3 years.',
-    rating: 5,
+    name: 'Yến Tinh Chế',
+    description: 'Yến sào đã được làm sạch, loại bỏ tạp chất',
+    icon: FlaskConical
   },
   {
-    name: 'Dr. Michael Chen',
-    role: 'Traditional Medicine Practitioner',
-    content: 'I recommend Birdnest Shop to my patients. Their products are authentic and of the highest quality.',
-    rating: 5,
+    name: 'Tổ Yến Thô',
+    description: 'Yến sào nguyên tổ, giữ nguyên hình dạng tự nhiên',
+    icon: Leaf
   },
   {
-    name: 'Linda Wong',
-    role: 'Wellness Coach',
-    content: 'The customer service and product quality are outstanding. Highly recommended!',
-    rating: 5,
-  },
+    name: 'Combo Yến Sào',
+    description: 'Bộ sản phẩm đa dạng, phù hợp mọi nhu cầu',
+    icon: Gift
+  }
 ]
 
-const partners = [
-  { name: 'Vietnam Food Safety Authority', logo: '/images/logo.png' },
-  { name: 'Kien Giang Agriculture Department', logo: '/images/logo.png' },
-  { name: 'International Bird\'s Nest Association', logo: '/images/logo.png' },
+const advantages = [
+  {
+    icon: Leaf,
+    title: 'Nguồn Gốc Tự Nhiên',
+    description: 'Yến sào được thu hoạch từ các hang động tự nhiên tại Kiên Giang, đảm bảo chất lượng và độ tinh khiết cao nhất.'
+  },
+  {
+    icon: FlaskConical,
+    title: 'Quy Trình Khép Kín',
+    description: 'Từ khâu thu hoạch đến đóng gói đều tuân thủ quy trình nghiêm ngặt, đạt tiêu chuẩn vệ sinh an toàn thực phẩm.'
+  },
+  {
+    icon: Heart,
+    title: 'Dịch Vụ Tận Tâm',
+    description: 'Đội ngũ tư vấn chuyên nghiệp, giao hàng nhanh chóng, hỗ trợ khách hàng 24/7 với cam kết hài lòng 100%.'
+  }
 ]
 
 export default function AboutPage() {
@@ -107,7 +95,7 @@ export default function AboutPage() {
         <div className="absolute inset-0">
           <Image
             src="/images/bg_banner_top.jpg"
-            alt="Bird's nest background"
+            alt="Yến sào Kim Sang background"
             fill
             className="object-cover"
             priority
@@ -116,134 +104,91 @@ export default function AboutPage() {
         </div>
         <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Our Story
+            YẾN SÀO KIM SANG - THƯƠNG HIỆU UY TÍN
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
-            Bringing premium bird&apos;s nest from the pristine caves of Kien Giang to your table
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            Với hơn 10 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất cho sức khỏe gia đình Việt Nam.
           </p>
           <Button size="lg" className="bg-white text-black hover:bg-gray-100">
-            Explore Our Products
+            Khám phá ngay bộ sản phẩm yến sào cao cấp của chúng tôi
           </Button>
         </div>
       </section>
 
-      {/* Mission Section */}
+      {/* About Section */}
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Mission</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              To provide the highest quality bird&apos;s nest products while preserving traditional harvesting methods 
-              and supporting sustainable practices that protect both the environment and the swiftlet population.
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">🏆 Về Chúng Tôi</h2>
+            <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
+              Yến Sào Kim Sang tự hào là thương hiệu hàng đầu trong lĩnh vực cung cấp yến sào nguyên chất. 
+              Với hơn 10 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất cho sức khỏe gia đình Việt Nam.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center border-0 shadow-lg">
-              <CardContent className="pt-6">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Heart className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Quality First</h3>
-                <p className="text-gray-600">
-                  Every product undergoes rigorous quality control to ensure the highest standards.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center border-0 shadow-lg">
-              <CardContent className="pt-6">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-8 h-8 text-green-600" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Sustainable Harvesting</h3>
-                <p className="text-gray-600">
-                  We practice responsible harvesting that protects swiftlet populations and their habitats.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center border-0 shadow-lg">
-              <CardContent className="pt-6">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-purple-600" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Community Support</h3>
-                <p className="text-gray-600">
-                  Supporting local communities and preserving traditional knowledge and practices.
-                </p>
-              </CardContent>
-            </Card>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {features.map((feature, index) => (
+              <Card key={index} className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <feature.icon className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-sm text-gray-600">
+                    {feature.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Story Section */}
+      {/* Products Section */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Journey</h2>
-            <p className="text-lg text-gray-600">
-              From humble beginnings to becoming a trusted name in premium bird&apos;s nest products
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">🍯 Sản Phẩm Chính</h2>
           </div>
           
-          <div className="space-y-8">
-            {milestones.map((milestone, index) => (
-              <div key={milestone.year} className={`flex items-center gap-8 ${
-                index % 2 === 1 ? 'md:flex-row-reverse' : ''
-              }`}>
-                <div className="flex-1">
+          <div className="grid md:grid-cols-3 gap-8">
+            {products.map((product, index) => (
+              <Card key={index} className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <product.icon className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3">{product.name}</h3>
+                  <p className="text-gray-600">
+                    {product.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Advantages Section */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Bộ sản phẩm thanh tẩy nhà cửa mang may mắn này có gì?</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {advantages.map((advantage, index) => (
+              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="pt-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <milestone.icon className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                      <advantage.icon className="w-6 h-6 text-purple-600" />
                     </div>
-                    <div>
-                      <Badge variant="secondary" className="text-sm">
-                        {milestone.year}
-                      </Badge>
-                    </div>
+                    <h3 className="text-xl font-semibold">{advantage.title}</h3>
                   </div>
-                  <h3 className="text-2xl font-semibold mb-2">{milestone.title}</h3>
-                  <p className="text-gray-600">{milestone.description}</p>
-                </div>
-                <div className="flex-1">
-                  <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <span className="text-gray-500">Timeline Image</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Meet Our Team</h2>
-            <p className="text-lg text-gray-600">
-              The passionate individuals behind our success
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {teamMembers.map((member) => (
-              <Card key={member.name} className="text-center border-0 shadow-lg">
-                <CardContent className="pt-6">
-                  <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden">
-                    <Image
-                      src={member.image}
-                      alt={member.name}
-                      width={128}
-                      height={128}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-1">{member.name}</h3>
-                  <p className="text-blue-600 mb-3">{member.role}</p>
-                  <p className="text-gray-600 text-sm">{member.bio}</p>
+                  <p className="text-gray-600 leading-relaxed">
+                    {advantage.description}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -251,74 +196,16 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Social Proof Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Customers Say</h2>
-            <p className="text-lg text-gray-600">
-              Trusted by thousands of satisfied customers worldwide
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {testimonials.map((testimonial) => (
-              <Card key={testimonial.name} className="border-0 shadow-lg">
-                <CardContent className="pt-6">
-                  <div className="flex mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-gray-600 mb-4 italic">&ldquo;{testimonial.content}&rdquo;</p>
-                  <div>
-                    <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-sm text-gray-500">{testimonial.role}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          <div className="text-center">
-            <h3 className="text-2xl font-semibold mb-8">Our Partners & Certifications</h3>
-            <div className="flex flex-wrap justify-center items-center gap-8">
-              {partners.map((partner) => (
-                <div key={partner.name} className="flex items-center gap-2">
-                  <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      width={48}
-                      height={48}
-                      className="w-12 h-12 object-contain"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600">{partner.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact CTA Section */}
-      <section className="py-16 px-4 bg-blue-600 text-white">
+      {/* CTA Section */}
+      <section className="py-16 px-4 bg-red-50">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Ready to Experience Premium Quality?
-          </h2>
-          <p className="text-xl mb-8 opacity-90">
-            Get in touch with us to learn more about our products or place your order
-          </p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Khám phá ngay bộ sản phẩm yến sào cao cấp của chúng tôi</h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
-              <Phone className="w-5 h-5 mr-2" />
-              Call Us
+            <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white">
+              Xem Tất Cả Sản Phẩm
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-              <Mail className="w-5 h-5 mr-2" />
-              Email Us
+            <Button size="lg" variant="outline" className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white">
+              Tìm Hiểu Thêm
             </Button>
           </div>
         </div>

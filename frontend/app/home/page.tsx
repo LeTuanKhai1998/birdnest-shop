@@ -31,11 +31,11 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <main className="min-h-screen">
-      {/* Hero Section */}
-      <HeroSection />
-      
       {/* Promotional Banner */}
       <PromotionalBanner />
+      
+      {/* Hero Section */}
+      <HeroSection />
       
       {/* Feature Icons */}
       <FeatureIcons />
