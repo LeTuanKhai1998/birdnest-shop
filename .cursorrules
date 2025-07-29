@@ -710,7 +710,57 @@ enum RecipientType {
 
 ---
 
-### 17. CI/CD and Deployment Readiness [X]
+### 17. Improve Desktop Navbar UI/UX with Sidebar Menu [X]
+
+- [X] Optimize navbar in `components/ResponsiveNavbar.tsx` for better structure and accessibility
+- [X] Add hamburger icon to the **left-most side** (similar to YouTube style)
+  - Only visible on desktop if sidebar layout is used
+  - Use icon from `lucide-react` or `heroicons`
+  - Icon should open a collapsible sidebar or drawer from the left
+
+- [X] Sidebar Menu (Slide-in from left):
+  - Triggered by hamburger icon
+  - Contains navigation links: Home, Products, About, Contact, Track Order
+  - Optional: include category links or shortcuts
+  - Use `@/components/ui/drawer` from Shadcn UI (or `Dialog` component)
+  - Include close button or click-away to dismiss
+
+- [X] Adjust layout to avoid header overflow:
+  - Ensure the full navbar is always visible at 100% width
+  - Prevent hamburger from being hidden or overlapping with logo
+
+- [X] Keep right-side controls:
+  - Search bar
+  - Cart icon
+  - Notification (optional)
+  - Sign in button
+
+- [X] Use Tailwind spacing and z-index:
+  - Keep spacing consistent (`px-4 md:px-6`, `gap-x-4`)
+  - Set proper `z-50` for navbar and sidebar layers
+
+- [X] Responsiveness:
+  - Keep mobile-friendly menu as is (or share logic)
+  - For desktop, detect and handle window resizing
+  - Sidebar should animate in/out smoothly
+
+- [X] Accessibility:
+  - Add `aria-label` and `aria-expanded` for hamburger
+  - Sidebar should trap focus when open
+
+- [X] Visual style:
+  - Match existing color scheme and typography
+  - Use border or shadow for sidebar
+
+- [X] Testing:
+  - Ensure sidebar opens/closes properly on desktop
+  - Ensure no layout shift or broken spacing occurs on different screen sizes
+
+
+---
+
+
+### 18. CI/CD and Deployment Readiness [X]
 
 - [X] Setup `.dockerignore`, `.env.example` files
 - [X] Dockerize backend with production-ready Dockerfile
@@ -724,7 +774,7 @@ enum RecipientType {
 
 ---
 
-### 18. Observability and Logging [ ]
+### 19. Observability and Logging [ ]
 
 - [ ] Add global error handler middleware (backend)
 - [ ] Add structured logs (`logger.service.ts` or `pino`)
@@ -733,7 +783,7 @@ enum RecipientType {
 
 ---
 
-### 19. Documentation and Developer Experience [ ]
+### 20. Documentation and Developer Experience [ ]
 
 - [ ] Generate Swagger docs at `/api-docs`
 - [ ] Write `README.md` inside `backend/`:

@@ -42,6 +42,7 @@ import useSWR from 'swr';
 export function ResponsiveNavbar() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -50,7 +51,6 @@ export function ResponsiveNavbar() {
   // Use session data directly instead of fetching from backend
   const user = userFromSession;
 
-
   return (
     <>
       {/* Full-width background container */}
@@ -58,27 +58,44 @@ export function ResponsiveNavbar() {
         {/* Content container */}
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between h-16 lg:h-20 px-4 lg:px-6 xl:px-8">
-            {/* Left: Logo and Brand Name */}
-            <div className="flex items-center flex-shrink-0">
-              <Link href="/" className="flex items-center gap-2 group">
-                <div className="relative">
-                  <Image
-                    src="/images/logo.png"
-                    alt="Yến Sào Kim Sang Logo"
-                    width={40}
-                    height={40}
-                    className="w-8 h-8 lg:w-10 lg:h-10 border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105"
-                  />
-                </div>
-                {/* Hide shop name on small screens */}
-                <span className="hidden sm:block text-lg lg:text-xl font-bold text-red-700 tracking-wide group-hover:text-red-800 transition-colors">
-                  Yến Sào Kim Sang
-                </span>
-              </Link>
+            {/* Left: Hamburger Menu (Desktop) + Logo and Brand Name */}
+            <div className="flex items-center gap-4">
+              {/* Desktop Hamburger Menu */}
+              <div className="hidden lg:block">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => setDesktopSidebarOpen(true)}
+                  aria-label="Open sidebar menu"
+                  aria-expanded={desktopSidebarOpen}
+                >
+                  <Menu className="w-6 h-6" />
+                </Button>
+              </div>
+
+              {/* Logo and Brand Name */}
+              <div className="flex items-center flex-shrink-0">
+                <Link href="/" className="flex items-center gap-2 group">
+                  <div className="relative">
+                    <Image
+                      src="/images/logo.png"
+                      alt="Yến Sào Kim Sang Logo"
+                      width={40}
+                      height={40}
+                      className="w-8 h-8 lg:w-10 lg:h-10 border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105"
+                    />
+                  </div>
+                  {/* Hide shop name on small screens */}
+                  <span className="hidden sm:block text-lg lg:text-xl font-bold text-red-700 tracking-wide group-hover:text-red-800 transition-colors">
+                    Yến Sào Kim Sang
+                  </span>
+                </Link>
+              </div>
             </div>
 
-            {/* Middle: Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center space-x-8">
+            {/* Middle: Desktop Navigation Links (Hidden on desktop, shown on tablet) */}
+            <nav className="hidden md:flex lg:hidden items-center space-x-6">
               <Link
                 href="/"
                 className="text-gray-700 hover:text-red-600 font-medium transition-colors duration-200 relative group px-2 py-1"
@@ -179,7 +196,7 @@ export function ResponsiveNavbar() {
                   </Button>
                 ) : (
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger>
                       <Button
                         variant="ghost"
                         className="flex items-center gap-2 p-2"
@@ -200,44 +217,24 @@ export function ResponsiveNavbar() {
                         <p className="text-sm font-medium">{user?.name}</p>
                         <p className="text-xs text-gray-500">{user?.email}</p>
                       </div>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/profile"
-                          className="flex items-center gap-2"
-                        >
-                          <User className="w-4 h-4" />
-                          Profile
-                        </Link>
+                      <DropdownMenuItem onClick={() => window.location.href = '/dashboard/profile'}>
+                        <User className="w-4 h-4" />
+                        Profile
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/orders"
-                          className="flex items-center gap-2"
-                        >
-                          <ShoppingBag className="w-4 h-4" />
-                          Orders
-                        </Link>
+                      <DropdownMenuItem onClick={() => window.location.href = '/dashboard/orders'}>
+                        <ShoppingBag className="w-4 h-4" />
+                        Orders
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/wishlist"
-                          className="flex items-center gap-2"
-                        >
-                          <Heart className="w-4 h-4" />
-                          Wishlist
-                        </Link>
+                      <DropdownMenuItem onClick={() => window.location.href = '/dashboard/wishlist'}>
+                        <Heart className="w-4 h-4" />
+                        Wishlist
                       </DropdownMenuItem>
                       {session.user?.isAdmin && (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href="/admin"
-                              className="flex items-center gap-2"
-                            >
-                              <Settings className="w-4 h-4" />
-                              Admin Dashboard
-                            </Link>
+                          <DropdownMenuItem onClick={() => window.location.href = '/admin'}>
+                            <Settings className="w-4 h-4" />
+                            Admin Dashboard
                           </DropdownMenuItem>
                         </>
                       )}
@@ -407,6 +404,195 @@ export function ResponsiveNavbar() {
           </div>
         </div>
       </div>
+
+      {/* Desktop Sidebar */}
+      <Drawer open={desktopSidebarOpen} onOpenChange={setDesktopSidebarOpen}>
+        <DrawerContent className="w-80 p-0 h-full max-h-screen">
+          <DrawerTitle className="sr-only">Desktop Navigation Menu</DrawerTitle>
+          <div className="p-6 h-full overflow-y-auto">
+            <div className="flex items-center justify-between mb-8">
+              <Link
+                href="/"
+                className="flex items-center gap-3"
+                onClick={() => setDesktopSidebarOpen(false)}
+              >
+                <Image
+                  src="/images/logo.png"
+                  alt="Logo"
+                  width={40}
+                  height={40}
+                  className="border-2 border-yellow-400 rounded-full"
+                />
+                <span className="font-bold text-xl text-red-700">
+                  Yến Sào Kim Sang
+                </span>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDesktopSidebarOpen(false)}
+                aria-label="Close sidebar"
+                className="hover:bg-gray-100"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+
+            {/* Desktop Sidebar Search */}
+            <div className="mb-8">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setDesktopSidebarOpen(false);
+                }}
+              >
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    aria-label="Search products"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600"
+                    aria-label="Submit search"
+                  >
+                    <Search className="w-5 h-5" />
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Desktop Sidebar Navigation */}
+            <nav className="space-y-2 mb-8">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                Navigation
+              </h3>
+              <Link
+                href="/"
+                className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors text-lg"
+                onClick={() => setDesktopSidebarOpen(false)}
+              >
+                <HomeIcon className="w-6 h-6" />
+                Home
+              </Link>
+              <Link
+                href="/products"
+                className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors text-lg"
+                onClick={() => setDesktopSidebarOpen(false)}
+              >
+                <Box className="w-6 h-6" />
+                Products
+              </Link>
+              <Link
+                href="/about"
+                className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors text-lg"
+                onClick={() => setDesktopSidebarOpen(false)}
+              >
+                <Info className="w-6 h-6" />
+                About
+              </Link>
+              <Link
+                href="/contact"
+                className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors text-lg"
+                onClick={() => setDesktopSidebarOpen(false)}
+              >
+                <Mail className="w-6 h-6" />
+                Contact
+              </Link>
+              <Link
+                href="/guest-orders"
+                className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors text-lg"
+                onClick={() => setDesktopSidebarOpen(false)}
+              >
+                <Search className="w-6 h-6" />
+                Track Order
+              </Link>
+            </nav>
+
+            {/* User Section */}
+            {session && (
+              <div className="border-t pt-6">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                  Account
+                </h3>
+                <div className="space-y-2">
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                    onClick={() => setDesktopSidebarOpen(false)}
+                  >
+                    <User className="w-6 h-6" />
+                    <div>
+                      <div className="font-medium">{user?.name}</div>
+                      <div className="text-sm text-gray-500">{user?.email}</div>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/dashboard/orders"
+                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                    onClick={() => setDesktopSidebarOpen(false)}
+                  >
+                    <ShoppingBag className="w-6 h-6" />
+                    Orders
+                  </Link>
+                  <Link
+                    href="/dashboard/wishlist"
+                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                    onClick={() => setDesktopSidebarOpen(false)}
+                  >
+                    <Heart className="w-6 h-6" />
+                    Wishlist
+                  </Link>
+                  {session.user?.isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                      onClick={() => setDesktopSidebarOpen(false)}
+                    >
+                      <Settings className="w-6 h-6" />
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      setDesktopSidebarOpen(false);
+                      signOut();
+                    }}
+                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors w-full text-left text-red-600"
+                  >
+                    <LogOut className="w-6 h-6" />
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Guest Sign In */}
+            {!session && (
+              <div className="border-t pt-6">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                  Account
+                </h3>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full flex items-center gap-3"
+                >
+                  <Link
+                    href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                    onClick={() => setDesktopSidebarOpen(false)}
+                  >
+                    <LogIn className="w-5 h-5" />
+                    Sign in
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Mobile Search Modal */}
       {showSearch && (
