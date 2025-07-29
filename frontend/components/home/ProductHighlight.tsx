@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export function ProductHighlight() {
   return (
-    <section className="w-full bg-[#fbd8b0] py-8 sm:py-12">
+    <section className="w-full bg-white py-8 sm:py-12">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-red-700">
