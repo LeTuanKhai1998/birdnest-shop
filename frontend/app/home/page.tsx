@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { HeroSection } from '@/components/home/HeroSection';
 import { PromotionalBanner } from '@/components/home/PromotionalBanner';
-import { FeatureIcons } from '@/components/home/FeatureIcons';
 import { CompanySummary } from '@/components/home/CompanySummary';
 import { FeaturesSection } from '@/components/home/FeaturesSection';
 import { ProductHighlight } from '@/components/home/ProductHighlight';
@@ -36,9 +35,6 @@ export default function HomePage() {
       
       {/* Hero Section */}
       <HeroSection />
-      
-      {/* Feature Icons */}
-      <FeatureIcons />
       
       {/* Company Summary */}
       <CompanySummary />
