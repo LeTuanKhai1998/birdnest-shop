@@ -287,15 +287,36 @@
 
 ---
 
-### 8. Security Best Practices [ ]
+### 8. Security Best Practices [X]
 
-- [ ] Sanitize user inputs (e.g. `class-validator`, middleware)
-- [ ] Hash passwords with **bcrypt** (if managing auth manually)
-- [ ] Use Helmet or similar middlewares to set HTTP headers
-- [ ] Rate limit sensitive endpoints (auth, payments)
-- [ ] Validate all incoming data (DTOs in NestJS)
-- [ ] Keep `.env` secrets out of source control
-- [ ] Restrict CORS to allowed origins
+- [X] Sanitize user inputs (e.g. `class-validator`, middleware)
+  - [X] Created SecurityMiddleware for input sanitization
+  - [X] Added frontend security utilities for XSS prevention
+  - [X] Implemented HTML entity escaping and control character removal
+- [X] Hash passwords with **bcrypt** (if managing auth manually)
+  - [X] Created PasswordService with bcrypt integration
+  - [X] Added password strength validation
+  - [X] Implemented secure password comparison
+- [X] Use Helmet or similar middlewares to set HTTP headers
+  - [X] Added Helmet middleware for security headers
+  - [X] Configured Content Security Policy (CSP) in Next.js
+  - [X] Set X-Frame-Options, X-Content-Type-Options, etc.
+- [X] Rate limit sensitive endpoints (auth, payments)
+  - [X] Implemented ThrottlerModule with multiple rate limits
+  - [X] Created custom ThrottleAuthGuard for authentication endpoints
+  - [X] Added IP-based tracking for rate limiting
+- [X] Validate all incoming data (DTOs in NestJS)
+  - [X] Enhanced ValidationPipe with security options
+  - [X] Added forbidNonWhitelisted and disableErrorMessages for production
+  - [X] Implemented comprehensive DTOs with class-validator
+- [X] Keep `.env` secrets out of source control
+  - [X] Updated .gitignore files for both frontend and backend
+  - [X] Created .env.example files with required variables
+  - [X] Excluded sensitive files from version control
+- [X] Restrict CORS to allowed origins
+  - [X] Configured strict CORS with allowed origins from environment
+  - [X] Limited HTTP methods and headers
+  - [X] Added security headers configuration
 
 ---
 
