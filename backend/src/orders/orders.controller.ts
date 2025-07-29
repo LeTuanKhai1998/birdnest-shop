@@ -49,7 +49,7 @@ export class OrdersController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() data: CreateOrderDto) {
-    return this.ordersService.create(data);
+    return this.ordersService.create(data as any);
   }
 
   @Put(':id/status')
