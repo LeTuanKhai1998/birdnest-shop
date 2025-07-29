@@ -270,16 +270,51 @@ export default function ProductsClient({ products }: { products: Product[] }) {
           </div>
         </div>
         
-        {/* Search Input */}
-        <div className="relative max-w-md w-full mx-auto lg:mx-0">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <Input
-            type="text"
-            placeholder="Tìm kiếm sản phẩm yến sào..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 pr-4 py-3 border-2 border-gray-200 focus:border-[#a10000] focus:ring-[#a10000] rounded-xl text-base shadow-sm transition-all duration-200"
-          />
+        {/* Search Input and Filter Button */}
+        <div className="flex flex-col sm:flex-row gap-3 max-w-md w-full mx-auto lg:mx-0">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Tìm kiếm sản phẩm yến sào..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-12 pr-4 py-3 border-2 border-gray-200 focus:border-[#a10000] focus:ring-[#a10000] rounded-xl text-base shadow-sm transition-all duration-200"
+            />
+          </div>
+          
+          {/* Filter Button - Mobile and Tablet */}
+          <div className="md:hidden">
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full py-3 px-4 text-base border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Bộ lọc
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="max-w-sm mx-auto rounded-t-lg">
+                <DrawerHeader className="border-b border-gray-200">
+                  <DrawerTitle className="text-[#a10000] font-semibold">
+                    Bộ Lọc Sản Phẩm
+                  </DrawerTitle>
+                </DrawerHeader>
+                <div className="p-6 pb-8 max-h-[70vh] overflow-y-auto">
+                  {FilterContent}
+                </div>
+                <DrawerClose asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full mb-4 py-3 text-base border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors"
+                  >
+                    Đóng
+                  </Button>
+                </DrawerClose>
+              </DrawerContent>
+            </Drawer>
+          </div>
         </div>
       </div>
     </div>
@@ -287,40 +322,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white">
-      {/* Mobile Filter Button */}
-      <div className="w-full flex justify-end px-4 pt-4 pb-2 sticky top-[56px] z-20 bg-gradient-to-b from-[#fbd8b0] to-white border-b border-gray-200 md:hidden">
-        <Drawer>
-          <DrawerTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="py-2 px-4 text-base border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Bộ lọc
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent className="max-w-sm mx-auto rounded-t-lg">
-            <DrawerHeader className="border-b border-gray-200">
-              <DrawerTitle className="text-[#a10000] font-semibold">
-                Bộ Lọc Sản Phẩm
-              </DrawerTitle>
-            </DrawerHeader>
-            <div className="p-6 pb-8 max-h-[70vh] overflow-y-auto">
-              {FilterContent}
-            </div>
-            <DrawerClose asChild>
-              <Button 
-                variant="outline" 
-                className="w-full mb-4 py-3 text-base border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors"
-              >
-                Đóng
-              </Button>
-            </DrawerClose>
-          </DrawerContent>
-        </Drawer>
-      </div>
-
-              {/* Page Header - Full width like Home page */}
+      {/* Page Header - Full width like Home page */}
         <section
           className="relative w-full bg-[#a10000] overflow-hidden lg:bg-[#a10000] bg-gradient-to-b from-[#a10000] to-[#fbd8b0]"
           style={{ minHeight: '600px' }}
@@ -342,7 +344,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
             src="/images/bg_banner_top_mobile.jpg"
             alt="Banner Background Mobile"
             fill
-            className="object-contain sm:object-cover md:object-cover w-full h-full lg:hidden"
+            className="object-cover w-full h-full lg:hidden"
             priority
             quality={100}
             sizes="100vw"
@@ -377,7 +379,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
             {/* Main Content */}
             <div className="flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                 {loading ? (
                   Array.from({ length: 8 }).map((_, i) => (
                     <div

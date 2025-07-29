@@ -47,6 +47,9 @@ export function ResponsiveNavbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLeftMenuVisible, setIsLeftMenuVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -64,6 +67,38 @@ export function ResponsiveNavbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Handle left menu visibility based on scroll
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleScrollForMenu = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
+      
+      // Hide menu when scrolling down, show when scrolling up
+      if (scrollDirection === 'down' && currentScrollY > 100) {
+        setIsLeftMenuVisible(false);
+      } else if (scrollDirection === 'up') {
+        setIsLeftMenuVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+      setIsScrolling(true);
+      
+      // Clear timeout and reset scrolling state
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        setIsScrolling(false);
+      }, 150);
+    };
+
+    window.addEventListener('scroll', handleScrollForMenu, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScrollForMenu);
+      clearTimeout(scrollTimeout);
+    };
+  }, [lastScrollY]);
 
   // Close sidebar when route changes
   useEffect(() => {
@@ -96,7 +131,10 @@ export function ResponsiveNavbar() {
   return (
     <>
       {/* Static Left Sidebar - Desktop Only */}
-      <div className="hidden lg:block fixed left-0 top-0 h-full w-20 bg-white border-r border-gray-200 z-[60] transition-all duration-500 ease-in-out group">
+      <div className={cn(
+        "hidden lg:block fixed left-0 top-0 h-full w-20 bg-white border-r border-gray-200 z-[60] transition-all duration-500 ease-in-out group",
+        isLeftMenuVisible ? "translate-x-0" : "-translate-x-full"
+      )}>
         {/* Hover trigger area */}
         <div className="absolute -right-2 top-0 w-4 h-full bg-transparent group-hover:bg-transparent" />
         <div className="flex flex-col h-full">
@@ -230,28 +268,7 @@ export function ResponsiveNavbar() {
                 </Link>
               </div>
 
-              {/* Middle: Desktop Navigation Links (Hidden on desktop, shown on tablet) */}
-              <nav className="hidden md:flex lg:hidden items-center space-x-6">
-                {navigationItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "text-gray-700 hover:text-red-600 font-medium transition-colors duration-200 relative group px-2 py-1",
-                        isActiveLink(item.href) && "text-red-600"
-                      )}
-                    >
-                      {item.label}
-                      <span className={cn(
-                        "absolute -bottom-1 left-0 h-0.5 bg-red-600 transition-all duration-200",
-                        isActiveLink(item.href) ? "w-full" : "w-0 group-hover:w-full"
-                      )}></span>
-                    </Link>
-                  );
-                })}
-              </nav>
+
 
               {/* Right: Search, Icons, User */}
               <div className="flex items-center gap-2 lg:gap-4">
@@ -378,7 +395,7 @@ export function ResponsiveNavbar() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="lg:hidden p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="md:hidden p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 hover:bg-gray-100 rounded-lg transition-colors"
                       aria-label="Mở menu"
                     >
                       <Menu className="w-5 h-5" />

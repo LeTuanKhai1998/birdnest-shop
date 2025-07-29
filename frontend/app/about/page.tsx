@@ -112,7 +112,7 @@ export default function AboutPage() {
           src="/images/bg_banner_top_mobile.jpg"
           alt="Banner Background Mobile"
           fill
-          className="object-contain sm:object-cover md:object-cover w-full h-full lg:hidden"
+          className="object-cover w-full h-full lg:hidden"
           priority
           quality={100}
           sizes="100vw"
@@ -125,7 +125,7 @@ export default function AboutPage() {
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               YẾN SÀO KIM SANG - THƯƠNG HIỆU UY TÍN
             </h1>
-            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-center leading-relaxed">
               Với hơn 10 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất cho sức khỏe gia đình Việt Nam.
             </p>
             <Button size="lg" className="bg-white text-black hover:bg-gray-100">
@@ -140,7 +140,7 @@ export default function AboutPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-[#a10000]">🏆 Về Chúng Tôi</h2>
-            <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed text-center">
               Yến Sào Kim Sang tự hào là thương hiệu hàng đầu trong lĩnh vực cung cấp yến sào nguyên chất. 
               Với hơn 10 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất cho sức khỏe gia đình Việt Nam.
             </p>
@@ -198,15 +198,15 @@ export default function AboutPage() {
           
           <div className="grid md:grid-cols-3 gap-8">
             {advantages.map((advantage, index) => (
-              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <Card key={index} className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardContent className="pt-6">
-                  <div className="flex items-center gap-4 mb-4">
+                  <div className="flex flex-col items-center gap-4 mb-4">
                     <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                       <advantage.icon className="w-6 h-6 text-purple-600" />
                     </div>
-                    <h3 className="text-xl font-semibold">{advantage.title}</h3>
+                    <h3 className="text-xl font-semibold text-center">{advantage.title}</h3>
                   </div>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-gray-600 leading-relaxed text-center">
                     {advantage.description}
                   </p>
                 </CardContent>

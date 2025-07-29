@@ -96,15 +96,15 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               )}
 
               {/* Weight Badge */}
-              <div className="absolute top-4 left-4 z-20 bg-[#a10000]/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg border border-white/20">
-                <Package className="w-4 h-4 inline mr-1" />
+              <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-20 bg-[#a10000]/90 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg border border-white/20">
+                <Package className="w-3 h-3 sm:w-4 sm:h-4 inline mr-0.5 sm:mr-1" />
                 {product.weight}g
               </div>
 
               {/* Popular Badge */}
               {product.sold && product.sold > 1000 && (
-                <div className="absolute top-4 left-20 z-20 bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg border border-white/20">
-                  <TrendingUp className="w-4 h-4 inline mr-1" />
+                <div className="absolute top-2 sm:top-4 left-16 sm:left-20 z-20 bg-orange-500/90 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg border border-white/20">
+                  <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 inline mr-0.5 sm:mr-1" />
                   Hot
                 </div>
               )}

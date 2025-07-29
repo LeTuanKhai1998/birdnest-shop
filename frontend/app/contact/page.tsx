@@ -163,7 +163,7 @@ export default function ContactPage() {
           src="/images/bg_banner_top_mobile.jpg"
           alt="Banner Background Mobile"
           fill
-          className="object-contain sm:object-cover md:object-cover w-full h-full lg:hidden"
+          className="object-cover w-full h-full lg:hidden"
           priority
           quality={100}
           sizes="100vw"
