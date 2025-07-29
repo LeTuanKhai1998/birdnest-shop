@@ -37,11 +37,11 @@ export default function HomePage() {
       {/* Hero Section */}
       <HeroSection />
       
-      {/* Star Rating */}
-      <StarRating />
-      
       {/* Company Summary */}
       <CompanySummary />
+      
+      {/* Star Rating */}
+      <StarRating />
       
       {/* Features Section */}
       <FeaturesSection />
