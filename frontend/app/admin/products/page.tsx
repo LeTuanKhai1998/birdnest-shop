@@ -91,6 +91,33 @@ export default function AdminProductsPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Check authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('auth-token');
+    const user = localStorage.getItem('user');
+    
+    if (!token || !user) {
+      console.log('No authentication found, redirecting to login');
+      window.location.href = '/admin/login';
+      return;
+    }
+    
+    // Verify user is admin
+    try {
+      const userData = JSON.parse(user);
+      if (!userData.isAdmin) {
+        alert('Access denied. Admin privileges required.');
+        window.location.href = '/';
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      localStorage.removeItem('auth-token');
+      localStorage.removeItem('user');
+      window.location.href = '/admin/login';
+    }
+  }, []);
+
   // Filter form
   const {
     register: filterRegister,
@@ -154,28 +181,40 @@ export default function AdminProductsPage() {
   // On submit, send images array (with url and isPrimary) to API
   const onSubmit = async (data: ProductForm) => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
+    
+    try {
+      // Prepare payload with form data and images
+      const payload = {
+        name: data.name,
+        slug: data.name.toLowerCase().replace(/\s+/g, '-'), // Generate slug from name
+        description: data.description,
+        price: data.price, // Keep as string
+        quantity: parseInt(data.stock),
+        categoryId: data.category, // Use category as categoryId
+        images: images.map((img) => ({ url: img.url, isPrimary: img.isPrimary || false })),
+      };
 
-    // Prepare payload with form data and images
-    const payload = {
-      ...data,
-      images: images.map((img) => ({ url: img.url, isPrimary: img.isPrimary })),
-    };
-
-    if (editId) {
-      // Edit mode
-      // Call PATCH API with payload
-      console.log('Editing product:', editId, payload);
-    } else {
-      // Create mode
-      // Call POST API with payload
-      console.log('Creating product:', payload);
+      if (editId) {
+        // Edit mode
+        await apiService.updateProduct(editId, payload);
+      } else {
+        // Create mode
+        await apiService.createProduct(payload);
+      }
+      
+      // Refresh the products list
+      mutate();
+      
+      reset();
+      setEditId(null);
+      setImages([]);
+      setDrawerOpen(false); // Close drawer on successful submission
+    } catch (error) {
+      console.error('Error saving product:', error);
+      // You could add a toast notification here
+    } finally {
+      setLoading(false);
     }
-    reset();
-    setEditId(null);
-    setImages([]);
-    setDrawerOpen(false); // Close drawer on successful submission
   };
 
   // Handle edit button
@@ -260,35 +299,54 @@ export default function AdminProductsPage() {
   // Add state for delete modal
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Handle delete button click
   const handleDeleteClick = (productId: string) => {
+    if (deleting) return; // Prevent opening modal while deletion is in progress
     setProductToDelete(productId);
     setDeleteModalOpen(true);
   };
 
   // Handle confirm delete
   const handleConfirmDelete = async () => {
-    if (!productToDelete) return;
+    if (!productToDelete || deleting) return;
     
+    setDeleting(true);
     try {
-      // Call API to delete product
-      const response = await fetch(`/api/products/${productToDelete}`, {
-        method: 'DELETE',
-      });
+      // Call API service to delete product
+      await apiService.deleteProduct(productToDelete);
       
-      if (!response.ok) {
-        throw new Error('Failed to delete product');
-      }
+      // Show refreshing state
+      setRefreshing(true);
       
-      // Remove product from UI by updating state
-      mutate(); // Re-fetch products to update the list
+      // Force refresh the products list with optimistic update
+      await mutate(undefined, { revalidate: true });
       
       setDeleteModalOpen(false);
       setProductToDelete(null);
+      
+      // Show success message
+      console.log('Product deleted successfully - table refreshed');
     } catch (error) {
       console.error('Error deleting product:', error);
-      // You could add a toast notification here
+      if (error instanceof Error && error.message.includes('401')) {
+        alert('Authentication failed. Please log in again.');
+        localStorage.removeItem('auth-token');
+        localStorage.removeItem('user');
+        window.location.href = '/admin/login';
+      } else if (error instanceof Error && error.message.includes('500')) {
+        // Handle server errors (including "Product not found" after deletion)
+        console.log('Server error during deletion, refreshing list...');
+        await mutate(undefined, { revalidate: true }); // Force refresh the product list
+        // Don't show alert for this case as it's expected behavior
+      } else {
+        alert('Failed to delete product. Please try again.');
+      }
+    } finally {
+      setDeleting(false);
+      setRefreshing(false);
     }
   };
 
@@ -330,7 +388,27 @@ console.log('paginatedData:', paginatedData); // Debug log
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Product Management</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Product Management</h2>
+        <Button
+          onClick={() => {
+            setRefreshing(true);
+            mutate(undefined, { revalidate: true }).finally(() => setRefreshing(false));
+          }}
+          variant="outline"
+          size="sm"
+          disabled={refreshing}
+        >
+          {refreshing ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+              Refreshing...
+            </>
+          ) : (
+            'Refresh Table'
+          )}
+        </Button>
+      </div>
       {/* Filter Bar */}
       <form
         className="mb-6 flex flex-wrap gap-4 items-end bg-white p-4 rounded shadow-sm"
@@ -701,7 +779,15 @@ console.log('paginatedData:', paginatedData); // Debug log
         </Drawer>
       </div>
       {/* Desktop Table */}
-      <div className="hidden md:block w-full min-w-0 overflow-x-auto">
+      <div className="hidden md:block w-full min-w-0 overflow-x-auto relative">
+        {refreshing && (
+          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600">Refreshing table...</p>
+            </div>
+          </div>
+        )}
         <AdminTable
           columns={[
             { key: 'id', label: 'ID' },
@@ -766,6 +852,7 @@ console.log('paginatedData:', paginatedData); // Debug log
                   variant="ghost"
                   className="rounded-full px-4 py-1 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
                   onClick={() => handleDeleteClick(p.id)}
+                  disabled={deleting}
                   aria-label="Delete product"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -792,7 +879,16 @@ console.log('paginatedData:', paginatedData); // Debug log
         />
       </div>
       {/* Mobile Card List */}
-      <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24">
+      <div className="block md:hidden relative">
+        {refreshing && (
+          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600">Refreshing products...</p>
+            </div>
+          </div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24">
         {(filteredProducts || []).map((p) => {
           const fullProduct = products?.find((prod) => prod.id === p.id);
           const desc =
@@ -879,6 +975,7 @@ console.log('paginatedData:', paginatedData); // Debug log
                   variant="ghost"
                   className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
                   onClick={() => handleDeleteClick(p.id)}
+                  disabled={deleting}
                   aria-label={`Delete product ${p.name}`}
                 >
                   Delete
@@ -907,6 +1004,7 @@ console.log('paginatedData:', paginatedData); // Debug log
         >
           +
         </Button>
+        </div>
       </div>
       {/* Delete confirmation modal */}
       {deleteModalOpen && (
@@ -926,9 +1024,10 @@ console.log('paginatedData:', paginatedData); // Debug log
               <Button
                 variant="destructive"
                 onClick={handleConfirmDelete}
+                disabled={deleting}
                 className="bg-red-600 text-white hover:bg-red-700"
               >
-                Delete
+                {deleting ? 'Deleting...' : 'Delete'}
               </Button>
             </div>
           </div>

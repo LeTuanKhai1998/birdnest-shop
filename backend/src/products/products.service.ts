@@ -129,8 +129,8 @@ export class ProductsService {
       },
     });
 
-    // Invalidate cache
-    this.cacheService.delete('products:findAll');
+    // Invalidate cache - clear all product-related cache entries
+    this.cacheService.deletePattern('products:findAll');
     this.cacheService.delete(`products:findOne:${product.id}`);
 
     return product;
@@ -146,23 +146,55 @@ export class ProductsService {
       },
     });
 
-    // Invalidate cache
-    this.cacheService.delete('products:findAll');
+    // Invalidate cache - clear all product-related cache entries
+    this.cacheService.deletePattern('products:findAll');
     this.cacheService.delete(`products:findOne:${id}`);
 
     return product;
   }
 
   async delete(id: string): Promise<Product> {
-    const product = await this.prisma.product.delete({
+    // First, fetch the product to return it later
+    const productToDelete = await this.prisma.product.findUnique({
       where: { id },
+      include: {
+        category: true,
+        images: true,
+      },
     });
 
-    // Invalidate cache
-    this.cacheService.delete('products:findAll');
+    if (!productToDelete) {
+      throw new Error('Product not found');
+    }
+
+    // Delete related records to avoid foreign key constraints
+    await this.prisma.$transaction(async (tx) => {
+      // Delete order items that reference this product
+      await tx.orderItem.deleteMany({
+        where: { productId: id },
+      });
+
+      // Delete reviews that reference this product
+      await tx.review.deleteMany({
+        where: { productId: id },
+      });
+
+      // Delete product images
+      await tx.image.deleteMany({
+        where: { productId: id },
+      });
+
+      // Finally, delete the product
+      await tx.product.delete({
+        where: { id },
+      });
+    });
+
+    // Invalidate cache - clear all product-related cache entries
+    this.cacheService.deletePattern('products:findAll');
     this.cacheService.delete(`products:findOne:${id}`);
 
-    return product;
+    return productToDelete;
   }
 
   async getCategories() {

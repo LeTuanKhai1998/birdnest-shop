@@ -60,12 +60,46 @@ export class CacheService {
   }
 
   /**
+   * Delete all cache entries that match a pattern
+   * @param pattern - Pattern to match (e.g., 'products:findAll' will delete all keys starting with that)
+   */
+  deletePattern(pattern: string): number {
+    let deleted = 0;
+    const keysToDelete: string[] = [];
+
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(pattern)) {
+        keysToDelete.push(key);
+      }
+    }
+
+    for (const key of keysToDelete) {
+      this.cache.delete(key);
+      deleted++;
+      this.logger.debug(`Deleted cache key (pattern): ${key}`);
+    }
+
+    if (deleted > 0) {
+      this.logger.log(`Deleted ${deleted} cache entries matching pattern: ${pattern}`);
+    }
+
+    return deleted;
+  }
+
+  /**
    * Clear all cache
    */
   clear(): void {
     const size = this.cache.size;
     this.cache.clear();
-    this.logger.debug(`Cleared ${size} cache entries`);
+    this.logger.log(`Cleared ${size} cache entries`);
+  }
+
+  /**
+   * Clear all product-related cache entries
+   */
+  clearProductCache(): number {
+    return this.deletePattern('products:');
   }
 
   /**
