@@ -143,12 +143,16 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setLoadingProvinces(true);
-    fetch('https://provinces.open-api.vn/api/?depth=3')
+    fetch('/lib/provinces-full.json')
       .then((res) => res.json())
       .then((data) => {
         setProvinces(data);
-        setLoadingProvinces(false);
-      });
+      })
+      .catch((err: unknown) => {
+        setProvinces([]);
+        console.error('Failed to load local provinces data:', err);
+      })
+      .finally(() => setLoadingProvinces(false));
   }, []);
 
   // Pre-fill form when address is selected
@@ -590,8 +594,9 @@ export default function CheckoutPage() {
                           ''
                         }
                         alt={product.name}
-                        layout="fill"
-                        objectFit="cover"
+                        width={56}
+                        height={56}
+                        className="object-cover w-full h-full rounded"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

@@ -268,37 +268,6 @@ export default function Footer() {
                   ))}
                 </div>
               </div>
-
-              {/* Facebook Page Plugin - Desktop Only */}
-              <div className="hidden lg:block">
-                <div
-                  className="fb-page"
-                  data-href="https://www.facebook.com/yensaokimsang"
-                  data-tabs="timeline"
-                  data-width="280"
-                  data-height="130"
-                  data-small-header="false"
-                  data-adapt-container-width="true"
-                  data-hide-cover="false"
-                  data-show-facepile="true"
-                  style={{ maxHeight: '130px', overflow: 'hidden' }}
-                ></div>
-              </div>
-
-              {/* Mobile Facebook Link */}
-              <div className="lg:hidden">
-                <a
-                  href="https://www.facebook.com/yensaokimsang"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-                >
-                  <Facebook className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    Theo dõi trên Facebook
-                  </span>
-                </a>
-              </div>
             </div>
           </div>
         </div>

@@ -28,8 +28,8 @@ describe('Performance Utils', () => {
     });
 
     it('should pass arguments correctly', (done) => {
-      let receivedArgs: any[] = [];
-      const debouncedFn = debounce((...args: any[]) => {
+      let receivedArgs: unknown[] = [];
+      const debouncedFn = debounce((...args: unknown[]) => {
         receivedArgs = args;
       }, 100);
 
@@ -69,9 +69,9 @@ describe('Performance Utils', () => {
   describe('memoize', () => {
     it('should memoize function results', () => {
       let callCount = 0;
-      const expensiveFn = memoize((a: number, b: number) => {
+      const expensiveFn = memoize((...args: unknown[]) => {
         callCount++;
-        return a + b;
+        return (args[0] as number) + (args[1] as number);
       });
 
       // First call
@@ -90,11 +90,15 @@ describe('Performance Utils', () => {
     it('should work with custom key generator', () => {
       let callCount = 0;
       const expensiveFn = memoize(
-        (obj: { a: number; b: number }) => {
+        (...args: unknown[]) => {
           callCount++;
+          const obj = args[0] as { a: number; b: number };
           return obj.a + obj.b;
         },
-        (obj) => `${obj.a}-${obj.b}`
+        (...args: unknown[]) => {
+          const obj = args[0] as { a: number; b: number };
+          return `${obj.a}-${obj.b}`;
+        }
       );
 
       expect(expensiveFn({ a: 1, b: 2 })).toBe(3);

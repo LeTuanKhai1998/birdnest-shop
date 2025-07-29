@@ -2,7 +2,7 @@ import { BarChart2, PieChart as PieChartIcon, TrendingUp } from 'lucide-react';
 
 interface ChartProps {
   type: 'bar' | 'pie' | 'line';
-  data: any[];
+  data: unknown[];
   width?: number;
   height?: number;
   dataKey?: string;

@@ -49,9 +49,10 @@ export default function PaymentPage() {
   const handleConfirm = async () => {
     setConfirming(true);
     try {
-      const res = await fetch('/api/create-order', {
+      const res = await fetch('http://localhost:8080/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           info: checkoutInfo,
           products: items,

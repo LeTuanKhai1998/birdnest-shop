@@ -46,8 +46,8 @@ export function ResponsiveNavbar() {
   const pathname = usePathname();
   const userFromSession = session?.user;
   const { data: user } = useSWR(
-    userFromSession ? '/api/profile' : null,
-    (url) => fetch(url).then((r) => r.json()),
+    userFromSession ? 'http://localhost:8080/api/users/profile' : null,
+    (url) => fetch(url, { credentials: 'include' }).then((r) => r.json()),
     { fallbackData: userFromSession },
   );
 

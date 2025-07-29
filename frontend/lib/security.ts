@@ -87,18 +87,22 @@ export function isValidPhone(phone: string): boolean {
   return phoneRegex.test(normalized);
 }
 
+function isRecord(val: unknown): val is Record<string, unknown> {
+  return typeof val === 'object' && val !== null && !Array.isArray(val);
+}
+
 /**
  * Sanitize and validate form data
  * @param data - Object containing form data
  * @returns Sanitized data object
  */
-export function sanitizeFormData<T extends Record<string, any>>(data: T): T {
-  const sanitized: any = {};
+export function sanitizeFormData<T extends Record<string, unknown>>(data: T): T {
+  const sanitized: Record<string, unknown> = Object.create(null);
 
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string') {
       sanitized[key] = sanitizeInput(value);
-    } else if (typeof value === 'object' && value !== null) {
+    } else if (isRecord(value)) {
       sanitized[key] = sanitizeFormData(value);
     } else {
       sanitized[key] = value;

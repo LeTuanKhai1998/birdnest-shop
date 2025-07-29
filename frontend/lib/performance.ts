@@ -3,7 +3,7 @@
  */
 
 // Debounce function for search inputs
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -16,7 +16,7 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 // Throttle function for scroll events
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -32,17 +32,17 @@ export function throttle<T extends (...args: any[]) => any>(
 }
 
 // Memoization utility
-export function memoize<T extends (...args: any[]) => any>(
+export function memoize<T extends (...args: unknown[]) => unknown>(
   fn: T,
   getKey?: (...args: Parameters<T>) => string
 ): T {
-  const cache = new Map<string, ReturnType<T>>();
+  const cache = new Map<string, unknown>();
   
   return ((...args: Parameters<T>) => {
     const key = getKey ? getKey(...args) : JSON.stringify(args);
     
     if (cache.has(key)) {
-      return cache.get(key);
+      return cache.get(key) as ReturnType<T>;
     }
     
     const result = fn(...args);
@@ -171,7 +171,7 @@ export const imageOptimization = {
 // API call optimization
 export const apiOptimization = {
   // Cache API responses
-  cache: new Map<string, { data: any; timestamp: number; ttl: number }>(),
+  cache: new Map<string, { data: unknown; timestamp: number; ttl: number }>(),
   
   // Get cached response
   getCached<T>(key: string): T | null {
@@ -183,7 +183,7 @@ export const apiOptimization = {
       return null;
     }
     
-    return cached.data;
+    return cached.data as T;
   },
   
   // Set cache
@@ -237,8 +237,8 @@ export const bundleOptimization = {
     fallback?: React.ComponentType
   ): Promise<T> {
     try {
-      const module = await importFn();
-      return module.default;
+      const mod = await importFn();
+      return mod.default;
     } catch (error) {
       console.error('Failed to load component:', error);
       if (fallback) {

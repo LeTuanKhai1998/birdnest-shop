@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Github, Mail, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Loader2 } from 'lucide-react';
 
 function LoginPageInner() {
   const [email, setEmail] = useState('');
@@ -43,12 +43,6 @@ function LoginPageInner() {
     } else if (res.url) {
       router.push(res.url);
     }
-  };
-
-  const handleSocial = async (provider: string) => {
-    setLoading(true);
-    await signIn(provider, { callbackUrl });
-    setLoading(false);
   };
 
   return (
@@ -127,18 +121,10 @@ function LoginPageInner() {
           <Button
             variant="outline"
             className="w-full flex items-center justify-center gap-2"
-            onClick={() => handleSocial('google')}
+            onClick={() => signIn('google', { callbackUrl })}
             disabled={loading}
           >
             <Mail className="w-5 h-5" /> Sign in with Google
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2"
-            onClick={() => handleSocial('github')}
-            disabled={loading}
-          >
-            <Github className="w-5 h-5" /> Sign in with GitHub
           </Button>
         </div>
         <div className="mt-6 text-center text-sm text-gray-600">

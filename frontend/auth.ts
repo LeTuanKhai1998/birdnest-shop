@@ -8,14 +8,6 @@ import Credentials from 'next-auth/providers/credentials';
 
 export const runtime = 'nodejs';
 
-console.log('[AUTH] Loaded auth.ts');
-
-if (!process.env.NEXTAUTH_SECRET) {
-  console.warn(
-    '[AUTH] WARNING: NEXTAUTH_SECRET is not set in the environment. Credential logins will fail.',
-  );
-}
-
 type AuthUser = { id: string; isAdmin: boolean; email: string; name?: string };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -33,7 +25,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        console.log('[DEBUG] Received credentials:', credentials);
         // Mock user for dev
         if (
           (credentials.email === 'test@demo.com' &&
@@ -43,7 +34,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (credentials.email === 'user@example.com' &&
             credentials.password === '123456')
         ) {
-          console.log('[DEBUG] Using mock/demo user branch');
           return {
             id: 'mock-demo-id',
             email: credentials.email,
@@ -57,12 +47,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           };
         }
         // Real DB logic
-        console.log('[DEBUG] Using real DB user branch');
         const email = credentials.email?.toString() || '';
         const user = await prisma.user.findUnique({ where: { email } });
-        console.log('[DEBUG] DB user found:', user);
         if (!user || !user.password) {
-          console.log('[DEBUG] No user or password found');
           await new Promise((res) => setTimeout(res, 5000));
           return null;
         }
@@ -70,9 +57,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const userPassword =
           typeof user.password === 'string' ? user.password : '';
         const isValid = await bcrypt.compare(password, userPassword);
-        console.log('[DEBUG] Password valid:', isValid);
         if (!isValid) {
-          console.log('[DEBUG] Password invalid');
           await new Promise((res) => setTimeout(res, 5000));
           return null;
         }
@@ -97,14 +82,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
-    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
-      ? [
-          GitHubProvider({
-            clientId: process.env.GITHUB_CLIENT_ID,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET,
-          }),
-        ]
-      : []),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -124,3 +101,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   secret: process.env.NEXTAUTH_SECRET,
 });
+
+if (!process.env.NEXTAUTH_SECRET) {
+  console.warn('[AUTH] WARNING: NEXTAUTH_SECRET is not set in the environment. Credential logins will fail.');
+}

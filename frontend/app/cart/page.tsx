@@ -6,7 +6,6 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Minus, Plus, Trash2 } from 'lucide-react';
-import Footer from '@/components/Footer';
 
 export default function CartPage() {
   const items = useCartStore((s) => s.items);
@@ -134,7 +133,6 @@ export default function CartPage() {
           </>
         )}
       </main>
-      <Footer />
     </div>
   );
 }

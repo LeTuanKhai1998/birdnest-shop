@@ -36,7 +36,7 @@ describe('Security Utils', () => {
 
     it('should handle non-string input', () => {
       const input = 123;
-      const result = sanitizeInput(input as any);
+      const result = sanitizeInput(input as unknown as string);
       expect(result).toBe(123);
     });
   });
