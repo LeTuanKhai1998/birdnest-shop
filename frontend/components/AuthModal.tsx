@@ -8,16 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { Loader2, Mail, Lock, User, Phone, Sparkles, ArrowRight, Shield, Clock } from "lucide-react";
+import { Loader2, Mail, Lock, User, Phone, ArrowRight, Shield, Clock } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  mode?: "login" | "register" | "quick";
+  mode?: "login" | "register" | "guest";
 }
 
-export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, onSuccess, mode = "login" }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<string>(mode);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,81 +29,6 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const generateDefaultPassword = () => {
-    // Generate a random 8-character password
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  const handleEmailAutoRegister = async (email: string) => {
-    setIsLoading(true);
-    
-    try {
-      // Generate default values
-      const defaultPassword = generateDefaultPassword();
-      const emailParts = email.split('@')[0]; // Use part before @ as name
-      const defaultName = emailParts.charAt(0).toUpperCase() + emailParts.slice(1);
-      
-      // Auto-register with default values
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email,
-          password: defaultPassword,
-          fullName: defaultName,
-          phone: email, // Use email as phone number
-        }),
-      });
-
-      if (response.ok) {
-        // Auto-login after successful registration
-        const result = await signIn("credentials", {
-          email: email,
-          password: defaultPassword,
-          redirect: false,
-        });
-
-        if (result?.error) {
-          toast.error("Account created but login failed. Please try signing in manually.");
-        } else {
-          toast.success(`Account created successfully! Email: ${email}, Password: ${defaultPassword}`);
-          onSuccess();
-          onClose();
-        }
-      } else {
-        const error = await response.json();
-        if (error.message?.includes("already exists")) {
-          // If account exists, try to login
-          toast.info("Account already exists. Trying to sign in...");
-          const result = await signIn("credentials", {
-            email: email,
-            password: defaultPassword,
-            redirect: false,
-          });
-
-          if (result?.error) {
-            toast.error("Account exists but password doesn't match. Please use the Sign In tab.");
-          } else {
-            toast.success("Successfully signed in!");
-            onSuccess();
-            onClose();
-          }
-        } else {
-          toast.error(error.message || "Registration failed");
-        }
-      }
-    } catch (error) {
-      toast.error("An error occurred during registration");
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -118,14 +43,14 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
       });
 
       if (result?.error) {
-        toast.error("Invalid email or password");
+        toast.error("Email hoặc mật khẩu không hợp lệ");
       } else {
-        toast.success("Successfully signed in!");
+        toast.success("Đăng nhập thành công!");
         onSuccess();
         onClose();
       }
     } catch (error) {
-      toast.error("An error occurred during sign in");
+      toast.error("Đã xảy ra lỗi trong quá trình đăng nhập");
     } finally {
       setIsLoading(false);
     }
@@ -156,38 +81,27 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
         });
 
         if (result?.error) {
-          toast.error("Registration successful but login failed. Please try logging in.");
+          toast.error("Đăng ký thành công nhưng đăng nhập thất bại. Vui lòng thử đăng nhập.");
         } else {
-          toast.success("Account created and signed in successfully!");
+          toast.success("Tài khoản đã được tạo và đăng nhập thành công!");
           onSuccess();
           onClose();
         }
       } else {
         const error = await response.json();
-        toast.error(error.message || "Registration failed");
+        toast.error(error.message || "Đăng ký thất bại");
       }
     } catch (error) {
-      toast.error("An error occurred during registration");
+      toast.error("Đã xảy ra lỗi trong quá trình đăng ký");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGuestCheckout = () => {
-    toast.success("Continuing as guest");
+    toast.success("Tiếp tục với tư cách khách");
     onSuccess();
     onClose();
-  };
-
-  const handleQuickSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email) {
-      toast.error("Please enter your email");
-      return;
-    }
-    
-    // Try auto-register with email
-    await handleEmailAutoRegister(formData.email);
   };
 
   return (
@@ -198,11 +112,11 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
           <DialogHeader className="text-center">
             <div className="flex items-center justify-center mb-3">
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center mr-3">
-                <Sparkles className="w-6 h-6 text-white" />
+                <User className="w-6 h-6 text-white" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-bold text-gray-900">Complete Your Order</DialogTitle>
-                <p className="text-sm text-gray-600 mt-1">Choose how you'd like to proceed</p>
+                <DialogTitle className="text-2xl font-bold text-gray-900">Hoàn Tất Đơn Hàng</DialogTitle>
+                <p className="text-sm text-gray-600 mt-1">Chọn cách bạn muốn tiếp tục</p>
               </div>
             </div>
           </DialogHeader>
@@ -211,97 +125,30 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
         {/* Content */}
         <div className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6 bg-gray-100 p-1 rounded-lg">
-              <TabsTrigger 
-                value="quick" 
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-600 rounded-md"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Quick
-              </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 p-1 rounded-lg">
               <TabsTrigger 
                 value="login"
                 className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-600 rounded-md"
               >
                 <User className="w-4 h-4 mr-2" />
-                Sign In
+                Đăng Nhập
               </TabsTrigger>
               <TabsTrigger 
                 value="guest"
                 className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-600 rounded-md"
               >
                 <ArrowRight className="w-4 h-4 mr-2" />
-                Guest
+                Khách
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="quick" className="space-y-6">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Mail className="w-8 h-8 text-green-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Quick Sign In</h3>
-                <p className="text-sm text-gray-600">Enter your email and we'll handle the rest</p>
-              </div>
-
-              <form onSubmit={handleQuickSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="quick-email" className="text-sm font-medium text-gray-700">Email Address</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="quick-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                      className="pl-10 h-12 border-gray-200 focus:border-red-500 focus:ring-red-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full h-12 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Creating your account...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Quick Sign In
-                    </>
-                  )}
-                </Button>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-blue-800">
-                      <p className="font-medium mb-1">What happens next?</p>
-                      <ul className="space-y-1 text-blue-700">
-                        <li>• We'll create an account for you automatically</li>
-                        <li>• Generate a secure password</li>
-                        <li>• Sign you in immediately</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            </TabsContent>
 
             <TabsContent value="login" className="space-y-6">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <User className="w-8 h-8 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Welcome Back</h3>
-                <p className="text-sm text-gray-600">Sign in to your existing account</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Chào Mừng Trở Lại</h3>
+                <p className="text-sm text-gray-600">Đăng nhập vào tài khoản hiện có</p>
               </div>
 
               <form onSubmit={handleLogin} className="space-y-4">
@@ -321,13 +168,13 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password" className="text-sm font-medium text-gray-700">Password</Label>
+                  <Label htmlFor="login-password" className="text-sm font-medium text-gray-700">Mật Khẩu</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="login-password"
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Nhập mật khẩu của bạn"
                       value={formData.password}
                       onChange={(e) => handleInputChange("password", e.target.value)}
                       className="pl-10 h-12 border-gray-200 focus:border-red-500 focus:ring-red-500"
@@ -343,12 +190,12 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Signing in...
+                      Đang đăng nhập...
                     </>
                   ) : (
                     <>
                       <User className="mr-2 h-5 w-5" />
-                      Sign In
+                      Đăng Nhập
                     </>
                   )}
                 </Button>
@@ -360,8 +207,8 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
                 <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
                   <ArrowRight className="w-8 h-8 text-gray-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Continue as Guest</h3>
-                <p className="text-sm text-gray-600">No account needed to complete your order</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Tiếp Tục Làm Khách</h3>
+                <p className="text-sm text-gray-600">Không cần tài khoản để hoàn tất đơn hàng</p>
               </div>
 
               <div className="space-y-4">
@@ -369,11 +216,11 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
                   <div className="flex items-start space-x-3">
                     <Clock className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-gray-700">
-                      <p className="font-medium mb-1">Guest checkout benefits:</p>
+                      <p className="font-medium mb-1">Lợi ích khi thanh toán khách:</p>
                       <ul className="space-y-1 text-gray-600">
-                        <li>• Complete your order immediately</li>
-                        <li>• No account creation required</li>
-                        <li>• Create account later to track orders</li>
+                        <li>• Hoàn tất đơn hàng ngay lập tức</li>
+                        <li>• Không cần tạo tài khoản</li>
+                        <li>• Tạo tài khoản sau để theo dõi đơn hàng</li>
                       </ul>
                     </div>
                   </div>
@@ -384,7 +231,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, mode = "quick" }: AuthMo
                   className="w-full h-12 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <ArrowRight className="mr-2 h-5 w-5" />
-                  Continue as Guest
+                  Tiếp Tục Làm Khách
                 </Button>
               </div>
             </TabsContent>
