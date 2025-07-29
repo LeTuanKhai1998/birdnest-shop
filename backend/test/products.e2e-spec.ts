@@ -89,4 +89,4 @@ describe('ProductsController (e2e)', () => {
         .expect(404);
     });
   });
-}); 
+});

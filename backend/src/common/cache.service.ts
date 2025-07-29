@@ -20,7 +20,9 @@ export class CacheService {
   set<T>(key: string, value: T, ttl: number = this.defaultTTL): void {
     const expiresAt = Date.now() + ttl;
     this.cache.set(key, { value, expiresAt });
-    this.logger.debug(`Cached key: ${key}, expires at: ${new Date(expiresAt).toISOString()}`);
+    this.logger.debug(
+      `Cached key: ${key}, expires at: ${new Date(expiresAt).toISOString()}`,
+    );
   }
 
   /**
@@ -30,7 +32,7 @@ export class CacheService {
    */
   get<T>(key: string): T | null {
     const item = this.cache.get(key);
-    
+
     if (!item) {
       return null;
     }
@@ -106,9 +108,9 @@ export class CacheService {
   generateKey(prefix: string, params: Record<string, any>): string {
     const sortedParams = Object.keys(params)
       .sort()
-      .map(key => `${key}:${params[key]}`)
+      .map((key) => `${key}:${params[key]}`)
       .join('|');
-    
+
     return `${prefix}:${sortedParams}`;
   }
 
@@ -117,13 +119,20 @@ export class CacheService {
    * @param ttl - Time to live in milliseconds
    * @param keyGenerator - Function to generate cache key
    */
-  static Cache(ttl: number = 300000, keyGenerator?: (...args: any[]) => string) {
-    return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+  static Cache(
+    ttl: number = 300000,
+    keyGenerator?: (...args: any[]) => string,
+  ) {
+    return function (
+      target: any,
+      propertyName: string,
+      descriptor: PropertyDescriptor,
+    ) {
       const method = descriptor.value;
       const cacheService = new CacheService();
 
       descriptor.value = async function (...args: any[]) {
-        const key = keyGenerator 
+        const key = keyGenerator
           ? keyGenerator(...args)
           : `${target.constructor.name}:${propertyName}:${JSON.stringify(args)}`;
 
@@ -138,4 +147,4 @@ export class CacheService {
       };
     };
   }
-} 
+}

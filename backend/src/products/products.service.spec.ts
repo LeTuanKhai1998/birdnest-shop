@@ -193,7 +193,9 @@ describe('ProductsService', () => {
         images: [mockImage],
         reviews: [],
       };
-      mockPrismaService.product.findUnique.mockResolvedValue(mockProductWithDetails);
+      mockPrismaService.product.findUnique.mockResolvedValue(
+        mockProductWithDetails,
+      );
 
       const result = await service.findOne('1');
 
@@ -234,7 +236,9 @@ describe('ProductsService', () => {
         images: [mockImage],
         reviews: [],
       };
-      mockPrismaService.product.findUnique.mockResolvedValue(mockProductWithDetails);
+      mockPrismaService.product.findUnique.mockResolvedValue(
+        mockProductWithDetails,
+      );
 
       const result = await service.findBySlug('test-product');
 
@@ -349,4 +353,4 @@ describe('ProductsService', () => {
       expect(mockPrismaService.category.findMany).toHaveBeenCalled();
     });
   });
-}); 
+});

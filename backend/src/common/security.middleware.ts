@@ -43,12 +43,14 @@ export class SecurityMiddleware implements NestMiddleware {
       return str;
     }
 
-    return str
-      // Remove null bytes
-      .replace(/\0/g, '')
-      // Remove control characters except newlines and tabs
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-      // Trim whitespace
-      .trim();
+    return (
+      str
+        // Remove null bytes
+        .replace(/\0/g, '')
+        // Remove control characters except newlines and tabs
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        // Trim whitespace
+        .trim()
+    );
   }
-} 
+}

@@ -25,12 +25,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
+
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
-      } else if (typeof exceptionResponse === 'object' && 'message' in exceptionResponse) {
-        message = Array.isArray(exceptionResponse.message) 
-          ? exceptionResponse.message[0] 
+      } else if (
+        typeof exceptionResponse === 'object' &&
+        'message' in exceptionResponse
+      ) {
+        message = Array.isArray(exceptionResponse.message)
+          ? exceptionResponse.message[0]
           : exceptionResponse.message;
       }
     }
@@ -51,9 +54,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       message,
       timestamp: new Date().toISOString(),
       path: request.url,
-      ...(isProduction ? {} : { stack: exception instanceof Error ? exception.stack : undefined }),
+      ...(isProduction
+        ? {}
+        : { stack: exception instanceof Error ? exception.stack : undefined }),
     };
 
     response.status(status).json(errorResponse);
   }
-} 
+}

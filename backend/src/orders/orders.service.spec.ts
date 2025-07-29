@@ -238,7 +238,9 @@ describe('OrdersService', () => {
         user: mockUser,
         orderItems: [mockOrderItem],
       };
-      mockPrismaService.order.findUnique.mockResolvedValue(mockOrderWithDetails);
+      mockPrismaService.order.findUnique.mockResolvedValue(
+        mockOrderWithDetails,
+      );
 
       const result = await service.findOne('1');
 
@@ -377,4 +379,4 @@ describe('OrdersService', () => {
       expect(mockPrismaService.order.groupBy).toHaveBeenCalled();
     });
   });
-}); 
+});

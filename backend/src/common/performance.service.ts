@@ -61,17 +61,18 @@ export class PerformanceService {
     }
 
     const totalRequests = this.metrics.length;
-    const averageResponseTime = this.metrics.reduce((sum, m) => sum + m.responseTime, 0) / totalRequests;
-    
-    const slowest = this.metrics.reduce((slowest, current) => 
-      current.responseTime > slowest.responseTime ? current : slowest
-    );
-    
-    const fastest = this.metrics.reduce((fastest, current) => 
-      current.responseTime < fastest.responseTime ? current : fastest
+    const averageResponseTime =
+      this.metrics.reduce((sum, m) => sum + m.responseTime, 0) / totalRequests;
+
+    const slowest = this.metrics.reduce((slowest, current) =>
+      current.responseTime > slowest.responseTime ? current : slowest,
     );
 
-    const errorCount = this.metrics.filter(m => m.statusCode >= 400).length;
+    const fastest = this.metrics.reduce((fastest, current) =>
+      current.responseTime < fastest.responseTime ? current : fastest,
+    );
+
+    const errorCount = this.metrics.filter((m) => m.statusCode >= 400).length;
     const errorRate = (errorCount / totalRequests) * 100;
 
     return {
@@ -88,7 +89,7 @@ export class PerformanceService {
    */
   getEndpointStats(endpoint: string, method: string): PerformanceStats {
     const endpointMetrics = this.metrics.filter(
-      m => m.endpoint === endpoint && m.method === method
+      (m) => m.endpoint === endpoint && m.method === method,
     );
 
     if (endpointMetrics.length === 0) {
@@ -102,17 +103,21 @@ export class PerformanceService {
     }
 
     const totalRequests = endpointMetrics.length;
-    const averageResponseTime = endpointMetrics.reduce((sum, m) => sum + m.responseTime, 0) / totalRequests;
-    
-    const slowest = endpointMetrics.reduce((slowest, current) => 
-      current.responseTime > slowest.responseTime ? current : slowest
-    );
-    
-    const fastest = endpointMetrics.reduce((fastest, current) => 
-      current.responseTime < fastest.responseTime ? current : fastest
+    const averageResponseTime =
+      endpointMetrics.reduce((sum, m) => sum + m.responseTime, 0) /
+      totalRequests;
+
+    const slowest = endpointMetrics.reduce((slowest, current) =>
+      current.responseTime > slowest.responseTime ? current : slowest,
     );
 
-    const errorCount = endpointMetrics.filter(m => m.statusCode >= 400).length;
+    const fastest = endpointMetrics.reduce((fastest, current) =>
+      current.responseTime < fastest.responseTime ? current : fastest,
+    );
+
+    const errorCount = endpointMetrics.filter(
+      (m) => m.statusCode >= 400,
+    ).length;
     const errorRate = (errorCount / totalRequests) * 100;
 
     return {
@@ -129,7 +134,7 @@ export class PerformanceService {
    */
   getRecentMetrics(minutes: number = 5): PerformanceMetric[] {
     const cutoff = new Date(Date.now() - minutes * 60 * 1000);
-    return this.metrics.filter(m => m.timestamp > cutoff);
+    return this.metrics.filter((m) => m.timestamp > cutoff);
   }
 
   /**
@@ -138,25 +143,33 @@ export class PerformanceService {
   clearOldMetrics(minutes: number = 60): number {
     const cutoff = new Date(Date.now() - minutes * 60 * 1000);
     const initialLength = this.metrics.length;
-    
-    const filtered = this.metrics.filter(m => m.timestamp > cutoff);
+
+    const filtered = this.metrics.filter((m) => m.timestamp > cutoff);
     this.metrics.splice(0, this.metrics.length, ...filtered);
-    
+
     const cleared = initialLength - this.metrics.length;
     if (cleared > 0) {
       this.logger.debug(`Cleared ${cleared} old performance metrics`);
     }
-    
+
     return cleared;
   }
 
   /**
    * Get top slowest endpoints
    */
-  getSlowestEndpoints(limit: number = 10): Array<{ endpoint: string; method: string; avgResponseTime: number; count: number }> {
-    const endpointStats = new Map<string, { totalTime: number; count: number }>();
+  getSlowestEndpoints(limit: number = 10): Array<{
+    endpoint: string;
+    method: string;
+    avgResponseTime: number;
+    count: number;
+  }> {
+    const endpointStats = new Map<
+      string,
+      { totalTime: number; count: number }
+    >();
 
-    this.metrics.forEach(metric => {
+    this.metrics.forEach((metric) => {
       const key = `${metric.method} ${metric.endpoint}`;
       const existing = endpointStats.get(key) || { totalTime: 0, count: 0 };
       endpointStats.set(key, {
@@ -175,4 +188,4 @@ export class PerformanceService {
       .sort((a, b) => b.avgResponseTime - a.avgResponseTime)
       .slice(0, limit);
   }
-} 
+}

@@ -21,15 +21,11 @@ describe('Basic App (e2e)', () => {
 
   describe('Health Check', () => {
     it('should return 200 for root endpoint', () => {
-      return request(app.getHttpServer())
-        .get('/')
-        .expect(200);
+      return request(app.getHttpServer()).get('/').expect(200);
     });
 
     it('should return 404 for non-existent endpoint', () => {
-      return request(app.getHttpServer())
-        .get('/api/non-existent')
-        .expect(404);
+      return request(app.getHttpServer()).get('/api/non-existent').expect(404);
     });
   });
-}); 
+});

@@ -219,6 +219,21 @@ npx prisma migrate reset
 npx prisma studio
 ```
 
+## 🏃‍♂️ Easy Run with Makefile
+
+You can use the provided `Makefile` for quick project commands:
+
+```bash
+make backend   # Start backend server (NestJS)
+make frontend  # Start frontend (Next.js)
+make run       # Start both backend and frontend in parallel
+make test      # Run all backend and frontend tests
+make stop      # Stop all running dev servers
+```
+
+- By default, backend runs on http://localhost:8080 and frontend on http://localhost:3000
+- Make sure your `.env` files are set up as described above.
+
 ## 🚀 Deployment
 
 ### Frontend Deployment (Vercel)
