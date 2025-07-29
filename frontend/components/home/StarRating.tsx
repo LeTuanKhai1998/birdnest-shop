@@ -2,19 +2,22 @@
 
 export function StarRating() {
   return (
-    <section className="w-full py-6 sm:py-8">
+    <section className="w-full py-10 sm:py-12 lg:py-16">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center justify-center">
           {/* Star Rating */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
             {[...Array(5)].map((_, index) => (
               <svg
                 key={index}
-                className="w-6 h-6 sm:w-8 sm:h-8"
+                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 drop-shadow-lg filter"
                 viewBox="0 0 24 24"
                 fill="url(#metalGradient)"
                 stroke="url(#metalGradient)"
                 strokeWidth="0"
+                style={{
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3)) drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                }}
               >
                 <defs>
                   <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -32,16 +35,16 @@ export function StarRating() {
           
           {/* Rating Text */}
           <div className="text-center">
-            <p className="text-sm sm:text-base text-gray-600 font-medium">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 font-medium">
               Đánh giá xuất sắc từ hơn 1,000+ khách hàng
             </p>
           </div>
           
           {/* Decorative Elements */}
-          <div className="flex items-center gap-4 mt-4">
-            <div className="w-8 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-            <div className="w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"></div>
-            <div className="w-8 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+          <div className="flex items-center gap-6 sm:gap-8 mt-6 sm:mt-8">
+            <div className="w-12 sm:w-16 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full shadow-md"></div>
+            <div className="w-12 sm:w-16 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
           </div>
         </div>
       </div>
