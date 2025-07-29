@@ -1,18 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from 'next/font/google';
+import "./fonts.css";
 import "./globals.css";
 import { ResponsiveNavbar } from "@/components/ResponsiveNavbar";
 import { Providers } from "@/components/Providers";
 import { HydrationSafe } from "@/components/HydrationSafe";
 import Footer from "@/components/Footer";
-
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '700', '900'],
-  style: ['normal', 'italic'],
-  variable: '--font-inter',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -25,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} font-sans`}>
+    <html lang="en" className="font-sans">
       <body>
         <Providers>
           <HydrationSafe>

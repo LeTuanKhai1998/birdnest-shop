@@ -14,7 +14,23 @@ import useSWR from "swr/immutable";
 import { fetcher } from "@/lib/utils";
 import type { Order } from "@/lib/mock-orders";
 import { toast } from "sonner";
-import { BarChart, Bar, Tooltip as RechartsTooltip, Cell, PieChart, Pie, Cell as RechartsCell, Legend as RechartsLegend } from "recharts";
+import { 
+  BarChart, 
+  Bar, 
+  Tooltip as RechartsTooltip, 
+  Cell, 
+  PieChart, 
+  Pie, 
+  Cell as RechartsCell, 
+  Legend as RechartsLegend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid
+} from "recharts";
 import Papa from "papaparse";
 import "jspdf-autotable";
 import { format, parseISO, isAfter, isBefore } from "date-fns";
@@ -26,14 +42,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Product } from "@/components/ProductCard";
 import Image from "next/image";
-
-const ResponsiveContainer = dynamic(() => import("recharts").then(m => m.ResponsiveContainer), { ssr: false });
-const LineChart = dynamic(() => import("recharts").then(m => m.LineChart), { ssr: false });
-const Line = dynamic(() => import("recharts").then(m => m.Line), { ssr: false });
-const XAxis = dynamic(() => import("recharts").then(m => m.XAxis), { ssr: false });
-const YAxis = dynamic(() => import("recharts").then(m => m.YAxis), { ssr: false });
-const Tooltip = dynamic(() => import("recharts").then(m => m.Tooltip), { ssr: false });
-const CartesianGrid = dynamic(() => import("recharts").then(m => m.CartesianGrid), { ssr: false });
 
 const metrics = [
   {
@@ -598,7 +606,7 @@ export default function AdminDashboardPage() {
                   lowStockProducts.map((product) => (
                     <tr key={product.id} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
                       <td className="py-2 px-3 flex items-center gap-3">
-                        <Image src={product.images?.[0] || '/fallback.png'} alt={product.name} width={40} height={40} className="rounded object-cover border" />
+                        <Image src={product.images?.[0] || '/images/fallback.png'} alt={product.name} width={40} height={40} className="rounded object-cover border" />
                         <span className="font-semibold">{product.name}</span>
                       </td>
                       <td className="py-2 px-3 font-semibold">{product.quantity ?? 0}</td>
@@ -648,7 +656,7 @@ export default function AdminDashboardPage() {
                   topProducts.map((product) => (
                     <tr key={product.name} className="border-b hover:bg-gray-50 dark:hover:bg-neutral-700 transition">
                       <td className="py-2 px-3 flex items-center gap-3">
-                        <Image src={product.image || '/fallback.png'} alt={product.name} width={40} height={40} className="rounded object-cover border" />
+                        <Image src={product.image || '/images/fallback.png'} alt={product.name} width={40} height={40} className="rounded object-cover border" />
                         <span className="font-semibold">{product.name}</span>
                       </td>
                       <td className="py-2 px-3 font-semibold">{product.unitsSold}</td>
