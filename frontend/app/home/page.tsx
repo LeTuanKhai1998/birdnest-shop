@@ -1,5 +1,3 @@
-'use client';
-
 import { Metadata } from 'next';
 import { HeroSection } from '@/components/home/HeroSection';
 import { PromotionalBanner } from '@/components/home/PromotionalBanner';
