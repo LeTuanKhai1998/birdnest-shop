@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
+import { CacheService } from '../common/cache.service';
 import { Product, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cacheService: CacheService,
+  ) {}
 
   async findAll(params: {
     skip?: number;
@@ -13,6 +17,20 @@ export class ProductsService {
     search?: string;
   }): Promise<Product[]> {
     const { skip, take, categoryId, search } = params;
+
+    // Generate cache key
+    const cacheKey = this.cacheService.generateKey('products:findAll', {
+      skip: skip || 0,
+      take: take || 10,
+      categoryId: categoryId || '',
+      search: search || '',
+    });
+
+    // Try to get from cache first
+    const cached = this.cacheService.get<Product[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
     const where: Prisma.ProductWhereInput = {};
 
@@ -27,7 +45,7 @@ export class ProductsService {
       ];
     }
 
-    return this.prisma.product.findMany({
+    const products = await this.prisma.product.findMany({
       where,
       skip,
       take,
@@ -41,10 +59,22 @@ export class ProductsService {
         },
       },
     });
+
+    // Cache the result for 5 minutes
+    this.cacheService.set(cacheKey, products, 300000);
+
+    return products;
   }
 
   async findOne(id: string): Promise<Product | null> {
-    return this.prisma.product.findUnique({
+    // Try to get from cache first
+    const cacheKey = `products:findOne:${id}`;
+    const cached = this.cacheService.get<Product>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
         category: true,
@@ -61,6 +91,13 @@ export class ProductsService {
         },
       },
     });
+
+    // Cache the result for 10 minutes
+    if (product) {
+      this.cacheService.set(cacheKey, product, 600000);
+    }
+
+    return product;
   }
 
   async findBySlug(slug: string): Promise<Product | null> {
@@ -84,17 +121,23 @@ export class ProductsService {
   }
 
   async create(data: Prisma.ProductCreateInput): Promise<Product> {
-    return this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data,
       include: {
         category: true,
         images: true,
       },
     });
+
+    // Invalidate cache
+    this.cacheService.delete('products:findAll');
+    this.cacheService.delete(`products:findOne:${product.id}`);
+
+    return product;
   }
 
   async update(id: string, data: Prisma.ProductUpdateInput): Promise<Product> {
-    return this.prisma.product.update({
+    const product = await this.prisma.product.update({
       where: { id },
       data,
       include: {
@@ -102,12 +145,24 @@ export class ProductsService {
         images: true,
       },
     });
+
+    // Invalidate cache
+    this.cacheService.delete('products:findAll');
+    this.cacheService.delete(`products:findOne:${id}`);
+
+    return product;
   }
 
   async delete(id: string): Promise<Product> {
-    return this.prisma.product.delete({
+    const product = await this.prisma.product.delete({
       where: { id },
     });
+
+    // Invalidate cache
+    this.cacheService.delete('products:findAll');
+    this.cacheService.delete(`products:findOne:${id}`);
+
+    return product;
   }
 
   async getCategories() {

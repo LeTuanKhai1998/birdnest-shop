@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../common/prisma.service';
+import { CacheService } from '../common/cache.service';
 import { Product, Category, Image, Prisma } from '@prisma/client';
 
 describe('ProductsService', () => {
@@ -56,6 +57,15 @@ describe('ProductsService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: CacheService,
+          useValue: {
+            get: jest.fn().mockReturnValue(null),
+            set: jest.fn(),
+            delete: jest.fn(),
+            generateKey: jest.fn().mockReturnValue('test-key'),
+          },
         },
       ],
     }).compile();

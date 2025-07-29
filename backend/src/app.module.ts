@@ -9,6 +9,9 @@ import { ProductsModule } from './products/products.module';
 import { OrdersModule } from './orders/orders.module';
 import { PrismaService } from './common/prisma.service';
 import { SecurityMiddleware } from './common/security.middleware';
+import { CacheService } from './common/cache.service';
+import { PerformanceService } from './common/performance.service';
+import { PerformanceInterceptor } from './common/performance.interceptor';
 
 @Module({
   imports: [
@@ -31,7 +34,7 @@ import { SecurityMiddleware } from './common/security.middleware';
     OrdersModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [AppService, PrismaService, CacheService, PerformanceService, PerformanceInterceptor],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

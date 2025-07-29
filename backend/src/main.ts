@@ -4,6 +4,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { GlobalExceptionFilter } from './common/global-exception.filter';
+import { PerformanceInterceptor } from './common/performance.interceptor';
+import { PerformanceService } from './common/performance.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +15,9 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());
+
+  // Global performance interceptor
+  app.useGlobalInterceptors(new PerformanceInterceptor(app.get(PerformanceService)));
 
   // Enable CORS with strict configuration
   app.enableCors({
