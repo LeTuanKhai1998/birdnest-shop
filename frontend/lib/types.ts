@@ -138,3 +138,21 @@ export interface OrderStats {
   averageOrderValue: string;
   ordersByStatus: Record<OrderStatus, number>;
 }
+
+// Settings types
+export interface SettingsData {
+  storeName: string;
+  storeEmail: string;
+  storePhone?: string;
+  defaultLanguage: 'en' | 'vi';
+  currency: string;
+  taxPercent: number;
+  freeShippingThreshold: number;
+  enableStripe: boolean;
+  enableMomo: boolean;
+  enableCOD: boolean;
+  maintenanceMode: boolean;
+  logoUrl?: string;
+  address?: string;
+  country?: string;
+}

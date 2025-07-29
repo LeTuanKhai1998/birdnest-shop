@@ -346,30 +346,131 @@
 
 ---
 
-### 10. About Page Feature Implementation [ ]
+### 10. About Page Feature Implementation [X]
 
-- [ ] Create new `/about` page using Next.js app router (e.g. `app/about/page.tsx`)
-- [ ] Hero section: full-width banner image + mission tagline + CTA button
-- [ ] Story section: timeline cards or alternating left/right grid layout
-- [ ] Team section: introduce founders or small team, with portraits + roles
-- [ ] Social proof: logos of partners, media quotes, or testimonials
-- [ ] Design details:
+- [X] Create new `/about` page using Next.js app router (e.g. `app/about/page.tsx`)
+- [X] Hero section: full-width banner image + mission tagline + CTA button
+- [X] Story section: timeline cards or alternating left/right grid layout
+- [X] Team section: introduce founders or small team, with portraits + roles
+- [X] Social proof: logos of partners, media quotes, or testimonials
+- [X] Design details:
   - Choose light or vibrant palette consistently
   - Use whitespace and typographic hierarchy
-- [ ] Responsive behavior:
+- [X] Responsive behavior:
   - Mobile-first layout
   - Conditionally show/hide sections if needed
-- [ ] Internationalization support:
+- [X] Internationalization support:
   - Use `t('about.hero')`, `t('about.story.card1')`, etc.
-- [ ] Accessibility:
+- [X] Accessibility:
   - Images have alt text
   - Contrast meets WCAG standards
-- [ ] SEO:
+- [X] SEO:
   - Set meta tags: title, description, OG image
+
+### 11. Contact Page Feature Implementation [X]
+
+- [ ] Create `app/contact/page.tsx` using Next.js App Router
+- [ ] Hero Section:
+  - Full-width background image + tagline (e.g. “How can we help?”)
+  - Short subtitle and form or CTA button to scroll
+- [ ] Contact Methods Section:
+  - Display email, phone, and operating hours
+  - Optionally separate by inquiry type
+- [ ] Inquiry Form:
+  - Fields: Name, Email, Phone (optional), Topic (dropdown), Message
+  - Submit handler connects to backend API `/api/contact`
+  - Show confirmation prompt and response time estimate
+- [ ] FAQ or Help Center Links:
+  - Provide quick links under form (Shipping, Returns, Payment)
+- [ ] Brand-aligned visuals and spacing:
+  - Use Tailwind: consistent spacing, font, and color scheme
+  - Alt text for all images
+- [ ] Responsive behavior:
+  - Stack layout for mobile (hero, then methods, then form)
+  - Use columns on desktop
+- [ ] i18n support:
+  - Use `t('contact.hero')`, `t('contact.form.name')`, etc.
+- [ ] SEO metadata:
+  - Set `<title>Contact Us – Birdnest Shop</title>`
+  - Include meta description and Open Graph tags
+
+
+### 12. Settings Page [Admin] Implementation [X]
+
+Path: `app/(admin)/settings/page.tsx`
+
+- [ ] UI
+  - Use `SettingsForm` component
+  - Shadcn UI form with sections:
+    - General (Store name, email, phone)
+    - Branding (Logo upload)
+    - Location (Address, country)
+    - Order / Checkout (Currency, tax %, free shipping threshold, enable COD)
+    - Payment methods toggles: Stripe / Momo / COD
+    - Language default: `en` or `vi`
+    - Maintenance mode toggle
+  - Use `useForm` from `react-hook-form` + `zod` schema for validation
+  - Persist state via API (`/api/settings`)
+
+- [ ] Data Fetching
+  - Server-side load existing values via `getServerSideProps()` or `getSettings()` helper
+
+- [ ] API Endpoint (if missing, auto-generate)
+  - Route: `POST /api/settings`
+  - Create new handler under `app/api/settings/route.ts`
+  - Save to `Settings` table (or key-value config store)
+  - Use Prisma schema:
+
+    ```ts
+    model Setting {
+      id         String   @id @default(cuid())
+      key        String   @unique
+      value      String
+      createdAt  DateTime @default(now())
+      updatedAt  DateTime @updatedAt
+    }
+    ```
+
+  - Example keys:
+    - `store_name`, `store_email`, `default_language`, `logo_url`, `free_shipping_threshold`, `maintenance_mode`, etc.
+
+- [ ] Auto-Prompt: if `Setting` table or endpoint `/api/settings` doesn’t exist, prompt Cursor to:
+  - Scaffold the table using Prisma
+  - Scaffold `route.ts` with `GET`, `POST`, and optional `PUT`
+
+- [ ] Localization Support
+  - Wrap all labels with `t('settings.general.store_name')` for i18n
+  - Support both `en` and `vi`
+
+- [ ] Validation (Zod Schema)
+  ```ts
+  const settingsSchema = z.object({
+    storeName: z.string().min(2),
+    email: z.string().email(),
+    phone: z.string().optional(),
+    defaultLanguage: z.enum(['en', 'vi']),
+    currency: z.string().min(1),
+    taxPercent: z.number().min(0).max(100),
+    freeShippingThreshold: z.number().min(0),
+    enableStripe: z.boolean(),
+    enableMomo: z.boolean(),
+    enableCOD: z.boolean(),
+    maintenanceMode: z.boolean(),
+  });
+
+## 🧠 Notes
+
+- Use a `SettingsService` utility to map key-value store to/from JSON config
+- Reuse these settings across the app by loading on server + caching
+- This approach is extensible and scalable for future additions (e.g. themes, business hours)
 
 ---
 
-### 11. CI/CD and Deployment Readiness [ ]
+Would you like me to generate the initial UI code or the Prisma `Setting` model + API handler next?
+
+---
+
+### 13. CI/CD and Deployment Readiness [ ]
 
 - [ ] Setup `.dockerignore`, `.env.example` files
 - [ ] Dockerize backend with production-ready Dockerfile
@@ -383,7 +484,7 @@
 
 ---
 
-### 12. Observability and Logging [ ]
+### 14. Observability and Logging [ ]
 
 - [ ] Add global error handler middleware (backend)
 - [ ] Add structured logs (`logger.service.ts` or `pino`)
@@ -392,7 +493,7 @@
 
 ---
 
-### 13. Documentation and Developer Experience [ ]
+### 15. Documentation and Developer Experience [ ]
 
 - [ ] Generate Swagger docs at `/api-docs`
 - [ ] Write `README.md` inside `backend/`:

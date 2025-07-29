@@ -7,6 +7,7 @@ import {
   OrdersParams,
   CreateOrderData,
   OrderStats,
+  SettingsData,
 } from './types';
 
 // API payload types for create/update operations
@@ -192,6 +193,18 @@ class ApiService {
     return this.request<{ access_token: string; user: any }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
+    });
+  }
+
+  // Settings API
+  async getSettings(): Promise<SettingsData> {
+    return this.request<SettingsData>('/settings');
+  }
+
+  async updateSettings(data: Partial<SettingsData>): Promise<SettingsData> {
+    return this.request<SettingsData>('/settings', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 }
