@@ -1,13 +1,8 @@
 'use client';
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { ProductCard, type Product } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -27,12 +22,9 @@ import {
   PaginationNext,
 } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const nestTypes = ['Refined Nest', 'Raw Nest', 'Feather-removed Nest'];
-const weights = [50, 100, 200];
-const minPrice = 0;
-const maxPrice = 10000000;
-const PRODUCTS_PER_PAGE = 8;
+import { PRODUCTS_CONSTANTS } from '@/lib/constants';
+import { Search, Filter, X, ChevronDown } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 export default function ProductsClient({ products }: { products: Product[] }) {
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
@@ -40,12 +32,14 @@ export default function ProductsClient({ products }: { products: Product[] }) {
     currency: 'VND',
     maximumFractionDigits: 0,
   });
+  
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedWeights, setSelectedWeights] = useState<number[]>([]);
-  const [price, setPrice] = useState<number>(maxPrice);
+  const [price, setPrice] = useState<number>(PRODUCTS_CONSTANTS.filters.priceRange.max);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [search, setSearch] = useState('');
   const [loading] = useState(false);
+  const [expandedFilters, setExpandedFilters] = useState<string[]>(['type']);
 
   // Filtering logic
   const filteredProducts = products.filter((product) => {
@@ -67,10 +61,10 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
   // Pagination logic
   const totalPages =
-    Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE) || 1;
+    Math.ceil(filteredProducts.length / PRODUCTS_CONSTANTS.pagination.itemsPerPage) || 1;
   const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * PRODUCTS_PER_PAGE,
-    currentPage * PRODUCTS_PER_PAGE,
+    (currentPage - 1) * PRODUCTS_CONSTANTS.pagination.itemsPerPage,
+    currentPage * PRODUCTS_CONSTANTS.pagination.itemsPerPage,
   );
 
   // Handlers
@@ -80,6 +74,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
     );
     setCurrentPage(1);
   };
+  
   const handleWeightChange = (weight: number) => {
     setSelectedWeights((prev) =>
       prev.includes(weight)
@@ -88,208 +83,390 @@ export default function ProductsClient({ products }: { products: Product[] }) {
     );
     setCurrentPage(1);
   };
+  
   const handlePriceChange = (value: number[]) => {
     setPrice(value[0]);
     setCurrentPage(1);
   };
+  
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+  
   const handlePrev = () => {
     setCurrentPage((prev) => Math.max(1, prev - 1));
   };
+  
   const handleNext = () => {
     setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
+  
   const handleResetFilters = () => {
     setSelectedTypes([]);
     setSelectedWeights([]);
-    setPrice(maxPrice);
+    setPrice(PRODUCTS_CONSTANTS.filters.priceRange.max);
     setSearch('');
     setCurrentPage(1);
   };
 
+  const toggleFilter = (filterName: string) => {
+    setExpandedFilters((prev) =>
+      prev.includes(filterName)
+        ? prev.filter((f) => f !== filterName)
+        : [...prev, filterName]
+    );
+  };
+
   const FilterContent = (
-    <>
-      <h2 className="text-lg font-semibold md:hidden mb-2">Filters</h2>
-      <Accordion type="multiple" className="space-y-2">
-        <AccordionItem value="type">
-          <AccordionTrigger>Type</AccordionTrigger>
-          <AccordionContent>
-            <div className="flex flex-col gap-2">
-              {nestTypes.map((type) => (
-                <label
-                  key={type}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Checkbox
-                    checked={selectedTypes.includes(type)}
-                    onCheckedChange={() => handleTypeChange(type)}
-                    id={`type-${type}`}
-                  />
-                  <span className="text-sm">{type}</span>
-                </label>
-              ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="weight">
-          <AccordionTrigger>Weight</AccordionTrigger>
-          <AccordionContent>
-            <div className="flex flex-col gap-2">
-              {weights.map((weight) => (
-                <label
-                  key={weight}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Checkbox
-                    checked={selectedWeights.includes(weight)}
-                    onCheckedChange={() => handleWeightChange(weight)}
-                    id={`weight-${weight}`}
-                  />
-                  <span className="text-sm">{weight}g</span>
-                </label>
-              ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="price">
-          <AccordionTrigger>Price</AccordionTrigger>
-          <AccordionContent>
-            <div className="flex flex-col gap-2">
+    <div className="space-y-8">
+      <div className="text-center pb-6 border-b border-gray-200">
+        <h3 className="text-2xl font-bold text-[#a10000] mb-2">
+          {PRODUCTS_CONSTANTS.filters.title}
+        </h3>
+        <p className="text-sm text-gray-600">Tìm kiếm sản phẩm phù hợp</p>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleResetFilters}
+          className="mt-4 text-sm text-gray-600 hover:text-[#a10000] hover:bg-red-50 rounded-full px-4 py-2 transition-all duration-200"
+        >
+          <X className="w-4 h-4 mr-2" />
+          Xóa tất cả bộ lọc
+        </Button>
+      </div>
+
+      {/* Type Filter */}
+      <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-6 border border-red-100">
+        <button
+          onClick={() => toggleFilter('type')}
+          className="flex items-center justify-between w-full text-left font-semibold text-[#a10000] mb-4 text-lg"
+        >
+          <span className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-[#a10000] rounded-full"></div>
+            Loại Yến
+          </span>
+          <ChevronDown 
+            className={`w-5 h-5 transition-transform duration-200 ${
+              expandedFilters.includes('type') ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+        {expandedFilters.includes('type') && (
+          <div className="space-y-3">
+            {PRODUCTS_CONSTANTS.filters.types.map((type) => (
+              <label
+                key={type.value}
+                className="flex items-center gap-3 cursor-pointer hover:bg-white/60 p-3 rounded-xl transition-all duration-200 border border-transparent hover:border-red-200"
+              >
+                <Checkbox
+                  checked={selectedTypes.includes(type.value)}
+                  onCheckedChange={() => handleTypeChange(type.value)}
+                  id={`type-${type.value}`}
+                  className="text-[#a10000] data-[state=checked]:bg-[#a10000] data-[state=checked]:border-[#a10000]"
+                />
+                <span className="text-sm font-medium text-gray-800">{type.label}</span>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Weight Filter */}
+      <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-2xl p-6 border border-orange-100">
+        <button
+          onClick={() => toggleFilter('weight')}
+          className="flex items-center justify-between w-full text-left font-semibold text-[#a10000] mb-4 text-lg"
+        >
+          <span className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+            Trọng Lượng
+          </span>
+          <ChevronDown 
+            className={`w-5 h-5 transition-transform duration-200 ${
+              expandedFilters.includes('weight') ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+        {expandedFilters.includes('weight') && (
+          <div className="space-y-3">
+            {PRODUCTS_CONSTANTS.filters.weights.map((weight) => (
+              <label
+                key={weight.value}
+                className="flex items-center gap-3 cursor-pointer hover:bg-white/60 p-3 rounded-xl transition-all duration-200 border border-transparent hover:border-orange-200"
+              >
+                <Checkbox
+                  checked={selectedWeights.includes(weight.value)}
+                  onCheckedChange={() => handleWeightChange(weight.value)}
+                  id={`weight-${weight.value}`}
+                  className="text-[#a10000] data-[state=checked]:bg-[#a10000] data-[state=checked]:border-[#a10000]"
+                />
+                <span className="text-sm font-medium text-gray-800">{weight.label}</span>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Price Filter */}
+      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+        <button
+          onClick={() => toggleFilter('price')}
+          className="flex items-center justify-between w-full text-left font-semibold text-[#a10000] mb-4 text-lg"
+        >
+          <span className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            Giá Tiền
+          </span>
+          <ChevronDown 
+            className={`w-5 h-5 transition-transform duration-200 ${
+              expandedFilters.includes('price') ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+        {expandedFilters.includes('price') && (
+          <div className="space-y-6">
+            <div className="bg-white/60 rounded-xl p-4 border border-green-200">
               <Slider
-                min={minPrice}
-                max={maxPrice}
+                min={PRODUCTS_CONSTANTS.filters.priceRange.min}
+                max={PRODUCTS_CONSTANTS.filters.priceRange.max}
                 value={[price]}
                 onValueChange={handlePriceChange}
-                step={100000}
+                step={PRODUCTS_CONSTANTS.filters.priceRange.step}
               />
-              <div className="flex justify-between text-xs mt-1">
-                <span>0₫</span>
-                <span>{currencyFormatter.format(price)}</span>
+            </div>
+            <div className="flex justify-between items-center bg-white/80 rounded-xl p-4 border border-green-200">
+              <div className="text-center">
+                <div className="text-xs text-gray-500 mb-1">Từ</div>
+                <div className="text-sm font-semibold text-gray-700">0₫</div>
+              </div>
+              <div className="w-px h-8 bg-green-200"></div>
+              <div className="text-center">
+                <div className="text-xs text-gray-500 mb-1">Đến</div>
+                <div className="text-lg font-bold text-[#a10000]">
+                  {currencyFormatter.format(price)}
+                </div>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="px-2 py-1 mt-4 w-full"
-        onClick={handleResetFilters}
-      >
-        Reset
-      </Button>
-    </>
-  );
-
-  const resultSummary = (
-    <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-      <div className="text-sm text-muted-foreground">
-        {filteredProducts.length} result
-        {filteredProducts.length !== 1 ? 's' : ''}
-        {search && (
-          <>
-            {' '}
-            for <span className="font-semibold text-gray-900">‘{search}’</span>
-          </>
+          </div>
         )}
       </div>
     </div>
   );
 
+  const resultSummary = (
+    <div className="mb-8 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="text-center lg:text-left">
+          <div className="text-2xl font-bold text-[#a10000] mb-1">
+            {filteredProducts.length}
+          </div>
+          <div className="text-sm text-gray-600">
+            sản phẩm được tìm thấy
+            {search && (
+              <>
+                {' '}cho <span className="font-semibold text-gray-900 bg-yellow-100 px-2 py-1 rounded-full">"{search}"</span>
+              </>
+            )}
+          </div>
+        </div>
+        
+        {/* Search Input */}
+        <div className="relative max-w-md w-full mx-auto lg:mx-0">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm yến sào..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-12 pr-4 py-3 border-2 border-gray-200 focus:border-[#a10000] focus:ring-[#a10000] rounded-xl text-base shadow-sm transition-all duration-200"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <div className="w-full flex justify-end px-2 pt-2 pb-1 sticky top-[56px] z-20 bg-white border-b md:hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white">
+      {/* Mobile Filter Button */}
+      <div className="w-full flex justify-end px-4 pt-4 pb-2 sticky top-[56px] z-20 bg-gradient-to-b from-[#fbd8b0] to-white border-b border-gray-200 md:hidden">
         <Drawer>
           <DrawerTrigger asChild>
-            <Button variant="outline" className="py-2 px-4 text-base">
-              Filters
+            <Button 
+              variant="outline" 
+              className="py-2 px-4 text-base border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Bộ lọc
             </Button>
           </DrawerTrigger>
           <DrawerContent className="max-w-sm mx-auto rounded-t-lg">
-            <DrawerHeader>
-              <DrawerTitle>Filters</DrawerTitle>
+            <DrawerHeader className="border-b border-gray-200">
+              <DrawerTitle className="text-[#a10000] font-semibold">
+                Bộ Lọc Sản Phẩm
+              </DrawerTitle>
             </DrawerHeader>
-            <div className="p-4 pb-8">{FilterContent}</div>
+            <div className="p-6 pb-8 max-h-[70vh] overflow-y-auto">
+              {FilterContent}
+            </div>
             <DrawerClose asChild>
-              <Button variant="outline" className="w-full mb-4 py-3 text-base">
-                Close
+              <Button 
+                variant="outline" 
+                className="w-full mb-4 py-3 text-base border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors"
+              >
+                Đóng
               </Button>
             </DrawerClose>
           </DrawerContent>
         </Drawer>
       </div>
-      <main className="flex-1 p-2 sm:p-4 md:p-6">
-        <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-          Products Catalog
-        </h1>
-        {resultSummary}
-        <div className="flex w-full gap-6">
-          <aside className="w-72 bg-gray-50 border-r p-6 hidden md:block flex-shrink-0">
-            {FilterContent}
-          </aside>
-          <div className="flex-1">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
-              {loading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="group transition-transform duration-200"
-                  >
-                    <Skeleton className="w-full aspect-[4/3] mb-2 sm:mb-3 rounded-xl" />
-                    <Skeleton className="h-5 w-3/4 mb-1 sm:mb-2 rounded" />
-                    <Skeleton className="h-4 w-1/2 mb-1 sm:mb-2 rounded" />
-                    <div className="flex gap-2">
-                      <Skeleton className="h-8 w-1/2 rounded" />
-                      <Skeleton className="h-8 w-1/2 rounded" />
+
+              {/* Page Header - Full width like Home page */}
+        <section
+          className="relative w-full bg-[#a10000] overflow-hidden lg:bg-[#a10000] bg-gradient-to-b from-[#a10000] to-[#fbd8b0]"
+          style={{ minHeight: '600px' }}
+        >
+          {/* Background Image - Desktop */}
+          <Image
+            src="/images/bg_banner_top.jpg"
+            alt="Banner Background"
+            fill
+            className="object-cover w-full h-full hidden lg:block"
+            priority
+            quality={100}
+            sizes="100vw"
+            style={{ zIndex: 0, objectPosition: 'center 30%' }}
+          />
+
+          {/* Background Image - Mobile */}
+          <Image
+            src="/images/bg_banner_top_mobile.jpg"
+            alt="Banner Background Mobile"
+            fill
+            className="object-contain sm:object-cover md:object-cover w-full h-full lg:hidden"
+            priority
+            quality={100}
+            sizes="100vw"
+            style={{ zIndex: 0, objectPosition: 'center top' }}
+          />
+
+          {/* Content */}
+          <div className="relative z-10 flex items-center justify-center" style={{ minHeight: '600px' }}>
+            <div className="text-center text-white px-4 max-w-4xl mx-auto">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">
+                {PRODUCTS_CONSTANTS.title}
+              </h1>
+              <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+                {PRODUCTS_CONSTANTS.subtitle}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
+
+          {resultSummary}
+
+          <div className="flex w-full gap-6 lg:gap-8">
+            {/* Desktop Sidebar */}
+            <aside className="w-80 bg-white/90 backdrop-blur-md border border-white/30 rounded-3xl p-8 hidden lg:block flex-shrink-0 shadow-2xl">
+              <div className="sticky top-8">
+                {FilterContent}
+              </div>
+            </aside>
+
+            {/* Main Content */}
+            <div className="flex-1">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                {loading ? (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="group transition-transform duration-200"
+                    >
+                      <Skeleton className="w-full aspect-[4/3] mb-3 rounded-xl" />
+                      <Skeleton className="h-5 w-3/4 mb-2 rounded" />
+                      <Skeleton className="h-4 w-1/2 mb-2 rounded" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-1/2 rounded" />
+                        <Skeleton className="h-8 w-1/2 rounded" />
+                      </div>
+                    </div>
+                  ))
+                ) : paginatedProducts.length === 0 ? (
+                  <div className="col-span-full text-center py-16">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 border border-white/20 shadow-xl max-w-md mx-auto">
+                      <div className="text-gray-300 mb-6">
+                        <Search className="w-20 h-20 mx-auto" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-700 mb-4">
+                        {PRODUCTS_CONSTANTS.emptyState.title}
+                      </h3>
+                      <p className="text-gray-500 mb-6 leading-relaxed">
+                        {PRODUCTS_CONSTANTS.emptyState.description}
+                      </p>
+                      <Button
+                        onClick={handleResetFilters}
+                        className="bg-[#a10000] hover:bg-red-800 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
+                      >
+                        Xóa bộ lọc
+                      </Button>
                     </div>
                   </div>
-                ))
-              ) : paginatedProducts.length === 0 ? (
-                <div className="col-span-full text-center text-gray-500">
-                  No products found.
+                ) : (
+                  paginatedProducts.map((product, i) => (
+                    <ProductCard key={i} product={product} />
+                  ))
+                )}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-16">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                    <Pagination>
+                      <PaginationContent className="gap-2">
+                        <PaginationItem>
+                          <PaginationPrevious
+                            aria-disabled={currentPage === 1}
+                            tabIndex={currentPage === 1 ? -1 : 0}
+                            onClick={currentPage === 1 ? undefined : handlePrev}
+                            href="#"
+                            className="text-[#a10000] hover:bg-[#a10000] hover:text-white rounded-xl transition-all duration-200"
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: totalPages }, (_, idx) => (
+                          <PaginationItem key={idx + 1}>
+                            <PaginationLink
+                              isActive={currentPage === idx + 1}
+                              onClick={() => handlePageChange(idx + 1)}
+                              href="#"
+                              className={`rounded-xl transition-all duration-200 ${
+                                currentPage === idx + 1
+                                  ? 'bg-[#a10000] text-white shadow-lg scale-105'
+                                  : 'text-[#a10000] hover:bg-[#a10000] hover:text-white hover:scale-105'
+                              }`}
+                            >
+                              {idx + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            aria-disabled={currentPage === totalPages}
+                            tabIndex={currentPage === totalPages ? -1 : 0}
+                            onClick={
+                              currentPage === totalPages ? undefined : handleNext
+                            }
+                            href="#"
+                            className="text-[#a10000] hover:bg-[#a10000] hover:text-white rounded-xl transition-all duration-200"
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
                 </div>
-              ) : (
-                paginatedProducts.map((product, i) => (
-                  <ProductCard key={i} product={product} />
-                ))
               )}
-            </div>
-            <div className="flex justify-center mt-8 gap-1">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      aria-disabled={currentPage === 1}
-                      tabIndex={currentPage === 1 ? -1 : 0}
-                      onClick={currentPage === 1 ? undefined : handlePrev}
-                      href="#"
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: totalPages }, (_, idx) => (
-                    <PaginationItem key={idx + 1}>
-                      <PaginationLink
-                        isActive={currentPage === idx + 1}
-                        onClick={() => handlePageChange(idx + 1)}
-                        href="#"
-                      >
-                        {idx + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      aria-disabled={currentPage === totalPages}
-                      tabIndex={currentPage === totalPages ? -1 : 0}
-                      onClick={
-                        currentPage === totalPages ? undefined : handleNext
-                      }
-                      href="#"
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
             </div>
           </div>
         </div>

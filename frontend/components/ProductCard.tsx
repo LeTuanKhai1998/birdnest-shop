@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { AddToCartButton } from '@/components/AddToCartButton';
-import { Eye, ShoppingCart, Heart, HeartOff } from 'lucide-react';
+import { Eye, ShoppingCart, Heart, HeartOff, Star, Package, TrendingUp } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -53,117 +53,166 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <motion.div
-      whileHover={{ scale: 1.03, boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}
+      whileHover={{ 
+        scale: 1.02, 
+        y: -8,
+        boxShadow: '0 20px 40px 0 rgba(0,0,0,0.12)' 
+      }}
       transition={{
         type: 'spring',
         stiffness: 300,
-        damping: 20,
-        duration: 0.18,
+        damping: 25,
+        duration: 0.3,
       }}
     >
-      <div className="group cursor-pointer">
-        <Card className="h-full flex flex-col transition-shadow duration-200 hover:shadow-lg min-w-0">
+      <div className="group">
+      <div className="relative">
+        <Card className="h-full flex flex-col bg-white/90 backdrop-blur-sm border border-white/30 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 min-w-0">
           <CardContent className="p-0 min-w-0 relative">
-            {/* Wishlist Icon - only show for authenticated users */}
-            {session?.user && (
-              <button
-                type="button"
-                aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                className="absolute top-2 right-2 z-10 bg-white/80 rounded-full p-1 shadow hover:bg-red-100 transition"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (isInWishlist) {
-                    wishlist.remove(product.id, wishlist.mutate);
-                  } else {
-                    wishlist.add(product, wishlist.mutate);
-                  }
-                }}
-              >
-                {isInWishlist ? (
-                  <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                ) : (
-                  <Heart className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-            )}
-            <Link
-              href={`/products/${product.slug}`}
-              prefetch={false}
-              className="block min-w-0"
-            >
-              <AspectRatio
-                ratio={1 / 1}
-                className="overflow-hidden rounded-t-xl bg-gradient-to-b from-white via-gray-50 to-gray-100 border border-gray-200 shadow-sm min-w-0"
-              >
-                <Image
-                  src={
-                    product.image || (product.images && product.images[0]) || ''
-                  }
-                  alt={product.name}
-                  fill
-                  className="object-cover w-full h-full group-hover:opacity-90 transition duration-200"
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                />
-              </AspectRatio>
-            </Link>
-          </CardContent>
-          <div className="px-2 py-2 sm:px-4 sm:py-3 flex flex-col gap-1 flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 min-h-[2.2rem] min-w-0">
-              <Link
-                href={`/products/${product.slug}`}
-                prefetch={false}
-                className="text-sm sm:text-base font-semibold line-clamp-2 mb-0 hover:underline flex-1 min-w-0 truncate"
-              >
-                {product.name}
-              </Link>
-              <span className="text-xs text-gray-500 font-medium flex-shrink-0">
+            {/* Product Image Section */}
+            <div className="relative">
+              {/* Wishlist Icon - only show for authenticated users */}
+              {session?.user && (
+                <button
+                  type="button"
+                  aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                  className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-red-50 hover:scale-110 transition-all duration-200 border border-white/20"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isInWishlist) {
+                      wishlist.remove(product.id, wishlist.mutate);
+                    } else {
+                      wishlist.add(product, wishlist.mutate);
+                    }
+                  }}
+                >
+                  {isInWishlist ? (
+                    <Heart className="w-6 h-6 text-red-500 fill-red-500" />
+                  ) : (
+                    <Heart className="w-6 h-6 text-gray-500 hover:text-red-500 transition-colors" />
+                  )}
+                </button>
+              )}
+
+              {/* Weight Badge */}
+              <div className="absolute top-4 left-4 z-20 bg-[#a10000]/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg border border-white/20">
+                <Package className="w-4 h-4 inline mr-1" />
                 {product.weight}g
-              </span>
-            </div>
-            {/* Product meta: rating, sold, reviews */}
-            <ProductMeta
-              rating={avgRating}
-              reviewCount={product.reviews?.length ?? 120}
-              soldCount={product.sold ?? 1500}
-              className="flex-wrap gap-x-2 gap-y-1 min-w-0"
-            />
-            <div className="font-bold text-red-700 text-base sm:text-lg mb-1 whitespace-nowrap min-w-0">
-              {currencyFormatter.format(product.price)}
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2 w-full min-w-0">
-              {/* Mobile: icon buttons, Desktop: text buttons */}
-              <AddToCartButton
-                product={product}
-                className="flex-1 py-2 text-xs sm:text-sm md:hidden min-w-[120px] basis-0"
-              >
-                <ShoppingCart className="w-5 h-5" />
-              </AddToCartButton>
+              </div>
+
+              {/* Popular Badge */}
+              {product.sold && product.sold > 1000 && (
+                <div className="absolute top-4 left-20 z-20 bg-orange-500/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg border border-white/20">
+                  <TrendingUp className="w-4 h-4 inline mr-1" />
+                  Hot
+                </div>
+              )}
+
               <Link
                 href={`/products/${product.slug}`}
                 prefetch={false}
-                className="flex-1 py-2 text-xs sm:text-sm md:hidden border rounded bg-white flex items-center justify-center min-w-[120px] basis-0"
-                aria-label="View Details"
+                className="block min-w-0"
               >
-                <Eye className="w-5 h-5" />
-              </Link>
-              <AddToCartButton
-                product={product}
-                className="flex-1 py-2 text-xs sm:text-sm hidden md:block min-w-[120px] basis-0"
-              >
-                Add to Cart
-              </AddToCartButton>
-              <Link
-                href={`/products/${product.slug}`}
-                prefetch={false}
-                className="flex-1 py-2 text-xs sm:text-sm hidden md:block border rounded-md bg-white flex items-center justify-center text-center font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 h-10 min-w-[120px] basis-0"
-                aria-label="View Details"
-              >
-                View Details
+                <div className="relative w-full" style={{ aspectRatio: '4/3' }}>
+                  <Image
+                    src={
+                      product.image || (product.images && product.images[0]) || ''
+                    }
+                    alt={product.name}
+                    fill
+                    className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
               </Link>
             </div>
-          </div>
+
+            {/* Product Info Section */}
+            <div className="p-2 sm:p-3 lg:p-4 flex flex-col gap-1 sm:gap-2 lg:gap-3 flex-1 min-w-0">
+              {/* Product Name */}
+              <div className="min-w-0">
+                <Link
+                  href={`/products/${product.slug}`}
+                  prefetch={false}
+                  className="text-xs sm:text-sm lg:text-lg font-bold text-gray-900 line-clamp-2 mb-0.5 sm:mb-1 hover:text-[#a10000] transition-colors duration-200 leading-tight"
+                >
+                  {product.name}
+                </Link>
+                
+                {/* Product Type */}
+                {product.type && (
+                  <div className="text-xs text-gray-500 font-medium mb-0.5 sm:mb-1 lg:mb-2">
+                    {product.type}
+                  </div>
+                )}
+              </div>
+
+              {/* Product Meta */}
+              <ProductMeta
+                rating={avgRating}
+                reviewCount={product.reviews?.length ?? 120}
+                soldCount={product.sold ?? 1500}
+                className="flex-wrap gap-x-1 sm:gap-x-2 gap-y-0.5 sm:gap-y-1 min-w-0 mb-1.5 sm:mb-2 lg:mb-3"
+              />
+
+              {/* Price */}
+              <div className="mb-2 sm:mb-3 lg:mb-4">
+                <div className="text-base sm:text-lg lg:text-2xl font-black text-[#a10000] mb-0.5 sm:mb-1">
+                  {currencyFormatter.format(product.price)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  Giá đã bao gồm VAT
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-1.5 sm:gap-2 mt-auto">
+                {/* Desktop: Full buttons */}
+                <div className="hidden md:flex gap-2">
+                  <AddToCartButton
+                    product={product}
+                    className="flex-1 h-10 lg:h-12 bg-[#a10000] hover:bg-red-800 text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 shadow-lg border-0 text-sm flex items-center justify-center"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Thêm vào giỏ
+                  </AddToCartButton>
+                  <Link
+                    href={`/products/${product.slug}`}
+                    prefetch={false}
+                    className="flex-1 h-10 lg:h-12 border-2 border-[#a10000] text-[#a10000] font-semibold rounded-lg flex items-center justify-center text-center transition-all duration-200 hover:bg-[#a10000] hover:text-white hover:scale-105 shadow-lg text-sm"
+                    aria-label="View Details"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Chi tiết
+                  </Link>
+                </div>
+
+                {/* Mobile: Icon buttons */}
+                <div className="flex gap-1.5 sm:gap-2 md:hidden">
+                  <AddToCartButton
+                    product={product}
+                    className="flex-1 h-8 sm:h-10 bg-[#a10000] hover:bg-red-800 text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 shadow-lg border-0 flex items-center justify-center"
+                  >
+                    <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </AddToCartButton>
+                  <Link
+                    href={`/products/${product.slug}`}
+                    prefetch={false}
+                    className="flex-1 h-8 sm:h-10 border-2 border-[#a10000] text-[#a10000] font-semibold rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-[#a10000] hover:text-white hover:scale-105 shadow-lg"
+                    aria-label="View Details"
+                  >
+                    <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </CardContent>
         </Card>
+      </div>
       </div>
     </motion.div>
   );

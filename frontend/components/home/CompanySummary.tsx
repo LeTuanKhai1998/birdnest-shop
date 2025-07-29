@@ -9,28 +9,27 @@ export function CompanySummary() {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           {/* Main Title */}
-          <div className="text-center mb-12 sm:mb-16">
+          <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#a10000] mb-4">
-              {HOME_CONSTANTS.company.title}
+              <span className="block lg:hidden">YẾN SÀO KIM SANG</span>
+              <span className="block lg:hidden">THƯƠNG HIỆU UY TÍN</span>
+              <span className="hidden lg:block">{HOME_CONSTANTS.company.title}</span>
             </h2>
-            <div className="w-24 h-1 bg-[#a10000] mx-auto rounded-full"></div>
+            <div className="w-24 lg:w-1/3 h-1 bg-[#a10000] mx-auto rounded-full"></div>
           </div>
 
           {/* Star Rating - Positioned right after title */}
           <div className="flex flex-col items-center justify-center mb-12 sm:mb-16">
             {/* Star Rating */}
-            <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
               {[...Array(5)].map((_, index) => (
                 <svg
                   key={index}
-                  className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 drop-shadow-lg filter"
+                  className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20"
                   viewBox="0 0 24 24"
                   fill="url(#premiumGradient)"
                   stroke="url(#premiumGradient)"
                   strokeWidth="0"
-                  style={{
-                    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3)) drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                  }}
                 >
                   <defs>
                     <linearGradient id="premiumGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -49,7 +48,7 @@ export function CompanySummary() {
             
             {/* Rating Text */}
             <div className="text-center">
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 font-medium">
+              <p className="text-base sm:text-lg lg:text-xl text-[#a10000] font-semibold">
                 Đánh giá xuất sắc từ hơn 1,000+ khách hàng
               </p>
             </div>

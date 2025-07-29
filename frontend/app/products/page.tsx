@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import ProductsClient from '@/components/ProductsClient';
 import {
@@ -5,8 +6,27 @@ import {
   MockUiProduct,
   mockUiProducts,
 } from '@/lib/products-mapper';
+import { SEO_CONSTANTS } from '@/lib/constants';
 
 const FALLBACK_IMAGE = '/images/placeholder.png';
+
+// SEO Metadata
+export const metadata: Metadata = {
+  title: SEO_CONSTANTS.products.title,
+  description: SEO_CONSTANTS.products.description,
+  keywords: SEO_CONSTANTS.products.keywords,
+  openGraph: {
+    title: SEO_CONSTANTS.products.title,
+    description: SEO_CONSTANTS.products.description,
+    type: 'website',
+    locale: 'vi_VN',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SEO_CONSTANTS.products.title,
+    description: SEO_CONSTANTS.products.description,
+  },
+};
 
 function isImageObject(
   img: unknown,

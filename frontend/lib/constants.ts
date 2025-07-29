@@ -129,6 +129,42 @@ export const SEO_CONSTANTS = {
     description: "Yến Sào Kim Sang cung cấp yến sào nguyên chất 100% tự nhiên từ Kiên Giang. Sản phẩm chất lượng cao, giao hàng toàn quốc, bảo hành chính hãng.",
     keywords: "yến sào, yến sào kim sang, tổ yến nguyên chất, yến tinh chế, yến thô, kiên giang",
   },
+  products: {
+    title: "Sản Phẩm Yến Sào - Yến Sào Kim Sang",
+    description: "Khám phá bộ sưu tập yến sào nguyên chất cao cấp từ Yến Sào Kim Sang. Yến tinh chế, yến rút lông, tổ yến thô với nhiều trọng lượng khác nhau.",
+    keywords: "sản phẩm yến sào, yến tinh chế, yến rút lông, tổ yến thô, mua yến sào, yến sào kim sang",
+  },
+};
+
+// Products page constants
+export const PRODUCTS_CONSTANTS = {
+  title: "SẢN PHẨM YẾN SÀO",
+  subtitle: "Khám phá bộ sưu tập yến sào nguyên chất cao cấp",
+  filters: {
+    title: "Bộ Lọc Sản Phẩm",
+    types: [
+      { value: "Yến tinh chế", label: "Yến Tinh Chế" },
+      { value: "Yến rút lông", label: "Yến Rút Lông" },
+      { value: "Tổ yến thô", label: "Tổ Yến Thô" },
+    ],
+    weights: [
+      { value: 50, label: "50g" },
+      { value: 100, label: "100g" },
+      { value: 200, label: "200g" },
+    ],
+    priceRange: {
+      min: 0,
+      max: 10000000,
+      step: 100000,
+    },
+  },
+  emptyState: {
+    title: "Không tìm thấy sản phẩm",
+    description: "Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác",
+  },
+  pagination: {
+    itemsPerPage: 8,
+  },
 };
 
 // Animation constants

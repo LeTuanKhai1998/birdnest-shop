@@ -41,7 +41,7 @@ export default function HomePage() {
       
       {/* Features Section */}
       <FeaturesSection />
-      
+
       {/* Product Highlight */}
       <ProductHighlight />
       

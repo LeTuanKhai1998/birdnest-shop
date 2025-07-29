@@ -91,27 +91,47 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative h-[60vh] min-h-[400px] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src="/images/bg_banner_top.jpg"
-            alt="Yến sào Kim Sang background"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
-        <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            YẾN SÀO KIM SANG - THƯƠNG HIỆU UY TÍN
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-            Với hơn 10 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất cho sức khỏe gia đình Việt Nam.
-          </p>
-          <Button size="lg" className="bg-white text-black hover:bg-gray-100">
-            Khám phá ngay bộ sản phẩm yến sào cao cấp của chúng tôi
-          </Button>
+      <section
+        className="relative w-full bg-[#a10000] overflow-hidden lg:bg-[#a10000] bg-gradient-to-b from-[#a10000] to-[#fbd8b0]"
+        style={{ minHeight: '600px' }}
+      >
+        {/* Background Image - Desktop */}
+        <Image
+          src="/images/bg_banner_top.jpg"
+          alt="Banner Background"
+          fill
+          className="object-cover w-full h-full hidden lg:block"
+          priority
+          quality={100}
+          sizes="100vw"
+          style={{ zIndex: 0, objectPosition: 'center 30%' }}
+        />
+
+        {/* Background Image - Mobile */}
+        <Image
+          src="/images/bg_banner_top_mobile.jpg"
+          alt="Banner Background Mobile"
+          fill
+          className="object-contain sm:object-cover md:object-cover w-full h-full lg:hidden"
+          priority
+          quality={100}
+          sizes="100vw"
+          style={{ zIndex: 0, objectPosition: 'center top' }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 flex items-center justify-center" style={{ minHeight: '600px' }}>
+          <div className="text-center text-white px-4 max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              YẾN SÀO KIM SANG - THƯƠNG HIỆU UY TÍN
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+              Với hơn 10 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất cho sức khỏe gia đình Việt Nam.
+            </p>
+            <Button size="lg" className="bg-white text-black hover:bg-gray-100">
+              Khám phá ngay bộ sản phẩm yến sào cao cấp của chúng tôi
+            </Button>
+          </div>
         </div>
       </section>
 
