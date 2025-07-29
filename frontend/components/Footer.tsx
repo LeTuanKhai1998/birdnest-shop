@@ -1,5 +1,5 @@
 'use client';
-import { Instagram, Phone, Mail, MapPin, Globe, Facebook } from 'lucide-react';
+import { Instagram, Phone, Mail, MapPin, Globe, Facebook, ShoppingBag, Music } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
@@ -75,6 +75,18 @@ const socialLinks = [
       />
     ),
     color: 'hover:text-blue-500',
+  },
+  {
+    label: 'Shopee',
+    href: 'https://shopee.vn/yensaokimsang',
+    icon: <ShoppingBag className="w-5 h-5" />,
+    color: 'hover:text-orange-400',
+  },
+  {
+    label: 'TikTok',
+    href: 'https://www.tiktok.com/@yensaokimsang',
+    icon: <Music className="w-5 h-5" />,
+    color: 'hover:text-pink-300',
   },
 ];
 

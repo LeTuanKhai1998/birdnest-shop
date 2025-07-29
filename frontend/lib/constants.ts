@@ -88,6 +88,42 @@ export const HOME_CONSTANTS = {
         comment: "Yến sào Kim Sang giúp tôi khỏe mạnh hơn, cảm ơn shop!",
         avatar: "/images/user.jpeg",
       },
+      {
+        name: "Phạm Văn Nam",
+        rating: 5,
+        comment: "Đã sử dụng yến sào Kim Sang được 2 năm, sức khỏe cải thiện rõ rệt!",
+        avatar: "/images/user.jpeg",
+      },
+      {
+        name: "Hoàng Thị Hương",
+        rating: 5,
+        comment: "Yến sào nguyên chất, không phụ gia, rất an tâm khi sử dụng.",
+        avatar: "/images/user.jpeg",
+      },
+      {
+        name: "Vũ Đình Quang",
+        rating: 5,
+        comment: "Dịch vụ tư vấn chuyên nghiệp, giao hàng đúng hẹn, chất lượng tốt.",
+        avatar: "/images/user.jpeg",
+      },
+      {
+        name: "Đặng Thị Thu",
+        rating: 5,
+        comment: "Yến sào Kim Sang giúp tôi tăng cường sức đề kháng, rất hài lòng!",
+        avatar: "/images/user.jpeg",
+      },
+      {
+        name: "Ngô Văn Tú",
+        rating: 5,
+        comment: "Sản phẩm chất lượng cao, giá cả hợp lý, sẽ ủng hộ dài dài.",
+        avatar: "/images/user.jpeg",
+      },
+      {
+        name: "Lý Thị Bình",
+        rating: 5,
+        comment: "Yến sào tinh chế rất sạch, dễ sử dụng, hiệu quả tốt.",
+        avatar: "/images/user.jpeg",
+      },
     ],
   },
   customerService: {
@@ -162,9 +198,9 @@ export const PRODUCTS_CONSTANTS = {
     title: "Không tìm thấy sản phẩm",
     description: "Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác",
   },
-  pagination: {
-    itemsPerPage: 8,
-  },
+          pagination: {
+          itemsPerPage: 12,
+        },
 };
 
 // Animation constants

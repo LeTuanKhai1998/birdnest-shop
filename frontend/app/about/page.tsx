@@ -89,7 +89,7 @@ const advantages = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white">
       {/* Hero Section */}
       <section
         className="relative w-full bg-[#a10000] overflow-hidden lg:bg-[#a10000] bg-gradient-to-b from-[#a10000] to-[#fbd8b0]"
@@ -136,10 +136,10 @@ export default function AboutPage() {
       </section>
 
       {/* About Section */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">🏆 Về Chúng Tôi</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-[#a10000]">🏆 Về Chúng Tôi</h2>
             <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
               Yến Sào Kim Sang tự hào là thương hiệu hàng đầu trong lĩnh vực cung cấp yến sào nguyên chất. 
               Với hơn 10 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất cho sức khỏe gia đình Việt Nam.
@@ -165,10 +165,10 @@ export default function AboutPage() {
       </section>
 
       {/* Products Section */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">🍯 Sản Phẩm Chính</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-[#a10000]">🍯 Sản Phẩm Chính</h2>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -190,10 +190,10 @@ export default function AboutPage() {
       </section>
 
       {/* Advantages Section */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Bộ sản phẩm thanh tẩy nhà cửa mang may mắn này có gì?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-[#a10000]">Bộ sản phẩm thanh tẩy nhà cửa mang may mắn này có gì?</h2>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -217,14 +217,14 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 bg-red-50">
+      <section className="py-16 px-4 bg-gradient-to-br from-[#a10000] to-red-800 text-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Khám phá ngay bộ sản phẩm yến sào cao cấp của chúng tôi</h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white">
+            <Button size="lg" className="bg-white text-[#a10000] hover:bg-gray-100 font-semibold">
               Xem Tất Cả Sản Phẩm
             </Button>
-            <Button size="lg" variant="outline" className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white">
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-[#a10000]">
               Tìm Hiểu Thêm
             </Button>
           </div>

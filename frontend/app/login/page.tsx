@@ -48,7 +48,7 @@ function LoginPageInner() {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex-1 flex justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 mt-16 mb-8">
+        <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-5 mt-16 mb-4">
           <h1 className="text-2xl font-bold mb-6 text-center">
             Sign in to your account
           </h1>
@@ -128,7 +128,7 @@ function LoginPageInner() {
               <Mail className="w-5 h-5" /> Sign in with Google
             </Button>
           </div>
-          <div className="mt-4 text-center text-sm text-gray-600">
+          <div className="mt-2 text-center text-sm text-gray-600">
             Don&apos;t have an account?{' '}
             <a href="/signup" className="text-red-600 hover:underline">
               Sign up

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,43 +115,80 @@ export default function GuestOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        {/* Hero Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Tra cứu đơn hàng
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Nhập email hoặc số điện thoại để kiểm tra đơn hàng của bạn
-          </p>
+    <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white">
+      {/* Page Header - Full width like Home page */}
+      <section
+        className="relative w-full bg-[#a10000] overflow-hidden lg:bg-[#a10000] bg-gradient-to-b from-[#a10000] to-[#fbd8b0]"
+        style={{ minHeight: '600px' }}
+      >
+        {/* Background Image - Desktop */}
+        <Image
+          src="/images/bg_banner_top.jpg"
+          alt="Banner Background"
+          fill
+          className="object-cover w-full h-full hidden lg:block"
+          priority
+          quality={100}
+          sizes="100vw"
+          style={{ zIndex: 0, objectPosition: 'center 30%' }}
+        />
+
+        {/* Background Image - Mobile */}
+        <Image
+          src="/images/bg_banner_top_mobile.jpg"
+          alt="Banner Background Mobile"
+          fill
+          className="object-contain sm:object-cover md:object-cover w-full h-full lg:hidden"
+          priority
+          quality={100}
+          sizes="100vw"
+          style={{ zIndex: 0, objectPosition: 'center top' }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 flex items-center justify-center" style={{ minHeight: '600px' }}>
+          <div className="text-center text-white px-4 max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Tra cứu đơn hàng
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+              Nhập email hoặc số điện thoại để kiểm tra đơn hàng của bạn
+            </p>
+          </div>
         </div>
+      </section>
+
+      <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto">
 
         {/* Search Form */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/20 shadow-xl mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-[#a10000] mb-2 flex items-center justify-center gap-2">
+              <Search className="h-6 w-6" />
               Tìm kiếm đơn hàng
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSearch} className="flex gap-4">
-              <Input
-                type="text"
-                placeholder="Nhập email hoặc số điện thoại..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="flex-1"
-                minLength={3}
-                required
-              />
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Đang tìm...' : 'Tìm kiếm'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            </h2>
+            <p className="text-gray-600">Nhập email hoặc số điện thoại để tra cứu</p>
+          </div>
+          <form onSubmit={handleSearch} className="flex gap-4">
+            <Input
+              type="text"
+              placeholder="Nhập email hoặc số điện thoại..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1 border-2 border-gray-200 focus:border-[#a10000] rounded-xl"
+              minLength={3}
+              required
+            />
+            <Button 
+              type="submit" 
+              disabled={loading}
+              className="bg-[#a10000] hover:bg-red-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
+            >
+              {loading ? 'Đang tìm...' : 'Tìm kiếm'}
+            </Button>
+          </form>
+        </div>
 
         {/* Search Results */}
         {searched && (
@@ -258,6 +296,7 @@ export default function GuestOrdersPage() {
           </div>
         )}
       </div>
+    </main>
     </div>
   );
 } 

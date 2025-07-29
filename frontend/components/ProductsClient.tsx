@@ -367,9 +367,9 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
           {resultSummary}
 
-          <div className="flex w-full gap-6 lg:gap-8">
+          <div className="flex w-full gap-4 lg:gap-6">
             {/* Desktop Sidebar */}
-            <aside className="w-80 bg-white/90 backdrop-blur-md border border-white/30 rounded-3xl p-8 hidden lg:block flex-shrink-0 shadow-2xl">
+            <aside className="w-64 bg-white/90 backdrop-blur-md border border-white/30 rounded-3xl p-6 hidden lg:block flex-shrink-0 shadow-2xl">
               <div className="sticky top-8">
                 {FilterContent}
               </div>
@@ -377,7 +377,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
             {/* Main Content */}
             <div className="flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                 {loading ? (
                   Array.from({ length: 8 }).map((_, i) => (
                     <div

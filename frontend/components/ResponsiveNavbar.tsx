@@ -79,11 +79,11 @@ export function ResponsiveNavbar() {
   }, [showSearch]);
 
   const navigationItems = [
-    { href: '/', label: 'Home', icon: HomeIcon },
-    { href: '/products', label: 'Products', icon: Box },
-    { href: '/about', label: 'About', icon: Info },
-    { href: '/contact', label: 'Contact', icon: Mail },
-    { href: '/guest-orders', label: 'Track Order', icon: Package },
+    { href: '/', label: 'Trang chủ', icon: HomeIcon },
+    { href: '/products', label: 'Sản phẩm', icon: Box },
+    { href: '/about', label: 'Giới thiệu', icon: Info },
+    { href: '/contact', label: 'Liên hệ', icon: Mail },
+    { href: '/guest-orders', label: 'Tra đơn', icon: Package },
   ];
 
   const isActiveLink = (href: string) => {
@@ -108,7 +108,7 @@ export function ResponsiveNavbar() {
                 variant="ghost"
                 className="flex items-center justify-center w-full p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
                 onClick={() => setDesktopSidebarOpen(true)}
-                aria-label="Open sidebar menu"
+                                      aria-label="Mở menu bên"
                 aria-expanded={desktopSidebarOpen}
               >
                 <Menu className="w-6 h-6" />
@@ -156,7 +156,7 @@ export function ResponsiveNavbar() {
                       size={32}
                       className="w-6 h-6"
                     />
-                    <span className="text-xs font-medium text-center leading-tight">Profile</span>
+                                              <span className="text-xs font-medium text-center leading-tight">Hồ sơ</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 ml-2">
@@ -266,14 +266,14 @@ export function ResponsiveNavbar() {
                   >
                     <input
                       type="text"
-                      placeholder="Search products..."
+                      placeholder="Tìm kiếm sản phẩm..."
                       className="w-56 lg:w-72 pl-4 pr-10 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all hover:border-gray-400"
-                      aria-label="Search products"
+                      aria-label="Tìm kiếm sản phẩm"
                     />
                     <button
                       type="submit"
                       className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-600 transition-colors"
-                      aria-label="Submit search"
+                      aria-label="Tìm kiếm"
                     >
                       <Search className="w-4 h-4" />
                     </button>
@@ -286,7 +286,7 @@ export function ResponsiveNavbar() {
                   size="icon"
                   className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   onClick={() => setShowSearch(true)}
-                  aria-label="Open search"
+                                        aria-label="Mở tìm kiếm"
                 >
                   <Search className="w-5 h-5" />
                 </Button>
@@ -312,7 +312,7 @@ export function ResponsiveNavbar() {
                         href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
                       >
                         <LogIn className="w-4 h-4" />
-                        <span>Sign in</span>
+                        <span>Đăng nhập</span>
                       </Link>
                     </Button>
                   ) : (
@@ -340,22 +340,22 @@ export function ResponsiveNavbar() {
                         </div>
                         <DropdownMenuItem onClick={() => window.location.href = '/dashboard/profile'}>
                           <User className="w-4 h-4 mr-2" />
-                          Profile
+                          Hồ sơ
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => window.location.href = '/dashboard/orders'}>
                           <ShoppingBag className="w-4 h-4 mr-2" />
-                          Orders
+                          Đơn hàng
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => window.location.href = '/dashboard/wishlist'}>
                           <Heart className="w-4 h-4 mr-2" />
-                          Wishlist
+                          Yêu thích
                         </DropdownMenuItem>
                         {session.user?.isAdmin && (
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => window.location.href = '/admin'}>
                               <Settings className="w-4 h-4 mr-2" />
-                              Admin Dashboard
+                              Quản trị
                             </DropdownMenuItem>
                           </>
                         )}
@@ -365,7 +365,7 @@ export function ResponsiveNavbar() {
                           className="flex items-center gap-2 text-red-600 focus:text-red-600"
                         >
                           <LogOut className="w-4 h-4 mr-2" />
-                          Sign out
+                          Đăng xuất
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -379,13 +379,13 @@ export function ResponsiveNavbar() {
                       variant="ghost"
                       size="icon"
                       className="lg:hidden p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 hover:bg-gray-100 rounded-lg transition-colors"
-                      aria-label="Open menu"
+                      aria-label="Mở menu"
                     >
                       <Menu className="w-5 h-5" />
                     </Button>
                   </DrawerTrigger>
                   <DrawerContent className="w-80 p-0 h-full max-h-screen" data-vaul-drawer-direction="left">
-                    <DrawerTitle className="sr-only">Mobile Navigation Menu</DrawerTitle>
+                    <DrawerTitle className="sr-only">Menu Điều Hướng Di Động</DrawerTitle>
                     <div className="p-6 h-full overflow-y-auto bg-white">
                       <div className="flex items-center justify-between mb-8">
                         <Link
@@ -408,7 +408,7 @@ export function ResponsiveNavbar() {
                           variant="ghost"
                           size="icon"
                           onClick={() => setSheetOpen(false)}
-                          aria-label="Close sidebar"
+                          aria-label="Đóng menu"
                           className="hover:bg-gray-100 rounded-lg transition-colors"
                         >
                           <X className="w-6 h-6" />
@@ -426,14 +426,14 @@ export function ResponsiveNavbar() {
                           <div className="relative">
                             <input
                               type="text"
-                              placeholder="Search products..."
+                              placeholder="Tìm kiếm sản phẩm..."
                               className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all hover:border-gray-400"
-                              aria-label="Search products"
+                              aria-label="Tìm kiếm sản phẩm"
                             />
                             <button
                               type="submit"
                               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600 transition-colors"
-                              aria-label="Submit search"
+                              aria-label="Tìm kiếm"
                             >
                               <Search className="w-5 h-5" />
                             </button>
@@ -444,7 +444,7 @@ export function ResponsiveNavbar() {
                       {/* Mobile Navigation */}
                       <nav className="space-y-2 mb-8">
                         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                          Navigation
+                          Điều hướng
                         </h3>
                         {navigationItems.map((item) => {
                           const Icon = item.icon;
@@ -471,7 +471,7 @@ export function ResponsiveNavbar() {
                       {/* Quick Links Section */}
                       <div className="mb-8">
                         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                          Quick Links
+                          Liên kết nhanh
                         </h3>
                         <div className="space-y-2">
                           <Link
@@ -480,7 +480,7 @@ export function ResponsiveNavbar() {
                             onClick={() => setSheetOpen(false)}
                           >
                             <Star className="w-5 h-5 text-yellow-500" />
-                            Refined Bird's Nest
+                            Yến sào tinh chế
                           </Link>
                           <Link
                             href="/products?category=raw"
@@ -488,7 +488,7 @@ export function ResponsiveNavbar() {
                             onClick={() => setSheetOpen(false)}
                           >
                             <Package className="w-5 h-5 text-blue-500" />
-                            Raw Bird's Nest
+                            Yến sào thô
                           </Link>
                           <Link
                             href="/contact"
@@ -496,7 +496,7 @@ export function ResponsiveNavbar() {
                             onClick={() => setSheetOpen(false)}
                           >
                             <HelpCircle className="w-5 h-5 text-green-500" />
-                            Customer Support
+                            Hỗ trợ khách hàng
                           </Link>
                         </div>
                       </div>
@@ -505,7 +505,7 @@ export function ResponsiveNavbar() {
                       {session && (
                         <div className="border-t pt-6">
                           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                            Account
+                            Tài khoản
                           </h3>
                           <div className="space-y-2">
                             <Link
@@ -525,7 +525,7 @@ export function ResponsiveNavbar() {
                               onClick={() => setSheetOpen(false)}
                             >
                               <ShoppingBag className="w-6 h-6" />
-                              Orders
+                              Đơn hàng
                             </Link>
                             <Link
                               href="/dashboard/wishlist"
@@ -533,7 +533,7 @@ export function ResponsiveNavbar() {
                               onClick={() => setSheetOpen(false)}
                             >
                               <Heart className="w-6 h-6" />
-                              Wishlist
+                              Yêu thích
                             </Link>
                             {session.user?.isAdmin && (
                               <Link
@@ -542,7 +542,7 @@ export function ResponsiveNavbar() {
                                 onClick={() => setSheetOpen(false)}
                               >
                                 <Settings className="w-6 h-6" />
-                                Admin Dashboard
+                                Quản trị
                               </Link>
                             )}
                             <button
@@ -553,7 +553,7 @@ export function ResponsiveNavbar() {
                               className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors w-full text-left text-red-600"
                             >
                               <LogOut className="w-6 h-6" />
-                              Sign out
+                              Đăng xuất
                             </button>
                           </div>
                         </div>
@@ -563,7 +563,7 @@ export function ResponsiveNavbar() {
                       {!session && (
                         <div className="border-t pt-6">
                           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                            Account
+                            Tài khoản
                           </h3>
                           <Button
                             asChild
@@ -575,7 +575,7 @@ export function ResponsiveNavbar() {
                               onClick={() => setSheetOpen(false)}
                             >
                               <LogIn className="w-5 h-5" />
-                              Sign in
+                              Đăng nhập
                             </Link>
                           </Button>
                         </div>
@@ -595,7 +595,7 @@ export function ResponsiveNavbar() {
                     {/* Desktop Sidebar */}
               <Drawer open={desktopSidebarOpen} onOpenChange={setDesktopSidebarOpen}>
                 <DrawerContent className="w-80 p-0 h-full max-h-screen z-[70]" data-vaul-drawer-direction="left">
-          <DrawerTitle className="sr-only">Desktop Navigation Menu</DrawerTitle>
+          <DrawerTitle className="sr-only">Menu Điều Hướng Máy Tính</DrawerTitle>
           <div className="p-6 h-full overflow-y-auto bg-white">
             <div className="flex items-center justify-between mb-8">
               <Link
@@ -618,7 +618,7 @@ export function ResponsiveNavbar() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setDesktopSidebarOpen(false)}
-                aria-label="Close sidebar"
+                                        aria-label="Đóng menu"
                 className="hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-6 h-6" />
@@ -636,9 +636,9 @@ export function ResponsiveNavbar() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search products..."
+                    placeholder="Tìm kiếm sản phẩm..."
                     className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all hover:border-gray-400"
-                    aria-label="Search products"
+                    aria-label="Tìm kiếm sản phẩm"
                   />
                   <button
                     type="submit"
@@ -653,9 +653,9 @@ export function ResponsiveNavbar() {
 
             {/* Desktop Sidebar Navigation */}
             <nav className="space-y-2 mb-8">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                Navigation
-              </h3>
+                              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                  Điều hướng
+                </h3>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -680,9 +680,9 @@ export function ResponsiveNavbar() {
 
             {/* Quick Links Section */}
             <div className="mb-8">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                Quick Links
-              </h3>
+                              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                  Liên kết nhanh
+                </h3>
               <div className="space-y-2">
                 <Link
                   href="/products?category=refined"
@@ -715,7 +715,7 @@ export function ResponsiveNavbar() {
             {session && (
               <div className="border-t pt-6">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                  Account
+                  Tài khoản
                 </h3>
                 <div className="space-y-2">
                   <Link

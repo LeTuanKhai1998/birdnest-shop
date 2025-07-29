@@ -756,6 +756,13 @@ enum RecipientType {
   - Ensure sidebar opens/closes properly on desktop
   - Ensure no layout shift or broken spacing occurs on different screen sizes
 
+- [X] Additional Improvements:
+  - [X] Small left sidebar (80px width) with icons and text underneath
+  - [X] Hamburger button in left sidebar to open full sidebar
+  - [X] Cart kept in top menu bar for all screen sizes
+  - [X] Removed hamburger from top menu bar
+  - [X] Fixed guest-orders page parsing error
+
 
 ---
 
