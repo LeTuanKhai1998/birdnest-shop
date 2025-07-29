@@ -1,9 +1,9 @@
-"use client";
-import React from "react";
-import useSWR from "swr";
-import { UserCard } from "@/components/UserCard";
-import { UserTable } from "@/components/UserTable";
-import { toast } from "sonner";
+'use client';
+import React from 'react';
+import useSWR from 'swr';
+import { UserCard } from '@/components/UserCard';
+import { UserTable } from '@/components/UserTable';
+import { toast } from 'sonner';
 
 type AdminUser = {
   id: string;
@@ -16,38 +16,38 @@ type AdminUser = {
   lastLoginAt?: string | null;
 };
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function AdminUsersPage() {
-  const { data, mutate, isLoading } = useSWR("/api/users", fetcher);
+  const { data, mutate, isLoading } = useSWR('/api/users', fetcher);
   const users = data?.users || [];
 
   const handleRoleChange = async (id: string, isAdmin: boolean) => {
-    const res = await fetch("/api/users", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch('/api/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, isAdmin }),
     });
     if (res.ok) {
-      toast.success("Role updated");
+      toast.success('Role updated');
       mutate();
     } else {
-      toast.error("Failed to update role");
+      toast.error('Failed to update role');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
-    const res = await fetch("/api/users", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    const res = await fetch('/api/users', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     });
     if (res.ok) {
-      toast.success("User deleted");
+      toast.success('User deleted');
       mutate();
     } else {
-      toast.error("Failed to delete user");
+      toast.error('Failed to delete user');
     }
   };
 
@@ -64,16 +64,16 @@ export default function AdminUsersPage() {
                 name={user.name}
                 email={user.email}
                 isAdmin={user.isAdmin}
-                onEdit={() => toast.info("Edit not implemented")}
+                onEdit={() => toast.info('Edit not implemented')}
                 onDelete={() => handleDelete(user.id)}
-                onRoleChange={isAdmin => handleRoleChange(user.id, isAdmin)}
+                onRoleChange={(isAdmin) => handleRoleChange(user.id, isAdmin)}
               />
             ))}
           </div>
           <div className="hidden lg:block">
             <UserTable
               users={users}
-              onEdit={() => toast.info("Edit not implemented")}
+              onEdit={() => toast.info('Edit not implemented')}
               onDelete={handleDelete}
               onRoleChange={handleRoleChange}
             />
@@ -82,4 +82,4 @@ export default function AdminUsersPage() {
       )}
     </div>
   );
-} 
+}

@@ -1,5 +1,5 @@
-import React from "react";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import React from 'react';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 export type UserTableProps = {
   users: Array<{
@@ -13,7 +13,12 @@ export type UserTableProps = {
   onRoleChange: (id: string, isAdmin: boolean) => void;
 };
 
-export function UserTable({ users, onEdit, onDelete, onRoleChange }: UserTableProps) {
+export function UserTable({
+  users,
+  onEdit,
+  onDelete,
+  onRoleChange,
+}: UserTableProps) {
   return (
     <table className="min-w-full bg-white rounded shadow text-sm">
       <thead>
@@ -35,15 +40,15 @@ export function UserTable({ users, onEdit, onDelete, onRoleChange }: UserTablePr
             <td className="px-4 py-2">
               <select
                 className="border rounded px-2 py-1 text-xs"
-                value={u.isAdmin ? "admin" : "user"}
-                onChange={e => onRoleChange(u.id, e.target.value === "admin")}
+                value={u.isAdmin ? 'admin' : 'user'}
+                onChange={(e) => onRoleChange(u.id, e.target.value === 'admin')}
               >
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>
             </td>
             <td className="px-4 py-2">
-              <StatusBadge status={u.isAdmin ? "ADMIN" : "USER"} />
+              <StatusBadge status={u.isAdmin ? 'ADMIN' : 'USER'} />
             </td>
             <td className="px-4 py-2 flex gap-2">
               <button
@@ -66,4 +71,4 @@ export function UserTable({ users, onEdit, onDelete, onRoleChange }: UserTablePr
       </tbody>
     </table>
   );
-} 
+}

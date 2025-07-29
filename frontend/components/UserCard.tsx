@@ -1,5 +1,5 @@
-import React from "react";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import React from 'react';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 export type UserCardProps = {
   name?: string | null;
@@ -10,7 +10,14 @@ export type UserCardProps = {
   onRoleChange: (isAdmin: boolean) => void;
 };
 
-export function UserCard({ name, email, isAdmin, onEdit, onDelete, onRoleChange }: UserCardProps) {
+export function UserCard({
+  name,
+  email,
+  isAdmin,
+  onEdit,
+  onDelete,
+  onRoleChange,
+}: UserCardProps) {
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-4 flex flex-col gap-2">
       <div className="flex items-center justify-between">
@@ -18,13 +25,13 @@ export function UserCard({ name, email, isAdmin, onEdit, onDelete, onRoleChange 
           <div className="font-semibold text-lg">{name || email}</div>
           <div className="text-xs text-gray-500">{email}</div>
         </div>
-        <StatusBadge status={isAdmin ? "ADMIN" : "USER"} />
+        <StatusBadge status={isAdmin ? 'ADMIN' : 'USER'} />
       </div>
       <div className="flex gap-2 mt-2">
         <select
           className="border rounded px-2 py-1 text-xs"
-          value={isAdmin ? "admin" : "user"}
-          onChange={e => onRoleChange(e.target.value === "admin")}
+          value={isAdmin ? 'admin' : 'user'}
+          onChange={(e) => onRoleChange(e.target.value === 'admin')}
         >
           <option value="user">User</option>
           <option value="admin">Admin</option>
@@ -46,4 +53,4 @@ export function UserCard({ name, email, isAdmin, onEdit, onDelete, onRoleChange 
       </div>
     </div>
   );
-} 
+}

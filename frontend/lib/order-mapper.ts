@@ -15,10 +15,13 @@ export function mapOrderToApi(order: unknown): unknown {
           id: (i.product as Record<string, unknown>).id,
           name: (i.product as Record<string, unknown>).name,
           images: Array.isArray((i.product as Record<string, unknown>).images)
-            ? ((i.product as Record<string, unknown>).images as unknown[]).map((img: unknown) => (img as Record<string, unknown>).url as string)
+            ? ((i.product as Record<string, unknown>).images as unknown[]).map(
+                (img: unknown) =>
+                  (img as Record<string, unknown>).url as string,
+              )
             : [],
         },
       };
     }),
   };
-} 
+}

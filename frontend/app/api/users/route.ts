@@ -41,7 +41,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const { id, isAdmin } = await req.json();
-  if (!id) return NextResponse.json({ error: 'Missing user id' }, { status: 400 });
+  if (!id)
+    return NextResponse.json({ error: 'Missing user id' }, { status: 400 });
   const user = await prisma.user.update({
     where: { id },
     data: {
@@ -66,7 +67,8 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const { id } = await req.json();
-  if (!id) return NextResponse.json({ error: 'Missing user id' }, { status: 400 });
+  if (!id)
+    return NextResponse.json({ error: 'Missing user id' }, { status: 400 });
   await prisma.user.delete({ where: { id } });
   return NextResponse.json({ success: true });
-} 
+}

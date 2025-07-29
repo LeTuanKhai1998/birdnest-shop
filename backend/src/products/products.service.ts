@@ -13,13 +13,13 @@ export class ProductsService {
     search?: string;
   }): Promise<Product[]> {
     const { skip, take, categoryId, search } = params;
-    
+
     const where: Prisma.ProductWhereInput = {};
-    
+
     if (categoryId) {
       where.categoryId = categoryId;
     }
-    
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -121,4 +121,4 @@ export class ProductsService {
       },
     });
   }
-} 
+}

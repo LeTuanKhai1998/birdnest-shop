@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import Image from 'next/image';
+import { Card, CardContent } from '@/components/ui/card';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import {
   Carousel,
   CarouselContent,
@@ -10,8 +10,8 @@ import {
   CarouselNext,
   CarouselPrevious,
   type CarouselApi,
-} from "@/components/ui/carousel";
-import { useRef, useEffect, useState } from "react";
+} from '@/components/ui/carousel';
+import { useRef, useEffect, useState } from 'react';
 
 interface Banner {
   src: string;
@@ -32,10 +32,10 @@ export function HomeCarousel({ banners }: HomeCarouselProps) {
     const onSelect = () => {
       setCurrent(carouselApi.selectedScrollSnap());
     };
-    carouselApi.on("select", onSelect);
+    carouselApi.on('select', onSelect);
     onSelect();
     return () => {
-      carouselApi.off("select", onSelect);
+      carouselApi.off('select', onSelect);
     };
   }, [carouselApi]);
 
@@ -56,10 +56,17 @@ export function HomeCarousel({ banners }: HomeCarouselProps) {
 
   return (
     <section className="container mx-auto px-4 flex justify-center items-center">
-      <Carousel className="w-full" setApi={setCarouselApi} opts={{ loop: true }}>
+      <Carousel
+        className="w-full"
+        setApi={setCarouselApi}
+        opts={{ loop: true }}
+      >
         <CarouselContent>
           {banners.map((banner, i) => (
-            <CarouselItem key={banner.src} className="flex justify-center items-center">
+            <CarouselItem
+              key={banner.src}
+              className="flex justify-center items-center"
+            >
               <Card className="w-full rounded-2xl overflow-hidden shadow-xl border-0">
                 <CardContent className="p-0 m-0 border-0">
                   <AspectRatio ratio={16 / 7}>
@@ -82,4 +89,4 @@ export function HomeCarousel({ banners }: HomeCarouselProps) {
       </Carousel>
     </section>
   );
-} 
+}

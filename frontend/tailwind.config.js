@@ -8,11 +8,16 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Liberation Sans', 'sans-serif'],
+        sans: [
+          'Inter',
+          'Helvetica Neue',
+          'Arial',
+          'Noto Sans',
+          'Liberation Sans',
+          'sans-serif',
+        ],
       },
     },
   },
-  plugins: [
-    require('tailwind-scrollbar'),
-  ],
-}; 
+  plugins: [require('tailwind-scrollbar')],
+};

@@ -1,6 +1,18 @@
-import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { OrderStatus } from '@prisma/client';
 
 @Controller('orders')
 export class OrdersController {
@@ -18,7 +30,7 @@ export class OrdersController {
       skip: skip ? parseInt(skip) : undefined,
       take: take ? parseInt(take) : undefined,
       userId,
-      status: status as any,
+      status: status as OrderStatus | undefined,
     });
   }
 
@@ -36,7 +48,7 @@ export class OrdersController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() data: any) {
+  async create(@Body() data: CreateOrderDto) {
     return this.ordersService.create(data);
   }
 
@@ -44,8 +56,8 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
   async updateStatus(
     @Param('id') id: string,
-    @Body('status') status: string,
+    @Body() data: UpdateOrderStatusDto,
   ) {
-    return this.ordersService.updateStatus(id, status as any);
+    return this.ordersService.updateStatus(id, data.status);
   }
-} 
+}

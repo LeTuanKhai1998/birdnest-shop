@@ -45,7 +45,8 @@ async function main() {
     {
       name: 'Premium Refined Birdnest 50g',
       slug: 'premium-refined-birdnest-50g',
-      description: 'High-quality refined birdnest, carefully processed and cleaned. Perfect for daily consumption.',
+      description:
+        'High-quality refined birdnest, carefully processed and cleaned. Perfect for daily consumption.',
       price: 1500000,
       quantity: 50,
       categoryId: refinedCategory.id,
@@ -57,7 +58,8 @@ async function main() {
     {
       name: 'Raw Birdnest 100g',
       slug: 'raw-birdnest-100g',
-      description: 'Natural raw birdnest from Kien Giang, preserved in its original state.',
+      description:
+        'Natural raw birdnest from Kien Giang, preserved in its original state.',
       price: 2800000,
       quantity: 30,
       categoryId: rawCategory.id,
@@ -69,7 +71,8 @@ async function main() {
     {
       name: 'Feather-removed Birdnest 200g',
       slug: 'feather-removed-birdnest-200g',
-      description: 'Carefully processed birdnest with feathers removed, ready for cooking.',
+      description:
+        'Carefully processed birdnest with feathers removed, ready for cooking.',
       price: 5200000,
       quantity: 20,
       categoryId: featherRemovedCategory.id,
@@ -81,7 +84,8 @@ async function main() {
     {
       name: 'Premium Gift Combo Set',
       slug: 'premium-gift-combo-set',
-      description: 'Luxury gift combo including refined birdnest, honey, and premium packaging.',
+      description:
+        'Luxury gift combo including refined birdnest, honey, and premium packaging.',
       price: 3500000,
       quantity: 15,
       categoryId: comboCategory.id,
@@ -93,7 +97,8 @@ async function main() {
     {
       name: 'Family Pack Combo',
       slug: 'family-pack-combo',
-      description: 'Perfect for family consumption with multiple birdnest varieties.',
+      description:
+        'Perfect for family consumption with multiple birdnest varieties.',
       price: 4500000,
       quantity: 25,
       categoryId: comboCategory.id,
@@ -106,7 +111,7 @@ async function main() {
 
   for (const productData of products) {
     const { images, ...productInfo } = productData;
-    
+
     const product = await prisma.product.upsert({
       where: { slug: productData.slug },
       update: {},
@@ -131,4 +136,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  }); 
+  });

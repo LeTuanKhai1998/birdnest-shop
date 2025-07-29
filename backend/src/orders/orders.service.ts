@@ -13,13 +13,13 @@ export class OrdersService {
     status?: OrderStatus;
   }): Promise<Order[]> {
     const { skip, take, userId, status } = params;
-    
+
     const where: Prisma.OrderWhereInput = {};
-    
+
     if (userId) {
       where.userId = userId;
     }
-    
+
     if (status) {
       where.status = status;
     }
@@ -167,4 +167,4 @@ export class OrdersService {
       ordersByStatus,
     };
   }
-} 
+}

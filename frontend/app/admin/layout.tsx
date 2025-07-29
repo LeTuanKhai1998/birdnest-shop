@@ -1,15 +1,22 @@
-"use client";
-import Link from "next/link";
-import { ReactNode } from "react";
-import { LayoutDashboard, ShoppingBag, Users, Settings, Sun, Moon } from "lucide-react";
-import { cn } from "@/lib/utils";
+'use client';
+import Link from 'next/link';
+import { ReactNode } from 'react';
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  Users,
+  Settings,
+  Sun,
+  Moon,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const navLinks = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
-  { href: "/admin/products", label: "Products", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Customers", icon: Users },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+  { href: '/admin/products', label: 'Products', icon: LayoutDashboard },
+  { href: '/admin/users', label: 'Customers', icon: Users },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -22,11 +29,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <span>Admin</span>
         </div>
         <nav className="flex flex-col gap-2 flex-1">
-          {navLinks.map(link => (
-            <Link key={link.href} href={link.href} className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-base font-medium hover:bg-red-50 dark:hover:bg-neutral-700 transition",
-              "text-gray-700 dark:text-gray-200"
-            )}>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-lg text-base font-medium hover:bg-red-50 dark:hover:bg-neutral-700 transition',
+                'text-gray-700 dark:text-gray-200',
+              )}
+            >
               <link.icon className="w-5 h-5" />
               <span>{link.label}</span>
             </Link>
@@ -49,4 +60,4 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </div>
     </div>
   );
-} 
+}

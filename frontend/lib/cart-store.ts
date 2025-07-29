@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { Product } from "@/components/ProductCard";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Product } from '@/components/ProductCard';
 
 export interface CartItem {
   product: Product;
@@ -24,13 +24,15 @@ export const useCartStore = create<CartState>()(
       items: [],
       addToCart: (product, quantity = 1) => {
         set((state) => {
-          const existing = state.items.find((item) => item.product.id === product.id);
+          const existing = state.items.find(
+            (item) => item.product.id === product.id,
+          );
           let newItems;
           if (existing) {
             newItems = state.items.map((item) =>
               item.product.id === product.id
                 ? { ...item, quantity: item.quantity + quantity }
-                : item
+                : item,
             );
           } else {
             newItems = [...state.items, { product, quantity }];
@@ -42,12 +44,14 @@ export const useCartStore = create<CartState>()(
         });
       },
       removeFromCart: (productId) => {
-        set((state) => ({ items: state.items.filter((item) => item.product.id !== productId) }));
+        set((state) => ({
+          items: state.items.filter((item) => item.product.id !== productId),
+        }));
       },
       updateQuantity: (productId, quantity) => {
         set((state) => ({
           items: state.items.map((item) =>
-            item.product.id === productId ? { ...item, quantity } : item
+            item.product.id === productId ? { ...item, quantity } : item,
           ),
         }));
       },
@@ -60,11 +64,12 @@ export const useCartStore = create<CartState>()(
       cartCount: 0, // Placeholder, will be overridden by selector
     }),
     {
-      name: "cart-storage",
+      name: 'cart-storage',
       partialize: (state) => ({ items: state.items }),
-    }
-  )
+    },
+  ),
 );
 
 // Selector for cartCount
-export const selectCartCount = (state: CartState) => state.items.reduce((sum, item) => sum + item.quantity, 0); 
+export const selectCartCount = (state: CartState) =>
+  state.items.reduce((sum, item) => sum + item.quantity, 0);

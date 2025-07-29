@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import useSWR from "swr/immutable";
-import { fetcher } from "@/lib/utils";
-import { Product } from "@/components/ProductCard";
+import { create } from 'zustand';
+import useSWR from 'swr/immutable';
+import { fetcher } from '@/lib/utils';
+import { Product } from '@/components/ProductCard';
 
 export interface WishlistItem {
   id: string;
@@ -25,11 +25,16 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
   add: async (product, mutate) => {
     set({ loading: true, error: null });
     const prev = get().items;
-    set({ items: [...prev, { id: "optimistic-" + product.id, product, productId: product.id }] });
+    set({
+      items: [
+        ...prev,
+        { id: 'optimistic-' + product.id, product, productId: product.id },
+      ],
+    });
     try {
-      const res = await fetch("/api/wishlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: product.id }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -45,9 +50,9 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     const prev = get().items;
     set({ items: prev.filter((item) => item.productId !== productId) });
     try {
-      const res = await fetch("/api/wishlist", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/wishlist', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -58,12 +63,16 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       set({ loading: false });
     }
   },
-  isInWishlist: (productId) => get().items.some((item) => item.productId === productId),
+  isInWishlist: (productId) =>
+    get().items.some((item) => item.productId === productId),
 }));
 
 // SWR hook for fetching wishlist
 export function useWishlist() {
-  const { data, error, isLoading, mutate } = useSWR<WishlistItem[]>("/api/wishlist", fetcher);
+  const { data, error, isLoading, mutate } = useSWR<WishlistItem[]>(
+    '/api/wishlist',
+    fetcher,
+  );
   const store = useWishlistStore();
   // Sync Zustand store with SWR data
   if (data && store.items !== data) {
@@ -78,4 +87,4 @@ export function useWishlist() {
     remove: (productId: string) => store.remove(productId, mutate),
     isInWishlist: store.isInWishlist,
   };
-} 
+}

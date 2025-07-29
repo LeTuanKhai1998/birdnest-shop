@@ -10,10 +10,10 @@ import { JwtAuthGuard } from './jwt-auth.guard';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'fallback-secret',
-        signOptions: { 
-          expiresIn: `${configService.get<number>('JWT_ACCESS_EXP_MINUTES') || 30}m` 
+        signOptions: {
+          expiresIn: `${configService.get<number>('JWT_ACCESS_EXP_MINUTES') || 30}m`,
         },
       }),
       inject: [ConfigService],
@@ -22,4 +22,4 @@ import { JwtAuthGuard } from './jwt-auth.guard';
   providers: [JwtStrategy, JwtAuthGuard],
   exports: [JwtModule, JwtAuthGuard],
 })
-export class AuthModule {} 
+export class AuthModule {}

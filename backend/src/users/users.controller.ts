@@ -24,4 +24,4 @@ export class UsersController {
   ) {
     return this.usersService.updateAdminStatus(id, isAdmin);
   }
-} 
+}

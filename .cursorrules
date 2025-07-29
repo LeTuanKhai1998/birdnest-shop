@@ -243,35 +243,95 @@
 - [X] Prepare npm scripts for dev tools (`npm run start:dev`, `npm run test`)
 
 
-### 6. Advanced Features [ ]
+### 6. Code Quality, Refactor, Optimization [X]
 
-- [ ] Real-time notifications
-- [ ] Email system (Resend):
-  - Order confirmations
-  - Shipping updates
-  - Password reset
-- [ ] Search optimization
-- [ ] Performance optimization:
-  - Image optimization
-  - Caching strategies
-  - API optimization
-- [ ] Analytics and reporting
+- [X] Use **ESLint** and **Prettier** for linting and formatting.
+- [X] Add `npm run lint` and `npm run format` in both frontend/backend.
+- [X] Clean up:
+  - [X] Unused imports / variables - Fixed in frontend components
+  - [X] Duplicate logic - Removed unused variables and imports
+  - [X] Dead code - Cleaned up unused functions and variables
+- [X] Extract reusable logic to `services/` or `utils/`.
+  - [X] Created proper TypeScript interfaces in `frontend/lib/types.ts`
+  - [X] Created DTOs for backend validation in `backend/src/*/dto/`
+- [X] Follow **Single Responsibility Principle** per function/module.
+  - [X] Separated concerns in API service with proper types
+  - [X] Created dedicated DTOs for validation
+- [X] Optional: Add `husky` to auto-lint before commit.
 
-### 7. Testing and Deployment [ ]
+---
 
-- [ ] Unit testing
-- [ ] Integration testing
-- [ ] E2E testing
-- [ ] Security audit
-- [ ] Production deployment:
-  - Environment setup
-  - CI/CD pipeline
-  - Monitoring
-  - Backup strategy
+### 7. Testing and Reliability [ ]
 
-### 8. Documentation [ ]
+- [ ] Backend Unit Tests:
+  - Use **Jest** (NestJS mặc định hỗ trợ)
+  - Test service logic, controller endpoints
+- [ ] Frontend Unit Tests:
+  - Use **Jest + React Testing Library**
+  - Test components, forms, and auth logic
+- [ ] API Integration Tests:
+  - Use **Supertest** (backend) for endpoint testing
+  - Mock database (e.g. SQLite or in-memory)
+  - Test edge cases: auth failure, invalid input, DB errors
+- [ ] End-to-End Tests (Automation):
+  - Use **Playwright** or **Cypress**
+  - Simulate real user flows (login, checkout, order creation, etc.)
+  - Add scripts like `npm run test:e2e`
+  - Run on PR or deploy via GitHub Actions (optional)
 
-- [ ] API documentation
-- [ ] User guide
-- [ ] Admin documentation
-- [ ] Deployment guide
+---
+
+### 8. Security Best Practices [ ]
+
+- [ ] Sanitize user inputs (e.g. `class-validator`, middleware)
+- [ ] Hash passwords with **bcrypt** (if managing auth manually)
+- [ ] Use Helmet or similar middlewares to set HTTP headers
+- [ ] Rate limit sensitive endpoints (auth, payments)
+- [ ] Validate all incoming data (DTOs in NestJS)
+- [ ] Keep `.env` secrets out of source control
+- [ ] Restrict CORS to allowed origins
+
+---
+
+### 9. Performance & UX Optimization [ ]
+
+- [ ] Optimize frontend bundle size (code splitting, lazy loading)
+- [ ] Add loading states to all async operations
+- [ ] Use `React.memo`, `useMemo`, `useCallback` where needed
+- [ ] Enable cache headers for static assets (Vercel auto)
+- [ ] Optional: Use `next/image` for optimized images
+
+---
+
+### 10. CI/CD and Deployment Readiness [ ]
+
+- [ ] Setup `.dockerignore`, `.env.example` files
+- [ ] Dockerize backend with production-ready Dockerfile
+- [ ] Create `docker-compose.yml` for local development
+- [ ] Setup GitHub Actions or CI:
+  - Lint, test, build on PRs
+- [ ] Deploy backend to Railway, Fly.io, VPS or Render
+- [ ] Setup reverse proxy or subdomain for API (e.g. `api.birdnest.shop`)
+- [ ] Setup health check route
+- [ ] Optional: Use UptimeRobot to monitor API uptime
+
+---
+
+### 11. Observability and Logging [ ]
+
+- [ ] Add global error handler middleware (backend)
+- [ ] Add structured logs (`logger.service.ts` or `pino`)
+- [ ] Track user events (e.g. order success, payment failure)
+- [ ] Optional: Integrate error monitoring (Sentry / Logtail / Datadog)
+
+---
+
+### 12. Documentation and Developer Experience [ ]
+
+- [ ] Generate Swagger docs at `/api-docs`
+- [ ] Write `README.md` inside `backend/`:
+  - Setup instructions, run, envs, API overview
+- [ ] Add comments and typing to all exposed APIs
+- [ ] Document common error messages and responses
+- [ ] Provide sample curl or Postman collection
+- [ ] Optional: Add API versioning (e.g. `/api/v1/`)

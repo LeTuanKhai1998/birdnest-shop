@@ -1,5 +1,5 @@
-import * as React from "react";
-import { User as UserIcon } from "lucide-react";
+import * as React from 'react';
+import { User as UserIcon } from 'lucide-react';
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string;
@@ -8,12 +8,19 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: number;
 }
 
-export function Avatar({ src, alt, name, size = 32, className = "", ...props }: AvatarProps) {
+export function Avatar({
+  src,
+  alt,
+  name,
+  size = 32,
+  className = '',
+  ...props
+}: AvatarProps) {
   // Get initials from name
   const getInitials = (name?: string) => {
-    if (!name) return "";
-    const parts = name.split(" ");
-    if (parts.length === 1) return parts[0][0]?.toUpperCase() || "";
+    if (!name) return '';
+    const parts = name.split(' ');
+    if (parts.length === 1) return parts[0][0]?.toUpperCase() || '';
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
@@ -27,11 +34,13 @@ export function Avatar({ src, alt, name, size = 32, className = "", ...props }: 
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
-          alt={alt || name || "User"}
+          alt={alt || name || 'User'}
           className="object-cover w-full h-full"
           width={size}
           height={size}
-          onError={e => { (e.target as HTMLImageElement).src = ""; }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '';
+          }}
         />
       ) : name ? (
         <span className="text-gray-700 font-semibold text-base select-none">
@@ -42,4 +51,4 @@ export function Avatar({ src, alt, name, size = 32, className = "", ...props }: 
       )}
     </div>
   );
-} 
+}

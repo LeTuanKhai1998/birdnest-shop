@@ -1,20 +1,36 @@
-"use client";
-import * as React from "react";
-import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+'use client';
+import * as React from 'react';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
-export function TooltipProvider({ children, ...props }: TooltipPrimitive.TooltipProviderProps) {
-  return <TooltipPrimitive.Provider {...props}>{children}</TooltipPrimitive.Provider>;
+export function TooltipProvider({
+  children,
+  ...props
+}: TooltipPrimitive.TooltipProviderProps) {
+  return (
+    <TooltipPrimitive.Provider {...props}>{children}</TooltipPrimitive.Provider>
+  );
 }
 
 export function Tooltip({ children, ...props }: TooltipPrimitive.TooltipProps) {
   return <TooltipPrimitive.Root {...props}>{children}</TooltipPrimitive.Root>;
 }
 
-export function TooltipTrigger({ children, ...props }: TooltipPrimitive.TooltipTriggerProps) {
-  return <TooltipPrimitive.Trigger asChild {...props}>{children}</TooltipPrimitive.Trigger>;
+export function TooltipTrigger({
+  children,
+  ...props
+}: TooltipPrimitive.TooltipTriggerProps) {
+  return (
+    <TooltipPrimitive.Trigger asChild {...props}>
+      {children}
+    </TooltipPrimitive.Trigger>
+  );
 }
 
-export function TooltipContent({ children, className = "", ...props }: TooltipPrimitive.TooltipContentProps) {
+export function TooltipContent({
+  children,
+  className = '',
+  ...props
+}: TooltipPrimitive.TooltipContentProps) {
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
@@ -27,4 +43,4 @@ export function TooltipContent({ children, className = "", ...props }: TooltipPr
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   );
-} 
+}

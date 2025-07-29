@@ -1,16 +1,42 @@
-"use client";
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerTrigger, DrawerClose, DrawerTitle } from "@/components/ui/drawer";
-import { Search, User, Menu, X, ShoppingBag, LogOut, Heart, Bell, Box, Users, Settings, Home as HomeIcon, Info, Mail, LogIn } from "lucide-react";
-import { CartIconWithBadge } from "@/components/CartIconWithBadge";
-import { useState, useRef } from "react";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { useSession, signOut } from "next-auth/react";
-import { usePathname } from "next/navigation";
-import { Avatar as ShadcnAvatar } from "@/components/ui/avatar";
-import useSWR from "swr";
+'use client';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import {
+  Search,
+  User,
+  Menu,
+  X,
+  ShoppingBag,
+  LogOut,
+  Heart,
+  Bell,
+  Box,
+  Settings,
+  Home as HomeIcon,
+  Info,
+  Mail,
+  LogIn,
+} from 'lucide-react';
+import { CartIconWithBadge } from '@/components/CartIconWithBadge';
+import { useState, useRef } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { useSession, signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
+import { Avatar as ShadcnAvatar } from '@/components/ui/avatar';
+import useSWR from 'swr';
 
 export function ResponsiveNavbar() {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -19,18 +45,32 @@ export function ResponsiveNavbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const userFromSession = session?.user;
-  const { data: user } = useSWR(userFromSession ? "/api/profile" : null, url => fetch(url).then(r => r.json()), { fallbackData: userFromSession });
+  const { data: user } = useSWR(
+    userFromSession ? '/api/profile' : null,
+    (url) => fetch(url).then((r) => r.json()),
+    { fallbackData: userFromSession },
+  );
 
   // Notification state
   const [notifications, setNotifications] = useState([
-    { id: 1, text: "New order received!", read: false, time: "2m ago" },
-    { id: 2, text: "Stock low: Raw Birdnest 50g", read: false, time: "10m ago" },
-    { id: 3, text: "Order #1234 marked as shipped", read: true, time: "1h ago" },
+    { id: 1, text: 'New order received!', read: false, time: '2m ago' },
+    {
+      id: 2,
+      text: 'Stock low: Raw Birdnest 50g',
+      read: false,
+      time: '10m ago',
+    },
+    {
+      id: 3,
+      text: 'Order #1234 marked as shipped',
+      read: true,
+      time: '1h ago',
+    },
   ]);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markAllRead = () => {
-    setNotifications(n => n.map(notif => ({ ...notif, read: true })));
+    setNotifications((n) => n.map((notif) => ({ ...notif, read: true })));
   };
 
   const clearNotifications = () => {
@@ -44,17 +84,16 @@ export function ResponsiveNavbar() {
         {/* Content container */}
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between h-16 lg:h-20 px-4 lg:px-6 xl:px-8">
-            
             {/* Left: Logo and Brand Name */}
             <div className="flex items-center flex-shrink-0">
               <Link href="/" className="flex items-center gap-2 group">
                 <div className="relative">
-                  <Image 
-                    src="/images/logo.png" 
-                    alt="Yến Sào Kim Sang Logo" 
-                    width={40} 
-                    height={40} 
-                    className="w-8 h-8 lg:w-10 lg:h-10 border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105" 
+                  <Image
+                    src="/images/logo.png"
+                    alt="Yến Sào Kim Sang Logo"
+                    width={40}
+                    height={40}
+                    className="w-8 h-8 lg:w-10 lg:h-10 border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105"
                   />
                 </div>
                 {/* Hide shop name on small screens */}
@@ -66,29 +105,29 @@ export function ResponsiveNavbar() {
 
             {/* Middle: Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center space-x-8">
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 className="text-gray-700 hover:text-red-600 font-medium transition-colors duration-200 relative group px-2 py-1"
               >
                 Home
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all duration-200 group-hover:w-full"></span>
               </Link>
-              <Link 
-                href="/products" 
+              <Link
+                href="/products"
                 className="text-gray-700 hover:text-red-600 font-medium transition-colors duration-200 relative group px-2 py-1"
               >
                 Products
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all duration-200 group-hover:w-full"></span>
               </Link>
-              <Link 
-                href="/about" 
+              <Link
+                href="/about"
                 className="text-gray-700 hover:text-red-600 font-medium transition-colors duration-200 relative group px-2 py-1"
               >
                 About
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all duration-200 group-hover:w-full"></span>
               </Link>
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 className="text-gray-700 hover:text-red-600 font-medium transition-colors duration-200 relative group px-2 py-1"
               >
                 Contact
@@ -98,10 +137,14 @@ export function ResponsiveNavbar() {
 
             {/* Right: Search, Icons, User */}
             <div className="flex items-center gap-2 lg:gap-4">
-              
               {/* Search - Desktop */}
               <div className="hidden md:flex items-center">
-                <form className="relative" onSubmit={(e) => { e.preventDefault(); }}>
+                <form
+                  className="relative"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                  }}
+                >
                   <input
                     type="text"
                     placeholder="Search products..."
@@ -119,10 +162,10 @@ export function ResponsiveNavbar() {
               </div>
 
               {/* Search - Mobile */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="md:hidden p-2" 
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden p-2"
                 onClick={() => setShowSearch(true)}
                 aria-label="Open search"
               >
@@ -137,7 +180,12 @@ export function ResponsiveNavbar() {
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative p-2" aria-label="Notifications">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative p-2"
+                    aria-label="Notifications"
+                  >
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
@@ -151,7 +199,7 @@ export function ResponsiveNavbar() {
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold">Notifications</h3>
                       {notifications.length > 0 && (
-                        <button 
+                        <button
                           onClick={markAllRead}
                           className="text-sm text-blue-600 hover:underline"
                         >
@@ -162,15 +210,24 @@ export function ResponsiveNavbar() {
                   </div>
                   <div className="max-h-60 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500">No notifications</div>
+                      <div className="p-4 text-center text-gray-500">
+                        No notifications
+                      </div>
                     ) : (
-                      notifications.map(n => (
-                        <div key={n.id} className={`p-4 border-b last:border-b-0 ${n.read ? 'bg-white' : 'bg-red-50'}`}>
+                      notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className={`p-4 border-b last:border-b-0 ${n.read ? 'bg-white' : 'bg-red-50'}`}
+                        >
                           <div className="flex items-start gap-3">
-                            <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${n.read ? 'bg-gray-300' : 'bg-red-600'}`} />
+                            <div
+                              className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${n.read ? 'bg-gray-300' : 'bg-red-600'}`}
+                            />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-gray-900">{n.text}</p>
-                              <p className="text-xs text-gray-500 mt-1">{n.time}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {n.time}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -179,7 +236,7 @@ export function ResponsiveNavbar() {
                   </div>
                   {notifications.length > 0 && (
                     <div className="p-2 border-t">
-                      <button 
+                      <button
                         onClick={clearNotifications}
                         className="w-full py-2 text-sm text-gray-600 hover:text-red-600 transition-colors"
                       >
@@ -199,7 +256,9 @@ export function ResponsiveNavbar() {
                     size="sm"
                     className="hidden sm:flex items-center gap-2"
                   >
-                    <Link href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}>
+                    <Link
+                      href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                    >
                       <LogIn className="w-4 h-4" />
                       <span>Sign in</span>
                     </Link>
@@ -207,9 +266,12 @@ export function ResponsiveNavbar() {
                 ) : (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="flex items-center gap-2 p-2">
+                      <Button
+                        variant="ghost"
+                        className="flex items-center gap-2 p-2"
+                      >
                         <ShadcnAvatar
-                          src={user?.image || "/images/user.jpeg"}
+                          src={user?.image || '/images/user.jpeg'}
                           name={user?.name}
                           size={32}
                           className="w-8 h-8"
@@ -225,19 +287,28 @@ export function ResponsiveNavbar() {
                         <p className="text-xs text-gray-500">{user?.email}</p>
                       </div>
                       <DropdownMenuItem asChild>
-                        <Link href="/dashboard/profile" className="flex items-center gap-2">
+                        <Link
+                          href="/dashboard/profile"
+                          className="flex items-center gap-2"
+                        >
                           <User className="w-4 h-4" />
                           Profile
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/dashboard/orders" className="flex items-center gap-2">
+                        <Link
+                          href="/dashboard/orders"
+                          className="flex items-center gap-2"
+                        >
                           <ShoppingBag className="w-4 h-4" />
                           Orders
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/dashboard/wishlist" className="flex items-center gap-2">
+                        <Link
+                          href="/dashboard/wishlist"
+                          className="flex items-center gap-2"
+                        >
                           <Heart className="w-4 h-4" />
                           Wishlist
                         </Link>
@@ -246,7 +317,10 @@ export function ResponsiveNavbar() {
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild>
-                            <Link href="/admin" className="flex items-center gap-2">
+                            <Link
+                              href="/admin"
+                              className="flex items-center gap-2"
+                            >
                               <Settings className="w-4 h-4" />
                               Admin Dashboard
                             </Link>
@@ -254,7 +328,7 @@ export function ResponsiveNavbar() {
                         </>
                       )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={() => signOut()}
                         className="flex items-center gap-2 text-red-600"
                       >
@@ -269,7 +343,12 @@ export function ResponsiveNavbar() {
               {/* Mobile Menu Button */}
               <Drawer open={sheetOpen} onOpenChange={setSheetOpen}>
                 <DrawerTrigger asChild>
-                  <Button variant="ghost" size="icon" className="lg:hidden p-2" aria-label="Open menu">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="lg:hidden p-2"
+                    aria-label="Open menu"
+                  >
                     <Menu className="w-5 h-5" />
                   </Button>
                 </DrawerTrigger>
@@ -277,33 +356,40 @@ export function ResponsiveNavbar() {
                   <DrawerTitle className="sr-only">Navigation Menu</DrawerTitle>
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-6">
-                      <Link 
-                        href="/" 
+                      <Link
+                        href="/"
                         className="flex items-center gap-2"
                         onClick={() => setSheetOpen(false)}
                       >
-                        <Image 
-                          src="/images/logo.png" 
-                          alt="Logo" 
-                          width={32} 
-                          height={32} 
-                          className="border-2 border-yellow-400 rounded-full" 
+                        <Image
+                          src="/images/logo.png"
+                          alt="Logo"
+                          width={32}
+                          height={32}
+                          className="border-2 border-yellow-400 rounded-full"
                         />
-                        <span className="font-bold text-red-700">Yến Sào Kim Sang</span>
+                        <span className="font-bold text-red-700">
+                          Yến Sào Kim Sang
+                        </span>
                       </Link>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setSheetOpen(false)}
                         aria-label="Close menu"
                       >
                         <X className="w-5 h-5" />
                       </Button>
                     </div>
-                    
+
                     {/* Mobile Search */}
                     <div className="mb-6">
-                      <form onSubmit={(e) => { e.preventDefault(); setSheetOpen(false); }}>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          setSheetOpen(false);
+                        }}
+                      >
                         <div className="relative">
                           <input
                             type="text"
@@ -321,34 +407,34 @@ export function ResponsiveNavbar() {
                         </div>
                       </form>
                     </div>
-                    
+
                     <nav className="space-y-1">
-                      <Link 
-                        href="/" 
+                      <Link
+                        href="/"
                         className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                         onClick={() => setSheetOpen(false)}
                       >
                         <HomeIcon className="w-5 h-5" />
                         Home
                       </Link>
-                      <Link 
-                        href="/products" 
+                      <Link
+                        href="/products"
                         className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                         onClick={() => setSheetOpen(false)}
                       >
                         <Box className="w-5 h-5" />
                         Products
                       </Link>
-                      <Link 
-                        href="/about" 
+                      <Link
+                        href="/about"
                         className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                         onClick={() => setSheetOpen(false)}
                       >
                         <Info className="w-5 h-5" />
                         About
                       </Link>
-                      <Link 
-                        href="/contact" 
+                      <Link
+                        href="/contact"
                         className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                         onClick={() => setSheetOpen(false)}
                       >
@@ -361,8 +447,8 @@ export function ResponsiveNavbar() {
                       <>
                         <div className="border-t my-4" />
                         <div className="space-y-1">
-                          <Link 
-                            href="/dashboard" 
+                          <Link
+                            href="/dashboard"
                             className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                             onClick={() => setSheetOpen(false)}
                           >
@@ -370,8 +456,8 @@ export function ResponsiveNavbar() {
                             Dashboard
                           </Link>
                           {session.user?.isAdmin && (
-                            <Link 
-                              href="/admin" 
+                            <Link
+                              href="/admin"
                               className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                               onClick={() => setSheetOpen(false)}
                             >
@@ -379,8 +465,11 @@ export function ResponsiveNavbar() {
                               Admin
                             </Link>
                           )}
-                          <button 
-                            onClick={() => { setSheetOpen(false); signOut(); }}
+                          <button
+                            onClick={() => {
+                              setSheetOpen(false);
+                              signOut();
+                            }}
                             className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors w-full text-left text-red-600"
                           >
                             <LogOut className="w-5 h-5" />
@@ -388,10 +477,10 @@ export function ResponsiveNavbar() {
                           </button>
                         </div>
                       </>
-                                         )}
-                   </div>
-                 </DrawerContent>
-               </Drawer>
+                    )}
+                  </div>
+                </DrawerContent>
+              </Drawer>
             </div>
           </div>
         </div>
@@ -404,9 +493,9 @@ export function ResponsiveNavbar() {
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Search</h3>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowSearch(false)}
                   aria-label="Close search"
                 >
@@ -415,7 +504,12 @@ export function ResponsiveNavbar() {
               </div>
             </div>
             <div className="p-4">
-              <form onSubmit={(e) => { e.preventDefault(); setShowSearch(false); }}>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setShowSearch(false);
+                }}
+              >
                 <div className="relative">
                   <input
                     ref={searchInputRef}
@@ -440,4 +534,4 @@ export function ResponsiveNavbar() {
       )}
     </>
   );
-} 
+}

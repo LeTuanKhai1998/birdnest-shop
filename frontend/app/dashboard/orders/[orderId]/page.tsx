@@ -1,32 +1,44 @@
-"use client";
-import { use } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, Truck, XCircle } from "lucide-react";
-import Link from "next/link";
-import { mockOrders, Order } from "@/lib/mock-orders";
+'use client';
+import { use } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, Truck, XCircle } from 'lucide-react';
+import Link from 'next/link';
+import { mockOrders, Order } from '@/lib/mock-orders';
 import Image from 'next/image';
 
 const statusColor: Record<string, string> = {
-  DELIVERED: "bg-green-100 text-green-700",
-  SHIPPED: "bg-blue-100 text-blue-700",
-  CANCELLED: "bg-red-100 text-red-700",
+  DELIVERED: 'bg-green-100 text-green-700',
+  SHIPPED: 'bg-blue-100 text-blue-700',
+  CANCELLED: 'bg-red-100 text-red-700',
 };
 
 function formatVND(amount: number) {
-  return amount.toLocaleString("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
+  return amount.toLocaleString('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    maximumFractionDigits: 0,
+  });
 }
 
 function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("vi-VN", { year: "numeric", month: "short", day: "numeric" });
+  return new Date(date).toLocaleDateString('vi-VN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
-export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
+export default function OrderDetailPage({
+  params,
+}: {
+  params: Promise<{ orderId: string }>;
+}) {
   const { orderId } = use(params);
 
   // Use mock data for mock orders
   let order: Order | null = null;
-  if (orderId.startsWith("mock")) {
+  if (orderId.startsWith('mock')) {
     order = mockOrders.find((o) => o.id === orderId) || null;
   }
   // TODO: Fetch real order from API if not mock
@@ -45,18 +57,32 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   return (
     <div className="max-w-2xl mx-auto py-8 px-2">
       <Link href="/dashboard/orders">
-        <Button variant="ghost" className="mb-4">← Back to Orders</Button>
+        <Button variant="ghost" className="mb-4">
+          ← Back to Orders
+        </Button>
       </Link>
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="font-mono text-xs text-gray-500">Order ID: {order.id}</div>
-            <div className="text-sm text-gray-400">{formatDate(order.createdAt)}</div>
+            <div className="font-mono text-xs text-gray-500">
+              Order ID: {order.id}
+            </div>
+            <div className="text-sm text-gray-400">
+              {formatDate(order.createdAt)}
+            </div>
           </div>
-          <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${statusColor[order.status] || "bg-gray-100 text-gray-800"}`}>
-            {order.status === "DELIVERED" && <CheckCircle className="w-4 h-4 mr-1 text-green-600" />}
-            {order.status === "SHIPPED" && <Truck className="w-4 h-4 mr-1 text-blue-600" />}
-            {order.status === "CANCELLED" && <XCircle className="w-4 h-4 mr-1 text-red-600" />}
+          <span
+            className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${statusColor[order.status] || 'bg-gray-100 text-gray-800'}`}
+          >
+            {order.status === 'DELIVERED' && (
+              <CheckCircle className="w-4 h-4 mr-1 text-green-600" />
+            )}
+            {order.status === 'SHIPPED' && (
+              <Truck className="w-4 h-4 mr-1 text-blue-600" />
+            )}
+            {order.status === 'CANCELLED' && (
+              <XCircle className="w-4 h-4 mr-1 text-red-600" />
+            )}
             {order.status}
           </span>
         </div>
@@ -64,20 +90,30 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
           {order.orderItems.map((item) => (
             <div key={item.id} className="flex items-center gap-4 py-4">
               {item.product?.images?.[0] && (
-                <Image src={item.product.images[0]} alt={item.product.name} width={80} height={80} className="object-cover rounded-lg" />
+                <Image
+                  src={item.product.images[0]}
+                  alt={item.product.name}
+                  width={80}
+                  height={80}
+                  className="object-cover rounded-lg"
+                />
               )}
               <div className="flex-1 min-w-0">
                 <div className="font-semibold">{item.product?.name}</div>
-                <div className="text-gray-500 text-sm">x{item.quantity} &middot; {formatVND(Number(item.price))}</div>
+                <div className="text-gray-500 text-sm">
+                  x{item.quantity} &middot; {formatVND(Number(item.price))}
+                </div>
               </div>
             </div>
           ))}
         </div>
         <div className="flex items-center justify-between mt-6">
           <div className="font-medium text-gray-600">Total</div>
-          <div className="font-bold text-xl text-red-700">{formatVND(Number(order.total))}</div>
+          <div className="font-bold text-xl text-red-700">
+            {formatVND(Number(order.total))}
+          </div>
         </div>
       </Card>
     </div>
   );
-} 
+}

@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export type UserActionsMenuProps = {
   onEdit: () => void;
@@ -24,4 +24,4 @@ export function UserActionsMenu({ onEdit, onDelete }: UserActionsMenuProps) {
       </button>
     </div>
   );
-} 
+}

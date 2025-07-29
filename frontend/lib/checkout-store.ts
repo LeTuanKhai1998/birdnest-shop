@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { CartItem } from "@/lib/cart-store";
+import { create } from 'zustand';
+import { CartItem } from '@/lib/cart-store';
 
 export interface CheckoutInfo {
   fullName: string;
@@ -29,10 +29,11 @@ export const useCheckoutStore = create<CheckoutState>((set) => ({
   info: null,
   products: [],
   deliveryFee: 0,
-  paymentMethod: "",
+  paymentMethod: '',
   setCheckoutInfo: (info) => set({ info }),
   setProducts: (products) => set({ products }),
   setDeliveryFee: (fee) => set({ deliveryFee: fee }),
   setPaymentMethod: (method) => set({ paymentMethod: method }),
-  clearCheckout: () => set({ info: null, products: [], deliveryFee: 0, paymentMethod: "" }),
-})); 
+  clearCheckout: () =>
+    set({ info: null, products: [], deliveryFee: 0, paymentMethod: '' }),
+}));

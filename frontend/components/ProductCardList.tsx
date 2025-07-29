@@ -1,5 +1,5 @@
-"use client";
-import { ProductCard } from "@/components/ProductCard";
+'use client';
+import { ProductCard } from '@/components/ProductCard';
 
 interface Product {
   id: string;
@@ -24,4 +24,4 @@ export function ProductCardList({ products }: { products: Product[] }) {
       ))}
     </>
   );
-} 
+}

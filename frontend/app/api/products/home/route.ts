@@ -56,9 +56,9 @@ export async function GET() {
       where: {
         category: {
           name: {
-            not: 'Combo'
-          }
-        }
+            not: 'Combo',
+          },
+        },
       },
       include: {
         images: true,
@@ -67,24 +67,24 @@ export async function GET() {
           include: {
             user: {
               select: {
-                name: true
-              }
-            }
-          }
-        }
+                name: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: 'desc',
       },
-      take: 4
+      take: 4,
     });
 
     // Fetch all combo products
     const comboProducts = await prisma.product.findMany({
       where: {
         category: {
-          name: 'Combo'
-        }
+          name: 'Combo',
+        },
       },
       include: {
         images: true,
@@ -93,15 +93,15 @@ export async function GET() {
           include: {
             user: {
               select: {
-                name: true
-              }
-            }
-          }
-        }
+                name: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     });
 
     // Transform data to match the expected format
@@ -125,20 +125,20 @@ export async function GET() {
       reviews: product.reviews.map((review) => ({
         user: review.user.name || 'Anonymous',
         rating: review.rating,
-        comment: review.comment || ''
+        comment: review.comment || '',
       })),
-      sold: 0 // You might want to calculate this from orderItems
+      sold: 0, // You might want to calculate this from orderItems
     });
 
     return NextResponse.json({
       latestProducts: latestProducts.map(transformProduct),
-      comboProducts: comboProducts.map(transformProduct)
+      comboProducts: comboProducts.map(transformProduct),
     });
   } catch (error) {
     console.error('Error fetching home products:', error);
     return NextResponse.json(
       { error: 'Failed to fetch products' },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}
