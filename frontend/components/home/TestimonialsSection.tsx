@@ -7,7 +7,7 @@ import { HOME_CONSTANTS } from '@/lib/constants';
 
 export function TestimonialsSection() {
   return (
-    <section className="w-full bg-[#fbd8b0] py-8 sm:py-12">
+    <section className="w-full bg-white py-8 sm:py-12">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-red-700">
           {HOME_CONSTANTS.testimonials.title}
