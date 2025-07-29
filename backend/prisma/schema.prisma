@@ -9,6 +9,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Seed configuration
+/// @seed="npm run seed"
+
 enum OrderStatus {
   PENDING
   PAID
@@ -47,7 +50,7 @@ model User {
   address   String?
   isAdmin   Boolean    @default(false)
   bio       String? // User bio/tagline
-  orders    Order[]
+  orders    Order[]    // Can be empty for guest orders
   reviews   Review[]
   cartItems CartItem[]
   addresses Address[]
@@ -88,12 +91,16 @@ model Category {
 
 model Order {
   id              String        @id @default(cuid())
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
+  userId          String?       // Make nullable for guest orders
+  user            User?         @relation(fields: [userId], references: [id]) // Make nullable
   total           Decimal       @db.Decimal(10, 2)
   status          OrderStatus   @default(PENDING)
   paymentMethod   PaymentMethod @default(COD)
   shippingAddress String
+  // Guest order information
+  guestEmail      String?       // Email for guest orders
+  guestName       String?       // Name for guest orders
+  guestPhone      String?       // Phone for guest orders
   orderItems      OrderItem[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

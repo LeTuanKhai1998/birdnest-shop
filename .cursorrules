@@ -369,28 +369,28 @@
 
 ### 11. Contact Page Feature Implementation [X]
 
-- [ ] Create `app/contact/page.tsx` using Next.js App Router
-- [ ] Hero Section:
-  - Full-width background image + tagline (e.g. “How can we help?”)
+- [X] Create `app/contact/page.tsx` using Next.js App Router
+- [X] Hero Section:
+  - Full-width background image + tagline (e.g. "How can we help?")
   - Short subtitle and form or CTA button to scroll
-- [ ] Contact Methods Section:
+- [X] Contact Methods Section:
   - Display email, phone, and operating hours
   - Optionally separate by inquiry type
-- [ ] Inquiry Form:
+- [X] Inquiry Form:
   - Fields: Name, Email, Phone (optional), Topic (dropdown), Message
   - Submit handler connects to backend API `/api/contact`
   - Show confirmation prompt and response time estimate
-- [ ] FAQ or Help Center Links:
+- [X] FAQ or Help Center Links:
   - Provide quick links under form (Shipping, Returns, Payment)
-- [ ] Brand-aligned visuals and spacing:
+- [X] Brand-aligned visuals and spacing:
   - Use Tailwind: consistent spacing, font, and color scheme
   - Alt text for all images
-- [ ] Responsive behavior:
+- [X] Responsive behavior:
   - Stack layout for mobile (hero, then methods, then form)
   - Use columns on desktop
-- [ ] i18n support:
+- [X] i18n support:
   - Use `t('contact.hero')`, `t('contact.form.name')`, etc.
-- [ ] SEO metadata:
+- [X] SEO metadata:
   - Set `<title>Contact Us – Birdnest Shop</title>`
   - Include meta description and Open Graph tags
 
@@ -399,7 +399,7 @@
 
 Path: `app/(admin)/settings/page.tsx`
 
-- [ ] UI
+- [X] UI
   - Use `SettingsForm` component
   - Shadcn UI form with sections:
     - General (Store name, email, phone)
@@ -412,10 +412,10 @@ Path: `app/(admin)/settings/page.tsx`
   - Use `useForm` from `react-hook-form` + `zod` schema for validation
   - Persist state via API (`/api/settings`)
 
-- [ ] Data Fetching
+- [X] Data Fetching
   - Server-side load existing values via `getServerSideProps()` or `getSettings()` helper
 
-- [ ] API Endpoint (if missing, auto-generate)
+- [X] API Endpoint (if missing, auto-generate)
   - Route: `POST /api/settings`
   - Create new handler under `app/api/settings/route.ts`
   - Save to `Settings` table (or key-value config store)
@@ -434,15 +434,15 @@ Path: `app/(admin)/settings/page.tsx`
   - Example keys:
     - `store_name`, `store_email`, `default_language`, `logo_url`, `free_shipping_threshold`, `maintenance_mode`, etc.
 
-- [ ] Auto-Prompt: if `Setting` table or endpoint `/api/settings` doesn’t exist, prompt Cursor to:
+- [X] Auto-Prompt: if `Setting` table or endpoint `/api/settings` doesn't exist, prompt Cursor to:
   - Scaffold the table using Prisma
   - Scaffold `route.ts` with `GET`, `POST`, and optional `PUT`
 
-- [ ] Localization Support
+- [X] Localization Support
   - Wrap all labels with `t('settings.general.store_name')` for i18n
   - Support both `en` and `vi`
 
-- [ ] Validation (Zod Schema)
+- [X] Validation (Zod Schema)
   ```ts
   const settingsSchema = z.object({
     storeName: z.string().min(2),
@@ -470,7 +470,7 @@ Would you like me to generate the initial UI code or the Prisma `Setting` model 
 
 ---
 
-### 11. Notification System for Admin & Users [X]
+### 13. Notification System for Admin & Users [X]
 
 #### General Goals
 - [X] 🔔 Display notifications for both **Admin Dashboard** and **Customer UI**
@@ -590,9 +590,76 @@ enum RecipientType {
 
 
 
+### 14. Guest Order Lookup Feature (For Non-Logged-in Users) [X]
+
+- [X] Create `app/guest-orders/page.tsx` using Next.js App Router
+
+- [X] Hero Section:
+  - Title: "Tra cứu đơn hàng"
+  - Short subtitle explaining the feature (e.g. "Nhập email hoặc số điện thoại để kiểm tra đơn hàng của bạn")
+
+- [X] Search Form:
+  - Input field for email or phone
+  - Submit button to trigger API call
+  - Show loading state while waiting
+
+- [X] Search Result Section:
+  - Display matching orders: Order ID, Created At, Status
+  - Empty state message if no result
+
+- [X] API Integration:
+  - Create backend endpoint `POST /api/orders/guest/search`
+  - Accepts: `{ query: string }` (email or phone)
+  - Query DB using Prisma:
+    ```ts
+    where: {
+      OR: [
+        { guestEmail: query },
+        { guestPhone: query }
+      ]
+    }
+    ```
+    - Select: `id`, `createdAt`, `status`
+
+- [X] Prisma Schema Update:
+  - Add `guestEmail`, `guestPhone` fields to `Order` model
+  - Run migration:
+    ```bash
+    npx prisma migrate dev --name add_guest_fields
+    ```
+
+- [X] Search Entry in Header:
+  - Add "Track Order" to navbar or search bar (optional)
+  - Route to `/guest-orders` when clicked
+
+- [X] UI/UX Details:
+  - Show alert or success message after search
+  - Use Tailwind for padding, border, spacing, etc.
+  - Format `createdAt` using:
+    ```ts
+    new Date(order.createdAt).toLocaleString()
+    ```
+
+- [X] Responsive Design:
+  - Stack layout on mobile
+  - Clean list view on larger screens
+
+- [X] Optional Enhancements:
+  - Group results by status (e.g. "Processing", "Shipped", "Completed")
+  - Animate result section on load
+
+- [X] i18n Support:
+  - Use translation keys like `t('guest_orders.title')`, `t('guest_orders.placeholder')`, etc.
+
+- [X] SEO Metadata:
+  - `<title>Track Order – Birdnest Shop</title>`
+  - Add meta description for guest order tracking
+
+
+
 ---
 
-### 13. CI/CD and Deployment Readiness [ ]
+### 15. CI/CD and Deployment Readiness [ ]
 
 - [ ] Setup `.dockerignore`, `.env.example` files
 - [ ] Dockerize backend with production-ready Dockerfile
@@ -606,7 +673,7 @@ enum RecipientType {
 
 ---
 
-### 14. Observability and Logging [ ]
+### 16. Observability and Logging [ ]
 
 - [ ] Add global error handler middleware (backend)
 - [ ] Add structured logs (`logger.service.ts` or `pino`)
@@ -615,7 +682,7 @@ enum RecipientType {
 
 ---
 
-### 15. Documentation and Developer Experience [ ]
+### 17. Documentation and Developer Experience [ ]
 
 - [ ] Generate Swagger docs at `/api-docs`
 - [ ] Write `README.md` inside `backend/`:

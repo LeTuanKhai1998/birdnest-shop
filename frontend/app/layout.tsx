@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="font-sans">
+    <html lang="en" className="font-sans" data-scroll-behavior="smooth">
       <body>
         <Providers>
           <HydrationSafe>

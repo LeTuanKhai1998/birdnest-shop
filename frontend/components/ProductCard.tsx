@@ -7,6 +7,8 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import ProductMeta from '@/components/ProductMeta';
 import { useWishlist } from '@/lib/wishlist-store';
+import { useSession } from 'next-auth/react';
+
 export interface Product {
   id: string;
   slug: string;
@@ -21,25 +23,34 @@ export interface Product {
   reviews?: Review[];
   sold?: number;
 }
+
 export interface Review {
   user: string;
   rating: number;
   comment: string;
 }
+
 type ProductCardProps = { product: Product; onClick?: () => void };
+
 export const ProductCard = ({ product }: ProductCardProps) => {
-  const { isInWishlist, add, remove } = useWishlist();
-  const inWishlist = isInWishlist(product.id);
+  const { data: session } = useSession();
+  const wishlist = useWishlist();
+  
+  // Only show wishlist functionality for authenticated users
+  const isInWishlist = session?.user ? wishlist.isInWishlist(product.id) : false;
+  
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
     maximumFractionDigits: 0,
   });
+  
   const avgRating =
     product.reviews && product.reviews.length > 0
       ? product.reviews.reduce((sum: number, r: Review) => sum + r.rating, 0) /
         product.reviews.length
       : 0;
+
   return (
     <motion.div
       whileHover={{ scale: 1.03, boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}
@@ -53,27 +64,29 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       <div className="group cursor-pointer">
         <Card className="h-full flex flex-col transition-shadow duration-200 hover:shadow-lg min-w-0">
           <CardContent className="p-0 min-w-0 relative">
-            {/* Wishlist Icon */}
-            <button
-              type="button"
-              aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-              className="absolute top-2 right-2 z-10 bg-white/80 rounded-full p-1 shadow hover:bg-red-100 transition"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (inWishlist) {
-                  remove(product.id);
-                } else {
-                  add(product);
-                }
-              }}
-            >
-              {inWishlist ? (
-                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-              ) : (
-                <Heart className="w-5 h-5 text-gray-400" />
-              )}
-            </button>
+            {/* Wishlist Icon - only show for authenticated users */}
+            {session?.user && (
+              <button
+                type="button"
+                aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                className="absolute top-2 right-2 z-10 bg-white/80 rounded-full p-1 shadow hover:bg-red-100 transition"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (isInWishlist) {
+                    wishlist.remove(product.id, wishlist.mutate);
+                  } else {
+                    wishlist.add(product, wishlist.mutate);
+                  }
+                }}
+              >
+                {isInWishlist ? (
+                  <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                ) : (
+                  <Heart className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
+            )}
             <Link
               href={`/products/${product.slug}`}
               prefetch={false}

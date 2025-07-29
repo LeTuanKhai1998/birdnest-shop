@@ -107,6 +107,13 @@ export function ResponsiveNavbar() {
                 Contact
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all duration-200 group-hover:w-full"></span>
               </Link>
+              <Link
+                href="/guest-orders"
+                className="text-gray-700 hover:text-red-600 font-medium transition-colors duration-200 relative group px-2 py-1"
+              >
+                Track Order
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all duration-200 group-hover:w-full"></span>
+              </Link>
             </nav>
 
             {/* Right: Search, Icons, User */}
@@ -347,6 +354,14 @@ export function ResponsiveNavbar() {
                       >
                         <Mail className="w-5 h-5" />
                         Contact
+                      </Link>
+                      <Link
+                        href="/guest-orders"
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        <Search className="w-5 h-5" />
+                        Track Order
                       </Link>
                     </nav>
 

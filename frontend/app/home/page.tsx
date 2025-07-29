@@ -624,6 +624,134 @@ export default function Home3Page() {
         `}</style>
       </section>
 
+      {/* Company Summary Section */}
+      <section className="w-full bg-gradient-to-b from-[#fbd8b0] to-white py-12 sm:py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-[#a10000]">
+              YẾN SÀO KIM SANG - THƯƠNG HIỆU UY TÍN
+            </h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center mb-8">
+              {/* Left Column - Company Info */}
+              <div className="text-left space-y-4">
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+                  <h3 className="text-xl font-semibold mb-4 text-[#a10000]">
+                    🏆 Về Chúng Tôi
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    Yến Sào Kim Sang tự hào là thương hiệu hàng đầu trong lĩnh vực cung cấp yến sào nguyên chất. 
+                    Với hơn 10 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất 
+                    cho sức khỏe gia đình Việt Nam.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center">
+                      <span className="text-[#a10000] font-semibold">✓</span>
+                      <span className="ml-2">100% Tự Nhiên</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-[#a10000] font-semibold">✓</span>
+                      <span className="ml-2">Kiểm Định Chất Lượng</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-[#a10000] font-semibold">✓</span>
+                      <span className="ml-2">Giao Hàng Toàn Quốc</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-[#a10000] font-semibold">✓</span>
+                      <span className="ml-2">Bảo Hành Chính Hãng</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Product Highlights */}
+              <div className="text-left space-y-4">
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+                  <h3 className="text-xl font-semibold mb-4 text-[#a10000]">
+                    🍯 Sản Phẩm Chính
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start">
+                      <div className="w-3 h-3 bg-[#a10000] rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">Yến Tinh Chế</h4>
+                        <p className="text-sm text-gray-600">Yến sào đã được làm sạch, loại bỏ tạp chất</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="w-3 h-3 bg-[#a10000] rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">Tổ Yến Thô</h4>
+                        <p className="text-sm text-gray-600">Yến sào nguyên tổ, giữ nguyên hình dạng tự nhiên</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="w-3 h-3 bg-[#a10000] rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">Combo Yến Sào</h4>
+                        <p className="text-sm text-gray-600">Bộ sản phẩm đa dạng, phù hợp mọi nhu cầu</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Row - Key Benefits */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+              <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-6 text-center">
+                <div className="text-4xl mb-3">🌿</div>
+                <h3 className="text-lg font-semibold mb-2 text-[#a10000]">Nguồn Gốc Tự Nhiên</h3>
+                <p className="text-sm text-gray-600">
+                  Yến sào được thu hoạch từ các hang động tự nhiên tại Kiên Giang, 
+                  đảm bảo chất lượng và độ tinh khiết cao nhất.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-6 text-center">
+                <div className="text-4xl mb-3">🔬</div>
+                <h3 className="text-lg font-semibold mb-2 text-[#a10000]">Quy Trình Khép Kín</h3>
+                <p className="text-sm text-gray-600">
+                  Từ khâu thu hoạch đến đóng gói đều tuân thủ quy trình nghiêm ngặt, 
+                  đạt tiêu chuẩn vệ sinh an toàn thực phẩm.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-6 text-center">
+                <div className="text-4xl mb-3">💝</div>
+                <h3 className="text-lg font-semibold mb-2 text-[#a10000]">Dịch Vụ Tận Tâm</h3>
+                <p className="text-sm text-gray-600">
+                  Đội ngũ tư vấn chuyên nghiệp, giao hàng nhanh chóng, 
+                  hỗ trợ khách hàng 24/7 với cam kết hài lòng 100%.
+                </p>
+              </div>
+            </div>
+
+            {/* CTA Section */}
+            <div className="mt-10 text-center">
+              <p className="text-lg text-gray-700 mb-6">
+                Khám phá ngay bộ sản phẩm yến sào cao cấp của chúng tôi
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/products"
+                  className="inline-block bg-[#a10000] text-white font-bold px-8 py-3 rounded-full shadow-lg hover:bg-red-800 transition-colors duration-200"
+                >
+                  Xem Tất Cả Sản Phẩm
+                </Link>
+                <Link
+                  href="/about"
+                  className="inline-block bg-white text-[#a10000] font-bold px-8 py-3 rounded-full shadow-lg border-2 border-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors duration-200"
+                >
+                  Tìm Hiểu Thêm
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Feature Icons Row */}
       <section className="w-full bg-[#fbd8b0] py-4 sm:py-6 flex flex-col items-center">
         <div className="flex flex-wrap justify-center gap-4 sm:gap-8 px-4">
@@ -711,41 +839,7 @@ export default function Home3Page() {
         </div>
       </section>
 
-      {/* Latest Products */}
-      <section className="w-full bg-[#fbd8b0] py-8 sm:py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-red-700">
-            Latest Products
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            <ProductCardList products={latestProducts} />
-          </div>
-        </div>
-      </section>
 
-      {/* Premium Combos */}
-      <section className="w-full bg-[#fbd8b0] py-8 sm:py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-yellow-700">
-            Premium Birdnest Combos
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            <ProductCardList products={comboProducts} />
-          </div>
-        </div>
-      </section>
-
-      {/* YẾN SÀO KIM SANG Products */}
-      <section className="w-full bg-[#fbd8b0] py-8 sm:py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-red-700">
-            YẾN SÀO KIM SANG
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            <ProductCardList products={kimSangProducts} />
-          </div>
-        </div>
-      </section>
 
       {/* Product Highlight */}
       <section className="w-full bg-[#fbd8b0] py-6 sm:py-8 flex flex-col items-center px-4">

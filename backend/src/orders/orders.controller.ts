@@ -7,11 +7,13 @@ import {
   Body,
   Query,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { SearchGuestOrdersDto } from './dto/search-guest-orders.dto';
 import { OrderStatus } from '@prisma/client';
 
 @Controller('orders')
@@ -166,8 +168,19 @@ export class OrdersController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() data: CreateOrderDto) {
-    return this.ordersService.create(data as any);
+  async create(@Body() data: CreateOrderDto, @Request() req: any) {
+    return this.ordersService.create(data, req.user.id);
+  }
+
+  @Post('guest')
+  async createGuestOrder(@Body() data: any) {
+    // Create a guest order without authentication
+    return this.ordersService.createGuestOrder(data);
+  }
+
+  @Post('guest/search')
+  async searchGuestOrders(@Body() searchDto: SearchGuestOrdersDto) {
+    return this.ordersService.searchGuestOrders(searchDto.query);
   }
 
   @Put(':id/status')

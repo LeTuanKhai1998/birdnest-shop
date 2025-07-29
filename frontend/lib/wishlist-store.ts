@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import useSWR from 'swr/immutable';
 import { fetcher } from '@/lib/utils';
 import { Product } from '@/components/ProductCard';
+import { useSession } from 'next-auth/react';
 
 export interface WishlistItem {
   id: string;
@@ -67,24 +68,36 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     get().items.some((item) => item.productId === productId),
 }));
 
-// SWR hook for fetching wishlist
+// SWR hook for fetching wishlist - only for authenticated users
 export function useWishlist() {
+  const { data: session } = useSession();
   const { data, error, isLoading, mutate } = useSWR<WishlistItem[]>(
-    '/api/wishlist',
+    // Only fetch wishlist if user is authenticated
+    session?.user ? '/api/wishlist' : null,
     fetcher,
+    {
+      // Don't retry on 401 errors
+      onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+        if (error.status === 401) return; // Don't retry on auth errors
+        if (retryCount >= 3) return; // Limit retries
+        setTimeout(() => revalidate({ retryCount }), 1000);
+      },
+    }
   );
   const store = useWishlistStore();
+  
   // Sync Zustand store with SWR data
   if (data && store.items !== data) {
     store.items = data;
   }
+
   return {
     items: data || [],
     loading: isLoading,
     error,
     mutate,
-    add: (product: Product) => store.add(product, mutate),
-    remove: (productId: string) => store.remove(productId, mutate),
+    add: store.add,
+    remove: store.remove,
     isInWishlist: store.isInWishlist,
   };
 }

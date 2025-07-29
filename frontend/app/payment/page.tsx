@@ -7,6 +7,7 @@ import { useCartStore } from '@/lib/cart-store';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCheckoutStore } from '@/lib/checkout-store';
+import { useSession } from 'next-auth/react';
 
 const PAYMENT_METHODS = [
   { value: 'stripe', label: 'Credit/Debit Card (Stripe)' },
@@ -29,6 +30,7 @@ type ProductCartItem = {
 export default function PaymentPage() {
   const [method, setMethod] = useState('stripe');
   const [confirming, setConfirming] = useState(false);
+  const { data: session } = useSession();
   const items = useCheckoutStore((s) => s.products) as ProductCartItem[];
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -47,28 +49,50 @@ export default function PaymentPage() {
   const router = useRouter();
 
   const handleConfirm = async () => {
+    if (!method) {
+      alert('Please select a payment method');
+      return;
+    }
+
     setConfirming(true);
     try {
-      const res = await fetch('http://localhost:8080/api/orders', {
+      const orderData = {
+        info: checkoutInfo,
+        products: items,
+        deliveryFee: shippingFee,
+        paymentMethod: method,
+      };
+
+      // Use guest endpoint if user is not authenticated, otherwise use regular endpoint
+      const endpoint = session?.user ? '/api/orders' : '/api/orders/guest';
+      const response = await fetch(`http://localhost:8080${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          info: checkoutInfo,
-          products: items,
-          deliveryFee: shippingFee,
-          paymentMethod: method,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Order failed');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create order');
+      }
+
+      const order = await response.json();
+      
+      // Clear cart after successful order
       clearCart();
-      triggerCartBounce();
+      
+      // Show success message
+      alert(`Order created successfully! Order ID: ${order.id}`);
+      
+      // Redirect to order confirmation page
+      router.push(`/order-confirmation/${order.id}`);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert(`Error creating order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
       setConfirming(false);
-      router.push('/dashboard/orders');
-    } catch (e) {
-      setConfirming(false);
-      alert(e instanceof Error ? e.message : 'Order failed');
     }
   };
 
@@ -219,32 +243,34 @@ export default function PaymentPage() {
               <ul className="divide-y mb-2">
                 {items.map(({ product, quantity }) => (
                   <li key={product.id} className="py-2 flex items-center gap-3">
-                    <div className="w-12 h-12 rounded bg-gray-50 border flex items-center justify-center overflow-hidden">
-                      <Image
-                        src={
-                          product.image ||
-                          (product.images && product.images[0]) ||
-                          ''
-                        }
-                        alt={product.name}
-                        width={48}
-                        height={48}
-                        className="object-cover w-full h-full"
-                      />
+                    <div className="w-12 h-12 bg-gray-100 rounded flex-shrink-0">
+                      {product.image && (
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
+                      <p className="font-medium text-sm truncate">
                         {product.name}
-                      </div>
-                      <div className="text-xs text-gray-500">x{quantity}</div>
+                      </p>
+                      <p className="text-gray-500 text-xs">
+                        Qty: {quantity}
+                      </p>
                     </div>
-                    <div className="font-semibold text-red-700 text-sm">
-                      {currencyFormatter.format(product.price * quantity)}
+                    <div className="text-right">
+                      <p className="font-semibold text-sm">
+                        {currencyFormatter.format(product.price * quantity)}
+                      </p>
                     </div>
                   </li>
                 ))}
               </ul>
-              <div className="flex items-center justify-between pt-2 text-base">
+              <div className="flex items-center justify-between text-base">
                 <span>Subtotal</span>
                 <span>{currencyFormatter.format(subtotal)}</span>
               </div>
