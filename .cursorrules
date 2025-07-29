@@ -344,6 +344,49 @@
   - [X] Implemented responsive image sizing
   - [X] Added lazy loading with placeholders
 
+### About Page Feature Implementation [ ]
+
+- [ ] Create new `/about` page using Next.js app router (e.g. `app/about/page.tsx`)
+- [ ] Hero section: full-width banner image + mission tagline + CTA button
+- [ ] Story section: timeline cards or alternating left/right grid layout
+- [ ] Team section: introduce founders or small team, with portraits + roles
+- [ ] Social proof: logos of partners, media quotes, or testimonials
+- [ ] Design details:
+  - Choose light or vibrant palette consistently
+  - Use whitespace and typographic hierarchy
+- [ ] Responsive behavior:
+  - Mobile-first layout
+  - Conditionally show/hide sections if needed
+- [ ] Internationalization support:
+  - Use `t('about.hero')`, `t('about.story.card1')`, etc.
+- [ ] Accessibility:
+  - Images have alt text
+  - Contrast meets WCAG standards
+- [ ] SEO:
+  - Set meta tags: title, description, OG image
+
+### About Page Feature Implementation [ ]
+
+- [ ] Create new `/about` page using Next.js app router (e.g. `app/about/page.tsx`)
+- [ ] Hero section: full-width banner image + mission tagline + CTA button
+- [ ] Story section: timeline cards or alternating left/right grid layout
+- [ ] Team section: introduce founders or small team, with portraits + roles
+- [ ] Social proof: logos of partners, media quotes, or testimonials
+- [ ] Design details:
+  - Choose light or vibrant palette consistently
+  - Use whitespace and typographic hierarchy
+- [ ] Responsive behavior:
+  - Mobile-first layout
+  - Conditionally show/hide sections if needed
+- [ ] Internationalization support:
+  - Use `t('about.hero')`, `t('about.story.card1')`, etc.
+- [ ] Accessibility:
+  - Images have alt text
+  - Contrast meets WCAG standards
+- [ ] SEO:
+  - Set meta tags: title, description, OG image
+
+
 ---
 
 ### 10. CI/CD and Deployment Readiness [ ]

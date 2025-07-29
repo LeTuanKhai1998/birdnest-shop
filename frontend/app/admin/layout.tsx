@@ -49,6 +49,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <Sun className="w-5 h-5 hidden dark:inline" />
             <Moon className="w-5 h-5 dark:hidden" />
           </button>
+          {/* Logout button */}
+          <button 
+            onClick={() => {
+              localStorage.removeItem('auth-token');
+              localStorage.removeItem('user');
+              window.location.href = '/admin/login';
+            }}
+            className="p-2 rounded hover:bg-red-100 dark:hover:bg-red-900 transition text-red-600"
+            title="Logout"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </aside>
       {/* Main content area */}
