@@ -5,28 +5,34 @@ import { HOME_CONSTANTS } from '@/lib/constants';
 
 export function CompanySummary() {
   return (
-    <section className="w-full bg-gradient-to-b from-[#fbd8b0] to-white py-12 sm:py-16">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-[#a10000]">
-            {HOME_CONSTANTS.company.title}
-          </h2>
+    <section className="w-full bg-gradient-to-b from-[#fbd8b0] to-white py-16 sm:py-20 lg:py-24">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Main Title */}
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#a10000] mb-4">
+              {HOME_CONSTANTS.company.title}
+            </h2>
+            <div className="w-24 h-1 bg-[#a10000] mx-auto rounded-full"></div>
+          </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center mb-8">
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-start mb-12 sm:mb-16">
             {/* Left Column - Company Info */}
-            <div className="text-left space-y-4">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-semibold mb-4 text-[#a10000]">
-                  🏆 Về Chúng Tôi
+            <div className="text-left">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 sm:p-10 shadow-xl border border-white/20">
+                <h3 className="text-2xl sm:text-3xl font-bold mb-6 text-[#a10000] flex items-center">
+                  <span className="text-3xl sm:text-4xl mr-3">🏆</span>
+                  Về Chúng Tôi
                 </h3>
-                <p className="text-gray-700 leading-relaxed mb-4">
+                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-6">
                   {HOME_CONSTANTS.company.description}
                 </p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {HOME_CONSTANTS.company.highlights.map((highlight, index) => (
-                    <div key={index} className="flex items-center">
-                      <span className="text-[#a10000] font-semibold">✓</span>
-                      <span className="ml-2">{highlight}</span>
+                    <div key={index} className="flex items-center p-3 bg-red-50 rounded-lg">
+                      <span className="text-[#a10000] font-bold text-lg mr-3">✓</span>
+                      <span className="font-semibold text-gray-800">{highlight}</span>
                     </div>
                   ))}
                 </div>
@@ -34,18 +40,19 @@ export function CompanySummary() {
             </div>
 
             {/* Right Column - Product Highlights */}
-            <div className="text-left space-y-4">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-semibold mb-4 text-[#a10000]">
-                  🍯 Sản Phẩm Chính
+            <div className="text-left">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 sm:p-10 shadow-xl border border-white/20">
+                <h3 className="text-2xl sm:text-3xl font-bold mb-6 text-[#a10000] flex items-center">
+                  <span className="text-3xl sm:text-4xl mr-3">🍯</span>
+                  Sản Phẩm Chính
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {HOME_CONSTANTS.company.products.map((product, index) => (
-                    <div key={index} className="flex items-start">
-                      <div className="w-3 h-3 bg-[#a10000] rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <div key={index} className="flex items-start p-4 bg-orange-50 rounded-xl">
+                      <div className="w-4 h-4 bg-[#a10000] rounded-full mt-1 mr-4 flex-shrink-0"></div>
                       <div>
-                        <h4 className="font-semibold text-gray-800">{product.title}</h4>
-                        <p className="text-sm text-gray-600">{product.description}</p>
+                        <h4 className="font-bold text-lg text-gray-800 mb-1">{product.title}</h4>
+                        <p className="text-base text-gray-600 leading-relaxed">{product.description}</p>
                       </div>
                     </div>
                   ))}
@@ -54,34 +61,42 @@ export function CompanySummary() {
             </div>
           </div>
 
-          {/* Bottom Row - Key Benefits */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            {HOME_CONSTANTS.company.benefits.map((benefit, index) => (
-              <div key={index} className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-6 text-center">
-                <div className="text-4xl mb-3">{benefit.icon}</div>
-                <h3 className="text-lg font-semibold mb-2 text-[#a10000]">{benefit.title}</h3>
-                <p className="text-sm text-gray-600">
-                  {benefit.description}
-                </p>
-              </div>
-            ))}
+          {/* Key Benefits Section */}
+          <div className="mb-12 sm:mb-16">
+            <h3 className="text-3xl sm:text-4xl font-bold text-center text-[#a10000] mb-8 sm:mb-12">
+              Tại Sao Chọn Chúng Tôi?
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+              {HOME_CONSTANTS.company.benefits.map((benefit, index) => (
+                <div key={index} className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-8 text-center shadow-lg border border-white/20">
+                  <div className="text-5xl sm:text-6xl mb-4">{benefit.icon}</div>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-4 text-[#a10000]">{benefit.title}</h3>
+                  <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
+                    {benefit.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* CTA Section */}
-          <div className="mt-10 text-center">
-            <p className="text-lg text-gray-700 mb-6">
+          <div className="text-center bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 shadow-xl border border-white/20">
+            <h3 className="text-2xl sm:text-3xl font-bold text-[#a10000] mb-4">
+              Sẵn Sàng Trải Nghiệm?
+            </h3>
+            <p className="text-lg sm:text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
               Khám phá ngay bộ sản phẩm yến sào cao cấp của chúng tôi
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
               <Link
                 href="/products"
-                className="inline-block bg-[#a10000] text-white font-bold px-8 py-3 rounded-full shadow-lg hover:bg-red-800 transition-colors duration-200"
+                className="inline-block bg-[#a10000] text-white font-bold px-10 py-4 rounded-full shadow-lg hover:bg-red-800 transition-all duration-200 text-lg hover:scale-105"
               >
                 Xem Tất Cả Sản Phẩm
               </Link>
               <Link
                 href="/about"
-                className="inline-block bg-white text-[#a10000] font-bold px-8 py-3 rounded-full shadow-lg border-2 border-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors duration-200"
+                className="inline-block bg-white text-[#a10000] font-bold px-10 py-4 rounded-full shadow-lg border-2 border-[#a10000] hover:bg-[#a10000] hover:text-white transition-all duration-200 text-lg hover:scale-105"
               >
                 Tìm Hiểu Thêm
               </Link>
