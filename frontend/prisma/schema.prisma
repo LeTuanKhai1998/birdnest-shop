@@ -24,6 +24,7 @@ model User {
   orders      Order[]
   reviews     Review[]
   wishlist    Wishlist[]
+  notifications Notification[]
 }
 
 model Product {
@@ -144,6 +145,20 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+model Notification {
+  id             String           @id @default(cuid())
+  title          String
+  body           String?
+  type           NotificationType
+  recipientType  RecipientType
+  userId         String?          // nullable if sent to all users/admins
+  isRead         Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user           User?            @relation(fields: [userId], references: [id])
+}
+
 enum OrderStatus {
   PENDING
   PAID
@@ -158,4 +173,17 @@ enum PaymentMethod {
   STRIPE
   MOMO
   VNPAY
+}
+
+enum NotificationType {
+  ORDER
+  STOCK
+  PAYMENT
+  SYSTEM
+  PROMOTION
+}
+
+enum RecipientType {
+  ADMIN
+  USER
 }

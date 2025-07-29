@@ -470,6 +470,128 @@ Would you like me to generate the initial UI code or the Prisma `Setting` model 
 
 ---
 
+### 11. Notification System for Admin & Users [X]
+
+#### General Goals
+- [X] 🔔 Display notifications for both **Admin Dashboard** and **Customer UI**
+- [X] Design scalable notification model with support for:
+  - Role-based filtering (admin vs. user)
+  - Type-specific styling (e.g. order updates, system alerts)
+  - Read/unread status
+
+---
+
+## 1. Database Schema (Prisma)
+
+```ts
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  body      String?
+  type      NotificationType
+  recipientType RecipientType // enum: ADMIN or USER
+  userId    String?           // nullable if sent to all users/admins
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+enum NotificationType {
+  ORDER
+  STOCK
+  PAYMENT
+  SYSTEM
+  PROMOTION
+}
+
+enum RecipientType {
+  ADMIN
+  USER
+}
+```
+
+## 2. Backend API (NestJS)
+
+- [X] `GET /notifications` – Fetch notifications for the current user  
+  - Use JWT to detect role (admin/user) and filter accordingly.
+
+- [X] `PATCH /notifications/:id/read` – Mark a notification as read.
+
+- [X] `PATCH /notifications/read-all` – Mark all notifications as read for the current user.
+
+- [X] `POST /notifications` – Allow system/manual creation  
+  - Include `recipientType` and optional `userId`.  
+  - Validate access using guards.
+
+- [X] `GET /notifications/unread-count` – Get unread notification count.
+
+- [X] `DELETE /notifications/:id` – Delete a notification.
+
+> ✅ Use Swagger to document each route at `/api-docs`.
+
+---
+
+## 3. Frontend – Admin Panel (Shadcn + Cursor)
+
+- [X] 🔔 Notification bell in top nav bar.
+- [X] 🔴 Red badge displayed when there are unread notifications.
+- [X] 🔽 Dropdown includes:
+  - Type icon
+  - Title + preview of body
+  - Time ago
+  - “Mark all as read” button
+
+**UX Enhancements:**
+- [X] Group by date (e.g., Today / Yesterday).
+- [X] Loading and empty states.
+- [X] Delete individual notifications.
+
+---
+
+## 4. Frontend – User UI (Customer Site)
+
+- [X] 🔔 Bell icon in the navbar.
+- [X] `/notifications` route for full notification history.
+- [X] Filter only notifications with `USER` recipientType.
+
+**Types to show:**
+- [X] Promotions
+- [X] Order status updates
+- [X] Payment alerts
+
+---
+
+## 5. Real-time (Optional)
+
+- [X] Polling mechanism (every 30 seconds).
+- [X] Update unread count in real time.
+- [X] Refresh notifications on page load.
+
+---
+
+## 6. Best Practices
+
+- [X] Use DTOs and validation (`class-validator`).
+- [X] Extract logic into a reusable `NotificationService`.
+- [X] Maintain consistent typings between backend and frontend.
+- [X] Use timezone-aware formatting (`date-fns`).
+- [X] Secure all endpoints with role guards and user identity checks.
+- [X] Track unread count in layout context for global badge updates.
+
+---
+
+## 7. Testing
+
+- [X] Backend unit tests for controllers and services.
+- [X] Frontend component tests (e.g., dropdown, icon).
+- [X] End-to-end tests for API endpoints.
+
+
+
+---
+
 ### 13. CI/CD and Deployment Readiness [ ]
 
 - [ ] Setup `.dockerignore`, `.env.example` files

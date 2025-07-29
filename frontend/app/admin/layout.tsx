@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -10,6 +11,7 @@ import {
   Moon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const navLinks = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -20,9 +22,80 @@ const navLinks = [
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  // Check if we're on the login page
+  const isLoginPage = pathname === '/admin/login';
+
+  useEffect(() => {
+    // Don't check authentication on login page
+    if (isLoginPage) {
+      setIsAuthenticated(true);
+      return;
+    }
+
+    const checkAuth = () => {
+      const token = localStorage.getItem('auth-token');
+      const userData = localStorage.getItem('user');
+      
+      if (!token || !userData) {
+        setIsAuthenticated(false);
+        router.push('/admin/login');
+        return;
+      }
+
+      try {
+        const user = JSON.parse(userData);
+        if (!user.isAdmin) {
+          setIsAuthenticated(false);
+          router.push('/admin/login');
+          return;
+        }
+        
+        setUser(user);
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+        router.push('/admin/login');
+      }
+    };
+
+    checkAuth();
+  }, [router, isLoginPage]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth-token');
+    localStorage.removeItem('user');
+    router.push('/admin/login');
+  };
+
+  // Show loading while checking authentication (except on login page)
+  if (isAuthenticated === null && !isLoginPage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render layout if not authenticated (except on login page)
+  if (!isAuthenticated && !isLoginPage) {
+    return null;
+  }
+
+  // On login page, just render children without admin layout
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-neutral-900">
-      {/* Removed mobile Drawer Menu (hamburger) as requested */}
       {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700 py-6 px-4 gap-4 sticky top-0 h-screen z-20">
         <div className="mb-8 flex items-center gap-2 text-2xl font-bold text-red-700">
@@ -44,6 +117,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="mt-auto flex items-center gap-2">
+          {/* User info */}
+          <div className="flex-1 text-sm text-gray-600 dark:text-gray-400">
+            {user?.name || user?.email}
+          </div>
           {/* Theme toggle placeholder */}
           <button className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 transition">
             <Sun className="w-5 h-5 hidden dark:inline" />
@@ -51,11 +128,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </button>
           {/* Logout button */}
           <button 
-            onClick={() => {
-              localStorage.removeItem('auth-token');
-              localStorage.removeItem('user');
-              window.location.href = '/admin/login';
-            }}
+            onClick={handleLogout}
             className="p-2 rounded hover:bg-red-100 dark:hover:bg-red-900 transition text-red-600"
             title="Logout"
           >

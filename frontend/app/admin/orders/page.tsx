@@ -8,29 +8,114 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown } from 'lucide-react';
+import { 
+  ChevronDown, 
+  Search, 
+  Filter, 
+  RefreshCw, 
+  AlertCircle, 
+  CheckCircle2,
+  Package,
+  Eye,
+  MoreHorizontal,
+  Calendar,
+  User,
+  DollarSign,
+  Truck,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Download,
+  Settings,
+  Info,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
+  DialogDescription,
   DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import Image from 'next/image';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import useSWR from 'swr';
 import { apiService } from '@/lib/api';
 
-const STATUS = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+const STATUS = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+
+const STATUS_CONFIG = {
+  PENDING: { 
+    label: 'Pending', 
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
+    icon: Clock,
+    description: 'Awaiting processing'
+  },
+  PROCESSING: { 
+    label: 'Processing', 
+    color: 'bg-blue-100 text-blue-800 border-blue-200', 
+    icon: CheckCircle,
+    description: 'Being prepared'
+  },
+  SHIPPED: { 
+    label: 'Shipped', 
+    color: 'bg-purple-100 text-purple-800 border-purple-200', 
+    icon: Truck,
+    description: 'In transit'
+  },
+  DELIVERED: { 
+    label: 'Delivered', 
+    color: 'bg-green-100 text-green-800 border-green-200', 
+    icon: CheckCircle2,
+    description: 'Successfully delivered'
+  },
+  CANCELLED: { 
+    label: 'Cancelled', 
+    color: 'bg-red-100 text-red-800 border-red-200', 
+    icon: XCircle,
+    description: 'Order cancelled'
+  }
+};
 
 export default function AdminOrdersPage() {
+  const { toast } = useToast();
   const { data: orders, isLoading, mutate } = useSWR('admin-orders', () => apiService.getOrders());
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewId, setViewId] = useState<string | null>(null);
+  const [statusUpdateId, setStatusUpdateId] = useState<string | null>(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+
+  // Check authentication
+  useEffect(() => {
+    const token = localStorage.getItem('auth-token');
+    const user = localStorage.getItem('user');
+    
+    if (!token || !user) {
+      window.location.href = '/admin/login';
+      return;
+    }
+
+    const userData = JSON.parse(user);
+    if (!userData.isAdmin) {
+      window.location.href = '/admin/login';
+      return;
+    }
+  }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -42,21 +127,102 @@ export default function AdminOrdersPage() {
 
   // Filter orders in-memory
   const filteredOrders = useMemo(() => {
-    return orders?.filter((o) => {
+    if (!orders || !Array.isArray(orders)) return [];
+    
+    return orders.filter((o: any) => {
+      if (!o) return false;
+      
       const matchesSearch =
         !debouncedSearch ||
-        o.id.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        o.user?.name.toLowerCase().includes(debouncedSearch.toLowerCase());
-      const matchesStatus = !statusFilter || o.status === statusFilter;
+        (o.id && o.id.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
+        (o.user?.name && o.user.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
+      const matchesStatus = !statusFilter || statusFilter === 'all' || o.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [orders, debouncedSearch, statusFilter]);
 
+  // Calculate metrics with trends
+  const metrics = useMemo(() => {
+    if (!orders || !Array.isArray(orders)) return null;
+    
+    const now = new Date();
+    const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    const recentOrders = orders.filter((o: any) => o && o.createdAt && new Date(o.createdAt) >= lastWeek);
+    const lastMonthOrders = orders.filter((o: any) => o && o.createdAt && new Date(o.createdAt) >= lastMonth);
+    
+    const totalRevenue = orders.reduce((sum: number, o: any) => {
+      if (!o || !o.total) return sum;
+      return sum + parseFloat(o.total);
+    }, 0);
+    const recentRevenue = recentOrders.reduce((sum: number, o: any) => {
+      if (!o || !o.total) return sum;
+      return sum + parseFloat(o.total);
+    }, 0);
+    const lastMonthRevenue = lastMonthOrders.reduce((sum: number, o: any) => {
+      if (!o || !o.total) return sum;
+      return sum + parseFloat(o.total);
+    }, 0);
+    
+    return {
+      totalOrders: orders.length,
+      pendingOrders: orders.filter((o: any) => o && o.status === 'PENDING').length,
+      completedOrders: orders.filter((o: any) => o && o.status === 'DELIVERED').length,
+      totalRevenue,
+      recentRevenue,
+      revenueTrend: lastMonthRevenue > 0 ? ((recentRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0,
+      orderTrend: lastMonthOrders.length > 0 ? ((recentOrders.length - lastMonthOrders.length) / lastMonthOrders.length) * 100 : 0,
+    };
+  }, [orders]);
+
   // Status change handler
-  const onStatusChange = (orderId: string, newStatus: string) => {
-    mutate((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
-    );
+  const onStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      await apiService.updateOrderStatus(orderId, newStatus);
+      await mutate();
+      setStatusUpdateId(null);
+      setNewStatus('');
+      toast({
+        title: "Status updated successfully",
+        description: `Order status changed to ${STATUS_CONFIG[newStatus as keyof typeof STATUS_CONFIG]?.label}`,
+        variant: "success",
+      });
+    } catch (error) {
+      toast({
+        title: "Update failed",
+        description: "Failed to update order status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await mutate();
+      toast({
+        title: "Data refreshed",
+        description: "Order list has been updated successfully",
+        variant: "success",
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh failed",
+        description: "Failed to refresh data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleExport = () => {
+    toast({
+      title: "Export feature",
+      description: "Export functionality will be implemented soon",
+      variant: "default",
+    });
   };
 
   function formatFullDate(date: string) {
@@ -72,432 +238,493 @@ export default function AdminOrdersPage() {
     });
   }
 
-  return (
-    <div className="w-full max-w-7xl mx-auto px-6 lg:px-8 min-w-0">
-      <h2 className="text-2xl font-bold mb-4">Order Management</h2>
-      {/* Filter Bar */}
-      <form
-        className="mb-2 flex flex-wrap gap-4 items-end w-full"
-        onSubmit={(e) => e.preventDefault()}
-        aria-label="Order Filters"
-      >
-        <div className="flex-1 min-w-[200px]">
-          <label
-            htmlFor="order-search"
-            className="block text-xs font-medium mb-1"
-          >
-            Search (Order ID, Customer)
-          </label>
-          <Input
-            id="order-search"
-            placeholder="Search orders..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            autoComplete="off"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="order-status"
-            className="block text-xs font-medium mb-1"
-          >
-            Status
-          </label>
-          <select
-            id="order-status"
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All</option>
-            {STATUS.map((s) => (
-              <option key={s} value={s}>
-                {s.charAt(0) + s.slice(1).toLowerCase()}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setStatusFilter('');
-              setSearchValue('');
-            }}
-          >
-            Reset
-          </Button>
-        </div>
-      </form>
-      {/* Desktop Table */}
-      <div className="hidden md:block w-full min-w-0 overflow-x-auto">
-        <AdminTable
-          columns={[
-            { key: 'id', label: 'Order ID' },
-            { key: 'customer', label: 'Customer Name' },
-            { key: 'total', label: 'Total' },
-            { key: 'status', label: 'Status' },
-            { key: 'date', label: 'Date' },
-          ]}
-          data={(filteredOrders || []).map((o) => ({
-            ...o,
-            total: parseFloat(o.total).toLocaleString() + ' ₫',
-            status: (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild aria-label="Change order status">
-                  <button className="flex items-center gap-1 min-w-[90px] px-2 py-1 outline-none">
-                    <Badge
-                      className={
-                        o.status === 'paid' || o.status === 'delivered'
-                          ? 'bg-green-100 text-green-800 border-green-200'
-                          : o.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                            : o.status === 'cancelled'
-                              ? 'bg-red-100 text-red-800 border-red-200'
-                              : o.status === 'shipped'
-                                ? 'bg-blue-100 text-blue-800 border-blue-200'
-                                : 'bg-gray-100 text-gray-800 border-gray-200'
-                      }
-                    >
-                      {o.status}
-                    </Badge>
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {STATUS.map((s) => (
-                    <DropdownMenuItem
-                      key={s}
-                      onClick={() => onStatusChange(o.id, s)}
-                    >
-                      {s.charAt(0) + s.slice(1).toLowerCase()}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ),
-          }))}
-          actions={(o) => (
-            <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="rounded-full px-4 py-1 text-sm font-semibold"
-                onClick={() => setViewId(o.id)}
-              >
-                View
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="rounded-full px-4 py-1 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
-                onClick={() => setDeleteId(o.id)}
-                aria-label="Delete order"
-              >
-                Delete
-              </Button>
+  function formatRelativeDate(date: string) {
+    const d = new Date(date);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 48) return 'Yesterday';
+    return d.toLocaleDateString('vi-VN');
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-8">
+              <Skeleton className="h-8 w-64 mb-2" />
+              <Skeleton className="h-4 w-96" />
             </div>
-          )}
-          exportButtons={[
-            <Button
-              key="csv"
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded"
-              onClick={() => alert('Export CSV')}
-            >
-              Export CSV
-            </Button>,
-            <Button
-              key="pdf"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
-              onClick={() => alert('Export PDF')}
-            >
-              Export PDF
-            </Button>,
-          ]}
-        />
-      </div>
-      {/* Mobile Card List */}
-      <div className="block md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pb-24 max-w-2xl mx-auto">
-        {(filteredOrders || []).map((o) => {
-          let badgeColor = 'bg-gray-100 text-gray-800 border-gray-200';
-          if (o.status === 'paid' || o.status === 'delivered')
-            badgeColor = 'bg-green-100 text-green-800 border-green-200';
-          else if (o.status === 'pending')
-            badgeColor = 'bg-yellow-100 text-yellow-800 border-yellow-200';
-          else if (o.status === 'cancelled')
-            badgeColor = 'bg-red-100 text-red-800 border-red-200';
-          else if (o.status === 'shipped')
-            badgeColor = 'bg-blue-100 text-blue-800 border-blue-200';
-          return (
-            <div
-              key={o.id}
-              className="rounded-xl border p-4 bg-white shadow-sm flex flex-col gap-2 relative"
-            >
-              {/* Top Row: Order ID and Status */}
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-base text-blue-900">
-                  #{o.id}
-                </span>
-                <Badge
-                  className={
-                    badgeColor + ' px-3 py-1 text-xs font-semibold rounded-full'
-                  }
-                >
-                  {o.status}
-                </Badge>
-              </div>
-              {/* Name and Price Row */}
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900">
-                  {o.user?.name}
-                </span>
-                <span className="font-bold text-red-600 text-lg">
-                  ₫{parseFloat(o.total).toLocaleString()}
-                </span>
-              </div>
-              {/* Date Row */}
-              <div className="text-sm text-gray-500 mb-2">
-                {formatFullDate(o.createdAt)}
-              </div>
-              {/* Actions */}
-              <div className="flex gap-2 mt-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setViewId(o.id)}
-                  aria-label={`View order ${o.id}`}
-                >
-                  View
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center justify-center gap-1"
-                  onClick={() => setDeleteId(o.id)}
-                  aria-label={`Delete order ${o.id}`}
-                >
-                  Delete
-                </Button>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-8 w-16 mb-2" />
+                    <Skeleton className="h-3 w-20" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          );
-        })}
-        {/* Floating Add Order Button (disabled for now) */}
-        {/*
-        <Button className="fixed bottom-6 right-6 z-50 rounded-full h-14 w-14 p-0 shadow-lg bg-primary text-white text-2xl flex items-center justify-center" aria-label="Add Order" disabled>
-          +
-        </Button>
-        */}
-      </div>
-      {/* Delete confirmation modal */}
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
-            <h3 className="text-lg font-bold mb-2 text-red-700">
-              Delete Order
-            </h3>
-            <p className="mb-4 text-gray-700">
-              Are you sure you want to delete this order? This action cannot be
-              undone.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setDeleteId(null)}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  if (!deleteId) return;
-                  
-                  try {
-                    // Call API to delete order
-                    const response = await fetch(`/api/orders/${deleteId}`, {
-                      method: 'DELETE',
-                    });
-                    
-                    if (!response.ok) {
-                      throw new Error('Failed to delete order');
-                    }
-                    
-                    // After deleting or updating an order, just call mutate() to revalidate, do not use mutate with a callback.
-                    mutate();
-                    
-                    setDeleteId(null);
-                  } catch (error) {
-                    console.error('Error deleting order:', error);
-                    // You could add a toast notification here
-                  }
-                }}
-                className="bg-red-600 text-white hover:bg-red-700"
-              >
-                Delete
-              </Button>
-            </div>
+            <Card>
+              <CardContent className="p-6">
+                <Skeleton className="h-64 w-full" />
+              </CardContent>
+            </Card>
           </div>
         </div>
-      )}
-      <Dialog
-        open={!!viewId}
-        onOpenChange={(open) => {
-          if (!open) setViewId(null);
-        }}
-      >
-        <DialogContent className="w-full sm:max-w-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto p-6">
-          {(() => {
-            const order = orders?.find((o) => o.id === viewId);
-            if (!order) return null;
-            let badgeColor = 'bg-gray-100 text-gray-800 border-gray-200';
-            if (order.status === 'paid' || order.status === 'delivered')
-              badgeColor = 'bg-green-100 text-green-800 border-green-200';
-            else if (order.status === 'pending')
-              badgeColor = 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            else if (order.status === 'cancelled')
-              badgeColor = 'bg-red-100 text-red-800 border-red-200';
-            else if (order.status === 'shipped')
-              badgeColor = 'bg-blue-100 text-blue-800 border-blue-200';
-            const items = [
-              {
-                id: 'p1',
-                name: 'Tổ yến tinh chế 50g',
-                image: '/images/p1.png',
-                quantity: 2,
-                price: 1750000,
-              },
-              {
-                id: 'p2',
-                name: 'Tổ yến thô 100g',
-                image: '/images/p2.png',
-                quantity: 1,
-                price: 3200000,
-              },
-            ];
-            const subtotal = items.reduce(
-              (sum: number, item) => sum + item.price * item.quantity,
-              0,
-            );
-            const discount = 0;
-            const shipping = 0;
-            const finalTotal = subtotal - discount + shipping;
-            const payment = 'Credit Card';
-            const shippingAddress = '123 Main St, District 1, HCMC';
-            return (
-              <>
-                <DialogHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <DialogTitle>Order #{order.id}</DialogTitle>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        asChild
-                        aria-label="Change order status"
-                      >
-                        <button className="flex items-center gap-1 outline-none">
-                          <Badge className={badgeColor}>{order.status}</Badge>
-                          <ChevronDown className="w-4 h-4 text-gray-500" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {STATUS.map((s) => (
-                          <DropdownMenuItem
-                            key={s}
-                            onClick={() => onStatusChange(order.id, s)}
-                          >
-                            {s.charAt(0) + s.slice(1).toLowerCase()}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-xl">
+                  <Package className="w-8 h-8 text-blue-600" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
+                  <p className="text-gray-600 mt-1">
+                    Manage customer orders, track shipments, and process payments
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-white rounded-lg border p-1">
+                  <Button
+                    variant={viewMode === 'table' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('table')}
+                  >
+                    Table
+                  </Button>
+                  <Button
+                    variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('cards')}
+                  >
+                    Cards
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleExport}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Metrics Cards */}
+          {metrics && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                      <p className="text-2xl font-bold text-gray-900">{metrics.totalOrders}</p>
+                      <div className="flex items-center gap-1 mt-2">
+                        {metrics.orderTrend > 0 ? (
+                          <TrendingUp className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <TrendingDown className="w-4 h-4 text-red-600" />
+                        )}
+                        <span className={`text-sm ${metrics.orderTrend > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {Math.abs(metrics.orderTrend).toFixed(1)}%
+                        </span>
+                        <span className="text-sm text-gray-500">vs last month</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <Package className="w-6 h-6 text-blue-600" />
+                    </div>
                   </div>
-                </DialogHeader>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-                  <div>
-                    <span className="font-semibold">Customer:</span>{' '}
-                    {order.user?.name}
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-yellow-500 hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Pending Orders</p>
+                      <p className="text-2xl font-bold text-gray-900">{metrics.pendingOrders}</p>
+                      <p className="text-sm text-gray-500 mt-2">Requires attention</p>
+                    </div>
+                    <div className="p-3 bg-yellow-100 rounded-lg">
+                      <Clock className="w-6 h-6 text-yellow-600" />
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-semibold">Date:</span> {order.createdAt}
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Completed Orders</p>
+                      <p className="text-2xl font-bold text-gray-900">{metrics.completedOrders}</p>
+                      <p className="text-sm text-gray-500 mt-2">Successfully delivered</p>
+                    </div>
+                    <div className="p-3 bg-green-100 rounded-lg">
+                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-semibold">Total:</span>{' '}
-                    <span className="font-bold text-red-700">
-                      ₫{parseFloat(order.total).toLocaleString()}
-                    </span>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(metrics.totalRevenue)}
+                      </p>
+                      <div className="flex items-center gap-1 mt-2">
+                        {metrics.revenueTrend > 0 ? (
+                          <TrendingUp className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <TrendingDown className="w-4 h-4 text-red-600" />
+                        )}
+                        <span className={`text-sm ${metrics.revenueTrend > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {Math.abs(metrics.revenueTrend).toFixed(1)}%
+                        </span>
+                        <span className="text-sm text-gray-500">vs last month</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-purple-100 rounded-lg">
+                      <DollarSign className="w-6 h-6 text-purple-600" />
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-semibold">Payment:</span> {payment}
-                  </div>
-                  <div className="sm:col-span-2">
-                    <span className="font-semibold">Shipping:</span>{' '}
-                    {shippingAddress}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Filters */}
+          <Card className="mb-6 border-l-4 border-l-gray-500">
+            <CardContent className="p-6">
+              <div className="flex flex-wrap gap-4 items-end">
+                <div className="flex-1 min-w-[200px]">
+                  <Label className="block text-xs font-medium mb-1 text-gray-700">
+                    Search Orders
+                  </Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search by order ID or customer name..."
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
                 </div>
-                <div className="mb-4">
-                  <div className="font-semibold mb-2">Products</div>
-                  <div className="flex flex-col gap-4 divide-y">
-                    {items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-4 pt-2 first:pt-0"
-                      >
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          width={56}
-                          height={56}
-                          className="w-14 h-14 object-cover rounded border"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">
-                            {item.name}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {item.quantity} × ₫{item.price.toLocaleString()} ={' '}
-                            <span className="font-semibold text-gray-900">
-                              ₫{(item.price * item.quantity).toLocaleString()}
-                            </span>
-                          </div>
+                <div className="min-w-[150px]">
+                  <Label className="block text-xs font-medium mb-1 text-gray-700">
+                    Status Filter
+                  </Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      {STATUS.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                    {filteredOrders?.length || 0} orders
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Orders Display */}
+          {viewMode === 'table' ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Order List</CardTitle>
+                <CardDescription>
+                  View and manage customer orders
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!filteredOrders || filteredOrders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+                    <p className="text-gray-600 mb-4">
+                      {searchValue || statusFilter 
+                        ? 'Try adjusting your search or filter criteria'
+                        : 'No orders have been placed yet'
+                      }
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-4 font-medium text-gray-700">Order</th>
+                          <th className="text-left p-4 font-medium text-gray-700">Customer</th>
+                          <th className="text-left p-4 font-medium text-gray-700">Total</th>
+                          <th className="text-left p-4 font-medium text-gray-700">Status</th>
+                          <th className="text-left p-4 font-medium text-gray-700">Date</th>
+                          <th className="text-right p-4 font-medium text-gray-700">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredOrders.map((order: any) => {
+                          const statusConfig = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG];
+                          const StatusIcon = statusConfig?.icon || Clock;
+                          
+                          return (
+                            <tr key={order.id} className="border-b hover:bg-gray-50 transition-colors">
+                              <td className="p-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <Package className="w-5 h-5 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">{order.id}</p>
+                                    <p className="text-xs text-gray-500">
+                                      {(order.orderItems?.length || order.items?.length || 0)} items
+                                    </p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                <div className="flex items-center gap-2">
+                                  <User className="w-4 h-4 text-gray-400" />
+                                  <span className="text-sm">{order.user?.name || 'Unknown'}</span>
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                <p className="font-medium text-sm">
+                                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(order.total))}
+                                </p>
+                              </td>
+                              <td className="p-4">
+                                <Badge className={`${statusConfig?.color} flex items-center gap-1 border`}>
+                                  <StatusIcon className="w-3 h-3" />
+                                  {statusConfig?.label}
+                                </Badge>
+                              </td>
+                              <td className="p-4">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4 text-gray-400" />
+                                  <div>
+                                    <span className="text-sm">{formatFullDate(order.createdAt)}</span>
+                                    <p className="text-xs text-gray-500">{formatRelativeDate(order.createdAt)}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-4 text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => setViewId(order.id)}>
+                                      <Eye className="w-4 h-4 mr-2" />
+                                      View Details
+                                    </DropdownMenuItem>
+                                                                         {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
+                                      <DropdownMenuItem onClick={() => {
+                                        setStatusUpdateId(order.id);
+                                        setNewStatus('');
+                                      }}>
+                                        <Settings className="w-4 h-4 mr-2" />
+                                        Update Status
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>
+                                      <Download className="w-4 h-4 mr-2" />
+                                      Export Order
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {filteredOrders?.map((order: any) => {
+                const statusConfig = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG];
+                const StatusIcon = statusConfig?.icon || Clock;
+                
+                return (
+                  <Card key={order.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-5 h-5 text-blue-600" />
+                          <span className="font-medium text-sm">{order.id}</span>
+                        </div>
+                        <Badge className={`${statusConfig?.color} text-xs border`}>
+                          <StatusIcon className="w-3 h-3 mr-1" />
+                          {statusConfig?.label}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <User className="w-4 h-4 text-gray-400" />
+                        <span>{order.user?.name || 'Unknown'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <DollarSign className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(order.total))}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span>{formatRelativeDate(order.createdAt)}</span>
+                      </div>
+                      <div className="pt-2 border-t">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">
+                            {(order.orderItems?.length || order.items?.length || 0)} items
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setViewId(order.id)}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="mt-4 border-t pt-4 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>₫{subtotal.toLocaleString()}</span>
-                  </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between">
-                      <span>Discount</span>
-                      <span>-₫{discount.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {shipping > 0 && (
-                    <div className="flex justify-between">
-                      <span>Shipping</span>
-                      <span>₫{shipping.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-bold text-base text-red-700">
-                    <span>Total</span>
-                    <span>₫{finalTotal.toLocaleString()}</span>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setViewId(null)}>
-                    Close
-                  </Button>
-                </DialogFooter>
-              </>
-            );
-          })()}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Order Details Dialog */}
+      <Dialog open={!!viewId} onOpenChange={() => setViewId(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Order Details</DialogTitle>
+            <DialogDescription>
+              View complete order information and items
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            {viewId && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">Order details would be displayed here...</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewId(null)}>
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Status Update Dialog */}
+      <Dialog open={!!statusUpdateId} onOpenChange={() => {
+        setStatusUpdateId(null);
+        setNewStatus('');
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Order Status</DialogTitle>
+            <DialogDescription>
+              Change the status of this order
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="status">New Status</Label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS.map((status) => (
+                                         <SelectItem key={status} value={status}>
+                       <div className="flex items-center gap-2">
+                         {(() => {
+                           const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG];
+                           const Icon = config?.icon;
+                           return Icon ? <Icon className="w-4 h-4" /> : null;
+                         })()}
+                         {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label}
+                       </div>
+                     </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setStatusUpdateId(null);
+                setNewStatus('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => statusUpdateId && newStatus && onStatusChange(statusUpdateId, newStatus)}
+              disabled={!newStatus}
+            >
+              Update Status
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Toast Notifications */}
+      <Toaster />
     </div>
   );
 }

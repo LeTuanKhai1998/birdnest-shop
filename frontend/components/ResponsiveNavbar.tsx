@@ -25,6 +25,7 @@ import {
   LogIn,
 } from 'lucide-react';
 import { CartIconWithBadge } from '@/components/CartIconWithBadge';
+import { NotificationBell } from '@/components/NotificationBell';
 import { useState, useRef } from 'react';
 import {
   DropdownMenu,
@@ -45,37 +46,10 @@ export function ResponsiveNavbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const userFromSession = session?.user;
-  const { data: user } = useSWR(
-    userFromSession ? 'http://localhost:8080/api/users/profile' : null,
-    (url) => fetch(url, { credentials: 'include' }).then((r) => r.json()),
-    { fallbackData: userFromSession },
-  );
+  
+  // Use session data directly instead of fetching from backend
+  const user = userFromSession;
 
-  // Notification state
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: 'New order received!', read: false, time: '2m ago' },
-    {
-      id: 2,
-      text: 'Stock low: Raw Birdnest 50g',
-      read: false,
-      time: '10m ago',
-    },
-    {
-      id: 3,
-      text: 'Order #1234 marked as shipped',
-      read: true,
-      time: '1h ago',
-    },
-  ]);
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAllRead = () => {
-    setNotifications((n) => n.map((notif) => ({ ...notif, read: true })));
-  };
-
-  const clearNotifications = () => {
-    setNotifications([]);
-  };
 
   return (
     <>
@@ -178,74 +152,7 @@ export function ResponsiveNavbar() {
               </div>
 
               {/* Notifications */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="relative p-2"
-                    aria-label="Notifications"
-                  >
-                    <Bell className="w-5 h-5" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 p-0">
-                  <div className="p-4 border-b">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">Notifications</h3>
-                      {notifications.length > 0 && (
-                        <button
-                          onClick={markAllRead}
-                          className="text-sm text-blue-600 hover:underline"
-                        >
-                          Mark all read
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500">
-                        No notifications
-                      </div>
-                    ) : (
-                      notifications.map((n) => (
-                        <div
-                          key={n.id}
-                          className={`p-4 border-b last:border-b-0 ${n.read ? 'bg-white' : 'bg-red-50'}`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div
-                              className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${n.read ? 'bg-gray-300' : 'bg-red-600'}`}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-gray-900">{n.text}</p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {n.time}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  {notifications.length > 0 && (
-                    <div className="p-2 border-t">
-                      <button
-                        onClick={clearNotifications}
-                        className="w-full py-2 text-sm text-gray-600 hover:text-red-600 transition-colors"
-                      >
-                        Clear all
-                      </button>
-                    </div>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <NotificationBell />
 
               {/* User Menu */}
               <div className="flex items-center">

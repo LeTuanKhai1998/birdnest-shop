@@ -65,6 +65,26 @@ class ApiService {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('auth-token');
       if (token) {
+        // Check if token is expired
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const now = Math.floor(Date.now() / 1000);
+          
+          if (payload.exp && payload.exp < now) {
+            console.log('JWT token expired, redirecting to login');
+            localStorage.removeItem('auth-token');
+            localStorage.removeItem('user');
+            window.location.href = '/admin/login';
+            throw new Error('Token expired');
+          }
+        } catch (error) {
+          console.log('Invalid token format, redirecting to login');
+          localStorage.removeItem('auth-token');
+          localStorage.removeItem('user');
+          window.location.href = '/admin/login';
+          throw new Error('Invalid token');
+        }
+        
         config.headers = {
           ...config.headers,
           Authorization: `Bearer ${token}`,
@@ -76,10 +96,21 @@ class ApiService {
       const response = await fetch(url, config);
 
       if (!response.ok) {
+        console.error(`API request failed: ${response.status} ${response.statusText}`);
+        
+        // If 401 Unauthorized, clear token and redirect to login
+        if (response.status === 401) {
+          console.log('401 Unauthorized - clearing token and redirecting to login');
+          localStorage.removeItem('auth-token');
+          localStorage.removeItem('user');
+          window.location.href = '/admin/login';
+        }
+        
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('API request failed:', error);
       throw error;

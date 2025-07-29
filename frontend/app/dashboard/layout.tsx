@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { User, ListOrdered, MapPin, Heart } from 'lucide-react';
+import { User, ListOrdered, MapPin, Heart, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { label: 'Profile', href: '/dashboard/profile', icon: User },
   { label: 'Addresses', href: '/dashboard/addresses', icon: MapPin },
   { label: 'Wishlist', href: '/dashboard/wishlist', icon: Heart },
+  { label: 'Notifications', href: '/notifications', icon: Bell },
 ];
 
 export default function DashboardLayout({

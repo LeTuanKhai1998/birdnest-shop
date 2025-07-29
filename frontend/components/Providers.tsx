@@ -2,11 +2,18 @@
 
 import { SessionProvider } from 'next-auth/react';
 import { ReactNode } from 'react';
+import { NotificationProvider } from '@/lib/notification-context';
 
 interface ProvidersProps {
   children: ReactNode;
 }
 
 export function Providers({ children }: ProvidersProps) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <NotificationProvider>
+        {children}
+      </NotificationProvider>
+    </SessionProvider>
+  );
 }
