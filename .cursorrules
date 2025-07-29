@@ -656,10 +656,61 @@ enum RecipientType {
   - Add meta description for guest order tracking
 
 
+### 15. Optimize Home Page Layout and Content [X]
+
+- [ ] Update `app/page.tsx` (Home page) to improve overall structure and UX
+- [ ] Apply brand-aligned visual hierarchy:
+  - Use consistent spacing, font sizing, and section padding (Tailwind)
+  - Ensure alignment and spacing match the rest of the site
+- [ ] Hero Section:
+  - Large banner with high-quality lifestyle/product image
+  - Strong headline (e.g. “Discover Your Style at Birdnest”)
+  - Short supporting subtitle and CTA (e.g. “Shop Now” button)
+- [ ] Featured Categories:
+  - Display 3–6 top-level categories with images and links
+  - Responsive grid layout, center-aligned text
+- [ ] Product Highlights:
+  - Show bestsellers / new arrivals / seasonal promotions
+  - Use reusable product card component
+  - Support “Add to Cart” or “View Details”
+- [ ] Promotional Banner:
+  - Add promotional strip (e.g. “Free Shipping on Orders over 500K VND”)
+  - Use brand color and good contrast
+- [ ] Testimonials (optional):
+  - Add section with 1–3 short customer testimonials
+  - Name, image, and short quote
+- [ ] Newsletter Signup:
+  - Form with name and email
+  - Connected to backend or just UI for now
+- [ ] Footer Teaser:
+  - Include key links (Shipping, Returns, Contact)
+  - Match footer design
+
+- [ ] Responsive Design:
+  - Stack layout for mobile
+  - Use columns and grid for desktop
+  - Test breakpoints across sizes
+
+- [ ] SEO:
+  - Set `<title>Birdnest – Modern Fashion & Lifestyle</title>`
+  - Add meta description
+  - Include alt text on all images
+
+- [ ] i18n Support:
+  - Wrap all visible texts in `t()` with keys like `home.hero.title`, `home.cta.button`, etc.
+
+- [ ] Best Practices:
+  - Split sections into reusable components
+  - Avoid hardcoded values, use `@/lib/constants.ts` or config files
+  - Use loading skeletons for async product data
+
+- [ ] Testing:
+  - Add basic unit test for Hero and Featured section
+  - Ensure all links and CTA buttons work
 
 ---
 
-### 15. CI/CD and Deployment Readiness [ ]
+### 16. CI/CD and Deployment Readiness [ ]
 
 - [ ] Setup `.dockerignore`, `.env.example` files
 - [ ] Dockerize backend with production-ready Dockerfile
@@ -673,7 +724,7 @@ enum RecipientType {
 
 ---
 
-### 16. Observability and Logging [ ]
+### 17. Observability and Logging [ ]
 
 - [ ] Add global error handler middleware (backend)
 - [ ] Add structured logs (`logger.service.ts` or `pino`)
@@ -682,7 +733,7 @@ enum RecipientType {
 
 ---
 
-### 17. Documentation and Developer Experience [ ]
+### 18. Documentation and Developer Experience [ ]
 
 - [ ] Generate Swagger docs at `/api-docs`
 - [ ] Write `README.md` inside `backend/`:
