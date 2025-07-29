@@ -27,6 +27,8 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
+    "@radix-ui/react-toast": "^1.2.14",
+    "class-variance-authority": "^0.7.1",
     "cookie-parser": "^1.4.7"
   }
 }
