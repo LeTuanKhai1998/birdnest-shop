@@ -6,8 +6,8 @@
 - Organize thoughts and plan steps before starting a task in the `Scratchpad` section.
 - Clear old tasks if necessary.
 - Use todo markers for progress tracking:
-  - `[X]` Completed tasks
-  - `[ ]` Pending tasks
+  - [X] Completed tasks
+  - [ ] Pending tasks
 - Update Scratchpad after completing subtasks.
 - Reflect and plan after milestones for better task management.
 - Always refer to Scratchpad before planning the next step.
@@ -16,7 +16,7 @@
 
 ## Scratchpad
 
-### 1. Project Setup and Configuration []
+### 1. Project Setup and Configuration [X]
 
 - [X] Initialize Next.js 15 project with TypeScript
 - [X] Set up project structure and folders
@@ -34,7 +34,7 @@
   - NextAuth.js beta for authentication
   - Stripe for payments
 
-### 2. Database and Authentication []
+### 2. Database and Authentication [X]
 
 - [X] Set up PostgreSQL database
 - [X] Configure Prisma schema:
@@ -50,7 +50,7 @@
   - JWT handling
   - Protected routes
 
-### 3. Core Features - Customer Side [ ]
+### 3. Core Features - Customer Side [X]
 
 - [X] Home Layout:
   - Create `(home)` folder in the `app` directory  
@@ -104,7 +104,7 @@
   - Wishlist (favorite products)
 
 
-### 4. Admin Dashboard [ ]
+### 4. Admin Dashboard [X]
 
 - [X] Admin authentication and authorization (Implemented: /admin route, only accessible by isAdmin users, unauthorized users redirected)
 - [X] Dashboard overview:
@@ -169,7 +169,69 @@
   - Admin privileges
   - User actions
 
-### 5. Advanced Features [ ]
+### 5. Backend Architecture and API Integration [X]
+
+- [X] Set up backend folder:
+  - Create `backend/` directory
+  - Initialize NestJS project using TypeScript
+  - Choose `npm` for package manager
+  - Configure ESLint, Prettier, and environment variables (`.env`)
+  - Clean default modules and create initial structure:
+    - `auth/`, `users/`, `products/`, `orders/` modules
+
+- [X] Connect to PostgreSQL using Prisma:
+  - Create `prisma/` directory inside `backend/`
+  - Copy or refactor Prisma schema from `frontend/`
+  - Generate Prisma client
+  - Set up `PrismaService` and make it injectable across modules
+
+- [X] Authentication & Authorization:
+  - Implement JWT-based auth with NestJS `@nestjs/passport` and `@nestjs/jwt`
+  - Auth flow:
+    - **Frontend** handles login/register using NextAuth
+    - **Backend** verifies JWT in `Authorization: Bearer <token>` header
+    - Protect backend routes with `JwtAuthGuard`
+  - Support roles (admin, customer) for RBAC using NestJS `RolesGuard`
+
+- [X] API routes and modules:
+  - Products API (CRUD) - ✅ Working
+  - Orders API (create, update status, list by user) - ✅ Working
+  - Users API (basic info, roles) - ✅ Working
+  - Cart/Wishlist endpoints (optional)
+
+- [X] Frontend - Backend integration:
+  - In `frontend/.env.local` set:
+    ```env
+    NEXT_PUBLIC_API_URL=http://localhost:8080/api
+    ```
+  - Replace mock services with real API calls to NestJS backend
+  - Use Axios instance with token header
+  - Created `frontend/lib/api.ts` service
+
+- [X] Environment configuration:
+  - Use `@nestjs/config` to load `.env`
+  - Required variables:
+    - `DATABASE_URL`
+    - `JWT_SECRET`
+    - `PORT`
+
+- [X] Local dev scripts:
+  - Add root-level script to run FE & BE concurrently:
+    ```json
+    "scripts": {
+      "dev": "concurrently \"npm run dev --workspace frontend\" \"npm run start:dev --workspace backend\""
+    }
+    ```
+  - Update root `package.json`:
+    ```json
+    "workspaces": ["frontend", "backend"]
+    ```
+
+- [X] Optional: Add Swagger docs for backend API:
+  - Install and configure `@nestjs/swagger` for auto-generated API docs
+  - Accessible at `http://localhost:8080/swagger`
+
+### 6. Advanced Features [ ]
 
 - [ ] Real-time notifications
 - [ ] Email system (Resend):
@@ -183,7 +245,7 @@
   - API optimization
 - [ ] Analytics and reporting
 
-### 6. Testing and Deployment [ ]
+### 7. Testing and Deployment [ ]
 
 - [ ] Unit testing
 - [ ] Integration testing
@@ -195,7 +257,7 @@
   - Monitoring
   - Backup strategy
 
-### 7. Documentation [ ]
+### 8. Documentation [ ]
 
 - [ ] API documentation
 - [ ] User guide
