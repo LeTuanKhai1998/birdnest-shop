@@ -656,7 +656,7 @@ enum RecipientType {
   - Add meta description for guest order tracking
 
 
-### 15. Optimize Home Page Layout and Content [X]
+### 16. Optimize Home Page Layout and Content [X]
 
 - [ ] Update `app/page.tsx` (Home page) to improve overall structure and UX
 - [ ] Apply brand-aligned visual hierarchy:
@@ -710,21 +710,21 @@ enum RecipientType {
 
 ---
 
-### 16. CI/CD and Deployment Readiness [ ]
+### 17. CI/CD and Deployment Readiness [X]
 
-- [ ] Setup `.dockerignore`, `.env.example` files
-- [ ] Dockerize backend with production-ready Dockerfile
-- [ ] Create `docker-compose.yml` for local development
-- [ ] Setup GitHub Actions or CI:
+- [X] Setup `.dockerignore`, `.env.example` files
+- [X] Dockerize backend with production-ready Dockerfile
+- [X] Create `docker-compose.yml` for local development
+- [X] Setup GitHub Actions or CI:
   - Lint, test, build on PRs
-- [ ] Deploy backend to Railway, Fly.io, VPS or Render
-- [ ] Setup reverse proxy or subdomain for API (e.g. `api.birdnest.shop`)
-- [ ] Setup health check route
-- [ ] Optional: Use UptimeRobot to monitor API uptime
+- [X] Deploy backend to Railway, Fly.io, VPS or Render
+- [X] Setup reverse proxy or subdomain for API (e.g. `api.birdnest.shop`)
+- [X] Setup health check route
+- [X] Optional: Use UptimeRobot to monitor API uptime
 
 ---
 
-### 17. Observability and Logging [ ]
+### 18. Observability and Logging [ ]
 
 - [ ] Add global error handler middleware (backend)
 - [ ] Add structured logs (`logger.service.ts` or `pino`)
@@ -733,7 +733,7 @@ enum RecipientType {
 
 ---
 
-### 18. Documentation and Developer Experience [ ]
+### 19. Documentation and Developer Experience [ ]
 
 - [ ] Generate Swagger docs at `/api-docs`
 - [ ] Write `README.md` inside `backend/`:
