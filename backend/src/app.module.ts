@@ -9,6 +9,7 @@ import { ProductsModule } from './products/products.module';
 import { OrdersModule } from './orders/orders.module';
 import { SettingsModule } from './settings/settings.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { HealthModule } from './health/health.module';
 import { PrismaService } from './common/prisma.service';
 import { SecurityMiddleware } from './common/security.middleware';
 import { CacheService } from './common/cache.service';
@@ -36,6 +37,7 @@ import { PerformanceInterceptor } from './common/performance.interceptor';
     OrdersModule,
     SettingsModule,
     NotificationsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, CacheService, PerformanceService, PerformanceInterceptor],
