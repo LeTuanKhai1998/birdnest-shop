@@ -82,9 +82,11 @@ export function HeroSection() {
               padding: '20px',
             }}
           >
-            <span style={{ whiteSpace: 'nowrap' }}>{HOME_CONSTANTS.hero.title.split(' ')[0]} {HOME_CONSTANTS.hero.title.split(' ')[1]}</span>
-            <br />
-            <span style={{ whiteSpace: 'nowrap' }}>{HOME_CONSTANTS.hero.title.split(' ')[2]} {HOME_CONSTANTS.hero.title.split(' ')[3]}</span>
+            {HOME_CONSTANTS.hero.title.split('\n').map((line, index) => (
+              <span key={index} style={{ whiteSpace: 'nowrap', display: 'block' }}>
+                {line}
+              </span>
+            ))}
           </h1>
           <p
             className="text-lg md:text-xl mb-4 font-medium italic"
@@ -203,8 +205,11 @@ export function HeroSection() {
               marginBottom: 'clamp(0.2em, 1.5vw, 0.5em)',
             }}
           >
-            <span className="block">{HOME_CONSTANTS.hero.title.split(' ')[0]} {HOME_CONSTANTS.hero.title.split(' ')[1]}</span>
-            <span className="block">{HOME_CONSTANTS.hero.title.split(' ')[2]} {HOME_CONSTANTS.hero.title.split(' ')[3]}</span>
+            {HOME_CONSTANTS.hero.title.split('\n').map((line, index) => (
+              <span key={index} className="block">
+                {line}
+              </span>
+            ))}
           </h1>
           <p
             className="font-medium italic"

@@ -1,7 +1,7 @@
 // Home page constants
 export const HOME_CONSTANTS = {
   hero: {
-    title: "TỔ YẾN SÀO NGUYÊN CHẤT",
+    title: "TỔ YẾN SÀO\nNGUYÊN CHẤT",
     subtitle: "Cho sức khỏe gia đình bạn",
     ctaText: "ĐẶT MUA NGAY",
     ctaLink: "/products",
