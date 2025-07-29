@@ -34,11 +34,11 @@ export default function HomePage() {
       {/* Promotional Banner */}
       <PromotionalBanner />
       
-      {/* Star Rating */}
-      <StarRating />
-      
       {/* Hero Section */}
       <HeroSection />
+      
+      {/* Star Rating */}
+      <StarRating />
       
       {/* Company Summary */}
       <CompanySummary />
