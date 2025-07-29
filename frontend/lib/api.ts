@@ -9,6 +9,33 @@ import {
   OrderStats,
 } from './types';
 
+// API payload types for create/update operations
+interface CreateProductData {
+  name: string;
+  slug: string;
+  description: string;
+  price: string;
+  quantity: number;
+  categoryId: string;
+  images?: Array<{
+    url: string;
+    isPrimary: boolean;
+  }>;
+}
+
+interface UpdateProductData {
+  name?: string;
+  slug?: string;
+  description?: string;
+  price?: string;
+  quantity?: number;
+  categoryId?: string;
+  images?: Array<{
+    url: string;
+    isPrimary: boolean;
+  }>;
+}
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -79,6 +106,26 @@ class ApiService {
     return this.request<Product>(`/products/slug/${slug}`);
   }
 
+  async createProduct(data: CreateProductData): Promise<Product> {
+    return this.request<Product>('/products', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateProduct(id: string, data: UpdateProductData): Promise<Product> {
+    return this.request<Product>(`/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    return this.request<void>(`/products/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   async getCategories(): Promise<Category[]> {
     return this.request<Category[]>(`/products/categories`);
   }
@@ -130,6 +177,21 @@ class ApiService {
     return this.request<User>(`/users/${id}/admin`, {
       method: 'PUT',
       body: JSON.stringify({ isAdmin }),
+    });
+  }
+
+  // Auth API
+  async login(email: string, password: string): Promise<{ access_token: string; user: any }> {
+    return this.request<{ access_token: string; user: any }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async register(email: string, password: string, name: string): Promise<{ access_token: string; user: any }> {
+    return this.request<{ access_token: string; user: any }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, name }),
     });
   }
 }

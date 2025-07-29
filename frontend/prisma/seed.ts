@@ -1,8 +1,24 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Create admin user
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@birdnest.com' },
+    update: {},
+    create: {
+      email: 'admin@birdnest.com',
+      name: 'Admin User',
+      password: hashedPassword,
+      isAdmin: true,
+    },
+  });
+
+  console.log(`Created admin user: ${adminUser.email}`);
   // Create categories
   const refinedCategory = await prisma.category.upsert({
     where: { name: 'Refined Nest' },
