@@ -5,13 +5,12 @@ import { Card } from '@/components/ui/card';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
-import { products } from '@/lib/products-data';
 import { notFound } from 'next/navigation';
 import { Star } from 'lucide-react';
 import ProductImageGallery from '@/components/ProductImageGallery';
 import RelatedProducts from '@/components/RelatedProducts';
-import { products as allProducts } from '@/lib/products-data';
 import { useWishlist } from '@/lib/wishlist-store';
+import { products } from '@/lib/products-data';
 import { useSession } from 'next-auth/react';
 import {
   Tooltip,
@@ -21,7 +20,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useReducedMotion } from 'framer-motion';
 import { Product } from '@/components/ProductCard';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
@@ -33,7 +32,9 @@ export default function ProductDetailPage({
 }) {
   const { slug } = React.use(params);
   const decodedSlug = decodeURIComponent(slug);
+  // Find product from mock data
   const product = products.find((p) => p.slug === decodedSlug);
+
   // Move all hooks here, before any return
   const images = product?.images || (product?.image ? [product.image] : []);
   // Review form state (mocked, local only)
@@ -45,7 +46,7 @@ export default function ProductDetailPage({
   const [submitting, setSubmitting] = React.useState(false);
   const [submitMsg, setSubmitMsg] = React.useState('');
   const { data: session } = useSession();
-  const { isInWishlist, add, remove, loading } = useWishlist();
+  const { isInWishlist, add, remove, loading: wishlistLoading } = useWishlist();
   const favorited = product ? isInWishlist(product.id) : false;
   const shouldReduceMotion = useReducedMotion();
 
@@ -80,14 +81,13 @@ export default function ProductDetailPage({
                         }
                         className={`rounded-full bg-white/90 shadow p-2 hover:bg-red-50 transition-colors border border-gray-200 ${favorited ? 'text-red-600' : 'text-gray-400 hover:text-red-500'}`}
                         onClick={() => {
-                          if (loading) return;
                           if (favorited) {
                             remove(product.id);
                           } else {
                             add(product);
                           }
                         }}
-                        disabled={loading}
+                        disabled={wishlistLoading}
                       >
                         <motion.span
                           initial={false}
@@ -352,7 +352,7 @@ export default function ProductDetailPage({
           </form>
         </div>
         {/* Related Products Section */}
-        <RelatedProducts currentProduct={product} products={allProducts} />
+        <RelatedProducts currentProduct={product} products={products} />
       </main>
       <Footer />
     </div>
