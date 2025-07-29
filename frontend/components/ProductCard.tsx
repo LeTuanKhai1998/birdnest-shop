@@ -1,11 +1,12 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { AddToCartButton } from '@/components/AddToCartButton';
-import { Eye, ShoppingCart } from 'lucide-react';
+import { Eye, ShoppingCart, Heart, HeartOff } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import ProductMeta from '@/components/ProductMeta';
+import { useWishlist } from '@/lib/wishlist-store';
 export interface Product {
   id: string;
   slug: string;
@@ -27,6 +28,8 @@ export interface Review {
 }
 type ProductCardProps = { product: Product; onClick?: () => void };
 export const ProductCard = ({ product }: ProductCardProps) => {
+  const { isInWishlist, add, remove } = useWishlist();
+  const inWishlist = isInWishlist(product.id);
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
@@ -50,6 +53,27 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       <div className="group cursor-pointer">
         <Card className="h-full flex flex-col transition-shadow duration-200 hover:shadow-lg min-w-0">
           <CardContent className="p-0 min-w-0 relative">
+            {/* Wishlist Icon */}
+            <button
+              type="button"
+              aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+              className="absolute top-2 right-2 z-10 bg-white/80 rounded-full p-1 shadow hover:bg-red-100 transition"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (inWishlist) {
+                  remove(product.id);
+                } else {
+                  add(product);
+                }
+              }}
+            >
+              {inWishlist ? (
+                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+              ) : (
+                <Heart className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
             <Link
               href={`/products/${product.slug}`}
               prefetch={false}

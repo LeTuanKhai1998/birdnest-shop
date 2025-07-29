@@ -107,12 +107,16 @@ export default function AddressesPage() {
   // Province/district/ward logic
   useEffect(() => {
     setLoadingProvinces(true);
-    fetch('https://provinces.open-api.vn/api/?depth=3')
+    fetch('/lib/provinces-full.json')
       .then((res) => res.json())
       .then((data) => {
         setProvinces(data);
-        setLoadingProvinces(false);
-      });
+      })
+      .catch((err) => {
+        setProvinces([]);
+        console.error('Failed to load local provinces data:', err);
+      })
+      .finally(() => setLoadingProvinces(false));
   }, []);
 
   const provinceCode = watch('province');
