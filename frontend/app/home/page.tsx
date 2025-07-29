@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { HeroSection } from '@/components/home/HeroSection';
 import { PromotionalBanner } from '@/components/home/PromotionalBanner';
+import { StarRating } from '@/components/home/StarRating';
 import { CompanySummary } from '@/components/home/CompanySummary';
 import { FeaturesSection } from '@/components/home/FeaturesSection';
 import { ProductHighlight } from '@/components/home/ProductHighlight';
@@ -32,6 +33,9 @@ export default function HomePage() {
     <main className="min-h-screen">
       {/* Promotional Banner */}
       <PromotionalBanner />
+      
+      {/* Star Rating */}
+      <StarRating />
       
       {/* Hero Section */}
       <HeroSection />
