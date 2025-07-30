@@ -37,7 +37,10 @@ function isImageObject(
 export default async function ProductsPage() {
   // Fetch products from the database
   const dbProducts = await prisma.product.findMany({
-    include: { images: true },
+    include: { 
+      images: true,
+      category: true 
+    },
     orderBy: { createdAt: 'desc' },
   });
   // Map DB fields to ProductCard props
@@ -76,6 +79,12 @@ export default async function ProductsPage() {
           quantity: typeof p.quantity === 'number' ? p.quantity : 0,
           reviews: [],
           sold: 0,
+          categoryId: String(p.categoryId),
+          category: p.category ? {
+            id: String(p.category.id),
+            name: String(p.category.name),
+            slug: String(p.category.slug),
+          } : undefined,
         };
       }
     }
@@ -104,6 +113,12 @@ export default async function ProductsPage() {
       quantity: typeof p.quantity === 'number' ? p.quantity : 0,
       reviews: [],
       sold: 0,
+      categoryId: String(p.categoryId),
+      category: p.category ? {
+        id: String(p.category.id),
+        name: String(p.category.name),
+        slug: String(p.category.slug),
+      } : undefined,
     };
   });
   const displayProducts: MockUiProduct[] = mapDisplayProducts(

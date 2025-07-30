@@ -349,23 +349,27 @@ export function ResponsiveNavbar() {
                       </Link>
                     </Button>
                   ) : (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <ShadcnAvatar
-                            src={user?.image || '/images/user.jpeg'}
-                            name={user?.name}
-                            size={32}
-                            className="w-8 h-8"
-                          />
-                          <span className="hidden lg:block text-sm font-medium">
-                            {user?.name}
-                          </span>
-                        </Button>
-                      </DropdownMenuTrigger>
+                    <div className="flex items-center gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <ShadcnAvatar
+                              src={user?.image || '/images/user.jpeg'}
+                              name={user?.name}
+                              size={32}
+                              className="w-8 h-8"
+                            />
+                            <div className="hidden lg:block text-left">
+                              <div className="text-sm font-medium">{user?.name}</div>
+                              {(user as any)?.bio && (
+                                <div className="text-xs text-gray-500 italic truncate max-w-32">"{(user as any).bio}"</div>
+                              )}
+                            </div>
+                          </Button>
+                        </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
                         <div className="p-2 border-b">
                           <p className="text-sm font-medium">{user?.name}</p>
@@ -413,6 +417,7 @@ export function ResponsiveNavbar() {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    </div>
                   )}
                 </div>
 
