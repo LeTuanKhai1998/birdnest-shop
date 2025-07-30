@@ -10,10 +10,14 @@ import { toast } from 'sonner';
 import { LoadingOrEmpty } from '@/components/ui/LoadingOrEmpty';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Edit2 } from 'lucide-react';
+import { Eye, EyeOff, Edit2, User, Mail, Phone, Calendar, Shield, Save, Key } from 'lucide-react';
 import React from 'react';
 import { Avatar } from '@/components/ui/avatar';
+import { useRequireAuth } from '@/hooks/useAuth';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Tên quá ngắn'),
@@ -53,6 +57,7 @@ function getPasswordStrength(password: string) {
 
 export default function ProfilePage() {
   const { data: session } = useSession();
+  const { user: authUser } = useRequireAuth('/login');
   
   // Check for localStorage authentication (admin users)
   const [localUser, setLocalUser] = useState<any>(null);
@@ -163,12 +168,12 @@ export default function ProfilePage() {
         mutate('/api/profile');
       }
       
-      toast.success('Profile updated!');
+      toast.success('Cập nhật hồ sơ thành công!');
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);
       } else {
-        toast.error('An unknown error occurred');
+        toast.error('Đã xảy ra lỗi không xác định');
       }
     } finally {
       setSaving(false);
@@ -182,7 +187,7 @@ export default function ProfilePage() {
       if (isAdminUser) {
         // For admin users, we'll need to implement a backend endpoint for password change
         // For now, show a message that this feature is not available for admin users
-        toast.error('Password change is not available for admin users yet. Please contact support.');
+        toast.error('Đổi mật khẩu chưa khả dụng cho tài khoản admin. Vui lòng liên hệ hỗ trợ.');
       } else {
         // Use frontend API for regular users
         const res = await fetch('/api/profile/password', {
@@ -195,7 +200,7 @@ export default function ProfilePage() {
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || 'Password change failed');
-        toast.success('Password changed!');
+        toast.success('Đổi mật khẩu thành công!');
         resetPw();
       }
     } catch (e: unknown) {
@@ -222,319 +227,303 @@ export default function ProfilePage() {
   }, [user, reset]);
 
   return (
-    <div className="py-8 px-2 md:px-0 max-w-2xl mx-auto bg-gray-50 min-h-screen">
-      {/* Sticky header for mobile */}
-      <div className="sticky top-0 z-10 bg-gray-50 pb-2 pt-2 md:pt-0">
-        <h2 className="text-2xl font-bold mb-2 md:mb-4 text-center md:text-left">
-          Hồ sơ của bạn
-        </h2>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center lg:text-left">
+        <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+          Hồ sơ cá nhân
+        </h1>
+        <p className="text-lg text-gray-600">
+          Quản lý thông tin cá nhân và bảo mật tài khoản của bạn
+        </p>
       </div>
+
       <LoadingOrEmpty loading={isLoading}>
-        <motion.div
-          {...({
-            key: 'avatar-section',
-            initial: { opacity: 0, y: 20 },
-            animate: { opacity: 1, y: 0 },
-            exit: { opacity: 0, y: 20 },
-            transition: { duration: 0.3 },
-            className: 'flex flex-col items-center gap-2 mb-6',
-          } as any)}
-        >
-          <div className="relative group">
-            <Avatar
-              src={user?.image || '/images/user.jpeg'}
-              name={user?.name || undefined}
-              size={96}
-              aria-label="User avatar"
-              className="border-4 border-white shadow-md bg-white w-24 h-24 text-4xl"
-            />
-            <button
-              className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 hover:bg-gray-100 transition flex items-center"
-              title="Chỉnh sửa avatar (sắp ra mắt)"
-              type="button"
-              tabIndex={-1}
-            >
-              <Edit2 className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
-          <div className="text-lg font-semibold mt-2">{user?.name}</div>
-          <div className="text-gray-500 text-sm">{user?.email}</div>
-          {user?.bio && (
-            <div className="text-gray-600 text-sm mt-1 text-center max-w-xs">
-              {user.bio}
-            </div>
-          )}
-          {user?.createdAt && (
-            <div className="text-xs text-gray-400 mt-1">
-              Tài khoản được tạo: {new Date(user.createdAt).toLocaleDateString()}
-            </div>
-          )}
-        </motion.div>
-        {/* Profile info card */}
-        <AnimatePresence>
-          <motion.div
-            {...({
-              key: 'profile-form',
-              initial: { opacity: 0, y: 20 },
-              animate: { opacity: 1, y: 0 },
-              exit: { opacity: 0, y: 20 },
-              transition: { duration: 0.3 },
-              className:
-                'bg-white rounded-2xl shadow-lg p-6 border border-gray-100',
-            } as any)}
-          >
-            <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
-              <span>Thông tin cá nhân</span>
-            </h3>
-            <form
-              onSubmit={handleSubmit(onSubmitProfile)}
-              className="space-y-4"
-            >
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="name"
-                >
-                  Tên
-                </label>
-                <Input
-                  id="name"
-                  {...register('name')}
-                  placeholder="Tên của bạn"
-                  disabled={saving}
-                  autoComplete="name"
-                />
-                {errors.name && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.name.message}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Profile Overview */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <div className="relative inline-block mb-4">
+                    <Avatar
+                      src={user?.image || '/images/user.jpeg'}
+                      name={user?.name || undefined}
+                      size={120}
+                      aria-label="User avatar"
+                      className="border-4 border-white shadow-lg bg-white w-30 h-30 text-5xl"
+                    />
+                    <button
+                      className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-md border border-gray-200 hover:bg-gray-100 transition flex items-center"
+                      title="Chỉnh sửa avatar (sắp ra mắt)"
+                      type="button"
+                      tabIndex={-1}
+                    >
+                      <Edit2 className="w-4 h-4 text-gray-500" />
+                    </button>
                   </div>
-                )}
-              </div>
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="email"
-                >
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  {...register('email')}
-                  placeholder="you@example.com"
-                  disabled={saving}
-                  autoComplete="email"
-                />
-                {errors.email && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.email.message}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="phone"
-                >
-                  Số điện thoại
-                </label>
-                <Input
-                  id="phone"
-                  {...register('phone')}
-                  placeholder="Số điện thoại"
-                  disabled={saving}
-                  autoComplete="tel"
-                />
-                {errors.phone && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.phone.message}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="bio">
-                  Tiểu sử / Khẩu hiệu
-                </label>
-                <Input
-                  id="bio"
-                  {...register('bio')}
-                  placeholder="Tiểu sử ngắn hoặc khẩu hiệu (tùy chọn)"
-                  disabled={saving}
-                  maxLength={120}
-                />
-                {errors.bio && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.bio.message}
-                  </div>
-                )}
-              </div>
-              <Button type="submit" disabled={saving} className="w-full mt-2">
-                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
-              </Button>
-            </form>
-          </motion.div>
-          {/* Divider */}
-          <div className="h-2" />
-          {/* Password change card */}
-          <motion.div
-            {...({
-              key: 'password-form',
-              initial: { opacity: 0, y: 20 },
-              animate: { opacity: 1, y: 0 },
-              exit: { opacity: 0, y: 20 },
-              transition: { duration: 0.3 },
-              className:
-                'bg-white rounded-2xl shadow-lg p-6 border border-gray-100',
-            } as any)}
-          >
-            <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
-              <span>Đổi mật khẩu</span>
-            </h3>
-            <form
-              onSubmit={handlePwSubmit(onSubmitPassword)}
-              className="space-y-4"
-            >
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="currentPassword"
-                >
-                  Mật khẩu hiện tại
-                </label>
-                <div className="relative">
-                  <Input
-                    type={showCurrentPw ? 'text' : 'password'}
-                    id="currentPassword"
-                    {...pwRegister('currentPassword')}
-                    placeholder="Mật khẩu hiện tại"
-                    disabled={pwSaving}
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    onClick={() => setShowCurrentPw((v) => !v)}
-                  >
-                    {showCurrentPw ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-                {pwErrors.currentPassword && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {pwErrors.currentPassword.message}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="newPassword"
-                >
-                  Mật khẩu mới
-                </label>
-                <div className="relative">
-                  <Input
-                    type={showNewPw ? 'text' : 'password'}
-                    id="newPassword"
-                    {...pwRegister('newPassword')}
-                    placeholder="Mật khẩu mới"
-                    disabled={pwSaving}
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    onClick={() => setShowNewPw((v) => !v)}
-                  >
-                    {showNewPw ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-                {/* Password strength meter */}
-                {newPassword && (
-                  <div className="mt-1 flex items-center gap-2">
-                    <div className="flex-1 h-2 rounded bg-gray-200 overflow-hidden">
-                      <div
-                        className={`h-2 rounded transition-all duration-300 ${
-                          pwStrength === 0
-                            ? 'bg-gray-200 w-0'
-                            : pwStrength === 1
-                              ? 'bg-red-400 w-1/4'
-                              : pwStrength === 2
-                                ? 'bg-yellow-400 w-2/4'
-                                : pwStrength === 3
-                                  ? 'bg-blue-400 w-3/4'
-                                  : 'bg-green-500 w-full'
-                        }`}
-                      />
+                  
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">{user?.name || 'Người dùng'}</h2>
+                  <p className="text-gray-600 mb-3">{user?.email}</p>
+                  
+                  {user?.bio && (
+                    <p className="text-gray-600 text-sm mb-4 italic">"{user.bio}"</p>
+                  )}
+                  
+                  <div className="space-y-2 text-sm text-gray-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      <span>{user?.phone || 'Chưa cập nhật'}</span>
                     </div>
-                    <span className="text-xs text-gray-500">
-                      {pwStrength === 0
-                        ? ''
-                        : pwStrength === 1
-                          ? 'Yếu'
-                          : pwStrength === 2
-                            ? 'Trung bình'
-                            : pwStrength === 3
-                              ? 'Tốt'
-                              : 'Mạnh'}
-                    </span>
-                  </div>
-                )}
-                {pwErrors.newPassword && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {pwErrors.newPassword.message}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="confirmPassword"
-                >
-                  Xác nhận mật khẩu mới
-                </label>
-                <div className="relative">
-                  <Input
-                    type={showConfirmPw ? 'text' : 'password'}
-                    id="confirmPassword"
-                    {...pwRegister('confirmPassword')}
-                    placeholder="Xác nhận mật khẩu mới"
-                    disabled={pwSaving}
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    onClick={() => setShowConfirmPw((v) => !v)}
-                  >
-                    {showConfirmPw ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
+                    {user?.createdAt && (
+                      <div className="flex items-center justify-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>Tham gia: {new Date(user.createdAt).toLocaleDateString()}</span>
+                      </div>
                     )}
-                  </button>
-                </div>
-                {pwErrors.confirmPassword && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {pwErrors.confirmPassword.message}
                   </div>
-                )}
-              </div>
-              <Button type="submit" disabled={pwSaving} className="w-full mt-2">
-                {pwSaving ? 'Đang lưu...' : 'Đổi mật khẩu'}
-              </Button>
-            </form>
-          </motion.div>
-        </AnimatePresence>
+                  
+                  <Separator className="my-4" />
+                  
+                  <div className="flex items-center justify-center gap-2">
+                    <Shield className="w-4 h-4 text-green-600" />
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      Tài khoản đã xác thực
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Forms */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Profile Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-[#a10000]" />
+                  Thông tin cá nhân
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit(onSubmitProfile)} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700" htmlFor="name">
+                        Họ và tên
+                      </label>
+                      <Input
+                        id="name"
+                        {...register('name')}
+                        placeholder="Nhập họ và tên"
+                        disabled={saving}
+                        autoComplete="name"
+                        className="h-11"
+                      />
+                      {errors.name && (
+                        <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700" htmlFor="email">
+                        Email
+                      </label>
+                      <Input
+                        id="email"
+                        {...register('email')}
+                        placeholder="you@example.com"
+                        disabled={saving}
+                        autoComplete="email"
+                        className="h-11"
+                      />
+                      {errors.email && (
+                        <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700" htmlFor="phone">
+                      Số điện thoại
+                    </label>
+                    <Input
+                      id="phone"
+                      {...register('phone')}
+                      placeholder="Nhập số điện thoại"
+                      disabled={saving}
+                      autoComplete="tel"
+                      className="h-11"
+                    />
+                    {errors.phone && (
+                      <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700" htmlFor="bio">
+                      Tiểu sử / Khẩu hiệu
+                    </label>
+                    <Input
+                      id="bio"
+                      {...register('bio')}
+                      placeholder="Tiểu sử ngắn hoặc khẩu hiệu (tùy chọn)"
+                      disabled={saving}
+                      maxLength={120}
+                      className="h-11"
+                    />
+                    {errors.bio && (
+                      <p className="text-red-500 text-xs mt-1">{errors.bio.message}</p>
+                    )}
+                  </div>
+                  
+                  <Button type="submit" disabled={saving} className="w-full h-11">
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Password Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Key className="w-5 h-5 text-[#a10000]" />
+                  Đổi mật khẩu
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handlePwSubmit(onSubmitPassword)} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700" htmlFor="currentPassword">
+                      Mật khẩu hiện tại
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type={showCurrentPw ? 'text' : 'password'}
+                        id="currentPassword"
+                        {...pwRegister('currentPassword')}
+                        placeholder="Nhập mật khẩu hiện tại"
+                        disabled={pwSaving}
+                        autoComplete="current-password"
+                        className="h-11 pr-10"
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        onClick={() => setShowCurrentPw((v) => !v)}
+                      >
+                        {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {pwErrors.currentPassword && (
+                      <p className="text-red-500 text-xs mt-1">{pwErrors.currentPassword.message}</p>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700" htmlFor="newPassword">
+                        Mật khẩu mới
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type={showNewPw ? 'text' : 'password'}
+                          id="newPassword"
+                          {...pwRegister('newPassword')}
+                          placeholder="Nhập mật khẩu mới"
+                          disabled={pwSaving}
+                          autoComplete="new-password"
+                          className="h-11 pr-10"
+                        />
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          onClick={() => setShowNewPw((v) => !v)}
+                        >
+                          {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {/* Password strength meter */}
+                      {newPassword && (
+                        <div className="mt-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="flex-1 h-2 rounded bg-gray-200 overflow-hidden">
+                              <div
+                                className={`h-2 rounded transition-all duration-300 ${
+                                  pwStrength === 0
+                                    ? 'bg-gray-200 w-0'
+                                    : pwStrength === 1
+                                      ? 'bg-red-400 w-1/4'
+                                      : pwStrength === 2
+                                        ? 'bg-yellow-400 w-2/4'
+                                        : pwStrength === 3
+                                          ? 'bg-blue-400 w-3/4'
+                                          : 'bg-green-500 w-full'
+                                }`}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {pwStrength === 0
+                                ? ''
+                                : pwStrength === 1
+                                  ? 'Yếu'
+                                  : pwStrength === 2
+                                    ? 'Trung bình'
+                                    : pwStrength === 3
+                                      ? 'Tốt'
+                                      : 'Mạnh'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {pwErrors.newPassword && (
+                        <p className="text-red-500 text-xs mt-1">{pwErrors.newPassword.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700" htmlFor="confirmPassword">
+                        Xác nhận mật khẩu mới
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPw ? 'text' : 'password'}
+                          id="confirmPassword"
+                          {...pwRegister('confirmPassword')}
+                          placeholder="Xác nhận mật khẩu mới"
+                          disabled={pwSaving}
+                          autoComplete="new-password"
+                          className="h-11 pr-10"
+                        />
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          onClick={() => setShowConfirmPw((v) => !v)}
+                        >
+                          {showConfirmPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {pwErrors.confirmPassword && (
+                        <p className="text-red-500 text-xs mt-1">{pwErrors.confirmPassword.message}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Button type="submit" disabled={pwSaving} className="w-full h-11">
+                    <Key className="w-4 h-4 mr-2" />
+                    {pwSaving ? 'Đang lưu...' : 'Đổi mật khẩu'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </LoadingOrEmpty>
     </div>
   );

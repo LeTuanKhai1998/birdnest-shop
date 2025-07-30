@@ -1,16 +1,29 @@
 'use client';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { User, ListOrdered, MapPin, Heart, Bell, Home as HomeIcon, Box, Info, Mail, Package } from 'lucide-react';
+import { User, ListOrdered, MapPin, Heart, Bell, Home as HomeIcon, Box, Info, Mail, Package, Settings, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Avatar } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const navItems = [
-  { label: 'Đơn hàng', href: '/dashboard/orders', icon: ListOrdered },
-  { label: 'Hồ sơ', href: '/dashboard/profile', icon: User },
-  { label: 'Địa chỉ', href: '/dashboard/addresses', icon: MapPin },
-  { label: 'Yêu thích', href: '/dashboard/wishlist', icon: Heart },
-  { label: 'Thông báo', href: '/notifications', icon: Bell },
+  { label: 'Đơn hàng', href: '/dashboard/orders', icon: ListOrdered, description: 'Xem và quản lý đơn hàng' },
+  { label: 'Hồ sơ', href: '/dashboard/profile', icon: User, description: 'Cập nhật thông tin cá nhân' },
+  { label: 'Địa chỉ', href: '/dashboard/addresses', icon: MapPin, description: 'Quản lý địa chỉ giao hàng' },
+  { label: 'Yêu thích', href: '/dashboard/wishlist', icon: Heart, description: 'Sản phẩm yêu thích' },
+  { label: 'Thông báo', href: '/notifications', icon: Bell, description: 'Xem thông báo mới' },
+];
+
+const mainNavItems = [
+  { label: 'Trang chủ', href: '/', icon: HomeIcon },
+  { label: 'Sản phẩm', href: '/products', icon: Box },
+  { label: 'Giới thiệu', href: '/about', icon: Info },
+  { label: 'Liên hệ', href: '/contact', icon: Mail },
+  { label: 'Tra đơn', href: '/guest-orders', icon: Package },
 ];
 
 export default function DashboardLayout({
@@ -25,11 +38,12 @@ export default function DashboardLayout({
   // Show loading while checking authentication
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white flex items-center justify-center">
+        <Card className="w-96 p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a10000] mx-auto mb-4"></div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Đang tải...</h3>
+          <p className="text-gray-600">Vui lòng chờ trong giây lát</p>
+        </Card>
       </div>
     );
   }
@@ -37,106 +51,146 @@ export default function DashboardLayout({
   // Show loading if not authenticated (will redirect)
   if (!isAuthenticated) {
     return (
-      <div className="flex-1 flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang chuyển hướng...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white flex items-center justify-center">
+        <Card className="w-96 p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a10000] mx-auto mb-4"></div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Đang chuyển hướng...</h3>
+          <p className="text-gray-600">Chuyển hướng đến trang đăng nhập</p>
+        </Card>
       </div>
     );
   }
 
+  const handleLogout = async () => {
+    // Clear localStorage
+    localStorage.removeItem('auth-token');
+    localStorage.removeItem('user');
+    
+    // Redirect to home
+    router.push('/');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white">
       <div className="flex">
-        {/* Sidebar */}
-        <aside className="hidden md:flex flex-col w-64 bg-white border-r shadow-sm py-8 px-4 sticky top-0 h-screen">
-          <div className="mb-8 text-2xl font-bold tracking-tight">
-            Bảng điều khiển
+        {/* Sidebar - Desktop */}
+        <aside className="hidden lg:flex flex-col w-80 bg-white border-r border-gray-200 shadow-sm py-8 px-6 sticky top-0 h-screen overflow-y-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-[#a10000] rounded-full flex items-center justify-center">
+                <User className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Bảng điều khiển</h1>
+                <p className="text-sm text-gray-600">Quản lý tài khoản của bạn</p>
+              </div>
+            </div>
+            
+            {/* User Info */}
+            <Card className="p-4 bg-gray-50 border-gray-200">
+              <div className="flex items-center gap-3">
+                <Avatar 
+                  src="/images/user.jpeg" 
+                  alt={user?.name} 
+                  name={user?.name}
+                  size={40}
+                  className="bg-[#a10000] text-white"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{user?.name || 'Người dùng'}</p>
+                  <p className="text-sm text-gray-500 truncate">{user?.email}</p>
+                </div>
+              </div>
+            </Card>
           </div>
-          <nav className="flex flex-col gap-2">
-            {navItems.map(({ label, href, icon: Icon }) => (
+
+          {/* Dashboard Navigation */}
+          <nav className="flex flex-col gap-2 mb-8">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Quản lý tài khoản
+            </h3>
+            {navItems.map(({ label, href, icon: Icon, description }) => (
               <Link
                 key={href}
                 href={href}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-gray-100 transition',
+                  'flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 group',
                   pathname === href
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-gray-700',
+                    ? 'bg-[#a10000] text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span>{label}</span>
+                <Icon className={cn(
+                  "w-5 h-5 transition-colors",
+                  pathname === href ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+                )} />
+                <div className="flex-1">
+                  <span>{label}</span>
+                  <p className="text-xs opacity-75 mt-0.5">{description}</p>
+                </div>
               </Link>
             ))}
           </nav>
           
+          <Separator className="my-6" />
+          
           {/* Main Navigation */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
+          <nav className="flex flex-col gap-2 mb-8">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Điều hướng chính
             </h3>
-            <nav className="flex flex-col gap-2">
+            {mainNavItems.map(({ label, href, icon: Icon }) => (
               <Link
-                href="/"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-gray-100 transition text-gray-700"
+                key={href}
+                href={href}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-700 hover:bg-gray-100 hover:text-[#a10000] transition-all duration-200 group"
               >
-                <HomeIcon className="w-5 h-5" />
-                <span>Trang chủ</span>
+                <Icon className="w-5 h-5 text-gray-500 group-hover:text-[#a10000] transition-colors" />
+                <span>{label}</span>
               </Link>
-              <Link
-                href="/products"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-gray-100 transition text-gray-700"
-              >
-                <Box className="w-5 h-5" />
-                <span>Sản phẩm</span>
-              </Link>
-              <Link
-                href="/about"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-gray-100 transition text-gray-700"
-              >
-                <Info className="w-5 h-5" />
-                <span>Giới thiệu</span>
-              </Link>
-              <Link
-                href="/contact"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-gray-100 transition text-gray-700"
-              >
-                <Mail className="w-5 h-5" />
-                <span>Liên hệ</span>
-              </Link>
-              <Link
-                href="/guest-orders"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-gray-100 transition text-gray-700"
-              >
-                <Package className="w-5 h-5" />
-                <span>Tra đơn</span>
-              </Link>
-            </nav>
+            ))}
+          </nav>
+
+          {/* Logout */}
+          <div className="mt-auto">
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+            >
+              <LogOut className="w-5 h-5" />
+              Đăng xuất
+            </Button>
           </div>
         </aside>
-        {/* Mobile bottom navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t shadow flex justify-around items-center h-16 md:hidden">
-          {navItems.map(({ label, href, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'flex flex-col items-center justify-center flex-1 h-full text-xs font-medium transition',
-                pathname === href
-                  ? 'text-primary'
-                  : 'text-gray-600 hover:text-primary',
-              )}
-            >
-              <Icon className="w-5 h-5 mb-1" />
-              {label}
-            </Link>
-          ))}
+
+        {/* Mobile Navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg lg:hidden">
+          <div className="flex justify-around items-center h-16 px-2">
+            {navItems.slice(0, 4).map(({ label, href, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  'flex flex-col items-center justify-center flex-1 h-full text-xs font-medium transition-colors',
+                  pathname === href
+                    ? 'text-[#a10000]'
+                    : 'text-gray-600 hover:text-[#a10000]'
+                )}
+              >
+                <Icon className="w-5 h-5 mb-1" />
+                <span className="text-xs">{label}</span>
+              </Link>
+            ))}
+          </div>
         </nav>
-        {/* Main content */}
-        <main className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full pb-20 md:pb-0">
-          {children}
+
+        {/* Main Content */}
+        <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full pb-20 lg:pb-8">
+          <div className="max-w-6xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>
