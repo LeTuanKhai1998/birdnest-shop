@@ -16,22 +16,22 @@ import React from 'react';
 import { Avatar } from '@/components/ui/avatar';
 
 const profileSchema = z.object({
-  name: z.string().min(2, 'Name is too short'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().min(8, 'Phone is too short'),
-  bio: z.string().max(120, 'Bio must be 120 characters or less').optional(),
+  name: z.string().min(2, 'Tên quá ngắn'),
+  email: z.string().email('Địa chỉ email không hợp lệ'),
+  phone: z.string().min(8, 'Số điện thoại quá ngắn'),
+  bio: z.string().max(120, 'Tiểu sử phải ít hơn 120 ký tự').optional(),
 });
 
 type ProfileForm = z.infer<typeof profileSchema>;
 
 const passwordSchema = z
   .object({
-    currentPassword: z.string().min(6, 'Required'),
-    newPassword: z.string().min(6, 'At least 6 characters'),
+    currentPassword: z.string().min(6, 'Bắt buộc'),
+    newPassword: z.string().min(6, 'Ít nhất 6 ký tự'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'Mật khẩu không khớp',
     path: ['confirmPassword'],
   });
 
@@ -77,7 +77,7 @@ export default function ProfilePage() {
   
   const { data: user, isLoading } = useSWR(
     (session?.user || localUser) ? apiEndpoint : null,
-    async (url) => {
+    async (url: string) => {
       if (isAdminUser) {
         // Use JWT token for backend API
         const token = localStorage.getItem('auth-token');
@@ -202,7 +202,7 @@ export default function ProfilePage() {
       if (e instanceof Error) {
         toast.error(e.message);
       } else {
-        toast.error('An unknown error occurred');
+        toast.error('Đã xảy ra lỗi không xác định');
       }
     } finally {
       setPwSaving(false);
@@ -226,7 +226,7 @@ export default function ProfilePage() {
       {/* Sticky header for mobile */}
       <div className="sticky top-0 z-10 bg-gray-50 pb-2 pt-2 md:pt-0">
         <h2 className="text-2xl font-bold mb-2 md:mb-4 text-center md:text-left">
-          Your Profile
+          Hồ sơ của bạn
         </h2>
       </div>
       <LoadingOrEmpty loading={isLoading}>
@@ -250,7 +250,7 @@ export default function ProfilePage() {
             />
             <button
               className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 hover:bg-gray-100 transition flex items-center"
-              title="Edit avatar (coming soon)"
+              title="Chỉnh sửa avatar (sắp ra mắt)"
               type="button"
               tabIndex={-1}
             >
@@ -266,7 +266,7 @@ export default function ProfilePage() {
           )}
           {user?.createdAt && (
             <div className="text-xs text-gray-400 mt-1">
-              Account created: {new Date(user.createdAt).toLocaleDateString()}
+              Tài khoản được tạo: {new Date(user.createdAt).toLocaleDateString()}
             </div>
           )}
         </motion.div>
@@ -284,7 +284,7 @@ export default function ProfilePage() {
             } as any)}
           >
             <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
-              <span>Personal Information</span>
+              <span>Thông tin cá nhân</span>
             </h3>
             <form
               onSubmit={handleSubmit(onSubmitProfile)}
@@ -295,12 +295,12 @@ export default function ProfilePage() {
                   className="block text-sm font-medium mb-1"
                   htmlFor="name"
                 >
-                  Name
+                  Tên
                 </label>
                 <Input
                   id="name"
                   {...register('name')}
-                  placeholder="Your name"
+                  placeholder="Tên của bạn"
                   disabled={saving}
                   autoComplete="name"
                 />
@@ -335,12 +335,12 @@ export default function ProfilePage() {
                   className="block text-sm font-medium mb-1"
                   htmlFor="phone"
                 >
-                  Phone
+                  Số điện thoại
                 </label>
                 <Input
                   id="phone"
                   {...register('phone')}
-                  placeholder="Phone number"
+                  placeholder="Số điện thoại"
                   disabled={saving}
                   autoComplete="tel"
                 />
@@ -352,12 +352,12 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="bio">
-                  Bio / Tagline
+                  Tiểu sử / Khẩu hiệu
                 </label>
                 <Input
                   id="bio"
                   {...register('bio')}
-                  placeholder="Short bio or tagline (optional)"
+                  placeholder="Tiểu sử ngắn hoặc khẩu hiệu (tùy chọn)"
                   disabled={saving}
                   maxLength={120}
                 />
@@ -368,7 +368,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <Button type="submit" disabled={saving} className="w-full mt-2">
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
               </Button>
             </form>
           </motion.div>
@@ -387,7 +387,7 @@ export default function ProfilePage() {
             } as any)}
           >
             <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
-              <span>Change Password</span>
+              <span>Đổi mật khẩu</span>
             </h3>
             <form
               onSubmit={handlePwSubmit(onSubmitPassword)}
@@ -398,14 +398,14 @@ export default function ProfilePage() {
                   className="block text-sm font-medium mb-1"
                   htmlFor="currentPassword"
                 >
-                  Current Password
+                  Mật khẩu hiện tại
                 </label>
                 <div className="relative">
                   <Input
                     type={showCurrentPw ? 'text' : 'password'}
                     id="currentPassword"
                     {...pwRegister('currentPassword')}
-                    placeholder="Current password"
+                    placeholder="Mật khẩu hiện tại"
                     disabled={pwSaving}
                     autoComplete="current-password"
                   />
@@ -433,14 +433,14 @@ export default function ProfilePage() {
                   className="block text-sm font-medium mb-1"
                   htmlFor="newPassword"
                 >
-                  New Password
+                  Mật khẩu mới
                 </label>
                 <div className="relative">
                   <Input
                     type={showNewPw ? 'text' : 'password'}
                     id="newPassword"
                     {...pwRegister('newPassword')}
-                    placeholder="New password"
+                    placeholder="Mật khẩu mới"
                     disabled={pwSaving}
                     autoComplete="new-password"
                   />
@@ -479,12 +479,12 @@ export default function ProfilePage() {
                       {pwStrength === 0
                         ? ''
                         : pwStrength === 1
-                          ? 'Weak'
+                          ? 'Yếu'
                           : pwStrength === 2
-                            ? 'Fair'
+                            ? 'Trung bình'
                             : pwStrength === 3
-                              ? 'Good'
-                              : 'Strong'}
+                              ? 'Tốt'
+                              : 'Mạnh'}
                     </span>
                   </div>
                 )}
@@ -499,14 +499,14 @@ export default function ProfilePage() {
                   className="block text-sm font-medium mb-1"
                   htmlFor="confirmPassword"
                 >
-                  Confirm New Password
+                  Xác nhận mật khẩu mới
                 </label>
                 <div className="relative">
                   <Input
                     type={showConfirmPw ? 'text' : 'password'}
                     id="confirmPassword"
                     {...pwRegister('confirmPassword')}
-                    placeholder="Confirm new password"
+                    placeholder="Xác nhận mật khẩu mới"
                     disabled={pwSaving}
                     autoComplete="new-password"
                   />
@@ -530,7 +530,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <Button type="submit" disabled={pwSaving} className="w-full mt-2">
-                {pwSaving ? 'Saving...' : 'Change Password'}
+                {pwSaving ? 'Đang lưu...' : 'Đổi mật khẩu'}
               </Button>
             </form>
           </motion.div>

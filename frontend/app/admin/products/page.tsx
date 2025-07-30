@@ -24,7 +24,8 @@ import {
   Star,
   DollarSign,
   Hash,
-  Tag
+  Tag,
+  X
 } from 'lucide-react';
 import { useRef } from 'react';
 import { AdminTable } from '@/components/ui/AdminTable';
@@ -62,21 +63,21 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Skeleton } from '@/components/ui/skeleton';
 
 const productSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  description: z.string().min(5, 'Description is required'),
+  name: z.string().min(2, 'Tên sản phẩm là bắt buộc'),
+  description: z.string().min(5, 'Mô tả là bắt buộc'),
   price: z
     .string()
-    .min(1, 'Price is required')
+    .min(1, 'Giá là bắt buộc')
     .refine((val) => !isNaN(Number(val)) && Number(val) >= 1000, {
-      message: 'Price must be a number and at least 1,000 VND',
+      message: 'Giá phải là số và ít nhất 1,000 VND',
     }),
   stock: z
     .string()
-    .min(1, 'Stock is required')
+    .min(1, 'Số lượng tồn kho là bắt buộc')
     .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
-      message: 'Stock must be a non-negative number',
+      message: 'Số lượng tồn kho phải là số không âm',
     }),
-  category: z.string().min(2, 'Category is required'),
+  category: z.string().min(2, 'Danh mục là bắt buộc'),
 });
 
 const filterSchema = z.object({
@@ -370,9 +371,9 @@ export default function AdminProductsPage() {
                   <Package className="w-8 h-8 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
+                  <h1 className="text-3xl font-bold text-gray-900">Quản lý sản phẩm</h1>
                   <p className="text-gray-600 mt-1">
-                    Manage your product catalog, inventory, and pricing
+                    Quản lý danh mục sản phẩm, kho hàng và giá cả
                   </p>
                 </div>
               </div>
@@ -383,11 +384,11 @@ export default function AdminProductsPage() {
                   disabled={refreshing}
                 >
                   <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                  Refresh
+                  Làm mới
                 </Button>
                 <Button onClick={() => setDrawerOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Product
+                  Thêm sản phẩm
                 </Button>
               </div>
             </div>
@@ -400,9 +401,9 @@ export default function AdminProductsPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Products</p>
+                      <p className="text-sm font-medium text-gray-600">Tổng sản phẩm</p>
                       <p className="text-2xl font-bold text-gray-900">{metrics.totalProducts}</p>
-                      <p className="text-sm text-gray-500 mt-2">In catalog</p>
+                      <p className="text-sm text-gray-500 mt-2">Trong danh mục</p>
                     </div>
                     <div className="p-3 bg-blue-100 rounded-lg">
                       <Package className="w-6 h-6 text-blue-600" />
@@ -415,9 +416,9 @@ export default function AdminProductsPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Low Stock</p>
+                      <p className="text-sm font-medium text-gray-600">Tồn kho thấp</p>
                       <p className="text-2xl font-bold text-gray-900">{metrics.lowStock}</p>
-                      <p className="text-sm text-gray-500 mt-2">Below 10 units</p>
+                      <p className="text-sm text-gray-500 mt-2">Dưới 10 đơn vị</p>
                     </div>
                     <div className="p-3 bg-orange-100 rounded-lg">
                       <AlertCircle className="w-6 h-6 text-orange-600" />
@@ -430,9 +431,9 @@ export default function AdminProductsPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Out of Stock</p>
+                      <p className="text-sm font-medium text-gray-600">Hết hàng</p>
                       <p className="text-2xl font-bold text-gray-900">{metrics.outOfStock}</p>
-                      <p className="text-sm text-gray-500 mt-2">Zero inventory</p>
+                      <p className="text-sm text-gray-500 mt-2">Không còn tồn kho</p>
                     </div>
                     <div className="p-3 bg-red-100 rounded-lg">
                       <Hash className="w-6 h-6 text-red-600" />
@@ -445,7 +446,7 @@ export default function AdminProductsPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Value</p>
+                      <p className="text-sm font-medium text-gray-600">Tổng giá trị</p>
                       <p className="text-2xl font-bold text-gray-900">
                         {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(metrics.totalValue)}
                       </p>
@@ -590,30 +591,13 @@ export default function AdminProductsPage() {
                              />
                            </td>
                           <td className="p-4 text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEdit(product)}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => window.open(`/products/${product.id}`, '_blank')}>
-                                  <Eye className="w-4 h-4 mr-2" />
-                                  View
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleDeleteClick(product.id)}
-                                  className="text-red-600"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(product)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -644,38 +628,43 @@ export default function AdminProductsPage() {
       </Drawer>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Product</DialogTitle>
-            <DialogDescription>
+      {deleteId && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Delete Product</h2>
+              <Button variant="ghost" size="sm" onClick={() => setDeleteId(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
               Are you sure you want to delete this product? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelDelete}>
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleConfirmDelete}
-              disabled={deleting}
-            >
-              {deleting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={handleCancelDelete}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Toast Notifications */}
       <Toaster />

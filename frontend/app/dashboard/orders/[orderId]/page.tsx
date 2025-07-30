@@ -39,7 +39,7 @@ export default function OrderDetailPage({
   const [loading, setLoading] = useState(true);
   
   // Check for localStorage authentication (admin users)
-  const [localUser, setLocalUser] = useState<any>(null);
+  const [localUser, setLocalUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean } | null>(null);
   
   useEffect(() => {
     const token = localStorage.getItem('auth-token');
@@ -91,7 +91,7 @@ export default function OrderDetailPage({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-gray-500">Loading order...</div>
+        <div className="text-gray-500">Đang tải đơn hàng...</div>
       </div>
     );
   }
@@ -99,9 +99,9 @@ export default function OrderDetailPage({
   if (!order) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-red-500 font-semibold">Order not found.</div>
+        <div className="text-red-500 font-semibold">Không tìm thấy đơn hàng.</div>
         <Link href="/dashboard/orders">
-          <Button className="mt-4">Back to Orders</Button>
+          <Button className="mt-4">Quay lại đơn hàng</Button>
         </Link>
       </div>
     );
@@ -111,14 +111,14 @@ export default function OrderDetailPage({
     <div className="max-w-2xl mx-auto py-8 px-2">
       <Link href="/dashboard/orders">
         <Button variant="ghost" className="mb-4">
-          ← Back to Orders
+          ← Quay lại đơn hàng
         </Button>
       </Link>
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="font-mono text-xs text-gray-500">
-              Order ID: {order.id}
+              Mã đơn hàng: {order.id}
             </div>
             <div className="text-sm text-gray-400">
               {formatDate(order.createdAt)}
@@ -161,7 +161,7 @@ export default function OrderDetailPage({
           ))}
         </div>
         <div className="flex items-center justify-between mt-6">
-          <div className="font-medium text-gray-600">Total</div>
+          <div className="font-medium text-gray-600">Tổng cộng</div>
           <div className="font-bold text-xl text-red-700">
             {formatVND(Number(order.total))}
           </div>

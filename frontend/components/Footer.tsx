@@ -2,38 +2,10 @@
 import { Instagram, Phone, Mail, MapPin, Globe, Facebook, ShoppingBag, Music } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useSetting } from '@/lib/settings-context';
 
 const companyInfoDescription = '';
-const companyInfoDetails = [
-  {
-    label: 'Address:',
-    value: '45 Trần Hưng Đạo, Đảo, Rạch Giá, Kiên Giang',
-    className: 'text-[#e6b17a]',
-    icon: <MapPin className="w-4 h-4 inline mr-1" />,
-    href: undefined,
-  },
-  {
-    label: 'Hotline:',
-    value: '0919.844.822 - 0945.844.822',
-    className: 'text-[#e6b17a] font-semibold',
-    icon: <Phone className="w-4 h-4 inline mr-1" />,
-    href: 'tel:0919844822',
-  },
-  {
-    label: 'Email:',
-    value: 'yensaokimsang.kg@gmail.com',
-    className: 'text-[#e6b17a] font-semibold',
-    icon: <Mail className="w-4 h-4 inline mr-1" />,
-    href: 'mailto:yensaokimsang.kg@gmail.com',
-  },
-  {
-    label: 'Website:',
-    value: 'https://yensaokimsang.vn',
-    className: 'text-[#e6b17a] font-semibold',
-    icon: <Globe className="w-4 h-4 inline mr-1" />,
-    href: 'https://yensaokimsang.vn',
-  },
-];
+// Company info details will be populated dynamically from settings
 
 const policies = [
   { label: 'Chính sách quy định chung', href: '/policy/general' },
@@ -93,6 +65,13 @@ const socialLinks = [
 export default function Footer() {
   const [open, setOpen] = useState([false, false, false, false]);
   const [showFB] = useState(false);
+  
+  // Get settings
+  const storeName = useSetting('storeName') || 'Birdnest Shop';
+  const storeEmail = useSetting('storeEmail') || 'admin@birdnest.com';
+  const storePhone = useSetting('storePhone') || '0919.844.822';
+  const address = useSetting('address') || '45 Trần Hưng Đạo, Đảo, Rạch Giá, Kiên Giang';
+  const country = useSetting('country') || 'Vietnam';
 
   useEffect(() => {
     if (
@@ -130,13 +109,13 @@ export default function Footer() {
               onClick={() => toggleSection(0)}
               className="flex items-center justify-between w-full md:hidden text-left"
             >
-              <h3 className="font-bold text-lg sm:text-xl">YẾN SÀO KIM SANG</h3>
+              <h3 className="font-bold text-lg sm:text-xl">{storeName.toUpperCase()}</h3>
               <span className="text-2xl transition-transform duration-200 md:hidden">
                 {open[0] ? '−' : '+'}
               </span>
             </button>
             <h3 className="font-bold text-lg sm:text-xl hidden md:block">
-              YẾN SÀO KIM SANG
+              {storeName.toUpperCase()}
             </h3>
 
             <div
@@ -145,34 +124,83 @@ export default function Footer() {
               <p className="text-sm sm:text-base text-gray-200 leading-relaxed">
                 {companyInfoDescription}
               </p>
-              {companyInfoDetails.map((item, i) =>
-                item.value ? (
-                  <div key={i} className="flex items-start space-x-2">
-                    <span className="text-[#e6b17a] mt-0.5">{item.icon}</span>
-                    <div className="flex-1">
-                      <span className="font-semibold text-sm sm:text-base">
-                        {item.label}
-                      </span>
-                      <span
-                        className={`${item.className} text-sm sm:text-base block sm:inline sm:ml-1`}
+              
+              {/* Address */}
+              <div className="flex items-start space-x-2">
+                <span className="text-[#e6b17a] mt-0.5">
+                  <MapPin className="w-4 h-4 inline mr-1" />
+                </span>
+                <div className="flex-1">
+                  <span className="font-semibold text-sm sm:text-base">
+                    Address:
+                  </span>
+                  <span className="text-[#e6b17a] text-sm sm:text-base block sm:inline sm:ml-1">
+                    {address}
+                  </span>
+                </div>
+              </div>
+
+              {/* Phone */}
+              {storePhone && (
+                <div className="flex items-start space-x-2">
+                  <span className="text-[#e6b17a] mt-0.5">
+                    <Phone className="w-4 h-4 inline mr-1" />
+                  </span>
+                  <div className="flex-1">
+                    <span className="font-semibold text-sm sm:text-base">
+                      Hotline:
+                    </span>
+                    <span className="text-[#e6b17a] font-semibold text-sm sm:text-base block sm:inline sm:ml-1">
+                      <a
+                        href={`tel:${storePhone.replace(/\s+/g, '')}`}
+                        className="hover:underline transition-colors duration-200"
                       >
-                        {item.href ? (
-                          <a
-                            href={item.href}
-                            className="hover:underline transition-colors duration-200"
-                          >
-                            {item.value}
-                          </a>
-                        ) : (
-                          item.value
-                        )}
-                      </span>
-                    </div>
+                        {storePhone}
+                      </a>
+                    </span>
                   </div>
-                ) : (
-                  <div key={i} className="h-2"></div>
-                ),
+                </div>
               )}
+
+              {/* Email */}
+              <div className="flex items-start space-x-2">
+                <span className="text-[#e6b17a] mt-0.5">
+                  <Mail className="w-4 h-4 inline mr-1" />
+                </span>
+                <div className="flex-1">
+                  <span className="font-semibold text-sm sm:text-base">
+                    Email:
+                  </span>
+                  <span className="text-[#e6b17a] font-semibold text-sm sm:text-base block sm:inline sm:ml-1">
+                    <a
+                      href={`mailto:${storeEmail}`}
+                      className="hover:underline transition-colors duration-200"
+                    >
+                      {storeEmail}
+                    </a>
+                  </span>
+                </div>
+              </div>
+
+              {/* Website */}
+              <div className="flex items-start space-x-2">
+                <span className="text-[#e6b17a] mt-0.5">
+                  <Globe className="w-4 h-4 inline mr-1" />
+                </span>
+                <div className="flex-1">
+                  <span className="font-semibold text-sm sm:text-base">
+                    Website:
+                  </span>
+                  <span className="text-[#e6b17a] font-semibold text-sm sm:text-base block sm:inline sm:ml-1">
+                    <a
+                      href="https://birdnest-shop.com"
+                      className="hover:underline transition-colors duration-200"
+                    >
+                      birdnest-shop.com
+                    </a>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -290,7 +318,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
             <p className="text-xs sm:text-sm text-gray-300 text-center sm:text-left">
-              © 2025 YẾN SÀO KIM SANG. All rights reserved.
+              © 2025 {storeName.toUpperCase()}. All rights reserved.
             </p>
             <div className="flex items-center space-x-4 text-xs sm:text-sm text-gray-300">
               <span>Made with ❤️ in Vietnam</span>

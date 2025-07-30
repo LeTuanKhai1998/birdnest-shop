@@ -74,7 +74,7 @@ export function useWishlist() {
   const { data: session } = useSession();
   
   // Check for localStorage authentication (admin users)
-  const [localUser, setLocalUser] = useState<any>(null);
+  const [localUser, setLocalUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean } | null>(null);
   
   useEffect(() => {
     const token = localStorage.getItem('auth-token');

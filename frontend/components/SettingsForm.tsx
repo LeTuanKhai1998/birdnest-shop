@@ -24,11 +24,11 @@ import { SettingsData } from '@/lib/types';
 import React from 'react';
 
 const settingsSchema = z.object({
-  storeName: z.string().min(2, 'Store name must be at least 2 characters'),
-  storeEmail: z.string().email('Invalid email address'),
+  storeName: z.string().min(2, 'Tên cửa hàng phải có ít nhất 2 ký tự'),
+  storeEmail: z.string().email('Địa chỉ email không hợp lệ'),
   storePhone: z.string().optional(),
   defaultLanguage: z.enum(['en', 'vi']),
-  currency: z.string().min(1, 'Currency is required'),
+  currency: z.string().min(1, 'Tiền tệ là bắt buộc'),
   taxPercent: z.number().min(0).max(100),
   freeShippingThreshold: z.number().min(0),
   enableStripe: z.boolean(),
@@ -96,14 +96,14 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
             <Settings className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold">Store Configuration</h2>
-            <p className="text-sm text-gray-600">Manage your store settings and preferences</p>
+            <h2 className="text-lg font-semibold">Cấu hình cửa hàng</h2>
+            <p className="text-sm text-gray-600">Quản lý cài đặt và tùy chọn cửa hàng</p>
           </div>
         </div>
         {hasChanges && (
           <Badge variant="secondary" className="text-orange-600 border-orange-200">
             <AlertCircle className="w-3 h-3 mr-1" />
-            Unsaved Changes
+            Thay đổi chưa lưu
           </Badge>
         )}
       </div>
@@ -118,11 +118,11 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
               </div>
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  General Settings
-                  <Badge variant="secondary" className="text-xs">Required</Badge>
+                  Cài đặt chung
+                  <Badge variant="secondary" className="text-xs">Bắt buộc</Badge>
                 </CardTitle>
                 <CardDescription>
-                  Basic store information and configuration
+                  Thông tin và cấu hình cơ bản của cửa hàng
                 </CardDescription>
               </div>
             </div>
@@ -131,7 +131,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="storeName" className="flex items-center gap-2">
-                  Store Name
+                  Tên cửa hàng
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -149,7 +149,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
               </div>
               <div className="space-y-2">
                 <Label htmlFor="storeEmail" className="flex items-center gap-2">
-                  Store Email
+                  Email cửa hàng
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -169,7 +169,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="storePhone">Store Phone</Label>
+                <Label htmlFor="storePhone">Số điện thoại cửa hàng</Label>
                 <Input
                   id="storePhone"
                   {...register('storePhone')}
@@ -177,7 +177,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="defaultLanguage">Default Language</Label>
+                <Label htmlFor="defaultLanguage">Ngôn ngữ mặc định</Label>
                 <select
                   id="defaultLanguage"
                   {...register('defaultLanguage')}
@@ -199,9 +199,9 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 <MapPin className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <CardTitle>Location & Address</CardTitle>
+                <CardTitle>Vị trí & Địa chỉ</CardTitle>
                 <CardDescription>
-                  Store location and contact information
+                  Vị trí cửa hàng và thông tin liên hệ
                 </CardDescription>
               </div>
             </div>
@@ -209,7 +209,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
+                <Label htmlFor="address">Địa chỉ</Label>
                 <Input
                   id="address"
                   {...register('address')}
@@ -217,7 +217,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="country">Quốc gia</Label>
                 <Input
                   id="country"
                   {...register('country')}
@@ -236,9 +236,9 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 <CreditCard className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <CardTitle>Order & Checkout</CardTitle>
+                <CardTitle>Đơn hàng & Thanh toán</CardTitle>
                 <CardDescription>
-                  Configure order processing and payment settings
+                  Cấu hình xử lý đơn hàng và cài đặt thanh toán
                 </CardDescription>
               </div>
             </div>
@@ -247,7 +247,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="currency" className="flex items-center gap-2">
-                  Currency
+                  Tiền tệ
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -264,7 +264,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="taxPercent">Tax Percentage (%)</Label>
+                <Label htmlFor="taxPercent">Phần trăm thuế (%)</Label>
                 <Input
                   id="taxPercent"
                   type="number"
@@ -281,7 +281,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="freeShippingThreshold">Free Shipping Threshold</Label>
+                <Label htmlFor="freeShippingThreshold">Ngưỡng miễn phí vận chuyển</Label>
                 <Input
                   id="freeShippingThreshold"
                   type="number"
@@ -302,7 +302,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
             <div className="border-t pt-6">
               <h4 className="font-medium flex items-center gap-2 mb-4">
                 <CreditCard className="w-4 h-4" />
-                Payment Methods
+                Phương thức thanh toán
               </h4>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
@@ -311,8 +311,8 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                       <span className="text-xs font-bold text-blue-600">S</span>
                     </div>
                     <div>
-                      <Label htmlFor="enableStripe" className="font-medium">Enable Stripe</Label>
-                      <p className="text-sm text-gray-600">International credit card payments</p>
+                      <Label htmlFor="enableStripe" className="font-medium">Bật Stripe</Label>
+                      <p className="text-sm text-gray-600">Thanh toán thẻ tín dụng quốc tế</p>
                     </div>
                   </div>
                   <input
@@ -329,8 +329,8 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                       <span className="text-xs font-bold text-pink-600">M</span>
                     </div>
                     <div>
-                      <Label htmlFor="enableMomo" className="font-medium">Enable MoMo</Label>
-                      <p className="text-sm text-gray-600">Vietnamese mobile payment</p>
+                      <Label htmlFor="enableMomo" className="font-medium">Bật MoMo</Label>
+                      <p className="text-sm text-gray-600">Thanh toán di động Việt Nam</p>
                     </div>
                   </div>
                   <input
@@ -347,8 +347,8 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                       <span className="text-xs font-bold text-green-600">C</span>
                     </div>
                     <div>
-                      <Label htmlFor="enableCOD" className="font-medium">Enable Cash on Delivery</Label>
-                      <p className="text-sm text-gray-600">Pay when you receive</p>
+                      <Label htmlFor="enableCOD" className="font-medium">Bật thanh toán khi nhận hàng</Label>
+                      <p className="text-sm text-gray-600">Thanh toán khi nhận hàng</p>
                     </div>
                   </div>
                   <input
@@ -372,16 +372,16 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 <Shield className="w-5 h-5 text-orange-600" />
               </div>
               <div>
-                <CardTitle>System Settings</CardTitle>
+                <CardTitle>Cài đặt hệ thống</CardTitle>
                 <CardDescription>
-                  Advanced system configuration
+                  Cấu hình hệ thống nâng cao
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="logoUrl">Logo URL</Label>
+                              <Label htmlFor="logoUrl">URL Logo</Label>
               <Input
                 id="logoUrl"
                 {...register('logoUrl')}
@@ -393,10 +393,10 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 <div className="w-10 h-6 bg-red-100 rounded flex items-center justify-center">
                   <Shield className="w-4 h-4 text-red-600" />
                 </div>
-                <div>
-                  <Label htmlFor="maintenanceMode" className="font-medium">Maintenance Mode</Label>
-                  <p className="text-sm text-gray-600">Temporarily disable the store</p>
-                </div>
+                                    <div>
+                      <Label htmlFor="maintenanceMode" className="font-medium">Chế độ bảo trì</Label>
+                      <p className="text-sm text-gray-600">Tạm thời vô hiệu hóa cửa hàng</p>
+                    </div>
               </div>
               <input
                 type="checkbox"
@@ -413,7 +413,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
         <div className="flex items-center justify-between pt-6 border-t">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Info className="w-4 h-4" />
-            {hasChanges ? 'You have unsaved changes' : 'All changes saved'}
+            {hasChanges ? 'Bạn có thay đổi chưa lưu' : 'Tất cả thay đổi đã được lưu'}
           </div>
           <div className="flex items-center gap-3">
             {hasChanges && (
@@ -423,7 +423,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 onClick={handleReset}
                 disabled={isSubmitting || isLoading}
               >
-                Reset Changes
+                Đặt lại thay đổi
               </Button>
             )}
             <Button
@@ -434,12 +434,12 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                  Saving...
+                  Đang lưu...
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Settings
+                  Lưu cài đặt
                 </>
               )}
             </Button>

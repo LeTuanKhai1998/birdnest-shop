@@ -98,10 +98,7 @@ export default function CartPage() {
                             href={`/products/${product.slug}`}
                             className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24"
                           >
-                            <AspectRatio
-                              ratio={1 / 1}
-                              className="rounded-lg bg-gray-50 border overflow-hidden"
-                            >
+                            <div className="relative w-full h-full rounded-lg bg-gray-50 border overflow-hidden">
                               <Image
                                 src={
                                   product.image ||
@@ -113,7 +110,7 @@ export default function CartPage() {
                                 className="object-cover"
                                 sizes="(max-width: 768px) 80px, 96px"
                               />
-                            </AspectRatio>
+                            </div>
                           </Link>
 
                           {/* Product Details */}
@@ -130,9 +127,9 @@ export default function CartPage() {
                                   <Badge variant="secondary" className="text-xs">
                                     {product.weight}g
                                   </Badge>
-                                  {product.category && (
-                                    <Badge variant="outline" className="text-xs">
-                                      {product.category.name}
+                                  {product.categoryId && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      Category
                                     </Badge>
                                   )}
                                 </div>

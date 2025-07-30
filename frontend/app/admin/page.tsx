@@ -65,10 +65,21 @@ import { Badge } from '@/components/ui/badge';
 import type { Product } from '@/lib/types';
 import Image from 'next/image';
 
+// Type for jsPDF with autoTable
+interface JsPDFWithAutoTable {
+  autoTable: (options: {
+    head: string[][];
+    body: string[][];
+    startY: number;
+    styles: { fontSize: number };
+    headStyles: { fillColor: number[] };
+  }) => void;
+}
+
 const FILTERS = [
-  { label: 'Daily', value: 'daily', icon: Calendar },
-  { label: 'Weekly', value: 'weekly', icon: BarChart2 },
-  { label: 'Monthly', value: 'monthly', icon: Activity },
+  { label: 'Hàng ngày', value: 'daily', icon: Calendar },
+  { label: 'Hàng tuần', value: 'weekly', icon: BarChart2 },
+  { label: 'Hàng tháng', value: 'monthly', icon: Activity },
 ];
 
 function groupOrders(orders: Order[], filter: string) {
@@ -120,7 +131,7 @@ async function exportOrdersPDF(data: Order[]) {
     format(parseISO(o.createdAt), 'yyyy-MM-dd HH:mm'),
   ]);
   
-  (doc as any).autoTable({
+  (doc as unknown as JsPDFWithAutoTable).autoTable({
     head: [['ID', 'Customer', 'Total', 'Status', 'Date']],
     body: tableData,
     startY: 20,
@@ -159,7 +170,7 @@ async function exportLowStockPDF(data: Product[]) {
     p.category.name,
   ]);
   
-  (doc as any).autoTable({
+  (doc as unknown as JsPDFWithAutoTable).autoTable({
     head: [['Name', 'Stock', 'Price', 'Category']],
     body: tableData,
     startY: 20,
@@ -214,7 +225,7 @@ async function exportTopProductsPDF(
     p.stock.toString(),
   ]);
   
-  (doc as any).autoTable({
+  (doc as unknown as JsPDFWithAutoTable).autoTable({
     head: [['Name', 'Units Sold', 'Revenue', 'Stock']],
     body: tableData,
     startY: 20,
@@ -300,10 +311,10 @@ export default function AdminDashboardPage() {
   // Status distribution
   const statusDistribution = useMemo(() => {
     if (!orders) return [];
-    const statusCount = orders.reduce((acc: any, order: Order) => {
+    const statusCount = orders.reduce((acc: Record<string, number>, order: Order) => {
       acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
     return Object.entries(statusCount).map(([status, count]) => ({ status, count }));
   }, [orders]);
 
@@ -427,14 +438,14 @@ export default function AdminDashboardPage() {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-red-600">Error Loading Dashboard</h3>
+              <h3 className="text-lg font-semibold mb-2 text-red-600">Lỗi tải Dashboard</h3>
               <p className="text-gray-600 mb-4">
-                {hasError ? 'Failed to load dashboard data from server' : 'No data available'}
+                {hasError ? 'Không thể tải dữ liệu dashboard từ máy chủ' : 'Không có dữ liệu khả dụng'}
               </p>
               <div className="space-y-2">
                 <Button onClick={() => window.location.reload()} className="w-full">
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Retry
+                  Thử lại
                 </Button>
                 <Button 
                   variant="outline" 
@@ -442,7 +453,7 @@ export default function AdminDashboardPage() {
                   className="w-full"
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  Check Authentication
+                  Kiểm tra xác thực
                 </Button>
               </div>
             </div>
@@ -464,16 +475,16 @@ export default function AdminDashboardPage() {
                   <BarChart2 className="w-8 h-8 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                  <h1 className="text-3xl font-bold text-gray-900">Bảng điều khiển</h1>
                   <p className="text-gray-600 mt-1">
-                    Overview of your store performance and analytics
+                    Tổng quan hiệu suất và phân tích cửa hàng của bạn
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Badge variant="secondary" className="bg-green-100 text-green-800">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
-                  Live Data
+                  Dữ liệu trực tiếp
                 </Badge>
               </div>
             </div>
@@ -485,7 +496,7 @@ export default function AdminDashboardPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                    <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
                     <p className="text-2xl font-bold text-gray-900">{formatVND(metrics.totalRevenue)}</p>
                     <div className="flex items-center mt-2">
                       {metrics.revenueGrowth > 0 ? (
@@ -496,7 +507,7 @@ export default function AdminDashboardPage() {
                       <span className={`text-sm ${metrics.revenueGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {Math.abs(metrics.revenueGrowth).toFixed(1)}%
                       </span>
-                      <span className="text-sm text-gray-500 ml-1">vs last period</span>
+                      <span className="text-sm text-gray-500 ml-1">so với kỳ trước</span>
                     </div>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-lg">
@@ -510,9 +521,9 @@ export default function AdminDashboardPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                    <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
                     <p className="text-2xl font-bold text-gray-900">{metrics.totalOrders}</p>
-                    <p className="text-sm text-gray-500 mt-2">All time orders</p>
+                    <p className="text-sm text-gray-500 mt-2">Tất cả đơn hàng</p>
                   </div>
                   <div className="p-3 bg-green-100 rounded-lg">
                     <ShoppingBag className="w-6 h-6 text-green-600" />
@@ -525,9 +536,9 @@ export default function AdminDashboardPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Customers</p>
+                    <p className="text-sm font-medium text-gray-600">Tổng khách hàng</p>
                     <p className="text-2xl font-bold text-gray-900">{metrics.totalCustomers}</p>
-                    <p className="text-sm text-gray-500 mt-2">Registered users</p>
+                    <p className="text-sm text-gray-500 mt-2">Người dùng đã đăng ký</p>
                   </div>
                   <div className="p-3 bg-purple-100 rounded-lg">
                     <Users className="w-6 h-6 text-purple-600" />
@@ -540,9 +551,9 @@ export default function AdminDashboardPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
+                    <p className="text-sm font-medium text-gray-600">Giá trị đơn hàng trung bình</p>
                     <p className="text-2xl font-bold text-gray-900">{formatVND(metrics.avgOrderValue)}</p>
-                    <p className="text-sm text-gray-500 mt-2">Per order</p>
+                    <p className="text-sm text-gray-500 mt-2">Mỗi đơn hàng</p>
                   </div>
                   <div className="p-3 bg-orange-100 rounded-lg">
                     <Target className="w-6 h-6 text-orange-600" />
@@ -559,8 +570,8 @@ export default function AdminDashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Revenue Trend</CardTitle>
-                    <CardDescription>Revenue over time</CardDescription>
+                    <CardTitle>Xu hướng doanh thu</CardTitle>
+                    <CardDescription>Doanh thu theo thời gian</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
                     {FILTERS.map((filter) => {
@@ -635,24 +646,10 @@ export default function AdminDashboardPage() {
                     <CardTitle>Recent Orders</CardTitle>
                     <CardDescription>Latest order activity</CardDescription>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Export
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={handleExportCSV} disabled={isExporting}>
-                        <FileText className="w-4 h-4 mr-2" />
-                        Export CSV
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleExportPDF} disabled={isExporting}>
-                        <FileText className="w-4 h-4 mr-2" />
-                        Export PDF
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={isExporting}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export CSV
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>

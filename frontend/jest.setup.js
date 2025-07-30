@@ -56,4 +56,19 @@ Object.defineProperty(window, 'localStorage', {
 })
 
 // Mock fetch
-global.fetch = jest.fn() 
+global.fetch = jest.fn()
+
+// Mock framer-motion
+jest.mock('framer-motion', () => {
+  const React = require('react');
+  return {
+    motion: {
+      div: React.forwardRef((props, ref) => React.createElement('div', { ...props, ref })),
+      h1: React.forwardRef((props, ref) => React.createElement('h1', { ...props, ref })),
+      p: React.forwardRef((props, ref) => React.createElement('p', { ...props, ref })),
+      span: React.forwardRef((props, ref) => React.createElement('span', { ...props, ref })),
+    },
+    useInView: () => true,
+    useRef: () => ({ current: null }),
+  };
+}) 

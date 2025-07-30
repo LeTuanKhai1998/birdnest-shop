@@ -8,6 +8,7 @@ import Link from 'next/link';
 import ProductMeta from '@/components/ProductMeta';
 import { useWishlist } from '@/lib/wishlist-store';
 import { useSession } from 'next-auth/react';
+import { useCurrencyFormat } from '@/lib/currency-utils';
 
 export interface Product {
   id: string;
@@ -43,15 +44,10 @@ type ProductCardProps = { product: Product; onClick?: () => void };
 export const ProductCard = ({ product }: ProductCardProps) => {
   const { data: session } = useSession();
   const wishlist = useWishlist();
+  const { format } = useCurrencyFormat();
   
   // Only show wishlist functionality for authenticated users
   const isInWishlist = session?.user ? wishlist.isInWishlist(product.id) : false;
-  
-  const currencyFormatter = new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  });
   
   const avgRating =
     product.reviews && product.reviews.length > 0
@@ -170,7 +166,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               {/* Price */}
               <div className="mb-2 sm:mb-3 lg:mb-4">
                 <div className="text-base sm:text-lg lg:text-xl font-black text-[#a10000] mb-0.5 sm:mb-1">
-                  {currencyFormatter.format(product.price)}
+                  {format(product.price)}
                 </div>
                 <div className="text-xs text-gray-500">
                   Giá đã bao gồm VAT

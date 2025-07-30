@@ -1,17 +1,12 @@
 import { Metadata } from 'next'
 import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { 
   Award, 
-  Users, 
   Heart, 
   Shield, 
-  Star,
   MapPin,
-  Phone,
-  Mail,
   CheckCircle,
   Leaf,
   FlaskConical,

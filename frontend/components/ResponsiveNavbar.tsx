@@ -41,6 +41,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { Avatar as ShadcnAvatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { useSetting } from '@/lib/settings-context';
 
 export function ResponsiveNavbar() {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -57,6 +58,13 @@ export function ResponsiveNavbar() {
   
   // Use session data directly instead of fetching from backend
   const user = userFromSession;
+  
+  // Check if we're on dashboard or admin pages to hide left sidebar
+  const isDashboardPage = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
+  
+  // Get settings
+  const storeName = useSetting('storeName') || 'Birdnest Shop';
+  const logoUrl = useSetting('logoUrl') || '/images/logo.png';
 
   // Handle scroll effect for navbar
   useEffect(() => {
@@ -133,7 +141,7 @@ export function ResponsiveNavbar() {
       {/* Static Left Sidebar - Tablet and Desktop */}
       <div className={cn(
         "hidden md:block fixed left-0 top-0 h-full w-20 bg-white border-r border-gray-200 z-[60] transition-all duration-500 ease-in-out group",
-        isLeftMenuVisible ? "translate-x-0" : "-translate-x-full"
+        isLeftMenuVisible && !isDashboardPage ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Hover trigger area */}
         <div className="absolute -right-2 top-0 w-4 h-full bg-transparent group-hover:bg-transparent" />
@@ -197,8 +205,8 @@ export function ResponsiveNavbar() {
                 <Link href="/" className="flex items-center gap-2 group">
                   <div className="relative">
                     <Image
-                      src="/images/logo.png"
-                      alt="Yến Sào Kim Sang Logo"
+                      src={logoUrl}
+                      alt={`${storeName} Logo`}
                       width={40}
                       height={40}
                       className="w-8 h-8 lg:w-10 lg:h-10 border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105"
@@ -207,7 +215,7 @@ export function ResponsiveNavbar() {
                   </div>
                   {/* Hide shop name on small screens */}
                   <span className="hidden sm:block text-lg lg:text-xl font-bold text-red-700 tracking-wide group-hover:text-red-800 transition-colors">
-                    Yến Sào Kim Sang
+                    {storeName}
                   </span>
                 </Link>
               </div>
@@ -355,14 +363,14 @@ export function ResponsiveNavbar() {
                           onClick={() => setSheetOpen(false)}
                         >
                           <Image
-                            src="/images/logo.png"
-                            alt="Logo"
+                            src={logoUrl}
+                            alt={`${storeName} Logo`}
                             width={40}
                             height={40}
                             className="border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105"
                           />
                           <span className="font-bold text-xl text-red-700 group-hover:text-red-800 transition-colors">
-                            Yến Sào Kim Sang
+                            {storeName}
                           </span>
                         </Link>
                         <Button
@@ -565,14 +573,14 @@ export function ResponsiveNavbar() {
                 onClick={() => setDesktopSidebarOpen(false)}
               >
                 <Image
-                  src="/images/logo.png"
-                  alt="Logo"
+                  src={logoUrl}
+                  alt={`${storeName} Logo`}
                   width={40}
                   height={40}
                   className="border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105"
                 />
                 <span className="font-bold text-xl text-red-700 group-hover:text-red-800 transition-colors">
-                  Yến Sào Kim Sang
+                  {storeName}
                 </span>
               </Link>
               <Button
@@ -731,7 +739,7 @@ export function ResponsiveNavbar() {
                   onClick={() => setDesktopSidebarOpen(false)}
                 >
                   <Star className="w-5 h-5 text-yellow-500" />
-                  Refined Bird's Nest
+                  Refined Bird&apos;s Nest
                 </Link>
                 <Link
                   href="/products?category=raw"
@@ -739,7 +747,7 @@ export function ResponsiveNavbar() {
                   onClick={() => setDesktopSidebarOpen(false)}
                 >
                   <Package className="w-5 h-5 text-blue-500" />
-                  Raw Bird's Nest
+                  Raw Bird&apos;s Nest
                 </Link>
                 <Link
                   href="/contact"

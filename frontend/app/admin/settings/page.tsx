@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Settings, Save, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 import { SettingsForm } from '@/components/SettingsForm';
+import { SettingsReloadCountdown } from '@/components/SettingsReloadCountdown';
 import { apiService } from '@/lib/api';
 import { SettingsData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,7 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [showReloadCountdown, setShowReloadCountdown] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -46,16 +48,16 @@ export default function AdminSettingsPage() {
       const data = await apiService.getSettings();
       setSettings(data);
       toast({
-        title: "Settings loaded",
-        description: "Your store settings have been loaded successfully.",
+        title: "Tải cài đặt thành công",
+        description: "Cài đặt cửa hàng của bạn đã được tải thành công.",
         variant: "success",
       });
     } catch (err) {
       console.error('Error loading settings:', err);
-      const errorMessage = 'Failed to load settings. Please try again.';
+      const errorMessage = 'Không thể tải cài đặt. Vui lòng thử lại.';
       setError(errorMessage);
       toast({
-        title: "Error",
+        title: "Lỗi",
         description: errorMessage,
         variant: "destructive",
       });
@@ -72,22 +74,34 @@ export default function AdminSettingsPage() {
       setLastSaved(new Date());
       
       toast({
-        title: "Settings saved",
-        description: "Your store settings have been updated successfully.",
+        title: "Lưu cài đặt thành công!",
+        description: "Cài đặt cửa hàng của bạn đã được cập nhật.",
         variant: "success",
+        duration: 2000,
       });
+      
+      // Show reload countdown after successful save
+      setShowReloadCountdown(true);
     } catch (err) {
       console.error('Error saving settings:', err);
-      const errorMessage = 'Failed to save settings. Please try again.';
+      const errorMessage = 'Không thể lưu cài đặt. Vui lòng thử lại.';
       setError(errorMessage);
       toast({
-        title: "Error",
+        title: "Lỗi",
         description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReload = () => {
+    window.location.reload();
+  };
+
+  const handleCancelReload = () => {
+    setShowReloadCountdown(false);
   };
 
   if (loading && !settings) {
@@ -97,8 +111,8 @@ export default function AdminSettingsPage() {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <h3 className="text-lg font-semibold mb-2">Loading Settings</h3>
-              <p className="text-gray-600">Please wait while we load your store configuration...</p>
+              <h3 className="text-lg font-semibold mb-2">Đang tải cài đặt</h3>
+              <p className="text-gray-600">Vui lòng chờ trong khi chúng tôi tải cấu hình cửa hàng...</p>
             </div>
           </CardContent>
         </Card>
@@ -115,11 +129,11 @@ export default function AdminSettingsPage() {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-red-600">Error Loading Settings</h3>
+              <h3 className="text-lg font-semibold mb-2 text-red-600">Lỗi tải cài đặt</h3>
               <p className="text-gray-600 mb-4">{error}</p>
               <Button onClick={loadSettings} className="w-full">
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Try Again
+                Thử lại
               </Button>
             </div>
           </CardContent>
@@ -137,8 +151,8 @@ export default function AdminSettingsPage() {
               <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Settings className="w-6 h-6 text-gray-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">No Settings Found</h3>
-              <p className="text-gray-600">No settings configuration was found.</p>
+              <h3 className="text-lg font-semibold mb-2">Không tìm thấy cài đặt</h3>
+              <p className="text-gray-600">Không tìm thấy cấu hình cài đặt.</p>
             </div>
           </CardContent>
         </Card>
@@ -158,16 +172,16 @@ export default function AdminSettingsPage() {
                   <Settings className="w-8 h-8 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Store Settings</h1>
-                  <p className="text-gray-600 mt-1">
-                    Configure your store settings, payment methods, and system preferences.
-                  </p>
+                                  <h1 className="text-3xl font-bold text-gray-900">Cài đặt cửa hàng</h1>
+                <p className="text-gray-600 mt-1">
+                  Cấu hình cài đặt cửa hàng, phương thức thanh toán và tùy chọn hệ thống.
+                </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 {lastSaved && (
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">Last saved</p>
+                    <p className="text-sm text-gray-500">Lần lưu cuối</p>
                     <p className="text-sm font-medium text-gray-900">
                       {lastSaved.toLocaleTimeString()}
                     </p>
@@ -175,7 +189,7 @@ export default function AdminSettingsPage() {
                 )}
                 <Badge variant="secondary" className="bg-green-100 text-green-800">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
-                  Active
+                  Hoạt động
                 </Badge>
               </div>
             </div>
@@ -192,13 +206,13 @@ export default function AdminSettingsPage() {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <div className="flex items-center justify-between text-sm text-gray-600">
               <div className="flex items-center gap-4">
-                <span>Store ID: {settings.storeName?.toLowerCase().replace(/\s+/g, '-') || 'birdnest-shop'}</span>
+                <span>ID cửa hàng: {settings.storeName?.toLowerCase().replace(/\s+/g, '-') || 'birdnest-shop'}</span>
                 <span>•</span>
-                <span>Version: 1.0.0</span>
+                <span>Phiên bản: 1.0.0</span>
               </div>
               <div className="flex items-center gap-2">
                 <Save className="w-4 h-4" />
-                <span>Auto-save enabled</span>
+                <span>Tự động lưu đã bật</span>
               </div>
             </div>
           </div>
@@ -207,6 +221,14 @@ export default function AdminSettingsPage() {
       
       {/* Toast Notifications */}
       <Toaster />
+      
+      {/* Reload Countdown Modal */}
+      <SettingsReloadCountdown
+        isVisible={showReloadCountdown}
+        onCancel={handleCancelReload}
+        onReload={handleReload}
+        countdownSeconds={3}
+      />
     </div>
   );
 } 

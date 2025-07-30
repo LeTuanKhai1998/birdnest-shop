@@ -34,7 +34,8 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  X
 } from 'lucide-react';
 import {
   Dialog,
@@ -52,39 +53,40 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import useSWR from 'swr';
 import { apiService } from '@/lib/api';
+import { Order } from '@/lib/types';
 
 const STATUS = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
 const STATUS_CONFIG = {
   PENDING: { 
-    label: 'Pending', 
+    label: 'Chờ xử lý', 
     color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
     icon: Clock,
-    description: 'Awaiting processing'
+    description: 'Đang chờ xử lý'
   },
   PROCESSING: { 
-    label: 'Processing', 
+    label: 'Đang xử lý', 
     color: 'bg-blue-100 text-blue-800 border-blue-200', 
     icon: CheckCircle,
-    description: 'Being prepared'
+    description: 'Đang chuẩn bị'
   },
   SHIPPED: { 
-    label: 'Shipped', 
+    label: 'Đã gửi', 
     color: 'bg-purple-100 text-purple-800 border-purple-200', 
     icon: Truck,
-    description: 'In transit'
+    description: 'Đang vận chuyển'
   },
   DELIVERED: { 
-    label: 'Delivered', 
+    label: 'Đã giao', 
     color: 'bg-green-100 text-green-800 border-green-200', 
     icon: CheckCircle2,
-    description: 'Successfully delivered'
+    description: 'Đã giao thành công'
   },
   CANCELLED: { 
-    label: 'Cancelled', 
+    label: 'Đã hủy', 
     color: 'bg-red-100 text-red-800 border-red-200', 
     icon: XCircle,
-    description: 'Order cancelled'
+    description: 'Đơn hàng đã hủy'
   }
 };
 
@@ -129,7 +131,7 @@ export default function AdminOrdersPage() {
   const filteredOrders = useMemo(() => {
     if (!orders || !Array.isArray(orders)) return [];
     
-    return orders.filter((o: any) => {
+    return orders.filter((o: Order) => {
       if (!o) return false;
       
       const matchesSearch =
@@ -149,26 +151,26 @@ export default function AdminOrdersPage() {
     const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
-    const recentOrders = orders.filter((o: any) => o && o.createdAt && new Date(o.createdAt) >= lastWeek);
-    const lastMonthOrders = orders.filter((o: any) => o && o.createdAt && new Date(o.createdAt) >= lastMonth);
+    const recentOrders = orders.filter((o: Order) => o && o.createdAt && new Date(o.createdAt) >= lastWeek);
+    const lastMonthOrders = orders.filter((o: Order) => o && o.createdAt && new Date(o.createdAt) >= lastMonth);
     
-    const totalRevenue = orders.reduce((sum: number, o: any) => {
+    const totalRevenue = orders.reduce((sum: number, o: Order) => {
       if (!o || !o.total) return sum;
       return sum + parseFloat(o.total);
     }, 0);
-    const recentRevenue = recentOrders.reduce((sum: number, o: any) => {
+    const recentRevenue = recentOrders.reduce((sum: number, o: Order) => {
       if (!o || !o.total) return sum;
       return sum + parseFloat(o.total);
     }, 0);
-    const lastMonthRevenue = lastMonthOrders.reduce((sum: number, o: any) => {
+    const lastMonthRevenue = lastMonthOrders.reduce((sum: number, o: Order) => {
       if (!o || !o.total) return sum;
       return sum + parseFloat(o.total);
     }, 0);
     
     return {
       totalOrders: orders.length,
-      pendingOrders: orders.filter((o: any) => o && o.status === 'PENDING').length,
-      completedOrders: orders.filter((o: any) => o && o.status === 'DELIVERED').length,
+      pendingOrders: orders.filter((o: Order) => o && o.status === 'pending').length,
+      completedOrders: orders.filter((o: Order) => o && o.status === 'delivered').length,
       totalRevenue,
       recentRevenue,
       revenueTrend: lastMonthRevenue > 0 ? ((recentRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0,
@@ -292,9 +294,9 @@ export default function AdminOrdersPage() {
                   <Package className="w-8 h-8 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
+                  <h1 className="text-3xl font-bold text-gray-900">Quản lý đơn hàng</h1>
                   <p className="text-gray-600 mt-1">
-                    Manage customer orders, track shipments, and process payments
+                    Quản lý đơn hàng khách hàng, theo dõi vận chuyển và xử lý thanh toán
                   </p>
                 </div>
               </div>
@@ -305,14 +307,14 @@ export default function AdminOrdersPage() {
                     size="sm"
                     onClick={() => setViewMode('table')}
                   >
-                    Table
+                    Bảng
                   </Button>
                   <Button
                     variant={viewMode === 'cards' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('cards')}
                   >
-                    Cards
+                    Thẻ
                   </Button>
                 </div>
                 <Button
@@ -320,7 +322,7 @@ export default function AdminOrdersPage() {
                   onClick={handleExport}
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Export
+                  Xuất
                 </Button>
                 <Button
                   variant="outline"
@@ -328,7 +330,7 @@ export default function AdminOrdersPage() {
                   disabled={refreshing}
                 >
                   <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                  Refresh
+                  Làm mới
                 </Button>
               </div>
             </div>
@@ -341,7 +343,7 @@ export default function AdminOrdersPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                      <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
                       <p className="text-2xl font-bold text-gray-900">{metrics.totalOrders}</p>
                       <div className="flex items-center gap-1 mt-2">
                         {metrics.orderTrend > 0 ? (
@@ -501,7 +503,7 @@ export default function AdminOrdersPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredOrders.map((order: any) => {
+                        {filteredOrders.map((order: Order) => {
                           const statusConfig = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG];
                           const StatusIcon = statusConfig?.icon || Clock;
                           
@@ -515,7 +517,7 @@ export default function AdminOrdersPage() {
                                   <div>
                                     <p className="font-medium text-sm">{order.id}</p>
                                     <p className="text-xs text-gray-500">
-                                      {(order.orderItems?.length || order.items?.length || 0)} items
+                                      {(order.items?.length || 0)} items
                                     </p>
                                   </div>
                                 </div>
@@ -547,33 +549,13 @@ export default function AdminOrdersPage() {
                                 </div>
                               </td>
                               <td className="p-4 text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      <MoreHorizontal className="w-4 h-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => setViewId(order.id)}>
-                                      <Eye className="w-4 h-4 mr-2" />
-                                      View Details
-                                    </DropdownMenuItem>
-                                                                         {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
-                                      <DropdownMenuItem onClick={() => {
-                                        setStatusUpdateId(order.id);
-                                        setNewStatus('');
-                                      }}>
-                                        <Settings className="w-4 h-4 mr-2" />
-                                        Update Status
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
-                                      <Download className="w-4 h-4 mr-2" />
-                                      Export Order
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setViewId(order.id)}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
                               </td>
                             </tr>
                           );
@@ -586,7 +568,7 @@ export default function AdminOrdersPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                              {filteredOrders?.map((order: any) => {
+                              {filteredOrders?.map((order: Order) => {
                 const statusConfig = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG];
                 const StatusIcon = statusConfig?.icon || Clock;
                 
@@ -622,7 +604,7 @@ export default function AdminOrdersPage() {
                       <div className="pt-2 border-t">
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-gray-500">
-                            {(order.orderItems?.length || order.items?.length || 0)} items
+                            {(order.items?.length || 0)} items
                           </span>
                           <Button
                             variant="outline"
@@ -644,41 +626,43 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* Order Details Dialog */}
-      <Dialog open={!!viewId} onOpenChange={() => setViewId(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Order Details</DialogTitle>
-            <DialogDescription>
-              View complete order information and items
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-96 overflow-y-auto">
-            {viewId && (
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600">Order details would be displayed here...</p>
-              </div>
-            )}
+      {viewId && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Order Details</h2>
+              <Button variant="ghost" size="sm" onClick={() => setViewId(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              <p className="text-sm text-gray-600">Order details would be displayed here...</p>
+            </div>
+            <div className="flex justify-end mt-4">
+              <Button variant="outline" onClick={() => setViewId(null)}>
+                Close
+              </Button>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setViewId(null)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
 
       {/* Status Update Dialog */}
-      <Dialog open={!!statusUpdateId} onOpenChange={() => {
-        setStatusUpdateId(null);
-        setNewStatus('');
-      }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Update Order Status</DialogTitle>
-            <DialogDescription>
+      {statusUpdateId && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Update Order Status</h2>
+              <Button variant="ghost" size="sm" onClick={() => {
+                setStatusUpdateId(null);
+                setNewStatus('');
+              }}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
               Change the status of this order
-            </DialogDescription>
-          </DialogHeader>
+            </p>
           <div className="space-y-4">
             <div>
               <Label htmlFor="status">New Status</Label>
@@ -703,25 +687,26 @@ export default function AdminOrdersPage() {
               </Select>
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setStatusUpdateId(null);
-                setNewStatus('');
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => statusUpdateId && newStatus && onStatusChange(statusUpdateId, newStatus)}
-              disabled={!newStatus}
-            >
-              Update Status
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <div className="flex justify-end gap-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStatusUpdateId(null);
+                  setNewStatus('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => statusUpdateId && newStatus && onStatusChange(statusUpdateId, newStatus)}
+                disabled={!newStatus}
+              >
+                Update Status
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Toast Notifications */}
       <Toaster />

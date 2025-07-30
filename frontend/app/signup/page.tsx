@@ -1,6 +1,7 @@
 'use client';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,64 @@ function SignupPageInner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    // Check for NextAuth session
+    if (status === 'authenticated' && session?.user) {
+      const user = session.user as { id: string; email: string; name?: string; isAdmin: boolean };
+      if (user.isAdmin) {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
+      return;
+    }
+
+    // Check for localStorage auth (admin users)
+    const token = localStorage.getItem('auth-token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.isAdmin) {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+        localStorage.removeItem('auth-token');
+        localStorage.removeItem('user');
+      }
+    }
+  }, [session, status, router]);
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a10000] mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang kiểm tra đăng nhập...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render signup form if user is authenticated
+  if (status === 'authenticated' || localStorage.getItem('auth-token')) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a10000] mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang chuyển hướng...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();

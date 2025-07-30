@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { useManualLoading } from '@/hooks/useManualLoading';
@@ -55,13 +56,13 @@ export function LoadingDemo() {
           </p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" asChild>
-              <a href="/products">Go to Products</a>
+              <Link href="/products">Go to Products</Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <a href="/about">Go to About</a>
+              <Link href="/about">Go to About</Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <a href="/contact">Go to Contact</a>
+              <Link href="/contact">Go to Contact</Link>
             </Button>
           </div>
         </div>

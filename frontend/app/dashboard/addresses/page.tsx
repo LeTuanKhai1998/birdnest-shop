@@ -12,16 +12,16 @@ import useSWR, { mutate } from 'swr';
 import { toast } from 'sonner';
 
 const addressSchema = z.object({
-  fullName: z.string().min(2, 'Full name is required'),
+  fullName: z.string().min(2, 'Họ tên là bắt buộc'),
   phone: z
     .string()
-    .regex(/^(0|\+84)[0-9]{9}$/, 'Invalid Vietnamese phone number'),
-  province: z.string().min(1, 'Province is required'),
-  district: z.string().min(1, 'District is required'),
-  ward: z.string().min(1, 'Ward is required'),
-  address: z.string().min(5, 'Street/house is required'),
+    .regex(/^(0|\+84)[0-9]{9}$/, 'Số điện thoại Việt Nam không hợp lệ'),
+  province: z.string().min(1, 'Tỉnh/thành phố là bắt buộc'),
+  district: z.string().min(1, 'Quận/huyện là bắt buộc'),
+  ward: z.string().min(1, 'Phường/xã là bắt buộc'),
+  address: z.string().min(5, 'Đường/số nhà là bắt buộc'),
   apartment: z.string().optional(),
-  country: z.string().min(2, 'Country is required'),
+  country: z.string().min(2, 'Quốc gia là bắt buộc'),
   isDefault: z.boolean().optional(),
 });
 
@@ -55,7 +55,7 @@ interface Ward {
   name: string;
 }
 
-function fetcher(url: string) {
+function fetcher(url: string): Promise<Address[]> {
   return fetch(url).then((r) => r.json());
 }
 
@@ -80,7 +80,7 @@ function getLine2(addr: Address, provinces: Province[]): string {
 
 export default function AddressesPage() {
   // Check for localStorage authentication (admin users)
-  const [localUser, setLocalUser] = useState<any>(null);
+  const [localUser, setLocalUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean } | null>(null);
   
   useEffect(() => {
     const token = localStorage.getItem('auth-token');
@@ -100,9 +100,9 @@ export default function AddressesPage() {
   const isAdminUser = !!localUser;
   const apiEndpoint = isAdminUser ? 'http://localhost:8080/api/addresses' : '/api/addresses';
   
-  const { data: addresses = [], isLoading } = useSWR(
+  const { data: addressesData, isLoading, mutate } = useSWR(
     apiEndpoint,
-    async (url) => {
+    async (url: string) => {
       if (isAdminUser) {
         // Use JWT token for backend API
         const token = localStorage.getItem('auth-token');
@@ -120,6 +120,14 @@ export default function AddressesPage() {
       }
     },
   );
+  
+  // Ensure addresses is always an array and handle edge cases
+  const addresses = Array.isArray(addressesData) ? addressesData : [];
+  
+  // Safety check: if addresses is not an array, show error or loading
+  if (!Array.isArray(addressesData) && addressesData !== undefined) {
+    console.error('Addresses data is not an array:', addressesData);
+  }
   
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -159,6 +167,8 @@ export default function AddressesPage() {
       })
       .finally(() => setLoadingProvinces(false));
   }, []);
+
+
 
   const provinceCode = watch('province');
   const districtCode = watch('district');
@@ -205,9 +215,13 @@ export default function AddressesPage() {
         ward: String(data.ward),
       };
       const method = editing ? 'PATCH' : 'POST';
-      const body = editing ? { ...cleanData, id: editing.id } : cleanData;
+      const body = editing ? cleanData : cleanData;
       
-      const endpoint = isAdminUser ? 'http://localhost:8080/api/addresses' : '/api/addresses';
+      let endpoint = isAdminUser ? 'http://localhost:8080/api/addresses' : '/api/addresses';
+      if (editing) {
+        endpoint += `/${editing.id}`;
+      }
+      
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       
       if (isAdminUser) {
@@ -223,15 +237,48 @@ export default function AddressesPage() {
       if (!res.ok)
         throw new Error((await res.json()).error || 'Failed to save address');
       
-      // Update local state
+      // Update local state with optimistic updates
       if (isAdminUser) {
-        // For admin users, we'll need to refetch the data
-        // For now, just show success message
+        // Store original data for rollback
+        const originalData = addresses;
+        
+        // Safety check: ensure addresses is an array
+        if (!Array.isArray(addresses)) {
+          console.error('Addresses is not an array:', addresses);
+          toast.error('Error: Invalid data format');
+          return;
+        }
+        
+        // For admin users, use optimistic updates
+        const optimisticData = editing 
+          ? addresses.map((addr: Address) => 
+              addr.id === editing.id 
+                ? { ...addr, ...cleanData, updatedAt: new Date().toISOString() }
+                : addr
+            )
+          : [...addresses, { 
+              id: `temp-${Date.now()}`, 
+              ...cleanData, 
+              userId: localUser.id,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }];
+        
+        // Optimistically update the UI
+        mutate(optimisticData, false);
+        toast.success(editing ? 'Address updated!' : 'Address added!');
+        
+        // Revalidate data from server (this will rollback if there's an error)
+        mutate().catch(() => {
+          // If revalidation fails, rollback to original data
+          mutate(originalData, false);
+          toast.error('Failed to save changes. Please try again.');
+        });
       } else {
         mutate('/api/addresses');
+        toast.success(editing ? 'Address updated!' : 'Address added!');
       }
       
-      toast.success(editing ? 'Address updated!' : 'Address added!');
       setShowForm(false);
       setEditId(null);
     } catch (e: unknown) {
@@ -249,7 +296,7 @@ export default function AddressesPage() {
   async function handleDelete(id: string) {
     setDeleting(id);
     try {
-      const endpoint = isAdminUser ? 'http://localhost:8080/api/addresses' : '/api/addresses';
+      const endpoint = `${isAdminUser ? 'http://localhost:8080/api/addresses' : '/api/addresses'}/${id}`;
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       
       if (isAdminUser) {
@@ -260,20 +307,39 @@ export default function AddressesPage() {
       const res = await fetch(endpoint, {
         method: 'DELETE',
         headers,
-        body: JSON.stringify({ id }),
       });
       if (!res.ok)
         throw new Error((await res.json()).error || 'Failed to delete address');
       
-      // Update local state
+      // Update local state with optimistic updates
       if (isAdminUser) {
-        // For admin users, we'll need to refetch the data
-        // For now, just show success message
+        // Store original data for rollback
+        const originalData = addresses;
+        
+        // Safety check: ensure addresses is an array
+        if (!Array.isArray(addresses)) {
+          console.error('Addresses is not an array:', addresses);
+          toast.error('Error: Invalid data format');
+          return;
+        }
+        
+        // For admin users, use optimistic updates
+        const optimisticData = addresses.filter((addr: Address) => addr.id !== id);
+        
+        // Optimistically update the UI
+        mutate(optimisticData, false);
+        toast.success('Address deleted!');
+        
+        // Revalidate data from server (this will rollback if there's an error)
+        mutate().catch(() => {
+          // If revalidation fails, rollback to original data
+          mutate(originalData, false);
+          toast.error('Failed to delete address. Please try again.');
+        });
       } else {
         mutate('/api/addresses');
+        toast.success('Address deleted!');
       }
-      
-      toast.success('Address deleted!');
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);
@@ -288,10 +354,17 @@ export default function AddressesPage() {
   // Set as default
   async function handleSetDefault(id: string) {
     try {
+      // Safety check: ensure addresses is an array
+      if (!Array.isArray(addresses)) {
+        console.error('Addresses is not an array:', addresses);
+        toast.error('Error: Invalid data format');
+        return;
+      }
+      
       const addr = addresses.find((a: Address) => a.id === id);
       if (!addr) return;
       
-      const endpoint = isAdminUser ? 'http://localhost:8080/api/addresses' : '/api/addresses';
+      const endpoint = `${isAdminUser ? 'http://localhost:8080/api/addresses' : '/api/addresses'}/${id}`;
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       
       if (isAdminUser) {
@@ -302,18 +375,41 @@ export default function AddressesPage() {
       await fetch(endpoint, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({ ...addr, isDefault: true, id }),
+        body: JSON.stringify({ ...addr, isDefault: true }),
       });
       
-      // Update local state
+      // Update local state with optimistic updates
       if (isAdminUser) {
-        // For admin users, we'll need to refetch the data
-        // For now, just show success message
+        // Store original data for rollback
+        const originalData = addresses;
+        
+        // Safety check: ensure addresses is an array
+        if (!Array.isArray(addresses)) {
+          console.error('Addresses is not an array:', addresses);
+          toast.error('Error: Invalid data format');
+          return;
+        }
+        
+        // For admin users, use optimistic updates
+        const optimisticData = addresses.map((addr: Address) => ({
+          ...addr,
+          isDefault: addr.id === id
+        }));
+        
+        // Optimistically update the UI
+        mutate(optimisticData, false);
+        toast.success('Default address set!');
+        
+        // Revalidate data from server (this will rollback if there's an error)
+        mutate().catch(() => {
+          // If revalidation fails, rollback to original data
+          mutate(originalData, false);
+          toast.error('Failed to set default address. Please try again.');
+        });
       } else {
         mutate('/api/addresses');
+        toast.success('Default address set!');
       }
-      
-      toast.success('Default address set!');
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);
@@ -369,7 +465,7 @@ export default function AddressesPage() {
                   {addr.fullName}
                   {addr.isDefault && (
                     <span className="inline-flex items-center px-2 py-0.5 text-xs bg-primary/10 text-primary rounded ml-2">
-                      <Star className="w-4 h-4 mr-1" /> Default
+                      <Star className="w-4 h-4 mr-1" /> Mặc định
                     </span>
                   )}
                 </div>
@@ -384,7 +480,7 @@ export default function AddressesPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    title="Set as default"
+                    title="Đặt làm mặc định"
                     onClick={() => handleSetDefault(addr.id)}
                   >
                     <StarOff className="w-5 h-5" />
@@ -393,7 +489,7 @@ export default function AddressesPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  title="Edit"
+                  title="Chỉnh sửa"
                   onClick={() => {
                     setEditId(addr.id);
                     setShowForm(true);
@@ -404,7 +500,7 @@ export default function AddressesPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  title="Delete"
+                  title="Xóa"
                   className="text-red-500 hover:bg-red-50"
                   onClick={() => handleDelete(addr.id)}
                   disabled={deleting === addr.id}
@@ -430,7 +526,7 @@ export default function AddressesPage() {
               <X className="w-6 h-6" />
             </button>
             <h3 className="text-lg font-semibold mb-4">
-              {editing ? 'Edit Address' : 'Add Address'}
+              {editing ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ'}
             </h3>
             <form
               className="grid grid-cols-1 gap-4"
@@ -441,12 +537,12 @@ export default function AddressesPage() {
                   className="block text-sm font-medium mb-1"
                   htmlFor="fullName"
                 >
-                  Full Name
+                  Họ tên
                 </label>
                 <Input
                   id="fullName"
                   {...register('fullName')}
-                  placeholder="Full name"
+                  placeholder="Họ tên"
                   required
                   disabled={saving}
                 />
@@ -461,12 +557,12 @@ export default function AddressesPage() {
                   className="block text-sm font-medium mb-1"
                   htmlFor="phone"
                 >
-                  Phone
+                  Số điện thoại
                 </label>
                 <Input
                   id="phone"
                   {...register('phone')}
-                  placeholder="Phone number"
+                  placeholder="Số điện thoại"
                   required
                   disabled={saving}
                 />
@@ -478,7 +574,7 @@ export default function AddressesPage() {
               </div>
               {/* Province dropdown */}
               <div>
-                <label className="block text-sm mb-1">Province/City</label>
+                <label className="block text-sm mb-1">Tỉnh/Thành phố</label>
                 <select
                   className="w-full border rounded px-2 py-2"
                   {...register('province')}
@@ -486,7 +582,7 @@ export default function AddressesPage() {
                   disabled={loadingProvinces || saving}
                 >
                   <option value="">
-                    {loadingProvinces ? 'Loading...' : 'Select province/city'}
+                    {loadingProvinces ? 'Đang tải...' : 'Chọn tỉnh/thành phố'}
                   </option>
                   {provinces.map((p) => (
                     <option key={p.code} value={String(p.code)}>
@@ -502,7 +598,7 @@ export default function AddressesPage() {
               </div>
               {/* District dropdown */}
               <div>
-                <label className="block text-sm mb-1">District</label>
+                <label className="block text-sm mb-1">Quận/Huyện</label>
                 <select
                   className="w-full border rounded px-2 py-2"
                   {...register('district')}
@@ -510,7 +606,7 @@ export default function AddressesPage() {
                   disabled={!provinceCode || loadingDistricts || saving}
                 >
                   <option value="">
-                    {loadingDistricts ? 'Loading...' : 'Select district'}
+                    {loadingDistricts ? 'Đang tải...' : 'Chọn quận/huyện'}
                   </option>
                   {provinceCode &&
                     !loadingDistricts &&
@@ -528,14 +624,14 @@ export default function AddressesPage() {
               </div>
               {/* Ward dropdown */}
               <div>
-                <label className="block text-sm mb-1">Ward/Commune</label>
+                <label className="block text-sm mb-1">Phường/Xã</label>
                 <select
                   className="w-full border rounded px-2 py-2"
                   {...register('ward')}
                   disabled={!districtCode || loadingWards || saving}
                 >
                   <option value="">
-                    {loadingWards ? 'Loading...' : 'Select ward/commune'}
+                    {loadingWards ? 'Đang tải...' : 'Chọn phường/xã'}
                   </option>
                   {provinceCode &&
                     districtCode &&
@@ -558,12 +654,12 @@ export default function AddressesPage() {
                   className="block text-sm font-medium mb-1"
                   htmlFor="address"
                 >
-                  Street/House Number
+                  Đường/Số nhà
                 </label>
                 <Input
                   id="address"
                   {...register('address')}
-                  placeholder="Enter street/house number..."
+                  placeholder="Nhập đường/số nhà..."
                   required
                   disabled={saving}
                 />
@@ -579,12 +675,12 @@ export default function AddressesPage() {
                   className="block text-sm font-medium mb-1"
                   htmlFor="apartment"
                 >
-                  Apartment/Unit (optional)
+                  Căn hộ/Đơn vị (tùy chọn)
                 </label>
                 <Input
                   id="apartment"
                   {...register('apartment')}
-                  placeholder="Apartment, suite, etc."
+                  placeholder="Căn hộ, suite, v.v."
                   disabled={saving}
                 />
                 {errors.apartment && (
@@ -602,11 +698,11 @@ export default function AddressesPage() {
                   className="w-4 h-4"
                 />
                 <label htmlFor="isDefault" className="text-sm">
-                  Set as default address
+                  Đặt làm địa chỉ mặc định
                 </label>
               </div>
               <Button type="submit" className="w-full mt-2" disabled={saving}>
-                {editing ? 'Save Changes' : 'Add Address'}
+                {editing ? 'Lưu thay đổi' : 'Thêm địa chỉ'}
               </Button>
             </form>
           </div>

@@ -21,7 +21,7 @@ export default function OrdersPage() {
   const router = useRouter();
   
   // Check for localStorage authentication (admin users)
-  const [localUser, setLocalUser] = useState<any>(null);
+  const [localUser, setLocalUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean } | null>(null);
   
   useEffect(() => {
     const token = localStorage.getItem('auth-token');
@@ -66,6 +66,7 @@ export default function OrdersPage() {
           setError(data.error || 'Failed to load orders');
         }
       } catch (err) {
+        console.error('Error fetching orders:', err);
         setError('Failed to load orders');
       } finally {
         setLoading(false);
@@ -95,7 +96,7 @@ export default function OrdersPage() {
       <div className="flex items-center justify-between mb-3 gap-2">
         <div className="flex flex-col gap-0.5">
           <span className="font-mono text-xs text-gray-400">
-            Order #{order.id.slice(0, 8)}
+            Đơn hàng #{order.id.slice(0, 8)}
           </span>
           <span className="text-xs text-gray-500">
             {formatDate(order.createdAt)}
@@ -137,7 +138,7 @@ export default function OrdersPage() {
           </div>
           {order.orderItems.length > 1 && (
             <div className="text-xs text-gray-400 mt-1">
-              +{order.orderItems.length - 1} more item(s)
+              +{order.orderItems.length - 1} sản phẩm khác
             </div>
           )}
         </div>
@@ -154,7 +155,7 @@ export default function OrdersPage() {
           aria-label="View order details"
           onClick={() => handleViewOrder(order.id)}
         >
-          <Eye className="w-4 h-4 mr-1" /> View
+          <Eye className="w-4 h-4 mr-1" /> Xem
         </Button>
       </div>
     </Card>
@@ -163,7 +164,7 @@ export default function OrdersPage() {
   // Loading state
   if (loading)
     return (
-      <div className="py-16 text-center text-lg">Loading your orders...</div>
+      <div className="py-16 text-center text-lg">Đang tải đơn hàng của bạn...</div>
     );
   // Error state
   if (error)
@@ -176,8 +177,16 @@ export default function OrdersPage() {
   return (
     <div className="py-8">
       <h2 className="text-2xl font-bold mb-6 text-center">
-        Your Orders{isMock ? ' (Mock Data)' : ''}
+        Đơn hàng của bạn{isMock ? ' (Dữ liệu mẫu)' : ''}
       </h2>
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 text-sm">{error}</p>
+          <p className="text-red-500 text-xs mt-1">
+            Để xem đơn hàng thực, vui lòng đăng nhập với tài khoản có đơn hàng.
+          </p>
+        </div>
+      )}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-x-auto px-1">
         {displayOrders.map(renderOrderCard)}
       </div>

@@ -264,7 +264,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
             sản phẩm được tìm thấy
             {search && (
               <>
-                {' '}cho <span className="font-semibold text-gray-900 bg-yellow-100 px-2 py-1 rounded-full">"{search}"</span>
+                {' '}cho <span className="font-semibold text-gray-900 bg-yellow-100 px-2 py-1 rounded-full">&quot;{search}&quot;</span>
               </>
             )}
           </div>

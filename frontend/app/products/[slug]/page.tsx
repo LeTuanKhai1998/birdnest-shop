@@ -19,7 +19,25 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip';
 import { useReducedMotion } from 'framer-motion';
+import { Product as ApiProduct } from '@/lib/types';
 import { Product, Review } from '@/components/ProductCard';
+
+// Adapter function to convert API product to component product
+function adaptProduct(apiProduct: ApiProduct): Product {
+  return {
+    id: apiProduct.id,
+    slug: apiProduct.slug,
+    name: apiProduct.name,
+    image: apiProduct.image,
+    images: apiProduct.images?.map(img => img.url) || [],
+    price: parseFloat(apiProduct.price),
+    weight: apiProduct.weight,
+    description: apiProduct.description,
+    quantity: apiProduct.quantity,
+    reviews: apiProduct.reviews || [],
+    categoryId: apiProduct.categoryId,
+  };
+}
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
@@ -126,7 +144,7 @@ export default function ProductDetailPage({
         setLoading(true);
         setError(null);
         const productData = await apiService.getProductBySlug(decodedSlug);
-        setProduct(productData);
+        setProduct(adaptProduct(productData));
         // Update local reviews when product loads
         setLocalReviews(productData?.reviews || []);
       } catch (err) {
@@ -186,8 +204,8 @@ export default function ProductDetailPage({
   // Derived state (not hooks)
   const images = product?.images || (product?.image ? [product.image] : []);
   const favorited = product ? isInWishlist(product.id) : false;
-  const averageRating = product.reviews?.length > 0
-    ? product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length
+  const averageRating = product.reviews && product.reviews.length > 0
+    ? product.reviews.reduce((acc: number, review: Review) => acc + review.rating, 0) / product.reviews.length
     : 0;
 
   return (
@@ -221,7 +239,7 @@ export default function ProductDetailPage({
                     {session?.user && (
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger asChild>
+                          <TooltipTrigger>
                             <button
                               type="button"
                               aria-label={

@@ -102,6 +102,10 @@ export function sanitizeFormData<T extends Record<string, unknown>>(data: T): T 
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string') {
       sanitized[key] = sanitizeInput(value);
+    } else if (Array.isArray(value)) {
+      sanitized[key] = value.map(item => 
+        typeof item === 'string' ? sanitizeInput(item) : item
+      );
     } else if (isRecord(value)) {
       sanitized[key] = sanitizeFormData(value);
     } else {

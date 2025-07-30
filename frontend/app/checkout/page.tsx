@@ -18,7 +18,7 @@ import { CartItem } from '@/lib/cart-store';
 import { useSession } from 'next-auth/react';
 import useSWR from 'swr';
 import Image from 'next/image';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
+
 import { 
   CreditCard, 
   Truck, 
@@ -30,6 +30,8 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import { useFeatureEnabled, useTaxPercent, useFreeShippingThreshold } from '@/lib/settings-context';
+import { useCurrencyFormat, calculateTax, calculateTotalWithTax, qualifiesForFreeShipping, formatShippingCost } from '@/lib/currency-utils';
 
 function fetcher(url: string) {
   return fetch(url).then((r) => r.json());
@@ -48,6 +50,7 @@ const schema = z.object({
   addressMode: z.enum(['manual', 'map']),
   apartment: z.string().optional(),
   note: z.string().optional(),
+  paymentMethod: z.enum(['stripe', 'momo', 'cod']).optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -733,10 +736,7 @@ export default function CheckoutPage() {
                     {items.map(({ product, quantity }) => (
                       <div key={product.id} className="flex items-center gap-3">
                         <div className="w-16 h-16 flex-shrink-0">
-                          <AspectRatio
-                            ratio={1 / 1}
-                            className="rounded-lg bg-gray-50 border overflow-hidden"
-                          >
+                          <div className="relative w-full h-full rounded-lg bg-gray-50 border overflow-hidden">
                             <Image
                               src={
                                 product.image ||
@@ -748,7 +748,7 @@ export default function CheckoutPage() {
                               className="object-cover"
                               sizes="64px"
                             />
-                          </AspectRatio>
+                          </div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm line-clamp-2">

@@ -213,15 +213,15 @@ class ApiService {
   }
 
   // Auth API
-  async login(email: string, password: string): Promise<{ access_token: string; user: any }> {
-    return this.request<{ access_token: string; user: any }>('/auth/login', {
+  async login(email: string, password: string): Promise<{ access_token: string; user: User }> {
+    return this.request<{ access_token: string; user: User }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
   }
 
-  async register(email: string, password: string, name: string): Promise<{ access_token: string; user: any }> {
-    return this.request<{ access_token: string; user: any }>('/auth/register', {
+  async register(email: string, password: string, name: string): Promise<{ access_token: string; user: User }> {
+    return this.request<{ access_token: string; user: User }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
     });

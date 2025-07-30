@@ -62,32 +62,32 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const ROLE_CONFIG = {
   admin: { 
-    label: 'Administrator', 
+    label: 'Quản trị viên', 
     color: 'bg-purple-100 text-purple-800 border-purple-200', 
     icon: Crown,
-    description: 'Full system access'
+    description: 'Quyền truy cập toàn hệ thống'
   },
   user: { 
-    label: 'Customer', 
+    label: 'Khách hàng', 
     color: 'bg-blue-100 text-blue-800 border-blue-200', 
     icon: UserCheck,
-    description: 'Standard customer access'
+    description: 'Quyền truy cập khách hàng tiêu chuẩn'
   },
 };
 
 const STATUS_CONFIG = {
   active: { 
-    label: 'Active', 
+    label: 'Hoạt động', 
     color: 'bg-green-100 text-green-800 border-green-200', 
     icon: UserCheck
   },
   inactive: { 
-    label: 'Inactive', 
+    label: 'Không hoạt động', 
     color: 'bg-gray-100 text-gray-800 border-gray-200', 
     icon: UserX
   },
   pending: { 
-    label: 'Pending', 
+    label: 'Chờ xử lý', 
     color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
     icon: Clock
   },
@@ -283,9 +283,9 @@ export default function AdminUsersPage() {
                   <Users className="w-8 h-8 text-purple-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+                  <h1 className="text-3xl font-bold text-gray-900">Quản lý người dùng</h1>
                   <p className="text-gray-600 mt-1">
-                    Manage customer accounts, admin privileges, and user access
+                    Quản lý tài khoản khách hàng, quyền quản trị và quyền truy cập người dùng
                   </p>
                 </div>
               </div>
@@ -296,14 +296,14 @@ export default function AdminUsersPage() {
                     size="sm"
                     onClick={() => setViewMode('table')}
                   >
-                    Table
+                    Bảng
                   </Button>
                   <Button
                     variant={viewMode === 'cards' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('cards')}
                   >
-                    Cards
+                    Thẻ
                   </Button>
                 </div>
                 <Button
@@ -311,7 +311,7 @@ export default function AdminUsersPage() {
                   onClick={handleExport}
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Export
+                  Xuất
                 </Button>
                 <Button
                   variant="outline"
@@ -319,11 +319,11 @@ export default function AdminUsersPage() {
                   disabled={refreshing}
                 >
                   <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                  Refresh
+                  Làm mới
                 </Button>
                 <Button>
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Add User
+                  Thêm người dùng
                 </Button>
               </div>
             </div>
@@ -336,7 +336,7 @@ export default function AdminUsersPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Users</p>
+                      <p className="text-sm font-medium text-gray-600">Tổng người dùng</p>
                       <p className="text-2xl font-bold text-gray-900">{metrics.totalUsers}</p>
                       <div className="flex items-center gap-1 mt-2">
                         {metrics.userGrowth > 0 ? (
@@ -347,7 +347,7 @@ export default function AdminUsersPage() {
                         <span className={`text-sm ${metrics.userGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {Math.abs(metrics.userGrowth).toFixed(1)}%
                         </span>
-                        <span className="text-sm text-gray-500">vs last month</span>
+                        <span className="text-sm text-gray-500">so với tháng trước</span>
                       </div>
                     </div>
                     <div className="p-3 bg-purple-100 rounded-lg">
@@ -544,28 +544,13 @@ export default function AdminUsersPage() {
                                 </div>
                               </td>
                               <td className="p-4 text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      <MoreHorizontal className="w-4 h-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleViewUser(user)}>
-                                      <Eye className="w-4 h-4 mr-2" />
-                                      View Details
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleRoleChange(user.id, !user.isAdmin)}>
-                                      <Shield className="w-4 h-4 mr-2" />
-                                      {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleDelete(user.id)}>
-                                      <UserX className="w-4 h-4 mr-2" />
-                                      Delete User
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewUser(user)}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
                               </td>
                             </tr>
                           );
@@ -633,57 +618,59 @@ export default function AdminUsersPage() {
       </div>
 
       {/* User Details Dialog */}
-      <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-            <DialogDescription>
+      {showUserDetails && (
+        <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
+          <DialogContent className="max-w-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">User Details</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
               View complete user information and activity
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-96 overflow-y-auto">
-            {selectedUser && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Name</Label>
-                    <p className="text-sm text-gray-900">{selectedUser.name}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Email</Label>
-                    <p className="text-sm text-gray-900">{selectedUser.email}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Role</Label>
-                    <Badge className={`${ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].color} mt-1`}>
-                      {ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].label}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Status</Label>
-                    <Badge className={`${STATUS_CONFIG[selectedUser.status as keyof typeof STATUS_CONFIG]?.color || STATUS_CONFIG.active.color} mt-1`}>
-                      {STATUS_CONFIG[selectedUser.status as keyof typeof STATUS_CONFIG]?.label || 'Active'}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Joined</Label>
-                    <p className="text-sm text-gray-900">{selectedUser.createdAt ? formatDate(selectedUser.createdAt) : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Last Login</Label>
-                    <p className="text-sm text-gray-900">{selectedUser.lastLoginAt ? formatDate(selectedUser.lastLoginAt) : 'Never'}</p>
+            </p>
+            <div className="max-h-96 overflow-y-auto">
+              {selectedUser && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Name</Label>
+                      <p className="text-sm text-gray-900">{selectedUser.name}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Email</Label>
+                      <p className="text-sm text-gray-900">{selectedUser.email}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Role</Label>
+                      <Badge className={`${ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].color} mt-1`}>
+                        {ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].label}
+                      </Badge>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Status</Label>
+                      <Badge className={`${STATUS_CONFIG[selectedUser.status as keyof typeof STATUS_CONFIG]?.color || STATUS_CONFIG.active.color} mt-1`}>
+                        {STATUS_CONFIG[selectedUser.status as keyof typeof STATUS_CONFIG]?.label || 'Active'}
+                      </Badge>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Joined</Label>
+                      <p className="text-sm text-gray-900">{selectedUser.createdAt ? formatDate(selectedUser.createdAt) : 'N/A'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Last Login</Label>
+                      <p className="text-sm text-gray-900">{selectedUser.lastLoginAt ? formatDate(selectedUser.lastLoginAt) : 'Never'}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowUserDetails(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowUserDetails(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
