@@ -541,7 +541,7 @@ enum RecipientType {
   - Type icon
   - Title + preview of body
   - Time ago
-  - “Mark all as read” button
+  - "Mark all as read" button
 
 **UX Enhancements:**
 - [X] Group by date (e.g., Today / Yesterday).
@@ -658,53 +658,53 @@ enum RecipientType {
 
 ### 16. Optimize Home Page Layout and Content [X]
 
-- [ ] Update `app/page.tsx` (Home page) to improve overall structure and UX
-- [ ] Apply brand-aligned visual hierarchy:
+- [X] Update `app/page.tsx` (Home page) to improve overall structure and UX
+- [X] Apply brand-aligned visual hierarchy:
   - Use consistent spacing, font sizing, and section padding (Tailwind)
   - Ensure alignment and spacing match the rest of the site
-- [ ] Hero Section:
+- [X] Hero Section:
   - Large banner with high-quality lifestyle/product image
-  - Strong headline (e.g. “Discover Your Style at Birdnest”)
-  - Short supporting subtitle and CTA (e.g. “Shop Now” button)
-- [ ] Featured Categories:
+  - Strong headline (e.g. "Discover Your Style at Birdnest")
+  - Short supporting subtitle and CTA (e.g. "Shop Now" button)
+- [X] Featured Categories:
   - Display 3–6 top-level categories with images and links
   - Responsive grid layout, center-aligned text
-- [ ] Product Highlights:
+- [X] Product Highlights:
   - Show bestsellers / new arrivals / seasonal promotions
   - Use reusable product card component
-  - Support “Add to Cart” or “View Details”
-- [ ] Promotional Banner:
-  - Add promotional strip (e.g. “Free Shipping on Orders over 500K VND”)
+  - Support "Add to Cart" or "View Details"
+- [X] Promotional Banner:
+  - Add promotional strip (e.g. "Free Shipping on Orders over 500K VND")
   - Use brand color and good contrast
-- [ ] Testimonials (optional):
+- [X] Testimonials (optional):
   - Add section with 1–3 short customer testimonials
   - Name, image, and short quote
-- [ ] Newsletter Signup:
+- [X] Newsletter Signup:
   - Form with name and email
   - Connected to backend or just UI for now
-- [ ] Footer Teaser:
+- [X] Footer Teaser:
   - Include key links (Shipping, Returns, Contact)
   - Match footer design
 
-- [ ] Responsive Design:
+- [X] Responsive Design:
   - Stack layout for mobile
   - Use columns and grid for desktop
   - Test breakpoints across sizes
 
-- [ ] SEO:
+- [X] SEO:
   - Set `<title>Birdnest – Modern Fashion & Lifestyle</title>`
   - Add meta description
   - Include alt text on all images
 
-- [ ] i18n Support:
+- [X] i18n Support:
   - Wrap all visible texts in `t()` with keys like `home.hero.title`, `home.cta.button`, etc.
 
-- [ ] Best Practices:
+- [X] Best Practices:
   - Split sections into reusable components
   - Avoid hardcoded values, use `@/lib/constants.ts` or config files
   - Use loading skeletons for async product data
 
-- [ ] Testing:
+- [X] Testing:
   - Add basic unit test for Hero and Featured section
   - Ensure all links and CTA buttons work
 
@@ -764,10 +764,26 @@ enum RecipientType {
   - [X] Fixed guest-orders page parsing error
 
 
+### 18. Add Scroll-triggered Animations to Home Page Sections [X]
+
+- [X] Use `framer-motion` to animate appearance of major homepage components (hero, features, testimonials, etc.)
+- [X] Use `useInView` from `framer-motion` or `react-intersection-observer` to trigger animations when component scrolls into view
+- [X] Apply animation variants for each section:
+  - Hero: `fadeIn` with `scale` (zoom-in)
+  - Section titles: `slideUp` or `fadeIn`
+  - Cards or images: `staggered fadeIn` from bottom
+- [X] Ensure animations only trigger once per page load (using `triggerOnce`)
+- [X] Add responsive performance optimization (e.g. limit animation on mobile if needed)
+- [X] Keep transitions smooth with ease-out curve and duration ~0.6s
+- [X] Ensure accessibility (no critical info hidden until animation completes)
+- [X] Keep animation subtle and brand-aligned (not overly flashy)
+
+> Goal: Create a polished first-impression with smooth content appearance as user scrolls.
+
 ---
 
 
-### 18. CI/CD and Deployment Readiness [X]
+### 19. CI/CD and Deployment Readiness [X]
 
 - [X] Setup `.dockerignore`, `.env.example` files
 - [X] Dockerize backend with production-ready Dockerfile
@@ -781,7 +797,7 @@ enum RecipientType {
 
 ---
 
-### 19. Observability and Logging [ ]
+### 20. Observability and Logging [ ]
 
 - [ ] Add global error handler middleware (backend)
 - [ ] Add structured logs (`logger.service.ts` or `pino`)
@@ -790,7 +806,7 @@ enum RecipientType {
 
 ---
 
-### 20. Documentation and Developer Experience [ ]
+### 21. Documentation and Developer Experience [ ]
 
 - [ ] Generate Swagger docs at `/api-docs`
 - [ ] Write `README.md` inside `backend/`:

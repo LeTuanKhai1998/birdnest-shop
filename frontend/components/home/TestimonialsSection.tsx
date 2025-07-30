@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
 import { HOME_CONSTANTS } from '@/lib/constants';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SlideUpSection, FadeInSection } from '@/components/ui/ScrollAnimation';
 
 export function TestimonialsSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -51,10 +52,13 @@ export function TestimonialsSection() {
   return (
     <section className="w-full bg-white py-8 sm:py-12">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-red-700">
-          {HOME_CONSTANTS.testimonials.title}
-        </h2>
-        <div className="relative">
+        <SlideUpSection>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-red-700">
+            {HOME_CONSTANTS.testimonials.title}
+          </h2>
+        </SlideUpSection>
+        
+        <FadeInSection className="relative">
           <Button
             variant="outline"
             size="sm"
@@ -195,7 +199,8 @@ export function TestimonialsSection() {
               </div>
             </AnimatePresence>
           </div>
-        </div>
+        </FadeInSection>
+        
         {/* Pagination Dots */}
         <div className="flex justify-center mt-6 gap-2">
           {Array.from({ length: totalPages }).map((_, index) => (

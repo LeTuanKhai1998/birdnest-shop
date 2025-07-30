@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { HOME_CONSTANTS } from '@/lib/constants';
+import { SlideUpSection, StaggeredSection, ScaleInSection, FadeInSection } from '@/components/ui/ScrollAnimation';
 
 export function CompanySummary() {
   return (
@@ -9,17 +10,17 @@ export function CompanySummary() {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           {/* Main Title */}
-          <div className="text-center mb-6 sm:mb-8">
+          <SlideUpSection className="text-center mb-6 sm:mb-8">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#a10000] mb-4">
               <span className="block lg:hidden">YẾN SÀO KIM SANG</span>
               <span className="block lg:hidden">THƯƠNG HIỆU UY TÍN</span>
               <span className="hidden lg:block">{HOME_CONSTANTS.company.title}</span>
             </h2>
             <div className="w-24 lg:w-1/3 h-1 bg-[#a10000] mx-auto rounded-full"></div>
-          </div>
+          </SlideUpSection>
 
           {/* Star Rating - Positioned right after title */}
-          <div className="flex flex-col items-center justify-center mb-12 sm:mb-16">
+          <ScaleInSection className="flex flex-col items-center justify-center mb-12 sm:mb-16">
             {/* Star Rating */}
             <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
               {[...Array(5)].map((_, index) => (
@@ -52,13 +53,13 @@ export function CompanySummary() {
                 Đánh giá xuất sắc từ hơn 1,000+ khách hàng
               </p>
             </div>
-          </div>
+          </ScaleInSection>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-start mb-12 sm:mb-16">
+          <StaggeredSection className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-start mb-12 sm:mb-16">
             {/* Left Column - Company Info */}
             <div className="text-left">
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 sm:p-10 shadow-xl border border-white/20">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 sm:p-10 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
                 <h3 className="text-2xl font-bold mb-6 text-[#a10000] flex items-center">
                   <span className="text-2xl mr-3">🏆</span>
                   Về Chúng Tôi
@@ -68,7 +69,7 @@ export function CompanySummary() {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {HOME_CONSTANTS.company.highlights.map((highlight, index) => (
-                    <div key={index} className="flex items-center p-3 bg-red-50 rounded-lg">
+                    <div key={index} className="flex items-center p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors duration-200">
                       <span className="text-[#a10000] font-bold text-base mr-3">✓</span>
                       <span className="font-semibold text-base text-gray-800">{highlight}</span>
                     </div>
@@ -79,14 +80,14 @@ export function CompanySummary() {
 
             {/* Right Column - Product Highlights */}
             <div className="text-left">
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 sm:p-10 shadow-xl border border-white/20">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 sm:p-10 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
                 <h3 className="text-2xl font-bold mb-6 text-[#a10000] flex items-center">
                   <span className="text-2xl mr-3">🍯</span>
                   Sản Phẩm Chính
                 </h3>
                 <div className="space-y-4">
                   {HOME_CONSTANTS.company.products.map((product, index) => (
-                    <div key={index} className="flex items-start p-4 bg-orange-50 rounded-xl">
+                    <div key={index} className="flex items-start p-4 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors duration-200">
                       <div className="w-4 h-4 bg-[#a10000] rounded-full mt-1 mr-4 flex-shrink-0"></div>
                       <div>
                         <h4 className="font-bold text-base text-gray-800 mb-1">{product.title}</h4>
@@ -97,16 +98,19 @@ export function CompanySummary() {
                 </div>
               </div>
             </div>
-          </div>
+          </StaggeredSection>
 
           {/* Key Benefits Section */}
           <div className="mb-12 sm:mb-16">
-            <h3 className="text-2xl font-bold text-center text-[#a10000] mb-8 sm:mb-12">
-              Tại Sao Chọn Chúng Tôi?
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            <SlideUpSection>
+              <h3 className="text-2xl font-bold text-center text-[#a10000] mb-8 sm:mb-12">
+                Tại Sao Chọn Chúng Tôi?
+              </h3>
+            </SlideUpSection>
+            
+            <StaggeredSection className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
               {HOME_CONSTANTS.company.benefits.map((benefit, index) => (
-                <div key={index} className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-8 text-center shadow-lg border border-white/20">
+                <div key={index} className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-8 text-center shadow-lg border border-white/20 hover:shadow-xl hover:scale-105 transition-all duration-300">
                   <div className="text-4xl mb-4">{benefit.icon}</div>
                   <h3 className="text-xl font-bold mb-4 text-[#a10000]">{benefit.title}</h3>
                   <p className="text-base text-gray-700 leading-relaxed">
@@ -114,11 +118,11 @@ export function CompanySummary() {
                   </p>
                 </div>
               ))}
-            </div>
+            </StaggeredSection>
           </div>
 
           {/* CTA Section */}
-          <div className="text-center bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 shadow-xl border border-white/20">
+          <FadeInSection className="text-center bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 shadow-xl border border-white/20">
             <h3 className="text-2xl font-bold text-[#a10000] mb-4">
               Sẵn Sàng Trải Nghiệm?
             </h3>
@@ -139,7 +143,7 @@ export function CompanySummary() {
                 Tìm Hiểu Thêm
               </Link>
             </div>
-          </div>
+          </FadeInSection>
         </div>
       </div>
     </section>
