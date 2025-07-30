@@ -528,6 +528,9 @@ export function ResponsiveNavbar() {
                               <div>
                                 <div className="font-medium">{user?.name}</div>
                                 <div className="text-sm text-gray-500">{user?.email}</div>
+                                {(user as any)?.bio && (
+                                  <div className="text-xs text-gray-400 italic mt-1">"{(user as any).bio}"</div>
+                                )}
                               </div>
                             </Link>
                             <Link
