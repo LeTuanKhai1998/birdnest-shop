@@ -57,16 +57,39 @@ export function ResponsiveNavbar() {
   const pathname = usePathname();
   const userFromSession = session?.user;
   
-  // Check for localStorage authentication
+  // Check for localStorage authentication and fetch fresh user data
   useEffect(() => {
-    const checkLocalAuth = () => {
+    const checkLocalAuth = async () => {
       const authToken = localStorage.getItem('auth-token');
       const userData = localStorage.getItem('user');
       
       if (authToken && userData) {
         try {
           const user = JSON.parse(userData);
-          setLocalUser(user);
+          
+          // Fetch fresh user data from backend to get updated bio
+          try {
+            const response = await fetch('http://localhost:8080/api/users/profile', {
+              headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (response.ok) {
+              const freshUserData = await response.json();
+              setLocalUser(freshUserData);
+              // Update localStorage with fresh data
+              localStorage.setItem('user', JSON.stringify(freshUserData));
+            } else {
+              // Fallback to localStorage data if API fails
+              setLocalUser(user);
+            }
+          } catch (error) {
+            console.error('Error fetching fresh user data:', error);
+            // Fallback to localStorage data
+            setLocalUser(user);
+          }
         } catch (error) {
           console.error('Error parsing user data:', error);
           localStorage.removeItem('auth-token');
@@ -367,10 +390,6 @@ export function ResponsiveNavbar() {
                               {(user as any)?.bio && (
                                 <div className="text-xs text-gray-500 italic truncate max-w-32">"{(user as any).bio}"</div>
                               )}
-                              {/* Temporary: Show bio status */}
-                              <div className="text-xs text-blue-500">
-                                Bio: {(user as any)?.bio || 'Not set'}
-                              </div>
                             </div>
                           </Button>
                         </DropdownMenuTrigger>

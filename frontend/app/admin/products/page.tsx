@@ -77,7 +77,7 @@ const productSchema = z.object({
     .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
       message: 'Số lượng tồn kho phải là số không âm',
     }),
-  category: z.string().min(2, 'Danh mục là bắt buộc'),
+  categoryId: z.string().min(2, 'Danh mục là bắt buộc'),
 });
 
 const filterSchema = z.object({
@@ -88,7 +88,19 @@ const filterSchema = z.object({
 type ProductForm = z.infer<typeof productSchema>;
 type FilterForm = z.infer<typeof filterSchema>;
 
-const CATEGORIES = ['Tinh chế', 'Thô', 'Combo'];
+// Map database categories to display names
+const CATEGORY_MAPPING = {
+  'Yến hủ': 'Yến Tinh Chế',
+  'Yến tinh': 'Yến Rút Lông', 
+  'Yến baby': 'Tổ Yến Thô'
+};
+
+const CATEGORIES = Object.values(CATEGORY_MAPPING);
+
+// Helper function to get display name for category
+const getCategoryDisplayName = (categoryName: string) => {
+  return CATEGORY_MAPPING[categoryName as keyof typeof CATEGORY_MAPPING] || categoryName;
+};
 
 // Add a fallback image path
 const FALLBACK_IMAGE = '/images/banner1.png';
@@ -125,6 +137,7 @@ export default function AdminProductsPage() {
   const [deleting, setDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Check authentication on component mount
@@ -148,6 +161,19 @@ export default function AdminProductsPage() {
 
   const { data: products, isLoading, mutate } = useSWR('admin-products', () => apiService.getProducts());
 
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await apiService.getCategories();
+        setCategories(response);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   // Filter products
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -155,7 +181,7 @@ export default function AdminProductsPage() {
       const matchesSearch = !searchValue || 
         product.name.toLowerCase().includes(searchValue.toLowerCase()) ||
         product.description.toLowerCase().includes(searchValue.toLowerCase());
-      const matchesCategory = !categoryFilter || product.category.name === categoryFilter;
+      const matchesCategory = !categoryFilter || getCategoryDisplayName(product.category.name) === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [products, searchValue, categoryFilter]);
@@ -180,7 +206,7 @@ export default function AdminProductsPage() {
             ...data,
             price: data.price,
             quantity: parseInt(data.stock),
-            categoryId: data.category,
+            categoryId: data.categoryId,
             images: images.map(img => ({ url: img.url, isPrimary: img.isPrimary || false })),
           });
           toast({
@@ -193,7 +219,7 @@ export default function AdminProductsPage() {
             ...data,
             price: data.price,
             quantity: parseInt(data.stock),
-            categoryId: data.category,
+            categoryId: data.categoryId,
             slug: data.name.toLowerCase().replace(/\s+/g, '-'),
             images: images.map(img => ({ url: img.url, isPrimary: img.isPrimary || false })),
           });
@@ -567,7 +593,7 @@ export default function AdminProductsPage() {
                            <td className="p-4">
                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                                <Tag className="w-3 h-3 mr-1" />
-                               {product.category.name}
+                               {getCategoryDisplayName(product.category.name)}
                              </Badge>
                            </td>
                            <td className="p-4">
