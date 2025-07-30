@@ -218,7 +218,10 @@ export default function ProfilePage() {
                   <User className="w-12 h-12 text-[#a10000]" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{user.name}</h3>
-                <p className="text-gray-600 mb-4">{user.email}</p>
+                <p className="text-gray-600 mb-2">{user.email}</p>
+                {(user as any)?.bio && (
+                  <p className="text-sm text-gray-500 mb-4 italic">"{(user as any).bio}"</p>
+                )}
                 <Badge className="bg-green-100 text-green-800 border-green-200">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Tài khoản đã xác thực
