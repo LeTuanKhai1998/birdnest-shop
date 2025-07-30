@@ -370,6 +370,9 @@ export function ResponsiveNavbar() {
                         <div className="p-2 border-b">
                           <p className="text-sm font-medium">{user?.name}</p>
                           <p className="text-xs text-gray-500">{user?.email}</p>
+                          {(user as any)?.bio && (
+                            <p className="text-xs text-gray-400 italic mt-1">"{(user as any).bio}"</p>
+                          )}
                         </div>
                         <DropdownMenuItem asChild>
                           <Link href="/dashboard/profile">
