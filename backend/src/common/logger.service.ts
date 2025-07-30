@@ -28,7 +28,12 @@ export class StructuredLoggerService implements LoggerService {
   }
 
   error(message: string, trace?: string, context?: LogContext): void {
-    const structuredLog = this.createStructuredLog('error', message, context, trace);
+    const structuredLog = this.createStructuredLog(
+      'error',
+      message,
+      context,
+      trace,
+    );
     this.logger.error(JSON.stringify(structuredLog));
   }
 
@@ -49,10 +54,10 @@ export class StructuredLoggerService implements LoggerService {
 
   trackUserEvent(event: UserEvent): void {
     this.userEvents.push(event);
-    
+
     const logLevel = event.status === 'success' ? 'info' : 'warn';
     const message = `User Event: ${event.action} on ${event.resource}`;
-    
+
     const context: LogContext = {
       userId: event.userId,
       action: event.action,
@@ -72,13 +77,13 @@ export class StructuredLoggerService implements LoggerService {
 
   getEventsByUser(userId: string, limit: number = 50): UserEvent[] {
     return this.userEvents
-      .filter(event => event.userId === userId)
+      .filter((event) => event.userId === userId)
       .slice(-limit);
   }
 
   getEventsByAction(action: string, limit: number = 50): UserEvent[] {
     return this.userEvents
-      .filter(event => event.action === action)
+      .filter((event) => event.action === action)
       .slice(-limit);
   }
 
@@ -116,7 +121,12 @@ export class StructuredLoggerService implements LoggerService {
   }
 
   // Performance logging methods
-  logRequestStart(method: string, url: string, userId?: string, requestId?: string): void {
+  logRequestStart(
+    method: string,
+    url: string,
+    userId?: string,
+    requestId?: string,
+  ): void {
     this.log(`Request started: ${method} ${url}`, {
       userId,
       requestId,
@@ -126,14 +136,24 @@ export class StructuredLoggerService implements LoggerService {
     });
   }
 
-  logRequestEnd(method: string, url: string, statusCode: number, duration: number, userId?: string, requestId?: string): void {
-    this.log(`Request completed: ${method} ${url} - ${statusCode} (${duration}ms)`, {
-      userId,
-      requestId,
-      action: 'request_end',
-      resource: url,
-      metadata: { method, statusCode, duration },
-    });
+  logRequestEnd(
+    method: string,
+    url: string,
+    statusCode: number,
+    duration: number,
+    userId?: string,
+    requestId?: string,
+  ): void {
+    this.log(
+      `Request completed: ${method} ${url} - ${statusCode} (${duration}ms)`,
+      {
+        userId,
+        requestId,
+        action: 'request_end',
+        resource: url,
+        metadata: { method, statusCode, duration },
+      },
+    );
   }
 
   // Business event logging methods
@@ -148,7 +168,12 @@ export class StructuredLoggerService implements LoggerService {
     });
   }
 
-  logOrderStatusChanged(orderId: string, oldStatus: string, newStatus: string, userId?: string): void {
+  logOrderStatusChanged(
+    orderId: string,
+    oldStatus: string,
+    newStatus: string,
+    userId?: string,
+  ): void {
     this.trackUserEvent({
       userId,
       action: 'order_status_changed',
@@ -159,7 +184,12 @@ export class StructuredLoggerService implements LoggerService {
     });
   }
 
-  logPaymentSuccess(orderId: string, amount: number, paymentMethod: string, userId?: string): void {
+  logPaymentSuccess(
+    orderId: string,
+    amount: number,
+    paymentMethod: string,
+    userId?: string,
+  ): void {
     this.trackUserEvent({
       userId,
       action: 'payment_success',
@@ -223,4 +253,4 @@ export class StructuredLoggerService implements LoggerService {
       timestamp: new Date(),
     });
   }
-} 
+}

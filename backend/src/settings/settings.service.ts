@@ -37,16 +37,19 @@ export class SettingsService {
     }
 
     const settings = await this.prisma.setting.findMany();
-    const settingsMap = new Map(settings.map(s => [s.key, s.value]));
+    const settingsMap = new Map(settings.map((s) => [s.key, s.value]));
 
     const defaultSettings: SettingsData = {
       storeName: settingsMap.get('store_name') || 'Birdnest Shop',
       storeEmail: settingsMap.get('store_email') || 'admin@birdnest.com',
       storePhone: settingsMap.get('store_phone') || '',
-      defaultLanguage: (settingsMap.get('default_language') as 'en' | 'vi') || 'en',
+      defaultLanguage:
+        (settingsMap.get('default_language') as 'en' | 'vi') || 'en',
       currency: settingsMap.get('currency') || 'VND',
       taxPercent: parseFloat(settingsMap.get('tax_percent') || '0'),
-      freeShippingThreshold: parseFloat(settingsMap.get('free_shipping_threshold') || '0'),
+      freeShippingThreshold: parseFloat(
+        settingsMap.get('free_shipping_threshold') || '0',
+      ),
       enableStripe: settingsMap.get('enable_stripe') === 'true',
       enableMomo: settingsMap.get('enable_momo') === 'true',
       enableCOD: settingsMap.get('enable_cod') === 'true',
@@ -64,20 +67,53 @@ export class SettingsService {
 
   async updateSettings(data: Partial<SettingsData>): Promise<SettingsData> {
     const settingsToUpdate = [
-      ...(data.storeName !== undefined ? [{ key: 'store_name', value: data.storeName }] : []),
-      ...(data.storeEmail !== undefined ? [{ key: 'store_email', value: data.storeEmail }] : []),
-      ...(data.storePhone !== undefined ? [{ key: 'store_phone', value: data.storePhone }] : []),
-      ...(data.defaultLanguage !== undefined ? [{ key: 'default_language', value: data.defaultLanguage }] : []),
-      ...(data.currency !== undefined ? [{ key: 'currency', value: data.currency }] : []),
-      ...(data.taxPercent !== undefined ? [{ key: 'tax_percent', value: data.taxPercent.toString() }] : []),
-      ...(data.freeShippingThreshold !== undefined ? [{ key: 'free_shipping_threshold', value: data.freeShippingThreshold.toString() }] : []),
-      ...(data.enableStripe !== undefined ? [{ key: 'enable_stripe', value: data.enableStripe.toString() }] : []),
-      ...(data.enableMomo !== undefined ? [{ key: 'enable_momo', value: data.enableMomo.toString() }] : []),
-      ...(data.enableCOD !== undefined ? [{ key: 'enable_cod', value: data.enableCOD.toString() }] : []),
-      ...(data.maintenanceMode !== undefined ? [{ key: 'maintenance_mode', value: data.maintenanceMode.toString() }] : []),
-      ...(data.logoUrl !== undefined ? [{ key: 'logo_url', value: data.logoUrl }] : []),
-      ...(data.address !== undefined ? [{ key: 'address', value: data.address }] : []),
-      ...(data.country !== undefined ? [{ key: 'country', value: data.country }] : []),
+      ...(data.storeName !== undefined
+        ? [{ key: 'store_name', value: data.storeName }]
+        : []),
+      ...(data.storeEmail !== undefined
+        ? [{ key: 'store_email', value: data.storeEmail }]
+        : []),
+      ...(data.storePhone !== undefined
+        ? [{ key: 'store_phone', value: data.storePhone }]
+        : []),
+      ...(data.defaultLanguage !== undefined
+        ? [{ key: 'default_language', value: data.defaultLanguage }]
+        : []),
+      ...(data.currency !== undefined
+        ? [{ key: 'currency', value: data.currency }]
+        : []),
+      ...(data.taxPercent !== undefined
+        ? [{ key: 'tax_percent', value: data.taxPercent.toString() }]
+        : []),
+      ...(data.freeShippingThreshold !== undefined
+        ? [
+            {
+              key: 'free_shipping_threshold',
+              value: data.freeShippingThreshold.toString(),
+            },
+          ]
+        : []),
+      ...(data.enableStripe !== undefined
+        ? [{ key: 'enable_stripe', value: data.enableStripe.toString() }]
+        : []),
+      ...(data.enableMomo !== undefined
+        ? [{ key: 'enable_momo', value: data.enableMomo.toString() }]
+        : []),
+      ...(data.enableCOD !== undefined
+        ? [{ key: 'enable_cod', value: data.enableCOD.toString() }]
+        : []),
+      ...(data.maintenanceMode !== undefined
+        ? [{ key: 'maintenance_mode', value: data.maintenanceMode.toString() }]
+        : []),
+      ...(data.logoUrl !== undefined
+        ? [{ key: 'logo_url', value: data.logoUrl }]
+        : []),
+      ...(data.address !== undefined
+        ? [{ key: 'address', value: data.address }]
+        : []),
+      ...(data.country !== undefined
+        ? [{ key: 'country', value: data.country }]
+        : []),
     ];
 
     // Update settings in transaction
@@ -115,4 +151,4 @@ export class SettingsService {
     // Invalidate cache
     this.cacheService.delete(this.cacheKey);
   }
-} 
+}

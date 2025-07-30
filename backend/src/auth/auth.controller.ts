@@ -42,6 +42,11 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto): Promise<AuthResponse> {
     const { email, password } = loginDto;
 
+    // Validate input
+    if (!email || !password) {
+      throw new BadRequestException('Email and password are required');
+    }
+
     // Find user by email
     const user = await this.prisma.user.findUnique({
       where: { email },
@@ -91,6 +96,11 @@ export class AuthController {
   async register(@Body() registerDto: RegisterDto): Promise<AuthResponse> {
     const { email, password, name } = registerDto;
 
+    // Validate input
+    if (!email || !password || !name) {
+      throw new BadRequestException('Email, password, and name are required');
+    }
+
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
@@ -132,4 +142,4 @@ export class AuthController {
       },
     };
   }
-} 
+}

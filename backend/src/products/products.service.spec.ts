@@ -19,6 +19,22 @@ describe('ProductsService', () => {
     category: {
       findMany: jest.fn(),
     },
+    orderItem: {
+      deleteMany: jest.fn(),
+    },
+    review: {
+      deleteMany: jest.fn(),
+    },
+    cartItem: {
+      deleteMany: jest.fn(),
+    },
+    wishlist: {
+      deleteMany: jest.fn(),
+    },
+    image: {
+      deleteMany: jest.fn(),
+    },
+    $transaction: jest.fn((callback) => callback(mockPrismaService)),
   };
 
   const mockProduct: Product = {
@@ -30,6 +46,7 @@ describe('ProductsService', () => {
     discount: 0,
     quantity: 10,
     categoryId: '1',
+    weight: 100,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -64,6 +81,7 @@ describe('ProductsService', () => {
             get: jest.fn().mockReturnValue(null),
             set: jest.fn(),
             delete: jest.fn(),
+            deletePattern: jest.fn(),
             generateKey: jest.fn().mockReturnValue('test-key'),
           },
         },
@@ -330,6 +348,7 @@ describe('ProductsService', () => {
         ...mockProduct,
         category: mockCategory,
         images: [mockImage],
+        reviews: [],
       };
       mockPrismaService.product.delete.mockResolvedValue(mockDeletedProduct);
 

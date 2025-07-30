@@ -89,26 +89,51 @@ export class OrdersService {
   }
 
   async create(data: any, userId: string): Promise<Order> {
-    const { info, products, deliveryFee, paymentMethod } = data;
+    const { items, shippingAddress: addressInfo, deliveryFee, paymentMethod } = data;
+
+    // Handle both info and shippingAddress formats
+    const orderInfo = addressInfo;
     
+    if (!orderInfo) {
+      throw new Error('Order information is required');
+    }
+
     // Compose shipping address string
     const shippingAddress = [
-      info.fullName,
-      info.phone,
-      info.email,
-      info.province,
-      info.district,
-      info.ward,
-      info.address,
-      info.apartment,
-      info.note,
+      orderInfo.fullName,
+      orderInfo.phone,
+      orderInfo.address,
+      orderInfo.city,
+      orderInfo.state,
+      orderInfo.zipCode,
+      orderInfo.country,
+      orderInfo.apartment,
+      orderInfo.note,
     ]
       .filter(Boolean)
       .join(', ');
 
     // Calculate total
-    const subtotal = products.reduce(
-      (sum: number, item: any) => sum + item.product.price * item.quantity,
+    if (!items || !Array.isArray(items)) {
+      throw new Error('Items array is required');
+    }
+    
+    // Get product details for each item
+    const itemsWithProducts = await Promise.all(
+      items.map(async (item: any) => {
+        const product = await this.prisma.product.findUnique({
+          where: { id: item.productId },
+          select: { id: true, price: true },
+        });
+        if (!product) {
+          throw new Error(`Product with ID ${item.productId} not found`);
+        }
+        return { ...item, product };
+      })
+    );
+    
+    const subtotal = itemsWithProducts.reduce(
+      (sum: number, item: any) => sum + (item.product?.price || 0) * item.quantity,
       0,
     );
     const total = subtotal + (deliveryFee || 0);
@@ -121,8 +146,8 @@ export class OrdersService {
         paymentMethod: paymentMethod?.toUpperCase() || 'COD',
         shippingAddress,
         orderItems: {
-          create: products.map((item: any) => ({
-            productId: item.product.id,
+          create: itemsWithProducts.map((item: any) => ({
+            productId: item.productId,
             quantity: item.quantity,
             price: item.product.price,
           })),
@@ -153,7 +178,7 @@ export class OrdersService {
 
   async createGuestOrder(data: any): Promise<Order> {
     const { info, products, deliveryFee, paymentMethod } = data;
-    
+
     // Map payment method to correct enum value
     const mapPaymentMethod = (method: string): any => {
       switch (method.toLowerCase()) {
@@ -171,7 +196,7 @@ export class OrdersService {
           return 'COD';
       }
     };
-    
+
     // For guest orders, we save the guest information directly to the order
     // No need to create a user account
     const order = await this.prisma.order.create({
@@ -183,7 +208,11 @@ export class OrdersService {
         guestName: info.fullName,
         guestPhone: info.phone,
         total: new Prisma.Decimal(
-          products.reduce((sum: number, item: any) => sum + item.product.price * item.quantity, 0) + deliveryFee
+          products.reduce(
+            (sum: number, item: any) =>
+              sum + item.product.price * item.quantity,
+            0,
+          ) + deliveryFee,
         ),
         paymentMethod: mapPaymentMethod(paymentMethod),
         shippingAddress: `${info.fullName}, ${info.phone}, ${info.address}`,

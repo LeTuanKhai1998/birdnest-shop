@@ -1,28 +1,31 @@
 import { Controller, Get } from '@nestjs/common';
-import { HealthCheck, HealthCheckService, HealthIndicatorResult } from '@nestjs/terminus';
+import {
+  HealthCheck,
+  HealthCheckService,
+  HealthIndicatorResult,
+} from '@nestjs/terminus';
 
 @Controller('health')
 export class HealthController {
-  constructor(
-    private health: HealthCheckService,
-  ) {}
+  constructor(private health: HealthCheckService) {}
 
   @Get()
   @HealthCheck()
   check() {
     return this.health.check([
       // Application health check
-      () => Promise.resolve({
-        application: {
-          status: 'up',
-          details: {
-            timestamp: new Date().toISOString(),
-            uptime: process.uptime(),
-            memory: process.memoryUsage(),
-            version: process.env.npm_package_version || '1.0.0',
+      () =>
+        Promise.resolve({
+          application: {
+            status: 'up',
+            details: {
+              timestamp: new Date().toISOString(),
+              uptime: process.uptime(),
+              memory: process.memoryUsage(),
+              version: process.env.npm_package_version || '1.0.0',
+            },
           },
-        },
-      } as HealthIndicatorResult),
+        } as HealthIndicatorResult),
     ]);
   }
 
@@ -30,15 +33,16 @@ export class HealthController {
   @HealthCheck()
   readiness() {
     return this.health.check([
-      () => Promise.resolve({
-        application: {
-          status: 'up',
-          details: {
-            timestamp: new Date().toISOString(),
-            uptime: process.uptime(),
+      () =>
+        Promise.resolve({
+          application: {
+            status: 'up',
+            details: {
+              timestamp: new Date().toISOString(),
+              uptime: process.uptime(),
+            },
           },
-        },
-      } as HealthIndicatorResult),
+        } as HealthIndicatorResult),
     ]);
   }
 
@@ -46,15 +50,16 @@ export class HealthController {
   @HealthCheck()
   liveness() {
     return this.health.check([
-      () => Promise.resolve({
-        application: {
-          status: 'up',
-          details: {
-            timestamp: new Date().toISOString(),
-            uptime: process.uptime(),
+      () =>
+        Promise.resolve({
+          application: {
+            status: 'up',
+            details: {
+              timestamp: new Date().toISOString(),
+              uptime: process.uptime(),
+            },
           },
-        },
-      } as HealthIndicatorResult),
+        } as HealthIndicatorResult),
     ]);
   }
-} 
+}

@@ -24,22 +24,24 @@ export class CreateNotificationDto {
   @IsString()
   body?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Notification type',
-    enum: NotificationType 
+    enum: NotificationType,
   })
   @IsEnum(NotificationType)
   type: NotificationType;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Recipient type',
-    enum: RecipientType 
+    enum: RecipientType,
   })
   @IsEnum(RecipientType)
   recipientType: RecipientType;
 
-  @ApiProperty({ description: 'User ID (optional for broadcast notifications)' })
+  @ApiProperty({
+    description: 'User ID (optional for broadcast notifications)',
+  })
   @IsOptional()
   @IsString()
   userId?: string;
-} 
+}

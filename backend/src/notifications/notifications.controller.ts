@@ -10,8 +10,15 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
@@ -26,40 +33,59 @@ export class NotificationsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new notification' })
-  @ApiResponse({ status: 201, description: 'Notification created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Notification created successfully',
+  })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(@Body() createNotificationDto: CreateNotificationDto, @Request() req) {
     // Only admins can create notifications
     if (!req.user.isAdmin) {
-      throw new Error('Only admins can create notifications');
+      throw new ForbiddenException('Only admins can create notifications');
     }
     return this.notificationsService.create(createNotificationDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all notifications for the current user' })
-  @ApiResponse({ status: 200, description: 'Notifications retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notifications retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAll(@Request() req) {
-    return this.notificationsService.findAll(req.user.id, req.user.isAdmin);
+    return this.notificationsService.findAll(req.user.userId, req.user.isAdmin);
   }
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notification count' })
-  @ApiResponse({ status: 200, description: 'Unread count retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Unread count retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getUnreadCount(@Request() req) {
-    return this.notificationsService.findUnreadCount(req.user.id, req.user.isAdmin);
+    return this.notificationsService.findUnreadCount(
+      req.user.userId,
+      req.user.isAdmin,
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific notification' })
-  @ApiResponse({ status: 200, description: 'Notification retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'Notification not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findOne(@Param('id') id: string, @Request() req) {
-    return this.notificationsService.findOne(id, req.user.id, req.user.isAdmin);
+  async findOne(@Param('id') id: string, @Request() req) {
+    const notification = await this.notificationsService.findOne(id, req.user.userId, req.user.isAdmin);
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+    return notification;
   }
 
   @Patch(':id/read')
@@ -68,8 +94,16 @@ export class NotificationsController {
   @ApiResponse({ status: 200, description: 'Notification marked as read' })
   @ApiResponse({ status: 404, description: 'Notification not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  markAsRead(@Param('id') id: string, @Request() req) {
-    return this.notificationsService.markAsRead(id, req.user.id, req.user.isAdmin);
+  async markAsRead(@Param('id') id: string, @Request() req) {
+    const notification = await this.notificationsService.markAsRead(
+      id,
+      req.user.userId,
+      req.user.isAdmin,
+    );
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+    return notification;
   }
 
   @Patch('read-all')
@@ -78,15 +112,25 @@ export class NotificationsController {
   @ApiResponse({ status: 200, description: 'All notifications marked as read' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   markAllAsRead(@Request() req) {
-    return this.notificationsService.markAllAsRead(req.user.id, req.user.isAdmin);
+    return this.notificationsService.markAllAsRead(
+      req.user.userId,
+      req.user.isAdmin,
+    );
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a notification' })
-  @ApiResponse({ status: 200, description: 'Notification deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification deleted successfully',
+  })
   @ApiResponse({ status: 404, description: 'Notification not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  remove(@Param('id') id: string, @Request() req) {
-    return this.notificationsService.remove(id, req.user.id, req.user.isAdmin);
+  async remove(@Param('id') id: string, @Request() req) {
+    const notification = await this.notificationsService.remove(id, req.user.userId, req.user.isAdmin);
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+    return notification;
   }
-} 
+}

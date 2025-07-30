@@ -1,14 +1,17 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { AppModule } from '../src/app.module';
 import helmet from 'helmet';
-import { GlobalExceptionFilter } from './common/global-exception.filter';
-import { PerformanceInterceptor } from './common/performance.interceptor';
-import { PerformanceService } from './common/performance.service';
+import { GlobalExceptionFilter } from '../src/common/global-exception.filter';
+import { PerformanceInterceptor } from '../src/common/performance.interceptor';
+import { PerformanceService } from '../src/common/performance.service';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+export async function createTestingApp(): Promise<INestApplication> {
+  const moduleFixture: TestingModule = await Test.createTestingModule({
+    imports: [AppModule],
+  }).compile();
+
+  const app = moduleFixture.createNestApplication();
 
   // Security middleware
   app.use(helmet({
@@ -50,17 +53,6 @@ async function bootstrap() {
   // Global prefix
   app.setGlobalPrefix('api');
 
-  // Swagger documentation
-  const config = new DocumentBuilder()
-    .setTitle('Birdnest Shop API')
-    .setDescription('The Birdnest Shop API description')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('swagger', app, document);
-
-  const port = process.env.APP_PORT || 8080;
-  await app.listen(port);
-}
-void bootstrap();
+  await app.init();
+  return app;
+} 

@@ -5,4 +5,4 @@ export class SearchGuestOrdersDto {
   @IsNotEmpty()
   @MinLength(3)
   query: string;
-} 
+}

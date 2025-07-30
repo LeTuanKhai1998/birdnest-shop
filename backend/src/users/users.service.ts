@@ -70,7 +70,7 @@ export class UsersService {
     // Only allow updating safe fields
     const allowedFields = ['name', 'phone', 'bio'];
     const filteredData: any = {};
-    
+
     for (const field of allowedFields) {
       if (updateData[field] !== undefined) {
         filteredData[field] = updateData[field];

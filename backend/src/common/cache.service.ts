@@ -80,7 +80,9 @@ export class CacheService {
     }
 
     if (deleted > 0) {
-      this.logger.log(`Deleted ${deleted} cache entries matching pattern: ${pattern}`);
+      this.logger.log(
+        `Deleted ${deleted} cache entries matching pattern: ${pattern}`,
+      );
     }
 
     return deleted;

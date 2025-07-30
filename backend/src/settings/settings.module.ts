@@ -9,4 +9,4 @@ import { CacheService } from '../common/cache.service';
   providers: [SettingsService, PrismaService, CacheService],
   exports: [SettingsService],
 })
-export class SettingsModule {} 
+export class SettingsModule {}

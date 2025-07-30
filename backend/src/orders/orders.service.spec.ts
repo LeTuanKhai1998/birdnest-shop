@@ -21,6 +21,9 @@ describe('OrdersService', () => {
       createMany: jest.fn(),
     },
     $transaction: jest.fn(),
+    product: {
+      findUnique: jest.fn(),
+    },
   };
 
   const mockUser: User = {
@@ -46,6 +49,7 @@ describe('OrdersService', () => {
     discount: 0,
     quantity: 10,
     categoryId: '1',
+    weight: 100,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -65,6 +69,9 @@ describe('OrdersService', () => {
     status: 'PENDING',
     paymentMethod: 'COD',
     shippingAddress: 'Test Address',
+    guestEmail: null,
+    guestName: null,
+    guestPhone: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -286,10 +293,25 @@ describe('OrdersService', () => {
   describe('create', () => {
     it('should create a new order with items', async () => {
       const createData = {
-        userId: '1',
-        total: new Prisma.Decimal('2000000'),
-        shippingAddress: 'Test Address',
-        user: { connect: { id: '1' } },
+        items: [
+          {
+            productId: '1',
+            quantity: 2,
+          },
+        ],
+        shippingAddress: {
+          fullName: 'Test User',
+          phone: '1234567890',
+          email: 'test@example.com',
+          province: 'Test Province',
+          district: 'Test District',
+          ward: 'Test Ward',
+          address: 'Test Address',
+          apartment: 'Test Apartment',
+          note: 'Test Note',
+        },
+        deliveryFee: 0,
+        paymentMethod: 'COD',
       };
 
       const mockCreatedOrder = {
@@ -299,8 +321,12 @@ describe('OrdersService', () => {
       };
 
       mockPrismaService.order.create.mockResolvedValue(mockCreatedOrder);
+      mockPrismaService.product.findUnique.mockResolvedValue({
+        id: '1',
+        price: new Prisma.Decimal('1000000'),
+      });
 
-      const result = await service.create(createData as any);
+      const result = await service.create(createData as any, '1');
 
       expect(result).toEqual(mockCreatedOrder);
       expect(mockPrismaService.order.create).toHaveBeenCalled();

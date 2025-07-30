@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationsService } from './notifications.service';
 import { PrismaService } from '../common/prisma.service';
-import { CreateNotificationDto, NotificationType, RecipientType } from './dto/create-notification.dto';
+import {
+  CreateNotificationDto,
+  NotificationType,
+  RecipientType,
+} from './dto/create-notification.dto';
 import { NotFoundException } from '@nestjs/common';
 
 describe('NotificationsService', () => {
@@ -66,7 +70,9 @@ describe('NotificationsService', () => {
         },
       };
 
-      mockPrismaService.notification.create.mockResolvedValue(expectedNotification);
+      mockPrismaService.notification.create.mockResolvedValue(
+        expectedNotification,
+      );
 
       const result = await service.create(createNotificationDto);
 
@@ -109,7 +115,9 @@ describe('NotificationsService', () => {
         },
       ];
 
-      mockPrismaService.notification.findMany.mockResolvedValue(expectedNotifications);
+      mockPrismaService.notification.findMany.mockResolvedValue(
+        expectedNotifications,
+      );
 
       const result = await service.findAll(userId, isAdmin);
 
@@ -206,7 +214,9 @@ describe('NotificationsService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrismaService.notification.findFirst.mockResolvedValue(expectedNotification);
+      mockPrismaService.notification.findFirst.mockResolvedValue(
+        expectedNotification,
+      );
 
       const result = await service.findOne(id, userId, isAdmin);
 
@@ -259,8 +269,12 @@ describe('NotificationsService', () => {
         isRead: true,
       };
 
-      mockPrismaService.notification.findFirst.mockResolvedValue(existingNotification);
-      mockPrismaService.notification.update.mockResolvedValue(updatedNotification);
+      mockPrismaService.notification.findFirst.mockResolvedValue(
+        existingNotification,
+      );
+      mockPrismaService.notification.update.mockResolvedValue(
+        updatedNotification,
+      );
 
       const result = await service.markAsRead(id, userId, isAdmin);
 
@@ -287,7 +301,9 @@ describe('NotificationsService', () => {
       const isAdmin = false;
       const expectedResult = { count: 5 };
 
-      mockPrismaService.notification.updateMany.mockResolvedValue(expectedResult);
+      mockPrismaService.notification.updateMany.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await service.markAllAsRead(userId, isAdmin);
 
@@ -315,8 +331,12 @@ describe('NotificationsService', () => {
         title: 'Test Notification',
       };
 
-      mockPrismaService.notification.findFirst.mockResolvedValue(existingNotification);
-      mockPrismaService.notification.delete.mockResolvedValue(existingNotification);
+      mockPrismaService.notification.findFirst.mockResolvedValue(
+        existingNotification,
+      );
+      mockPrismaService.notification.delete.mockResolvedValue(
+        existingNotification,
+      );
 
       const result = await service.remove(id, userId, isAdmin);
 
@@ -440,4 +460,4 @@ describe('NotificationsService', () => {
       });
     });
   });
-}); 
+});

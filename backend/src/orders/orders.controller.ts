@@ -2,204 +2,94 @@ import {
   Controller,
   Get,
   Post,
-  Put,
-  Param,
   Body,
+  Patch,
+  Param,
+  Delete,
   Query,
   UseGuards,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { SearchGuestOrdersDto } from './dto/search-guest-orders.dto';
-import { OrderStatus } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles, Role } from '../auth/roles.decorator';
 
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Get('demo')
-  async getDemoData() {
-    // Return demo data for dashboard when no authentication is available
-    return [
-      {
-        id: 'demo-order-1',
-        userId: 'demo-user-1',
-        status: 'delivered',
-        total: '1500000',
-        items: [
-          {
-            id: 'demo-item-1',
-            orderId: 'demo-order-1',
-            productId: 'demo-product-1',
-            quantity: 2,
-            price: '750000',
-          }
-        ],
-        shippingAddress: {
-          id: 'demo-address-1',
-          fullName: 'Demo Customer',
-          phone: '+84 123 456 789',
-          address: '123 Demo Street',
-          city: 'Ho Chi Minh City',
-          state: 'District 1',
-          zipCode: '70000',
-          country: 'Vietnam',
-          isDefault: true,
-          userId: 'demo-user-1',
-        },
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        user: {
-          id: 'demo-user-1',
-          name: 'Demo Customer',
-          email: 'demo@example.com',
-          isAdmin: false,
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      },
-      {
-        id: 'demo-order-2',
-        userId: 'demo-user-2',
-        status: 'processing',
-        total: '2500000',
-        items: [
-          {
-            id: 'demo-item-2',
-            orderId: 'demo-order-2',
-            productId: 'demo-product-2',
-            quantity: 1,
-            price: '2500000',
-          }
-        ],
-        shippingAddress: {
-          id: 'demo-address-2',
-          fullName: 'Another Customer',
-          phone: '+84 987 654 321',
-          address: '456 Sample Road',
-          city: 'Hanoi',
-          state: 'Ba Dinh',
-          zipCode: '10000',
-          country: 'Vietnam',
-          isDefault: true,
-          userId: 'demo-user-2',
-        },
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        user: {
-          id: 'demo-user-2',
-          name: 'Another Customer',
-          email: 'another@example.com',
-          isAdmin: false,
-          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      },
-      {
-        id: 'demo-order-3',
-        userId: 'demo-user-3',
-        status: 'pending',
-        total: '800000',
-        items: [
-          {
-            id: 'demo-item-3',
-            orderId: 'demo-order-3',
-            productId: 'demo-product-3',
-            quantity: 1,
-            price: '800000',
-          }
-        ],
-        shippingAddress: {
-          id: 'demo-address-3',
-          fullName: 'Third Customer',
-          phone: '+84 555 123 456',
-          address: '789 Test Avenue',
-          city: 'Da Nang',
-          state: 'Hai Chau',
-          zipCode: '55000',
-          country: 'Vietnam',
-          isDefault: true,
-          userId: 'demo-user-3',
-        },
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        user: {
-          id: 'demo-user-3',
-          name: 'Third Customer',
-          email: 'third@example.com',
-          isAdmin: false,
-          createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      }
-    ];
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() createOrderDto: CreateOrderDto, @Request() req) {
+    return this.ordersService.create(createOrderDto, req.user.userId);
+  }
+
+  @Post('guest')
+  async createGuestOrder(@Body() data: any) {
+    return this.ordersService.createGuestOrder(data);
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
-  async findAll(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
-    @Query('userId') userId?: string,
-    @Query('status') status?: string,
-    @Request() req: any,
-  ) {
-    // If no userId is provided, use the current user's ID
-    const currentUserId = userId || req.user.userId;
-    
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async findAll(@Query() query: any) {
+    const { skip, take, userId, status } = query;
     return this.ordersService.findAll({
       skip: skip ? parseInt(skip) : undefined,
       take: take ? parseInt(take) : undefined,
-      userId: currentUserId,
-      status: status as OrderStatus | undefined,
+      userId,
+      status,
+    });
+  }
+
+  @Get('my-orders')
+  @UseGuards(JwtAuthGuard)
+  async findMyOrders(@Request() req, @Query() query: any) {
+    const { skip, take, status } = query;
+    return this.ordersService.findAll({
+      skip: skip ? parseInt(skip) : undefined,
+      take: take ? parseInt(take) : undefined,
+      userId: req.user.userId,
+      status,
     });
   }
 
   @Get('stats')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async getStats() {
     return this.ordersService.getOrderStats();
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  async findOne(@Param('id') id: string, @Request() req: any) {
+  async findOne(@Param('id') id: string, @Request() req) {
     const order = await this.ordersService.findOne(id);
     
-    // Ensure the order belongs to the current user (unless admin)
+    // Check if user can access this order
     if (order && order.userId !== req.user.userId && !req.user.isAdmin) {
-      return { error: 'Order not found' };
+      throw new ForbiddenException('You can only view your own orders');
     }
     
     return order;
   }
 
-  @Post()
-  @UseGuards(JwtAuthGuard)
-  async create(@Body() data: CreateOrderDto, @Request() req: any) {
-    return this.ordersService.create(data, req.user.id);
-  }
-
-  @Post('guest')
-  async createGuestOrder(@Body() data: any) {
-    // Create a guest order without authentication
-    return this.ordersService.createGuestOrder(data);
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() updateOrderStatusDto: UpdateOrderStatusDto,
+  ) {
+    return this.ordersService.updateStatus(id, updateOrderStatusDto.status);
   }
 
   @Post('guest/search')
   async searchGuestOrders(@Body() searchDto: SearchGuestOrdersDto) {
     return this.ordersService.searchGuestOrders(searchDto.query);
-  }
-
-  @Put(':id/status')
-  @UseGuards(JwtAuthGuard)
-  async updateStatus(
-    @Param('id') id: string,
-    @Body() data: UpdateOrderStatusDto,
-  ) {
-    return this.ordersService.updateStatus(id, data.status);
   }
 }

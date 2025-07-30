@@ -1,6 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
-import { CreateNotificationDto, NotificationType, RecipientType } from './dto/create-notification.dto';
+import {
+  CreateNotificationDto,
+  NotificationType,
+  RecipientType,
+} from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 
 @Injectable()
@@ -30,15 +34,15 @@ export class NotificationsService {
 
   async findAll(userId: string, isAdmin: boolean) {
     console.log('Finding notifications for user:', userId, 'isAdmin:', isAdmin);
-    
+
     const where: any = {
       OR: [
         // User-specific notifications
         { userId: userId },
         // Broadcast notifications for the user's role
-        { 
-          userId: null, 
-          recipientType: isAdmin ? RecipientType.ADMIN : RecipientType.USER 
+        {
+          userId: null,
+          recipientType: isAdmin ? RecipientType.ADMIN : RecipientType.USER,
         },
       ],
     };
@@ -70,9 +74,9 @@ export class NotificationsService {
       isRead: false,
       OR: [
         { userId: userId },
-        { 
-          userId: null, 
-          recipientType: isAdmin ? RecipientType.ADMIN : RecipientType.USER 
+        {
+          userId: null,
+          recipientType: isAdmin ? RecipientType.ADMIN : RecipientType.USER,
         },
       ],
     };
@@ -86,9 +90,9 @@ export class NotificationsService {
         id,
         OR: [
           { userId: userId },
-          { 
-            userId: null, 
-            recipientType: isAdmin ? RecipientType.ADMIN : RecipientType.USER 
+          {
+            userId: null,
+            recipientType: isAdmin ? RecipientType.ADMIN : RecipientType.USER,
           },
         ],
       },
@@ -112,7 +116,7 @@ export class NotificationsService {
 
   async markAsRead(id: string, userId: string, isAdmin: boolean) {
     const notification = await this.findOne(id, userId, isAdmin);
-    
+
     return this.prisma.notification.update({
       where: { id },
       data: { isRead: true },
@@ -133,29 +137,35 @@ export class NotificationsService {
       isRead: false,
       OR: [
         { userId: userId },
-        { 
-          userId: null, 
-          recipientType: isAdmin ? RecipientType.ADMIN : RecipientType.USER 
+        {
+          userId: null,
+          recipientType: isAdmin ? RecipientType.ADMIN : RecipientType.USER,
         },
       ],
     };
 
-    return this.prisma.notification.updateMany({
+    const result = await this.prisma.notification.updateMany({
       where,
       data: { isRead: true },
     });
+
+    return { count: result.count };
   }
 
   async remove(id: string, userId: string, isAdmin: boolean) {
     const notification = await this.findOne(id, userId, isAdmin);
-    
+
     return this.prisma.notification.delete({
       where: { id },
     });
   }
 
   // Helper methods for creating system notifications
-  async createOrderNotification(userId: string, orderId: string, status: string) {
+  async createOrderNotification(
+    userId: string,
+    orderId: string,
+    status: string,
+  ) {
     return this.create({
       title: `Order Update`,
       body: `Your order #${orderId} has been ${status.toLowerCase()}`,
@@ -174,7 +184,11 @@ export class NotificationsService {
     });
   }
 
-  async createPaymentNotification(userId: string, orderId: string, status: string) {
+  async createPaymentNotification(
+    userId: string,
+    orderId: string,
+    status: string,
+  ) {
     return this.create({
       title: `Payment ${status}`,
       body: `Payment for order #${orderId} has been ${status.toLowerCase()}`,
@@ -227,4 +241,4 @@ export class NotificationsService {
 
     return createdNotifications;
   }
-} 
+}
