@@ -28,11 +28,9 @@ function SignupPageInner() {
     // Check for NextAuth session
     if (status === 'authenticated' && session?.user) {
       const user = session.user as { id: string; email: string; name?: string; isAdmin: boolean };
-      if (user.isAdmin) {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
+      // Redirect to appropriate dashboard based on user type
+      const defaultDestination = user.isAdmin ? '/admin' : '/dashboard';
+      router.push(defaultDestination);
       return;
     }
 
@@ -43,11 +41,9 @@ function SignupPageInner() {
     if (token && userData) {
       try {
         const user = JSON.parse(userData);
-        if (user.isAdmin) {
-          router.push('/admin');
-        } else {
-          router.push('/dashboard');
-        }
+        // Redirect to appropriate dashboard based on user type
+        const defaultDestination = user.isAdmin ? '/admin' : '/dashboard';
+        router.push(defaultDestination);
       } catch (error) {
         console.error('Error parsing user data from localStorage:', error);
         localStorage.removeItem('auth-token');

@@ -14,6 +14,13 @@
 
 ## Lessons
 
+### Prisma Client Regeneration
+- **Issue**: TypeScript errors when using new fields in Prisma schema
+- **Solution**: Always run `npx prisma generate --schema=backend/prisma/schema.prisma` after schema changes (monorepo setup)
+- **Prevention**: Add `prisma generate --schema=backend/prisma/schema.prisma` to build scripts and CI/CD pipeline
+- **Symptoms**: "Object literal may only specify known properties" errors for new fields
+- **Note**: In this monorepo, Prisma client is generated at root level but schema is in backend/
+
 ## Scratchpad
 
 ### 1. Project Setup and Configuration [X]
@@ -659,6 +666,10 @@ enum RecipientType {
 - [X] SEO Metadata:
   - `<title>Track Order – Birdnest Shop</title>`
   - Add meta description for guest order tracking
+
+- [X] **FIXED**: Prisma client regeneration issue - regenerated client after adding guest fields to Order model
+- [X] **FIXED**: Created test guest orders for testing the functionality
+- [X] **VERIFIED**: Guest order search API working correctly with both email and phone queries
 
 
 ### 16. Optimize Home Page Layout and Content [X]

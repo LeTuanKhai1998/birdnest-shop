@@ -20,65 +20,32 @@ function LoginPageInner() {
   const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
+  const callbackUrl = searchParams?.get('callbackUrl') || '/';
   const { data: session, status } = useSession();
+
+  // Clear any stuck authentication data on component mount
+  useEffect(() => {
+    console.log('Login page mounted - clearing any stuck auth data');
+    // Clear any potentially corrupted auth data
+    localStorage.removeItem('auth-token');
+    localStorage.removeItem('user');
+  }, []);
 
   // Check if user is already authenticated
   useEffect(() => {
-    // Check for NextAuth session
-    if (status === 'authenticated' && session?.user) {
-      const user = session.user as { id: string; email: string; name?: string; isAdmin: boolean };
-      if (user.isAdmin) {
-        router.push('/admin');
-      } else {
-        router.push(callbackUrl);
-      }
-      return;
-    }
-
-    // Check for localStorage auth (admin users)
-    const token = localStorage.getItem('auth-token');
-    const userData = localStorage.getItem('user');
+    console.log('Login page useEffect - status:', status, 'session:', !!session, 'callbackUrl:', callbackUrl);
     
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData);
-        if (user.isAdmin) {
-          router.push('/admin');
-        } else {
-          router.push(callbackUrl);
-        }
-      } catch (error) {
-        console.error('Error parsing user data from localStorage:', error);
-        localStorage.removeItem('auth-token');
-        localStorage.removeItem('user');
-      }
+    // Only redirect if we have a valid session
+    if (status === 'authenticated' && session?.user) {
+      console.log('NextAuth session found, redirecting to:', callbackUrl);
+      router.push(callbackUrl);
+      return;
     }
   }, [session, status, router, callbackUrl]);
 
-  // Show loading while checking authentication
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a10000] mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang kiểm tra đăng nhập...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render login form if user is authenticated
-  if (status === 'authenticated' || localStorage.getItem('auth-token')) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a10000] mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang chuyển hướng...</p>
-        </div>
-      </div>
-    );
-  }
+  // Temporarily bypass all authentication checks to show login form
+  console.log('Bypassing authentication checks to show login form');
+  console.log('Status:', status, 'Session:', !!session);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,13 +69,23 @@ function LoginPageInner() {
         localStorage.setItem('auth-token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redirect based on user type and callback URL
-        if (data.user.isAdmin) {
-          router.push(callbackUrl.startsWith('/admin') ? callbackUrl : '/admin');
-        } else {
+        // Now sign in with NextAuth to create a session
+        const nextAuthResult = await signIn('credentials', {
+          email,
+          password,
+          redirect: false,
+        });
+        
+        if (nextAuthResult?.ok) {
+          // NextAuth session created successfully
           router.push(callbackUrl);
+          return;
+        } else {
+          // If NextAuth fails, still proceed with custom auth
+          console.log('NextAuth signin failed, but custom auth succeeded');
+          router.push(callbackUrl);
+          return;
         }
-        return;
       }
     } catch (error) {
       console.log('Custom API login failed, trying NextAuth...');
@@ -300,6 +277,23 @@ function LoginPageInner() {
                     Đăng ký ngay
                   </a>
                 </p>
+                {/* Debug section - remove in production */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-xs text-gray-500 mb-2">Debug Info:</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.removeItem('auth-token');
+                        localStorage.removeItem('user');
+                        window.location.reload();
+                      }}
+                      className="text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      Clear Auth Data & Reload
+                    </button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

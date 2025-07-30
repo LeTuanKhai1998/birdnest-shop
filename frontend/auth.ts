@@ -13,6 +13,11 @@ type AuthUser = { id: string; isAdmin: boolean; email: string; name?: string };
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
+  pages: {
+    signIn: '/login',
+    signOut: '/',
+    error: '/login',
+  },
   providers: [
     Credentials({
       name: 'Credentials',
@@ -25,27 +30,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        // Mock user for dev
-        if (
-          (credentials.email === 'test@demo.com' &&
-            credentials.password === 'Test@1234') ||
-          (credentials.email === 'demo@demo.com' &&
-            credentials.password === 'Demo@1234') ||
-          (credentials.email === 'user@example.com' &&
-            credentials.password === '123456')
-        ) {
-          return {
-            id: 'mock-demo-id',
-            email: credentials.email,
-            name:
-              credentials.email === 'demo@demo.com'
-                ? 'Demo User'
-                : credentials.email === 'user@example.com'
-                  ? 'Test User'
-                  : 'Test User',
-            isAdmin: false,
-          };
-        }
         // Real DB logic
         const email = credentials.email?.toString() || '';
         const user = await prisma.user.findUnique({ where: { email } });

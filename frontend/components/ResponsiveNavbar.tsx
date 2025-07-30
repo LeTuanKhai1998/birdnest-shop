@@ -51,13 +51,49 @@ export function ResponsiveNavbar() {
   const [isLeftMenuVisible, setIsLeftMenuVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [localUser, setLocalUser] = useState<any>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
   const pathname = usePathname();
   const userFromSession = session?.user;
   
-  // Use session data directly instead of fetching from backend
-  const user = userFromSession;
+  // Check for localStorage authentication
+  useEffect(() => {
+    const checkLocalAuth = () => {
+      const authToken = localStorage.getItem('auth-token');
+      const userData = localStorage.getItem('user');
+      
+      if (authToken && userData) {
+        try {
+          const user = JSON.parse(userData);
+          setLocalUser(user);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+          localStorage.removeItem('auth-token');
+          localStorage.removeItem('user');
+          setLocalUser(null);
+        }
+      } else {
+        setLocalUser(null);
+      }
+    };
+
+    checkLocalAuth();
+    
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth-token' || e.key === 'user') {
+        checkLocalAuth();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Use session data or local user data
+  const user = userFromSession || localUser;
+  const isAuthenticated = !!session || !!localUser;
   
   // Check if we're on dashboard or admin pages to hide left sidebar
   const isDashboardPage = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
@@ -134,6 +170,34 @@ export function ResponsiveNavbar() {
       return pathname === '/';
     }
     return pathname.startsWith(href);
+  };
+
+  // Handle logout for both NextAuth and localStorage
+  const handleLogout = async () => {
+    // Clear localStorage
+    localStorage.removeItem('auth-token');
+    localStorage.removeItem('user');
+    setLocalUser(null);
+    
+    // Sign out from NextAuth if session exists
+    if (session) {
+      await signOut();
+    }
+    
+    // Redirect to home
+    window.location.href = '/';
+  };
+
+  // Handle logout with sidebar close
+  const handleLogoutWithClose = async () => {
+    setSheetOpen(false);
+    await handleLogout();
+  };
+
+  // Handle logout with desktop sidebar close
+  const handleLogoutWithDesktopClose = async () => {
+    setDesktopSidebarOpen(false);
+    await handleLogout();
   };
 
   return (
@@ -270,7 +334,7 @@ export function ResponsiveNavbar() {
 
                 {/* User Menu - All Screen Sizes */}
                 <div className="flex items-center">
-                  {!session ? (
+                  {!isAuthenticated ? (
                     <Button
                       asChild
                       variant="outline"
@@ -307,30 +371,38 @@ export function ResponsiveNavbar() {
                           <p className="text-sm font-medium">{user?.name}</p>
                           <p className="text-xs text-gray-500">{user?.email}</p>
                         </div>
-                        <DropdownMenuItem onClick={() => window.location.href = '/dashboard/profile'}>
-                          <User className="w-4 h-4 mr-2" />
-                          Hồ sơ
+                        <DropdownMenuItem asChild>
+                          <Link href="/dashboard/profile">
+                            <User className="w-4 h-4 mr-2" />
+                            Hồ sơ
+                          </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.location.href = '/dashboard/orders'}>
-                          <ShoppingBag className="w-4 h-4 mr-2" />
-                          Đơn hàng
+                        <DropdownMenuItem asChild>
+                          <Link href="/dashboard/orders">
+                            <ShoppingBag className="w-4 h-4 mr-2" />
+                            Đơn hàng
+                          </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.location.href = '/dashboard/wishlist'}>
-                          <Heart className="w-4 h-4 mr-2" />
-                          Yêu thích
+                        <DropdownMenuItem asChild>
+                          <Link href="/dashboard/wishlist">
+                            <Heart className="w-4 h-4 mr-2" />
+                            Yêu thích
+                          </Link>
                         </DropdownMenuItem>
-                        {session.user?.isAdmin && (
+                        {session?.user?.isAdmin && (
                           <>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => window.location.href = '/admin'}>
-                              <Settings className="w-4 h-4 mr-2" />
-                              Quản trị
+                            <DropdownMenuItem asChild>
+                              <Link href="/admin">
+                                <Settings className="w-4 h-4 mr-2" />
+                                Quản trị
+                              </Link>
                             </DropdownMenuItem>
                           </>
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => signOut()}
+                          onClick={handleLogout}
                           className="flex items-center gap-2 text-red-600 focus:text-red-600"
                         >
                           <LogOut className="w-4 h-4 mr-2" />
@@ -438,7 +510,7 @@ export function ResponsiveNavbar() {
                       </nav>
 
                       {/* User Section */}
-                      {session && (
+                      {isAuthenticated && (
                         <div className="mb-8">
                           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                             Tài khoản
@@ -471,7 +543,7 @@ export function ResponsiveNavbar() {
                               <Heart className="w-6 h-6" />
                               Yêu thích
                             </Link>
-                            {session.user?.isAdmin && (
+                            {session?.user?.isAdmin && (
                               <Link
                                 href="/admin"
                                 className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
@@ -481,22 +553,19 @@ export function ResponsiveNavbar() {
                                 Quản trị
                               </Link>
                             )}
-                            <button
-                              onClick={() => {
-                                setSheetOpen(false);
-                                signOut();
-                              }}
-                              className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors w-full text-left text-red-600"
-                            >
-                              <LogOut className="w-6 h-6" />
-                              Đăng xuất
-                            </button>
+                                                          <button
+                                onClick={handleLogoutWithClose}
+                                className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors w-full text-left text-red-600"
+                              >
+                                <LogOut className="w-6 h-6" />
+                                Đăng xuất
+                              </button>
                           </div>
                         </div>
                       )}
 
                       {/* Guest Sign In */}
-                      {!session && (
+                      {!isAuthenticated && (
                         <div className="mb-8">
                           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                             Tài khoản
@@ -648,7 +717,7 @@ export function ResponsiveNavbar() {
             </nav>
 
             {/* User Section */}
-            {session && (
+            {isAuthenticated && (
               <div className="mb-8">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                   Tài khoản
@@ -681,7 +750,7 @@ export function ResponsiveNavbar() {
                     <Heart className="w-6 h-6" />
                     Wishlist
                   </Link>
-                  {session.user?.isAdmin && (
+                  {session?.user?.isAdmin && (
                     <Link
                       href="/admin"
                       className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
@@ -691,22 +760,19 @@ export function ResponsiveNavbar() {
                       Admin Dashboard
                     </Link>
                   )}
-                  <button
-                    onClick={() => {
-                      setDesktopSidebarOpen(false);
-                      signOut();
-                    }}
-                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors w-full text-left text-red-600"
-                  >
-                    <LogOut className="w-6 h-6" />
-                    Sign out
-                  </button>
+                                      <button
+                      onClick={handleLogoutWithDesktopClose}
+                      className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors w-full text-left text-red-600"
+                    >
+                      <LogOut className="w-6 h-6" />
+                      Sign out
+                    </button>
                 </div>
               </div>
             )}
 
             {/* Guest Sign In */}
-            {!session && (
+            {!isAuthenticated && (
               <div className="mb-8">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                   Account
