@@ -1118,68 +1118,183 @@ enum RecipientType {
 
 ---
 
-### 25. Authentication & Authorization Best Practice Audit []
+### 25. Authentication & Authorization Best Practice Audit [X]
 
-#### 🛡️ Backend Auth (NestJS + Prisma)
+#### 🛡️ Backend Auth (NestJS + Prisma) [X]
 
-- [ ] Ensure JWT AuthGuard is globally or selectively applied:
+- [X] Ensure JWT AuthGuard is globally or selectively applied:
   - Protect routes like `/api/user`, `/api/order`, `/api/cart`, `/api/admin/*`
   - Use `@UseGuards(AuthGuard)` with role-based `@Roles()` where needed
-- [ ] Decode JWT from `Authorization: Bearer <token>` or cookies
-- [ ] Validate token expiration and user existence in DB
-- [ ] Handle auth errors gracefully (401, 403) with standard response format
-- [ ] Add middleware to log suspicious or failed login attempts
-- [ ] Sanitize sensitive fields when returning user data (remove password, etc.)
+- [X] Decode JWT from `Authorization: Bearer <token>` or cookies
+- [X] Validate token expiration and user existence in DB
+- [X] Handle auth errors gracefully (401, 403) with standard response format
+- [X] Add middleware to log suspicious or failed login attempts
+- [X] Sanitize sensitive fields when returning user data (remove password, etc.)
 
-#### 🔒 Role-Based Access Control (RBAC)
+#### 🔒 Role-Based Access Control (RBAC) [X]
 
-- [ ] Add `role` field in `User` model (`USER`, `ADMIN`, etc.)
-- [ ] In protected endpoints, check roles:
+- [X] Add `role` field in `User` model (`USER`, `ADMIN`, etc.)
+- [X] In protected endpoints, check roles:
   - e.g., `@Roles('ADMIN')` to restrict admin APIs
-- [ ] In Prisma queries, filter based on user ID for user-specific data (e.g. orders)
+- [X] In Prisma queries, filter based on user ID for user-specific data (e.g. orders)
 
 ---
 
-#### 🧭 Frontend Auth (Next.js 15 + App Router + NextAuth.js)
+#### 🧭 Frontend Auth (Next.js 15 + App Router + NextAuth.js) [X]
 
-- [ ] Use `useSession()` or `auth()` (server-side) to access session info
-- [ ] Add `middleware.ts` to protect routes (e.g. `/checkout`, `/account`, `/admin`)
+- [X] Use `useSession()` or `auth()` (server-side) to access session info
+- [X] Add `middleware.ts` to protect routes (e.g. `/checkout`, `/account`, `/admin`)
   - Example: check session, redirect to `/login` if unauthenticated
-- [ ] Hide/show UI elements (e.g. profile dropdown, cart actions) based on auth
-- [ ] Sync layout state with session:
+- [X] Hide/show UI elements (e.g. profile dropdown, cart actions) based on auth
+- [X] Sync layout state with session:
   - Show skeleton/loading when session is being fetched
   - Avoid flash of unauthenticated state (Flicker)
-- [ ] Auto-refresh token on expiry if using JWT
-- [ ] Store user info in global state (e.g. Zustand) and sync with session
+- [X] Auto-refresh token on expiry if using JWT
+- [X] Store user info in global state (e.g. Zustand) and sync with session
 
 ---
 
-#### 🧪 Pages Auth Flow Validation
+#### 🧪 Pages Auth Flow Validation [X]
 
-- [ ] ✅ `/login`: Redirect to `/` if already logged in
-- [ ] ✅ `/signup`: Redirect to `/` if logged in
-- [ ] ✅ `/checkout`: Protected, must login before access
-- [ ] ✅ `/payment`: Protected, and ensure valid order context
-- [ ] ✅ `/admin`: Admin only – redirect or 403 for others
-- [ ] ✅ `/account`, `/orders`: Must be logged in
-
----
-
-#### 🧪 UX & Security Enhancements
-
-- [ ] Protect all forms (login, signup, contact) from CSRF
-- [ ] Show login-required toast if accessing protected features while logged out
-- [ ] Add logout confirmation and expiration auto-logout
-- [ ] Responsive error pages for 401, 403, 404
-- [ ] `meta` tag: `<meta name="referrer" content="no-referrer">` for privacy
+- [X] ✅ `/login`: Redirect to `/` if already logged in
+- [X] ✅ `/signup`: Redirect to `/` if logged in
+- [X] ✅ `/checkout`: Protected, must login before access
+- [X] ✅ `/payment`: Protected, and ensure valid order context
+- [X] ✅ `/admin`: Admin only – redirect or 403 for others
+- [X] ✅ `/account`, `/orders`: Must be logged in
 
 ---
 
-#### 🌐 i18n & Accessibility
+#### 🧪 UX & Security Enhancements [X]
 
-- [ ] Use `t('auth.login')`, `t('auth.signup')`, etc.
-- [ ] All inputs have `label` or `aria-label`
-- [ ] Keyboard navigable forms and buttons
+- [X] Protect all forms (login, signup, contact) from CSRF
+- [X] Show login-required toast if accessing protected features while logged out
+- [X] Add logout confirmation and expiration auto-logout
+- [X] Responsive error pages for 401, 403, 404
+- [X] `meta` tag: `<meta name="referrer" content="no-referrer">` for privacy
+
+---
+
+#### 🌐 i18n & Accessibility [X]
+
+- [X] Use `t('auth.login')`, `t('auth.signup')`, etc.
+- [X] All inputs have `label` or `aria-label`
+- [X] Keyboard navigable forms and buttons
+
+---
+
+#### 🔧 Authentication Integration Fix [X]
+
+- [X] **FIXED**: Menu bar showing "Đăng nhập" after login
+- [X] **FIXED**: Dual authentication system integration (custom API + NextAuth)
+- [X] **FIXED**: Unified authentication state handling in navbar
+- [X] **FIXED**: Proper logout for both authentication methods
+- [X] **FIXED**: Real-time authentication state updates
+
+---
+
+### 26. User Dashboard – UI Unification with Main Website []
+
+#### 🧩 Global Layout Integration
+
+- [ ] Refactor all `/dashboard/*` pages to use a shared layout:
+  - Create `app/dashboard/layout.tsx` if not yet defined
+  - Include left sidebar navigation (or top tabs on mobile)
+  - Keep `main` content area responsive with consistent padding
+- [ ] Add `<title>` and SEO metadata for each page
+
+---
+
+#### 🎨 Unified Styling
+
+- [ ] Sync all dashboard pages with main website styling:
+  - Use Tailwind CSS + Shadcn UI components
+  - Align spacing, font sizes, color palette (e.g. `text-foreground`, `bg-muted`)
+  - Consistent header structure: title, subtitle, optional actions
+- [ ] Apply consistent UI patterns: `Card`, `Tabs`, `Badge`, `Skeleton`, `Alert`
+- [ ] Responsive layout: stack on mobile, grid on desktop
+
+---
+
+#### 🧾 Orders – `/dashboard/orders`
+
+- [ ] Display orders in table/card list format
+  - Columns: Order ID, Date, Status, Total, Action
+- [ ] Add “View Details” button → `/dashboard/orders/[id]`
+- [ ] Empty state: friendly illustration + link to `/products`
+
+---
+
+#### 👤 Profile – `/dashboard/profile`
+
+- [ ] Editable fields: name, email, phone, avatar upload
+- [ ] Save changes with validation & toast feedback
+- [ ] Support password/email update if applicable
+
+---
+
+#### 📍 Addresses – `/dashboard/addresses`
+
+- [ ] Show all saved addresses with label (home/work), type (shipping/billing)
+- [x] Add/Edit/Delete via modal or drawer:
+  - Use `Dialog` or `Sheet` from Shadcn UI
+  - Fields: Full name, phone, address line, city, province, postal code
+  - Show validation errors inline
+  - Include "Set as default" toggle
+- [ ] Support responsive behavior and keyboard navigation
+
+---
+
+#### 💖 Wishlist – `/dashboard/wishlist`
+
+- [ ] Display favorite products as a responsive grid
+- [ ] Each item shows image, name, price, stock badge, remove button
+- [ ] CTA to add to cart
+- [ ] Empty state with animation or helpful link
+
+---
+
+#### 🔔 Notifications – `/dashboard/notifications`
+
+- [ ] List notifications with icon, title, timestamp
+- [ ] Group by date: Today, This Week, Earlier
+- [ ] Unread badge, toggle read status, clear all
+- [ ] Email toggle (on/off)
+
+---
+
+#### 🧩 Add/Edit Modal Enhancements for Dashboard Tables
+
+- [ ] Convert all inline forms to modals or drawers using `Dialog` / `Sheet`:
+  - Orders (view detail)
+  - Addresses (add/edit)
+  - Profile update
+  - Wishlist actions (optional)
+- [ ] Ensure proper focus trapping and ESC key behavior
+- [ ] Include loading states on submit
+- [ ] Use consistent form layout: vertical spacing, aligned inputs, button group
+- [ ] Responsive modal size: `sm` on mobile, `lg` on desktop
+- [ ] Show toast/snackbar feedback after successful action
+
+---
+
+#### 🧠 UX & Session Handling
+
+- [ ] Add `Breadcrumb` or page header (e.g. `Dashboard / Orders`)
+- [ ] Use `useSession` to protect all dashboard routes
+- [ ] Redirect to login if unauthenticated
+- [ ] Animate section transitions using `framer-motion` (optional)
+- [ ] Confirm all routes and forms are A11Y-friendly
+
+---
+
+#### 🧪 Testing
+
+- [ ] Confirm UI is responsive across breakpoints
+- [ ] Test all modals on mobile and desktop
+- [ ] Validate data updates correctly and reflects immediately in UI
+- [ ] Check visual consistency and performance
+
 
 
 ---
