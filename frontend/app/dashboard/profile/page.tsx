@@ -270,13 +270,13 @@ export default function ProfilePage() {
         <div className="lg:col-span-2 space-y-8">
           {/* Profile Form */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pt-6">
               <CardTitle className="flex items-center gap-2">
                 <User className="w-5 h-5 text-[#a10000]" />
                 Thông tin cá nhân
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-6">
               <form onSubmit={handleProfileSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -345,13 +345,13 @@ export default function ProfilePage() {
 
           {/* Password Form */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pt-6">
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-[#a10000]" />
                 Thay đổi mật khẩu
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-6">
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div>
                   <Label htmlFor="currentPassword" className="mb-2">Mật khẩu hiện tại</Label>

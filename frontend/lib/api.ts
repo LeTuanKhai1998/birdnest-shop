@@ -40,6 +40,8 @@ interface UpdateProductData {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
+console.log('API_BASE_URL:', API_BASE_URL);
+
 class ApiService {
   private baseURL: string;
 
@@ -52,6 +54,7 @@ class ApiService {
     options: RequestInit = {},
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    console.log('Making API request to:', url);
 
     const config: RequestInit = {
       headers: {
