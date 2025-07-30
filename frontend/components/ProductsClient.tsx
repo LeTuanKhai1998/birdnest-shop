@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ProductCard, type Product } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PRODUCTS_CONSTANTS } from '@/lib/constants';
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { apiService } from '@/lib/api';
 
 export default function ProductsClient({ products }: { products: Product[] }) {
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
@@ -33,18 +34,33 @@ export default function ProductsClient({ products }: { products: Product[] }) {
     maximumFractionDigits: 0,
   });
   
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedWeights, setSelectedWeights] = useState<number[]>([]);
   const [price, setPrice] = useState<number>(PRODUCTS_CONSTANTS.filters.priceRange.max);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [search, setSearch] = useState('');
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [expandedFilters, setExpandedFilters] = useState<string[]>(['type']);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await apiService.get('/categories');
+        setCategories(response);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Filtering logic
   const filteredProducts = products.filter((product) => {
-    const typeMatch =
-      selectedTypes.length === 0 || selectedTypes.includes(product.type ?? '');
+    const categoryMatch =
+      selectedCategories.length === 0 || 
+      (product.categoryId && selectedCategories.includes(product.categoryId));
     const weightMatch =
       selectedWeights.length === 0 || selectedWeights.includes(product.weight);
     const priceMatch = product.price <= price;
@@ -52,11 +68,11 @@ export default function ProductsClient({ products }: { products: Product[] }) {
       !search ||
       product.name.toLowerCase().includes(search.toLowerCase()) ||
       product.description.toLowerCase().includes(search.toLowerCase()) ||
-      (product.type
-        ? product.type.toLowerCase().includes(search.toLowerCase())
+      (product.category?.name
+        ? product.category.name.toLowerCase().includes(search.toLowerCase())
         : false) ||
       product.weight.toString().includes(search);
-    return typeMatch && weightMatch && priceMatch && searchMatch;
+    return categoryMatch && weightMatch && priceMatch && searchMatch;
   });
 
   // Pagination logic

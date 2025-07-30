@@ -21,9 +21,15 @@ export interface Product {
   description: string;
   type?: string;
   quantity?: number;
+  discount?: number;
   reviews?: Review[];
   sold?: number;
   categoryId?: string;
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
 }
 
 export interface Review {
@@ -147,8 +153,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                   {product.name}
                 </Link>
                 
-                {/* Product Type */}
-                {product.type && (
+                {/* Product Category */}
+                {product.category && (
+                  <div className="text-xs text-[#a10000] font-medium mb-0.5 sm:mb-1 lg:mb-2 bg-red-50 px-2 py-1 rounded-full inline-block">
+                    {product.category.name}
+                  </div>
+                )}
+                {/* Product Type (fallback) */}
+                {!product.category && product.type && (
                   <div className="text-xs text-gray-500 font-medium mb-0.5 sm:mb-1 lg:mb-2">
                     {product.type}
                   </div>

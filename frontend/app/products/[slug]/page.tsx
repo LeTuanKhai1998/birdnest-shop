@@ -36,6 +36,7 @@ function adaptProduct(apiProduct: ApiProduct): Product {
     quantity: apiProduct.quantity,
     reviews: apiProduct.reviews || [],
     categoryId: apiProduct.categoryId,
+    category: apiProduct.category,
   };
 }
 import { useState, useEffect } from 'react';
@@ -316,14 +317,14 @@ export default function ProductDetailPage({
                     <span className="text-3xl md:text-4xl font-bold text-[#a10000]">
                       {product.price.toLocaleString('vi-VN')}₫
                     </span>
-                    {product.discount > 0 && (
+                    {product.discount && product.discount > 0 && (
                       <span className="text-lg text-gray-500 line-through">
                         {((product.price / (1 - product.discount / 100))).toLocaleString('vi-VN')}₫
                       </span>
                     )}
                   </div>
-                  {product.discount > 0 && (
-                    <Badge variant="destructive" className="text-sm">
+                  {product.discount && product.discount > 0 && (
+                    <Badge className="text-sm bg-red-500 text-white">
                       Giảm {product.discount}%
                     </Badge>
                   )}
@@ -335,6 +336,14 @@ export default function ProductDetailPage({
                 {/* Product Details */}
                 <Card className="bg-gray-50/50 border-gray-200">
                   <CardContent className="p-4 space-y-3">
+                    {product.category && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-600">Danh mục:</span>
+                        <span className="text-sm text-[#a10000] font-medium bg-red-50 px-2 py-1 rounded-full">
+                          {product.category.name}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-600">Loại:</span>
                       <span className="text-sm text-gray-900">{product.type}</span>

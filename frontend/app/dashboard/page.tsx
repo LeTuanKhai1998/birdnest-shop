@@ -90,7 +90,17 @@ export default function DashboardHome() {
     <div className="space-y-8">
       {/* Welcome Header */}
       <div className="text-center lg:text-left">
-        <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+        <h1 
+          className="text-glossy text-3xl md:text-5xl font-black italic"
+          style={{
+            fontWeight: 900,
+            fontStyle: 'italic',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '3.3rem',
+            padding: '20px',
+            color: '#a10000'
+          }}
+        >
           Chào mừng trở lại, {user?.name || 'Người dùng'}! 👋
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl">
@@ -100,105 +110,82 @@ export default function DashboardHome() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  </div>
-                  <div className={`p-3 rounded-full ${stat.bgColor}`}>
-                    <Icon className={`w-6 h-6 ${stat.color}`} />
-                  </div>
+        {stats.map((stat, index) => (
+          <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                <div className={`p-3 rounded-full ${stat.bgColor}`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Thao tác nhanh</h2>
+        <h2 
+          className="text-2xl font-bold text-[#a10000] mb-6"
+        >
+          Thao tác nhanh
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {quickActions.map((action, index) => {
-            const Icon = action.icon;
-            return (
-              <Card key={index} className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className={`p-3 rounded-full ${action.color} bg-opacity-10`}>
-                      <Icon className={`w-6 h-6 ${action.textColor}`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-1">{action.title}</h3>
-                      <p className="text-sm text-gray-600">{action.description}</p>
-                    </div>
-                  </div>
-                  <Button asChild className="w-full" variant="outline">
-                    <Link href={action.href}>
-                      Truy cập
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {quickActions.map((action, index) => (
+            <Card key={index} className="hover:shadow-lg transition-all duration-200 hover:scale-105">
+              <CardContent className="p-6 text-center">
+                <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                  <action.icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">{action.title}</h3>
+                <p className="text-sm text-gray-600 mb-4">{action.description}</p>
+                <Link
+                  href={action.href}
+                  className="inline-block bg-glossy text-red-900 font-bold px-6 py-3 rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 hover:shadow-3xl animate-button-zoom button-glow text-sm"
+                  style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)' }}
+                >
+                  Truy cập
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
       {/* Recent Activity */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Hoạt động gần đây</h2>
+        <h2 
+          className="text-2xl font-bold text-[#a10000] mb-6"
+        >
+          Hoạt động gần đây
+        </h2>
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-[#a10000]" />
-              Lịch sử hoạt động
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                </div>
+              <div className="flex items-center space-x-4">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">Đơn hàng #12345 đã được giao thành công</p>
                   <p className="text-sm text-gray-500">2 giờ trước</p>
                 </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  Hoàn thành
-                </Badge>
               </div>
-              
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Package className="w-4 h-4 text-blue-600" />
-                </div>
+              <div className="flex items-center space-x-4">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Đơn hàng #12346 đang được vận chuyển</p>
+                  <p className="font-medium text-gray-900">Đơn hàng #12344 đang được xử lý</p>
                   <p className="text-sm text-gray-500">1 ngày trước</p>
                 </div>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  Đang giao
-                </Badge>
               </div>
-              
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="p-2 bg-yellow-100 rounded-full">
-                  <Star className="w-4 h-4 text-yellow-600" />
-                </div>
+              <div className="flex items-center space-x-4">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">Bạn đã đánh giá sản phẩm "Yến sào tinh chế 100g"</p>
                   <p className="text-sm text-gray-500">3 ngày trước</p>
                 </div>
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                  Đánh giá
-                </Badge>
               </div>
             </div>
           </CardContent>
@@ -206,28 +193,32 @@ export default function DashboardHome() {
       </div>
 
       {/* Help Section */}
-      <Card className="bg-gradient-to-r from-[#a10000] to-red-800 text-white">
-        <CardContent className="p-8">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4">Cần hỗ trợ?</h3>
-            <p className="text-red-100 mb-6 max-w-2xl mx-auto">
-              Đội ngũ hỗ trợ khách hàng của chúng tôi luôn sẵn sàng giúp đỡ bạn 24/7.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild variant="secondary" className="bg-white text-[#a10000] hover:bg-gray-100">
-                <Link href="/contact">
-                  Liên hệ hỗ trợ
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white text-white hover:bg-white hover:text-[#a10000]">
-                <Link href="/guest-orders">
-                  Tra cứu đơn hàng
-                </Link>
-              </Button>
-            </div>
+      <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-8 border border-red-100">
+        <div className="text-center">
+          <h2 
+            className="text-2xl font-bold text-[#a10000] mb-4"
+          >
+            Cần hỗ trợ?
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Chúng tôi luôn sẵn sàng hỗ trợ bạn. Liên hệ với chúng tôi qua các kênh sau:
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/contact"
+              className="inline-block bg-white text-[#a10000] hover:bg-gray-100 font-semibold px-6 py-3 rounded-full transition-all duration-200"
+            >
+              Liên hệ hỗ trợ
+            </Link>
+            <Link
+              href="/about"
+              className="inline-block border-2 border-white text-[#a10000] hover:bg-white hover:text-[#a10000] font-semibold px-6 py-3 rounded-full transition-all duration-200"
+            >
+              Tìm hiểu thêm
+            </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
