@@ -88,19 +88,8 @@ const filterSchema = z.object({
 type ProductForm = z.infer<typeof productSchema>;
 type FilterForm = z.infer<typeof filterSchema>;
 
-// Map database categories to display names
-const CATEGORY_MAPPING = {
-  'Yến hủ': 'Yến Tinh Chế',
-  'Yến tinh': 'Yến Rút Lông', 
-  'Yến baby': 'Tổ Yến Thô'
-};
-
-const CATEGORIES = Object.values(CATEGORY_MAPPING);
-
-// Helper function to get display name for category
-const getCategoryDisplayName = (categoryName: string) => {
-  return CATEGORY_MAPPING[categoryName as keyof typeof CATEGORY_MAPPING] || categoryName;
-};
+// Categories will be loaded from database
+const CATEGORIES: string[] = [];
 
 // Add a fallback image path
 const FALLBACK_IMAGE = '/images/banner1.png';
@@ -181,7 +170,7 @@ export default function AdminProductsPage() {
       const matchesSearch = !searchValue || 
         product.name.toLowerCase().includes(searchValue.toLowerCase()) ||
         product.description.toLowerCase().includes(searchValue.toLowerCase());
-      const matchesCategory = !categoryFilter || getCategoryDisplayName(product.category.name) === categoryFilter;
+      const matchesCategory = !categoryFilter || product.category.name === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [products, searchValue, categoryFilter]);
@@ -593,7 +582,7 @@ export default function AdminProductsPage() {
                            <td className="p-4">
                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                                <Tag className="w-3 h-3 mr-1" />
-                               {getCategoryDisplayName(product.category.name)}
+                               {product.category.name}
                              </Badge>
                            </td>
                            <td className="p-4">
@@ -648,6 +637,9 @@ export default function AdminProductsPage() {
             <div className="p-6">
               {/* Form content would go here - simplified for brevity */}
               <p className="text-gray-600">Product form implementation would go here...</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Note: Form should use categories from database: {categories.map(c => c.name).join(', ')}
+              </p>
             </div>
           </div>
         </DrawerContent>

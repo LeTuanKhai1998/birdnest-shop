@@ -100,25 +100,37 @@ export default function AddressesPage() {
   const isAdminUser = !!localUser;
   const apiEndpoint = isAdminUser ? 'http://localhost:8080/api/addresses' : '/api/addresses';
   
-  const { data: addressesData, isLoading, mutate } = useSWR(
+  const { data: addressesData, isLoading, mutate, error } = useSWR(
     apiEndpoint,
     async (url: string) => {
       if (isAdminUser) {
         // Use JWT token for backend API
         const token = localStorage.getItem('auth-token');
+        if (!token) {
+          throw new Error('Authentication token not found');
+        }
         const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
-        if (!response.ok) throw new Error('Failed to fetch addresses');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to fetch addresses');
+        }
         return response.json();
       } else {
         // Use regular fetcher for frontend API
         return fetcher(url);
       }
     },
+    {
+      onError: (err) => {
+        console.error('Error fetching addresses:', err);
+        toast.error(err.message || 'Failed to load addresses');
+      }
+    }
   );
   
   // Ensure addresses is always an array and handle edge cases
@@ -234,8 +246,11 @@ export default function AddressesPage() {
         headers,
         body: JSON.stringify(body),
       });
-      if (!res.ok)
-        throw new Error((await res.json()).error || 'Failed to save address');
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || errorData.error || 'Failed to save address');
+      }
       
       // Update local state with optimistic updates
       if (isAdminUser) {
@@ -369,14 +384,23 @@ export default function AddressesPage() {
       
       if (isAdminUser) {
         const token = localStorage.getItem('auth-token');
+        if (!token) {
+          toast.error('Authentication token not found');
+          return;
+        }
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      await fetch(endpoint, {
+      const response = await fetch(endpoint, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ ...addr, isDefault: true }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to set default address');
+      }
       
       // Update local state with optimistic updates
       if (isAdminUser) {
@@ -411,6 +435,7 @@ export default function AddressesPage() {
         toast.success('Default address set!');
       }
     } catch (e: unknown) {
+      console.error('Error setting default address:', e);
       if (e instanceof Error) {
         toast.error(e.message);
       } else {
@@ -469,6 +494,21 @@ export default function AddressesPage() {
             <Plus className="w-4 h-4 mr-2" /> Thêm địa chỉ
           </Button>
         </div>
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">
+              <strong>Error:</strong> {error.message || 'Failed to load addresses'}
+            </p>
+            <Button
+              onClick={() => mutate()}
+              variant="outline"
+              size="sm"
+              className="mt-2 text-red-700 border-red-300 hover:bg-red-100"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
         <LoadingOrEmpty
           loading={isLoading}
           empty={addresses.length === 0}
