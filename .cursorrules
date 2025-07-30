@@ -1107,6 +1107,72 @@ enum RecipientType {
 
 ---
 
+### 25. Authentication & Authorization Best Practice Audit []
+
+#### 🛡️ Backend Auth (NestJS + Prisma)
+
+- [ ] Ensure JWT AuthGuard is globally or selectively applied:
+  - Protect routes like `/api/user`, `/api/order`, `/api/cart`, `/api/admin/*`
+  - Use `@UseGuards(AuthGuard)` with role-based `@Roles()` where needed
+- [ ] Decode JWT from `Authorization: Bearer <token>` or cookies
+- [ ] Validate token expiration and user existence in DB
+- [ ] Handle auth errors gracefully (401, 403) with standard response format
+- [ ] Add middleware to log suspicious or failed login attempts
+- [ ] Sanitize sensitive fields when returning user data (remove password, etc.)
+
+#### 🔒 Role-Based Access Control (RBAC)
+
+- [ ] Add `role` field in `User` model (`USER`, `ADMIN`, etc.)
+- [ ] In protected endpoints, check roles:
+  - e.g., `@Roles('ADMIN')` to restrict admin APIs
+- [ ] In Prisma queries, filter based on user ID for user-specific data (e.g. orders)
+
+---
+
+#### 🧭 Frontend Auth (Next.js 15 + App Router + NextAuth.js)
+
+- [ ] Use `useSession()` or `auth()` (server-side) to access session info
+- [ ] Add `middleware.ts` to protect routes (e.g. `/checkout`, `/account`, `/admin`)
+  - Example: check session, redirect to `/login` if unauthenticated
+- [ ] Hide/show UI elements (e.g. profile dropdown, cart actions) based on auth
+- [ ] Sync layout state with session:
+  - Show skeleton/loading when session is being fetched
+  - Avoid flash of unauthenticated state (Flicker)
+- [ ] Auto-refresh token on expiry if using JWT
+- [ ] Store user info in global state (e.g. Zustand) and sync with session
+
+---
+
+#### 🧪 Pages Auth Flow Validation
+
+- [ ] ✅ `/login`: Redirect to `/` if already logged in
+- [ ] ✅ `/signup`: Redirect to `/` if logged in
+- [ ] ✅ `/checkout`: Protected, must login before access
+- [ ] ✅ `/payment`: Protected, and ensure valid order context
+- [ ] ✅ `/admin`: Admin only – redirect or 403 for others
+- [ ] ✅ `/account`, `/orders`: Must be logged in
+
+---
+
+#### 🧪 UX & Security Enhancements
+
+- [ ] Protect all forms (login, signup, contact) from CSRF
+- [ ] Show login-required toast if accessing protected features while logged out
+- [ ] Add logout confirmation and expiration auto-logout
+- [ ] Responsive error pages for 401, 403, 404
+- [ ] `meta` tag: `<meta name="referrer" content="no-referrer">` for privacy
+
+---
+
+#### 🌐 i18n & Accessibility
+
+- [ ] Use `t('auth.login')`, `t('auth.signup')`, etc.
+- [ ] All inputs have `label` or `aria-label`
+- [ ] Keyboard navigable forms and buttons
+
+
+---
+
 ### 20. CI/CD and Deployment Readiness [X]
 
 - [X] Setup `.dockerignore`, `.env.example` files
