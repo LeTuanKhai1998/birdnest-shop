@@ -47,7 +47,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await apiService.get('/categories');
+        const response = await apiService.get('/products/categories');
         setCategories(response);
       } catch (error) {
         console.error('Error fetching categories:', error);

@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   User, 
   Mail, 
@@ -15,7 +16,8 @@ import {
   Shield, 
   Save, 
   Key,
-  CheckCircle
+  CheckCircle,
+  FileText
 } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -27,9 +29,10 @@ export default function ProfilePage() {
 
   // Profile form state
   const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: (user as any)?.phone || ''
+    name: '',
+    email: '',
+    phone: '',
+    bio: ''
   });
 
   // Password form state
@@ -39,17 +42,58 @@ export default function ProfilePage() {
     confirmPassword: ''
   });
 
+  // Initialize form data when user loads
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: (user as any)?.phone || '',
+        bio: (user as any)?.bio || ''
+      });
+    }
+  }, [user]);
+
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check for localStorage authentication (admin users)
+      const token = localStorage.getItem('auth-token');
+      const userData = localStorage.getItem('user');
+      const isAdminUser = !!(token && userData);
+      
+      const endpoint = isAdminUser ? 'http://localhost:8080/api/users/profile' : '/api/profile';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      
+      if (isAdminUser) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(endpoint, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(profileData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update profile');
+      }
+      
+      const result = await response.json();
+      
+      // Update local state if admin user
+      if (isAdminUser) {
+        const updatedUser = { ...JSON.parse(userData), ...profileData };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
       
       toast.success('Hồ sơ đã được cập nhật thành công!');
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi cập nhật hồ sơ');
+      console.error('Error updating profile:', error);
+      toast.error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi cập nhật hồ sơ');
     } finally {
       setSaving(false);
     }
@@ -63,11 +107,38 @@ export default function ProfilePage() {
       return;
     }
     
+    if (passwordData.newPassword.length < 6) {
+      toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
+      return;
+    }
+    
     setPwSaving(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check for localStorage authentication (admin users)
+      const token = localStorage.getItem('auth-token');
+      const userData = localStorage.getItem('user');
+      const isAdminUser = !!(token && userData);
+      
+      if (isAdminUser) {
+        // For admin users, show a message that password change is not available
+        toast.error('Đổi mật khẩu chưa khả dụng cho tài khoản admin. Vui lòng liên hệ hỗ trợ.');
+        return;
+      }
+      
+      const response = await fetch('/api/profile/password', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to change password');
+      }
       
       toast.success('Mật khẩu đã được thay đổi thành công!');
       setPasswordData({
@@ -76,7 +147,8 @@ export default function ProfilePage() {
         confirmPassword: ''
       });
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi thay đổi mật khẩu');
+      console.error('Error changing password:', error);
+      toast.error(error instanceof Error ? error.message : 'Có lỗi xảy ra khi thay đổi mật khẩu');
     } finally {
       setPwSaving(false);
     }
@@ -173,6 +245,14 @@ export default function ProfilePage() {
                 </div>
                 
                 <div className="flex items-center gap-3">
+                  <FileText className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Tiểu sử</p>
+                    <p className="text-sm text-gray-600">{(user as any)?.bio || 'Chưa cập nhật'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Ngày tham gia</p>
@@ -207,6 +287,7 @@ export default function ProfilePage() {
                       onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                       placeholder="Nhập họ và tên"
                       className="h-11"
+                      required
                     />
                   </div>
                   
@@ -219,6 +300,7 @@ export default function ProfilePage() {
                       onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                       placeholder="Nhập email"
                       className="h-11"
+                      required
                     />
                   </div>
                 </div>
@@ -232,6 +314,21 @@ export default function ProfilePage() {
                     placeholder="Nhập số điện thoại"
                     className="h-11"
                   />
+                </div>
+                
+                <div>
+                  <Label htmlFor="bio" className="mb-2">Tiểu sử / Khẩu hiệu</Label>
+                  <Textarea
+                    id="bio"
+                    value={profileData.bio}
+                    onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                    placeholder="Viết một chút về bản thân hoặc khẩu hiệu của bạn (tùy chọn)"
+                    className="min-h-[100px] resize-none"
+                    maxLength={120}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {profileData.bio.length}/120 ký tự
+                  </p>
                 </div>
                 
                 <Button 
@@ -265,6 +362,7 @@ export default function ProfilePage() {
                     onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                     placeholder="Nhập mật khẩu hiện tại"
                     className="h-11"
+                    required
                   />
                 </div>
                 
@@ -277,6 +375,7 @@ export default function ProfilePage() {
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                     placeholder="Nhập mật khẩu mới"
                     className="h-11"
+                    required
                   />
                   {passwordData.newPassword && (
                     <div className="mt-2">
@@ -309,6 +408,7 @@ export default function ProfilePage() {
                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                     placeholder="Nhập lại mật khẩu mới"
                     className="h-11"
+                    required
                   />
                 </div>
                 
