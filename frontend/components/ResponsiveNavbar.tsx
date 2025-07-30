@@ -367,9 +367,9 @@ export function ResponsiveNavbar() {
                               {(user as any)?.bio && (
                                 <div className="text-xs text-gray-500 italic truncate max-w-32">"{(user as any).bio}"</div>
                               )}
-                              {/* Debug: Show if bio exists */}
-                              <div className="text-xs text-red-500">
-                                Bio: {(user as any)?.bio ? 'Yes' : 'No'} - {JSON.stringify((user as any)?.bio)}
+                              {/* Temporary: Show bio status */}
+                              <div className="text-xs text-blue-500">
+                                Bio: {(user as any)?.bio || 'Not set'}
                               </div>
                             </div>
                           </Button>

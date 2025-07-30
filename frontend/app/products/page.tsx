@@ -68,12 +68,10 @@ export default async function ProductsPage() {
             return 50;
           })(),
           type: (() => {
-            if (typeof p.name === 'string' && p.name.includes('tinh chế'))
-              return 'Yến tinh chế';
-            if (typeof p.name === 'string' && p.name.includes('rút lông'))
-              return 'Yến rút lông';
-            if (typeof p.name === 'string' && p.name.includes('thô'))
-              return 'Tổ yến thô';
+            // Map category names to filter values
+            if (p.category?.name === 'Yến hủ') return 'Yến tinh chế';
+            if (p.category?.name === 'Yến tinh') return 'Yến rút lông';
+            if (p.category?.name === 'Yến baby') return 'Tổ yến thô';
             return 'Khác';
           })(),
           quantity: typeof p.quantity === 'number' ? p.quantity : 0,
@@ -102,12 +100,10 @@ export default async function ProductsPage() {
         return 50;
       })(),
       type: (() => {
-        if (typeof p.name === 'string' && p.name.includes('tinh chế'))
-          return 'Yến tinh chế';
-        if (typeof p.name === 'string' && p.name.includes('rút lông'))
-          return 'Yến rút lông';
-        if (typeof p.name === 'string' && p.name.includes('thô'))
-          return 'Tổ yến thô';
+        // Map category names to filter values
+        if (p.category?.name === 'Yến hủ') return 'Yến tinh chế';
+        if (p.category?.name === 'Yến tinh') return 'Yến rút lông';
+        if (p.category?.name === 'Yến baby') return 'Tổ yến thô';
         return 'Khác';
       })(),
       quantity: typeof p.quantity === 'number' ? p.quantity : 0,
