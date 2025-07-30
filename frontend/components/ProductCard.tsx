@@ -22,12 +22,20 @@ export interface Product {
   quantity?: number;
   reviews?: Review[];
   sold?: number;
+  categoryId?: string;
 }
 
 export interface Review {
-  user: string;
+  id: string;
+  userId: string;
+  productId: string;
   rating: number;
-  comment: string;
+  comment?: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+  };
 }
 
 type ProductCardProps = { product: Product; onClick?: () => void };

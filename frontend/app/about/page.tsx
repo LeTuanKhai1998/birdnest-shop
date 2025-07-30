@@ -123,7 +123,8 @@ export default function AboutPage() {
         <div className="relative z-10 flex items-center justify-center" style={{ minHeight: '600px' }}>
           <div className="text-center text-white px-4 max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              YẾN SÀO KIM SANG - THƯƠNG HIỆU UY TÍN
+              <div className="block">YẾN SÀO KIM SANG</div>
+              <div className="block">THƯƠNG HIỆU UY TÍN</div>
             </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-center leading-relaxed">
               Với hơn 10 năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng cao nhất cho sức khỏe gia đình Việt Nam.

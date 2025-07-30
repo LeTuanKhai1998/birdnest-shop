@@ -16,7 +16,7 @@
 
 ## Scratchpad
 
-### 1. Project Setup and Configuration []
+### 1. Project Setup and Configuration [X]
 
 - [X] Initialize Next.js 15 project with TypeScript
 - [X] Set up project structure and folders
@@ -34,7 +34,7 @@
   - NextAuth.js beta for authentication
   - Stripe for payments
 
-### 2. Database and Authentication []
+### 2. Database and Authentication [X]
 
 - [X] Set up PostgreSQL database
 - [X] Configure Prisma schema:
@@ -50,7 +50,7 @@
   - JWT handling
   - Protected routes
 
-### 3. Core Features - Customer Side [ ]
+### 3. Core Features - Customer Side [X]
 
 - [X] Home Layout:
   - Create `(home)` folder in the `app` directory  
@@ -86,6 +86,9 @@
   - Related products section:  
     - Show products from the same category  
     - Product card carousel
+  - [X] **FIXED**: Product detail page now uses real API instead of mock data
+  - [X] **FIXED**: Added weight field to database schema and seed data
+  - [X] **FIXED**: Updated API URL configuration to match backend
 
 - [X] Shopping cart:
   - Add/remove items  
@@ -251,6 +254,8 @@
   - [X] Unused imports / variables - Fixed in frontend components
   - [X] Duplicate logic - Removed unused variables and imports
   - [X] Dead code - Cleaned up unused functions and variables
+  - [X] Fixed API import errors - Updated `api` to `apiService` in product pages
+  - [X] Fixed React hooks violations - Moved hooks to top of components
 - [X] Extract reusable logic to `services/` or `utils/`.
   - [X] Created proper TypeScript interfaces in `frontend/lib/types.ts`
   - [X] Created DTOs for backend validation in `backend/src/*/dto/`
@@ -798,6 +803,307 @@ enum RecipientType {
 - [X] Ensure form is responsive and adapts to mobile layout properly
 - [X] Ensure light/dark theme (if supported) is respected
 - [X] Ensure accessibility: `aria-label`, `htmlFor`, and semantic markup
+
+---
+
+### 20. Update `/cart` Page Style and UX []
+
+- [ ] Path: `app/cart/page.tsx`
+- [ ] Purpose: Align cart page with overall brand styling and UX
+
+#### 🧱 Page Structure
+- [ ] Page heading: `Your Cart` with item count (e.g. `Your Cart (3 items)`)
+- [ ] Two-column layout on desktop:
+  - Left: Cart items list
+  - Right: Order summary
+- [ ] Stack layout on mobile
+
+#### 🛒 Cart Items List
+- [ ] Loop over cart items using reusable `<CartItem />` component:
+  - Product image thumbnail (lazy loaded)
+  - Title (clickable to product page)
+  - Options (e.g. size, color if applicable)
+  - Quantity selector (dropdown or +/-)
+  - Price per item
+  - Remove button (`<Button variant="ghost" size="icon">`)
+
+- [ ] Use dividers or cards to separate each item (`border-b py-4`)
+
+#### 📦 Order Summary
+- [ ] Box with:
+  - Subtotal
+  - Shipping (if calculated)
+  - Discount (if applied)
+  - Total (bold)
+- [ ] Checkout button:
+  - Full width
+  - Disabled if cart is empty
+  - Redirects to `/checkout`
+
+#### ❌ Empty Cart UX
+- [ ] If no items:
+  - Show centered illustration (optional) + “Your cart is empty”
+  - Link: `Continue shopping →` (to `/products`)
+
+#### 🧑 Auth Considerations
+- [ ] If user not logged in:
+  - Allow checkout as guest
+  - Sync cart with localStorage or session if available
+
+#### 🎨 Styling Guidelines
+- [ ] Tailwind classes: `grid`, `gap-6`, `bg-card`, `rounded-lg`, `shadow`, `dark:` variants
+- [ ] Responsive: 
+  - `grid-cols-1 md:grid-cols-3` (2 cols for cart + 1 col for summary)
+  - Collapsible or stacked on small screens
+
+#### 🧪 QA & UX Checks
+- [ ] Consistent spacing and typography
+- [ ] Mobile/desktop experience
+- [ ] Correct price formatting
+- [ ] Edge cases: 1 item, many items, item out of stock
+
+---
+
+### 21. Refactor `/checkout` Page for Consistent UX []
+
+- [ ] Path: `app/checkout/page.tsx`
+- [ ] Goal: Ensure the checkout flow is clean, mobile-friendly, and consistent with brand design
+
+#### 🧾 Page Structure
+- [ ] Page title: `Checkout` (with step indicator if needed)
+- [ ] Two-column layout (on desktop):
+  - Left: Shipping info + Payment method
+  - Right: Order Summary
+- [ ] Single-column stacked layout on mobile
+
+#### 🧍 Shipping Information
+- [ ] Form fields:
+  - Full Name, Email, Phone
+  - Address: Street, City, Province, ZIP
+  - Optional: Notes
+- [ ] Use `react-hook-form` with `zod` or `yup` validation
+- [ ] Inputs styled with `shadcn/ui` (use `<Input />`, `<Textarea />`, `<FormField />`)
+
+
+#### 📦 Order Summary
+- [ ] Component reused from cart page:
+  - Items with quantity
+  - Subtotal, Shipping, Discount, Total
+- [ ] Promo code input (optional)
+- [ ] Button: `Place Order`
+  - Disable during submission
+  - Show spinner/loading
+  - Redirect to `/order-success` or `/orders/:id`
+
+#### ✅ UX Enhancements
+- [ ] Loading state between steps (e.g. during Stripe processing)
+- [ ] Real-time validation
+- [ ] Prevent double submit
+- [ ] Show error toast if failure
+
+#### 🌐 Responsive Layout
+- [ ] `grid-cols-1 md:grid-cols-[2fr_1fr] gap-8`
+- [ ] Use `scroll-mt-20` for section linking (if multi-step)
+
+#### 🔐 Auth & Access
+- [ ] Allow guest checkout (check session + email)
+- [ ] Optional: Pre-fill form if user is logged in
+- [ ] Add client-side redirect if cart is empty
+
+#### 🧪 Testing
+- [ ] Form input validation
+- [ ] Payment method toggle
+- [ ] Mobile flow
+- [ ] Edge cases: invalid phone, empty fields, failed payment
+
+#### 🧁 Styling & i18n
+- [ ] Tailwind + Shadcn components
+- [ ] Use `t('checkout.shipping.address')`, etc.
+- [ ] Semantic HTML for accessibility
+
+---
+
+### 22. Implement `/payment` Page []
+
+- [ ] Path: `app/payment/page.tsx`
+- [ ] Purpose: Final step of checkout to handle secure payment
+- [ ] Redirect from `/checkout` after shipping info is saved
+
+#### 💡 Page Setup
+- [ ] Page title: "Secure Payment"
+- [ ] Back button: to return to `/checkout`
+- [ ] Show progress indicator (e.g. Step 2 of 2)
+
+#### 💳 Payment Methods
+- [ ] Radio group or tab selector (Shadcn UI):
+  - Stripe (Card payment)
+  - Momo (QR scan)
+  - Bank Transfer (ATM)
+  - Cash on Delivery
+- [ ] Use `<RadioGroup>` with icons for clarity
+
+##### 🎴 Stripe (Card Payment)
+- [ ] Integrate Stripe Elements for secure input
+- [ ] Fields: Card Number, Expiry, CVC
+- [ ] Real-time validation
+- [ ] Show loading while processing
+
+##### 📱 Momo
+- [ ] Display QR code for Momo scan
+- [ ] Include copy button for order code
+- [ ] Button: "I have paid" to confirm manually
+
+##### 🏦 Bank Transfer
+- [ ] Show bank account details
+- [ ] Field: "Transfer note"
+- [ ] Upload screenshot (optional)
+
+##### 💵 COD (Cash on Delivery)
+- [ ] Confirm address and estimated delivery date
+- [ ] Just one confirm button: "Place Order"
+
+#### 🧾 Order Summary Sidebar
+- [ ] Show: Items, Quantity, Subtotal, Shipping, Total
+- [ ] Option to edit cart (link to `/cart`)
+- [ ] Disable editing from here
+
+#### ✅ Final Actions
+- [ ] Button: `Complete Payment`
+  - Validate form before submission
+  - Disable + loading spinner while processing
+- [ ] On success:
+  - Redirect to `/order-success`
+- [ ] On error:
+  - Show toast with retry option
+
+#### 📱 Responsive Layout
+- [ ] Desktop: 2 columns (payment left, summary right)
+- [ ] Mobile: stacked layout with sticky "Complete Payment" button
+
+#### 🌐 i18n Support
+- [ ] Use translation keys: `t('payment.method.title')`, `t('payment.total')`, etc.
+- [ ] Fallback to English if not available
+
+#### 🧪 Testing
+- [ ] Stripe form renders and submits correctly
+- [ ] Momo QR works
+- [ ] Bank transfer details visible and copyable
+- [ ] Loading state
+- [ ] Success + error flow
+
+#### 🧁 Styling
+- [ ] Use Shadcn UI and Tailwind
+- [ ] Match theme: border, radius, font weight
+- [ ] Light/dark mode consistent
+
+---
+
+### 23. Product Detail Page `/product/[slug]` [X]
+
+- [X] Path: `app/products/[slug]/page.tsx`
+- [X] Purpose: Show full product info and actions for user to buy
+- [X] Use `slug` param from URL to fetch product via API or `getProductBySlug(slug)`
+
+#### 🖼️ Hero Section
+- [X] Responsive Image Gallery (main + thumbnails):
+  - Support multiple images
+  - Zoom-in on hover (desktop), swipe on mobile
+  - Show fallback if no image
+- [X] Product Name + Short Description
+- [X] Category, SKU, and Brand (optional)
+
+#### 💰 Price and Purchase Options
+- [X] Price with currency formatting (`VND`)
+- [X] Display discount if available (old price + percentage)
+- [X] Quantity selector (min 1, max by stock)
+- [X] Button: "Add to Cart" → `POST /api/cart`
+- [X] Button: "Buy Now" → Redirect to `/checkout`
+
+#### 📦 Stock + Shipping Info
+- [X] Stock level indicator (in stock / out of stock)
+- [X] Estimated delivery (e.g. "2–4 days")
+- [X] Free shipping badge (if eligible)
+
+#### 📝 Full Description Section
+- [X] Tabs or accordion:
+  - Description
+  - Specifications (optional: size, material, etc.)
+  - Reviews (see below)
+- [X] Rich text rendering (e.g. using `dangerouslySetInnerHTML` or custom MD parser)
+
+#### ⭐ Reviews Section (Optional)
+- [X] Average rating stars
+- [X] User reviews: name, rating, text, time
+- [X] Add Review form (auth only)
+
+#### 🔁 Related Products
+- [X] "You may also like" or "Similar items"
+- [X] Carousel or grid, fetch by category/tag
+
+#### 🧭 Breadcrumbs (SEO + UX)
+- [X] Home / Category / Product Name
+
+#### 🌐 SEO & Open Graph
+- [X] `<title>{product.name} – Birdnest</title>`
+- [X] `<meta name="description" content={product.shortDescription} />`
+- [X] Open Graph tags:
+  - `og:image`, `og:title`, `og:url`, etc.
+
+#### 🎨 Styling
+- [X] Use Shadcn UI + Tailwind
+- [X] Match design system: padding, spacing, font weights
+- [X] Mobile-first layout
+- [X] Alt text for images, label all inputs for a11y
+
+#### 🧪 UX Enhancements
+- [X] Skeleton loader while fetching data
+- [X] Toast feedback for actions (cart, error, etc.)
+- [X] Scroll to top on page change
+- [X] Smooth scroll to sections (reviews, specs)
+
+#### 🧪 Responsive Behavior
+- [X] Mobile: stack layout (image > details > action)
+- [X] Desktop: 2-column layout (gallery left, details right)
+
+#### 🌐 i18n Support
+- [X] Translation keys:
+  - `t('product.add_to_cart')`, `t('product.in_stock')`, etc.
+
+#### ⚠️ Edge Case Handling
+- [X] Product not found: show 404
+- [X] Out of stock: disable purchase buttons
+- [X] Handle long product names gracefully
+
+---
+
+### 24. Add Modern Loading UI for Page Transitions [X]
+
+- [X] Goal: Show loading feedback during route changes for better UX
+
+#### 🔁 Use Next.js App Router Events
+- [X] Track router state using `useRouter` from `next/navigation` or `next/router`
+- [X] Detect route change start and complete events to trigger loading
+
+#### 💡 Option A: Top Progress Bar (Recommended)
+- [X] Use `nprogress` for sleek top progress bar
+  - Install: `npm install nprogress`
+  - Import global styles: `import 'nprogress/nprogress.css'`
+  - Configure in a layout or custom hook
+- [X] Show progress on `routeChangeStart`, hide on `routeChangeComplete` / `routeChangeError`
+
+#### 💡 Option B: Fullscreen or Section Loader
+- [X] Use `loading.tsx` in each route segment to show loading fallback
+- [X] Or create a global `LoadingOverlay` component with animated spinner
+
+#### 💄 Design Requirements:
+- [X] Match brand color for progress bar or spinner
+- [X] Ensure the loader is lightweight and does not block interaction
+- [X] Optional: fade-in/fade-out transition on loader appearance
+
+#### 🧪 Test:
+- [X] Navigate between pages and ensure the loader is smooth and unobtrusive
+- [X] Confirm loader disappears immediately after page load
+- [X] Works in light and dark themes
 
 ---
 

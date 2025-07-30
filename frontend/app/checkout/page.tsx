@@ -5,7 +5,9 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { useCartStore } from '@/lib/cart-store';
 import { useState, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'sonner';
@@ -16,21 +18,33 @@ import { CartItem } from '@/lib/cart-store';
 import { useSession } from 'next-auth/react';
 import useSWR from 'swr';
 import Image from 'next/image';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { 
+  CreditCard, 
+  Truck, 
+  MapPin, 
+  User, 
+  FileText,
+  Loader2,
+  ArrowLeft,
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
 
 function fetcher(url: string) {
   return fetch(url).then((r) => r.json());
 }
 
 const schema = z.object({
-  fullName: z.string().min(2, 'Full name is required'),
+  fullName: z.string().min(2, 'Họ và tên phải có ít nhất 2 ký tự'),
   phone: z
     .string()
-    .regex(/^(0|\+84)[0-9]{9}$/, 'Invalid Vietnamese phone number'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
-  province: z.string(),
-  district: z.string(),
-  ward: z.string(),
-  address: z.string().min(5, 'Delivery address is required'),
+    .regex(/^(0|\+84)[0-9]{9}$/, 'Số điện thoại không hợp lệ'),
+  email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
+  province: z.string().min(1, 'Vui lòng chọn tỉnh/thành phố'),
+  district: z.string().min(1, 'Vui lòng chọn quận/huyện'),
+  ward: z.string().min(1, 'Vui lòng chọn phường/xã'),
+  address: z.string().min(5, 'Địa chỉ phải có ít nhất 5 ký tự'),
   addressMode: z.enum(['manual', 'map']),
   apartment: z.string().optional(),
   note: z.string().optional(),
@@ -108,6 +122,9 @@ export default function CheckoutPage() {
     (sum, item) => sum + item.product.price * item.quantity,
     0,
   );
+  const shipping = subtotal >= 500000 ? 0 : 30000; // Free shipping over 500K VND
+  const total = subtotal + shipping;
+  
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
@@ -128,6 +145,7 @@ export default function CheckoutPage() {
     defaultValues: {
       addressMode: 'manual',
       email: user?.email || '',
+      paymentMethod: 'stripe',
     },
   });
   const [addressMode, setAddressMode] = useState<'manual' | 'map'>('manual');
@@ -140,6 +158,13 @@ export default function CheckoutPage() {
   const setProducts = useCheckoutStore((s) => s.setProducts);
   const setDeliveryFee = useCheckoutStore((s) => s.setDeliveryFee);
   const lastResetId = useRef<string | null>(null);
+
+  // Redirect if cart is empty
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push('/cart');
+    }
+  }, [items.length, router]);
 
   useEffect(() => {
     setLoadingProvinces(true);
@@ -178,6 +203,7 @@ export default function CheckoutPage() {
             apartment: addr.apartment || '',
             addressMode: 'manual',
             note: '',
+            paymentMethod: 'stripe',
           });
           setTimeout(() => {
             setValue('province', String(addr.province));
@@ -199,6 +225,7 @@ export default function CheckoutPage() {
         apartment: '',
         addressMode: 'manual',
         note: '',
+        paymentMethod: 'stripe',
       });
       lastResetId.current = 'new';
     }
@@ -210,8 +237,6 @@ export default function CheckoutPage() {
     setValue,
     user?.email,
   ]);
-
-  const shippingFee = subtotal >= 2000000 ? 0 : 30000;
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -239,7 +264,7 @@ export default function CheckoutPage() {
     }
     setCheckoutInfo({ ...data, email: data.email ?? '' });
     setProducts(items as CartItem[]);
-    setDeliveryFee(shippingFee);
+    setDeliveryFee(shipping);
     setTimeout(() => {
       setLoading(false);
       router.push('/payment');
@@ -252,7 +277,6 @@ export default function CheckoutPage() {
     setValue('addressMode', mode);
   };
 
-  // Remove local state for province, district, ward
   // When province changes, reset district/ward
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -260,159 +284,238 @@ export default function CheckoutPage() {
     setValue('district', '');
     setValue('ward', '');
     setLoadingDistricts(true);
-    setTimeout(() => setLoadingDistricts(false), 500); // mock loading
+    setTimeout(() => setLoadingDistricts(false), 500);
   };
+  
   // When district changes, reset ward
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setValue('district', val);
     setValue('ward', '');
     setLoadingWards(true);
-    setTimeout(() => setLoadingWards(false), 500); // mock loading
+    setTimeout(() => setLoadingWards(false), 500);
   };
 
   const watchedAddress = watch('address');
 
-  // Always show the address form. If not logged in, show a sign-in link above the form.
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white">
+        <div className="text-center py-16">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-12 h-12 text-gray-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Giỏ hàng trống
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán
+          </p>
+          <Button asChild className="bg-[#a10000] hover:bg-red-800">
+            <Link href="/products" className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Tiếp tục mua sắm
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white">
       <Toaster position="top-center" richColors />
-      <main className="flex-1 container mx-auto px-2 py-8 max-w-6xl">
-        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Form left, summary right on desktop */}
-          <div className="flex-1 min-w-0">
-            <form
-              onSubmit={handleSubmit(onSubmit, (errors) => {
-                toast.error('Please fill all required fields correctly.');
+      
+      {/* Hero Section */}
+      <section className="relative w-full bg-[#a10000] overflow-hidden" style={{ minHeight: '300px' }}>
+        <div className="relative z-10 flex items-center justify-center" style={{ minHeight: '300px' }}>
+          <div className="text-center text-white px-4 max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 flex items-center justify-center gap-3">
+              <MapPin className="w-8 h-8" />
+              Thông Tin Giao Hàng
+            </h1>
+            <p className="text-lg md:text-xl mb-4">
+              Nhập thông tin giao hàng của bạn
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Checkout Content Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Form Section */}
+            <div className="lg:col-span-2 space-y-8">
+              <form onSubmit={handleSubmit(onSubmit, (errors) => {
+                toast.error('Vui lòng điền đầy đủ thông tin bắt buộc.');
                 console.log(errors);
-              })}
-              className="space-y-6"
-            >
-              <Card className="p-6 space-y-4">
-                <h2 className="text-lg font-semibold mb-2">
-                  Shipping Information
-                </h2>
-                <div className="flex flex-col gap-4">
-                  {!user && (
-                    <div className="mb-2 text-center text-sm text-gray-600">
-                      <a
-                        href="/login?callbackUrl=/checkout"
-                        className="text-red-600 hover:underline"
-                      >
-                        Sign in for faster checkout
-                      </a>
-                    </div>
-                  )}
-                  {user && savedAddresses.length > 0 && (
-                    <div>
-                      <label className="block font-medium mb-1">
-                        Select Address
-                      </label>
-                      <select
-                        className="w-full border rounded px-2 py-2 mb-2"
-                        value={selectedAddressId}
-                        onChange={(e) => setSelectedAddressId(e.target.value)}
-                      >
-                        {[...savedAddresses]
-                          .sort(
-                            (a, b) =>
-                              (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0),
-                          )
-                          .map((a: Address) => (
-                            <option key={a.id} value={a.id}>
-                              {getAddressDisplay(a, provinces)}
-                              {a.isDefault ? ' (Default)' : ''}
-                            </option>
-                          ))}
-                        <option value="new">Add new address</option>
-                      </select>
-                    </div>
-                  )}
-                  <div>
-                    <label
-                      className="block font-medium mb-1"
-                      htmlFor="fullName"
-                    >
-                      Full Name
-                    </label>
-                    <Input id="fullName" {...register('fullName')} />
-                    {errors.fullName && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {errors.fullName.message}
-                      </p>
+              })} className="space-y-6">
+                
+                {/* Customer Information */}
+                <Card className="border-0 shadow-lg py-8">
+                  <CardHeader className="pb-6">
+                    <CardTitle className="flex items-center gap-2 text-xl font-bold text-[#a10000]">
+                      <User className="w-5 h-5" />
+                      Thông Tin Khách Hàng
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 px-6 pb-6">
+                    {!user && (
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800 text-center">
+                          <Link
+                            href="/login?callbackUrl=/checkout"
+                            className="text-[#a10000] hover:underline font-medium"
+                          >
+                            Đăng nhập
+                          </Link>
+                          {' '}để thanh toán nhanh hơn và lưu địa chỉ
+                        </p>
+                      </div>
                     )}
-                  </div>
-                  <div>
-                    <label className="block font-medium mb-1" htmlFor="phone">
-                      Phone Number
-                    </label>
-                    <Input id="phone" {...register('phone')} />
-                    {errors.phone && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {errors.phone.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block font-medium mb-1" htmlFor="email">
-                      Email Address (optional)
-                    </label>
-                    <Input id="email" type="email" {...register('email')} />
-                    {errors.email && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {errors.email.message}
-                      </p>
-                    )}
-                  </div>
-                  {/* Address Mode Toggle */}
-                  <div>
-                    <label className="block font-medium mb-1">
-                      Delivery Address
-                    </label>
-                    <div className="flex gap-2 mb-2">
-                      <Button
-                        type="button"
-                        variant={
-                          addressMode === 'manual' ? 'default' : 'outline'
-                        }
-                        size="sm"
-                        onClick={() => handleAddressModeChange('manual')}
-                      >
-                        Manual Entry
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={addressMode === 'map' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleAddressModeChange('map')}
-                      >
-                        Map Selection
-                      </Button>
-                      <input type="hidden" {...register('addressMode')} />
-                    </div>
-                    {errors.addressMode && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {errors.addressMode.message}
-                      </p>
-                    )}
-                    {addressMode === 'manual' ? (
+                    
+                    {user && savedAddresses.length > 0 && (
                       <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Chọn địa chỉ đã lưu
+                        </Label>
+                        <select
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
+                          value={selectedAddressId}
+                          onChange={(e) => setSelectedAddressId(e.target.value)}
+                        >
+                          {[...savedAddresses]
+                            .sort(
+                              (a, b) =>
+                                (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0),
+                            )
+                            .map((a: Address) => (
+                              <option key={a.id} value={a.id}>
+                                {getAddressDisplay(a, provinces)}
+                                {a.isDefault ? ' (Mặc định)' : ''}
+                              </option>
+                            ))}
+                          <option value="new">Thêm địa chỉ mới</option>
+                        </select>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                          Họ và tên *
+                        </Label>
+                        <Input 
+                          id="fullName" 
+                          {...register('fullName')} 
+                          className="h-12"
+                          placeholder="Nhập họ và tên"
+                        />
+                        {errors.fullName && (
+                          <p className="text-red-600 text-sm flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.fullName.message}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                          Số điện thoại *
+                        </Label>
+                        <Input 
+                          id="phone" 
+                          {...register('phone')} 
+                          className="h-12"
+                          placeholder="Nhập số điện thoại"
+                        />
+                        {errors.phone && (
+                          <p className="text-red-600 text-sm flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.phone.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                        Email (tùy chọn)
+                      </Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        {...register('email')} 
+                        className="h-12"
+                        placeholder="Nhập email"
+                      />
+                      {errors.email && (
+                        <p className="text-red-600 text-sm flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.email.message}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Shipping Address */}
+                <Card className="border-0 shadow-lg py-8">
+                  <CardHeader className="pb-6">
+                    <CardTitle className="flex items-center gap-2 text-xl font-bold text-[#a10000]">
+                      <MapPin className="w-5 h-5" />
+                      Địa Chỉ Giao Hàng
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 px-6 pb-6">
+                    {/* Address Mode Toggle */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Chọn cách nhập địa chỉ
+                      </Label>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant={
+                            addressMode === 'manual' ? 'default' : 'outline'
+                          }
+                          size="sm"
+                          onClick={() => handleAddressModeChange('manual')}
+                          className={addressMode === 'manual' ? 'bg-[#a10000] hover:bg-red-800' : ''}
+                        >
+                          Nhập thủ công
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={addressMode === 'map' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => handleAddressModeChange('map')}
+                          className={addressMode === 'map' ? 'bg-[#a10000] hover:bg-red-800' : ''}
+                        >
+                          Chọn trên bản đồ
+                        </Button>
+                        <input type="hidden" {...register('addressMode')} />
+                      </div>
+                    </div>
+                    
+                    {addressMode === 'manual' ? (
+                      <div className="space-y-4">
                         {/* Province dropdown */}
-                        <div>
-                          <label className="block text-sm mb-1">
-                            Province/City
-                          </label>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Tỉnh/Thành phố *
+                          </Label>
                           <select
-                            className="w-full border rounded px-2 py-2"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 h-12 text-sm focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
                             {...register('province')}
                             onChange={handleProvinceChange}
                             disabled={loadingProvinces}
                           >
                             <option value="">
                               {loadingProvinces
-                                ? 'Loading...'
-                                : 'Select province/city'}
+                                ? 'Đang tải...'
+                                : 'Chọn tỉnh/thành phố'}
                             </option>
                             {provinces.map((p) => (
                               <option key={p.code} value={String(p.code)}>
@@ -420,20 +523,29 @@ export default function CheckoutPage() {
                               </option>
                             ))}
                           </select>
+                          {errors.province && (
+                            <p className="text-red-600 text-sm flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              {errors.province.message}
+                            </p>
+                          )}
                         </div>
+                        
                         {/* District dropdown */}
-                        <div>
-                          <label className="block text-sm mb-1">District</label>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Quận/Huyện *
+                          </Label>
                           <select
-                            className="w-full border rounded px-2 py-2"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 h-12 text-sm focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
                             {...register('district')}
                             onChange={handleDistrictChange}
                             disabled={!watch('province') || loadingDistricts}
                           >
                             <option value="">
                               {loadingDistricts
-                                ? 'Loading...'
-                                : 'Select district'}
+                                ? 'Đang tải...'
+                                : 'Chọn quận/huyện'}
                             </option>
                             {watch('province') &&
                               !loadingDistricts &&
@@ -449,22 +561,29 @@ export default function CheckoutPage() {
                                   </option>
                                 ))}
                           </select>
+                          {errors.district && (
+                            <p className="text-red-600 text-sm flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              {errors.district.message}
+                            </p>
+                          )}
                         </div>
+                        
                         {/* Ward dropdown */}
-                        <div>
-                          <label className="block text-sm mb-1">
-                            Ward/Commune
-                          </label>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700">
+                            Phường/Xã *
+                          </Label>
                           <select
-                            className="w-full border rounded px-2 py-2"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 h-12 text-sm focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
                             {...register('ward')}
                             onChange={(e) => setValue('ward', e.target.value)}
                             disabled={!watch('district') || loadingWards}
                           >
                             <option value="">
                               {loadingWards
-                                ? 'Loading...'
-                                : 'Select ward/commune'}
+                                ? 'Đang tải...'
+                                : 'Chọn phường/xã'}
                             </option>
                             {watch('province') &&
                               watch('district') &&
@@ -486,155 +605,210 @@ export default function CheckoutPage() {
                                   </option>
                                 ))}
                           </select>
+                          {errors.ward && (
+                            <p className="text-red-600 text-sm flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              {errors.ward.message}
+                            </p>
+                          )}
                         </div>
-                        {/* Street/house autocomplete */}
-                        <div>
-                          <label className="block text-sm mb-1">
-                            Street/House Number
-                          </label>
+                        
+                        {/* Street address */}
+                        <div className="space-y-2">
+                          <Label htmlFor="address" className="text-sm font-medium text-gray-700">
+                            Địa chỉ chi tiết *
+                          </Label>
                           <Input
                             id="address"
-                            placeholder="Enter street/house number..."
+                            placeholder="Nhập số nhà, tên đường..."
                             autoComplete="off"
                             {...register('address')}
+                            className="h-12"
                           />
                           {errors.address && (
-                            <p className="text-red-600 text-sm mt-1">
+                            <p className="text-red-600 text-sm flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
                               {errors.address.message}
                             </p>
                           )}
                         </div>
-                        {/* Optional apartment/unit */}
-                        <div>
-                          <label className="block text-sm mb-1">
-                            Apartment/Unit (optional)
-                          </label>
-                          <Input id="apartment" {...register('apartment')} />
+                        
+                        {/* Apartment */}
+                        <div className="space-y-2">
+                          <Label htmlFor="apartment" className="text-sm font-medium text-gray-700">
+                            Căn hộ/Phòng (tùy chọn)
+                          </Label>
+                          <Input 
+                            id="apartment" 
+                            {...register('apartment')} 
+                            className="h-12"
+                            placeholder="Nhập số căn hộ/phòng"
+                          />
                         </div>
                       </div>
                     ) : (
-                      <div className="w-full h-48 bg-gray-100 rounded flex items-center justify-center relative mb-2">
-                        {/* Mock map with marker */}
-                        <div
-                          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-                          onClick={() =>
-                            setMockMarker({
-                              lat: mockMarker.lat + 0.001,
-                              lng: mockMarker.lng + 0.001,
-                            })
-                          }
-                        >
-                          <svg
-                            width="32"
-                            height="32"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            className="text-red-500"
+                      <div className="space-y-4">
+                        <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center relative border">
+                          {/* Mock map with marker */}
+                          <div
+                            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+                            onClick={() =>
+                              setMockMarker({
+                                lat: mockMarker.lat + 0.001,
+                                lng: mockMarker.lng + 0.001,
+                              })
+                            }
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M12 21c-4-4-7-7-7-11a7 7 0 1 1 14 0c0 4-3 7-7 11z"
-                            />
-                            <circle cx="12" cy="10" r="3" fill="currentColor" />
-                          </svg>
+                            <svg
+                              width="32"
+                              height="32"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                              className="text-[#a10000]"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 21c-4-4-7-7-7-11a7 7 0 1 1 14 0c0 4-3 7-7 11z"
+                              />
+                              <circle cx="12" cy="10" r="3" fill="currentColor" />
+                            </svg>
+                          </div>
+                          <span className="text-xs text-gray-400 absolute bottom-2 left-2">
+                            (Bản đồ mô phỏng, click để di chuyển)
+                          </span>
                         </div>
-                        <span className="text-xs text-gray-400 absolute bottom-2 left-2">
-                          (Mock map, click marker to move)
-                        </span>
                       </div>
                     )}
-                    {/* Resolved address feedback */}
-                    {watchedAddress && (
-                      <div className="text-green-700 text-sm mt-1">
-                        Resolved: {watchedAddress}
-                      </div>
-                    )}
-                  </div>
-                  {/* Optional note */}
-                  <div>
-                    <label className="block font-medium mb-1" htmlFor="note">
-                      Note (optional)
-                    </label>
-                    <Textarea id="note" rows={2} {...register('note')} />
-                  </div>
-                </div>
-              </Card>
-              <Button
-                type="submit"
-                className="w-full text-base font-semibold py-3"
-                disabled={loading || items.length === 0}
-              >
-                {loading ? 'Processing...' : 'Proceed to Payment'}
-              </Button>
-              {items.length === 0 && (
-                <div className="text-center text-gray-500 mt-2">
-                  Your cart is empty.{' '}
-                  <Link href="/products" className="underline">
-                    Browse products
-                  </Link>
-                </div>
-              )}
-            </form>
-          </div>
-          {/* Order Summary */}
-          <div className="md:w-[350px] w-full md:sticky md:top-24 flex-shrink-0">
-            <Card className="p-6 space-y-4">
-              <h2 className="text-lg font-semibold mb-2">Order Summary</h2>
-              <ul className="divide-y">
-                {items.map(({ product, quantity }) => (
-                  <li key={product.id} className="py-2 flex items-center gap-3">
-                    <div className="w-14 h-14 rounded bg-gray-50 border flex items-center justify-center overflow-hidden">
-                      <Image
-                        src={
-                          product.image ||
-                          (product.images && product.images[0]) ||
-                          ''
-                        }
-                        alt={product.name}
-                        width={56}
-                        height={56}
-                        className="object-cover w-full h-full rounded"
+                    
+                    {/* Note */}
+                    <div className="space-y-2">
+                      <Label htmlFor="note" className="text-sm font-medium text-gray-700">
+                        Ghi chú (tùy chọn)
+                      </Label>
+                      <Textarea 
+                        id="note" 
+                        rows={3} 
+                        {...register('note')} 
+                        placeholder="Ghi chú về đơn hàng..."
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        {product.name}
-                      </div>
-                      <div className="text-xs text-gray-500">x{quantity}</div>
-                    </div>
-                    <div className="font-semibold text-red-700 text-sm">
-                      {currencyFormatter.format(product.price * quantity)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex items-center justify-between pt-2 text-base">
-                <span>Subtotal</span>
-                <span>{currencyFormatter.format(subtotal)}</span>
-              </div>
-              <div className="flex items-center justify-between text-base">
-                <span>Shipping</span>
-                <span>
-                  {shippingFee === 0 ? (
-                    <span className="text-green-600 font-semibold">Free</span>
+                  </CardContent>
+                </Card>
+
+
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  className="w-full h-12 text-base font-semibold bg-[#a10000] hover:bg-red-800 transition-colors"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Đang xử lý...
+                    </>
                   ) : (
-                    currencyFormatter.format(shippingFee)
+                    'Tiếp tục đến thanh toán'
                   )}
-                </span>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t font-bold text-lg">
-                <span>Total</span>
-                <span className="text-red-700">
-                  {currencyFormatter.format(subtotal + shippingFee)}
-                </span>
-              </div>
-            </Card>
+                </Button>
+              </form>
+            </div>
+
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <Card className="sticky top-8 border-0 shadow-lg py-8">
+                <CardHeader className="pb-6">
+                  <CardTitle className="flex items-center gap-2 text-xl font-bold text-[#a10000]">
+                    <FileText className="w-5 h-5" />
+                    Tóm Tắt Đơn Hàng
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 px-6 pb-6">
+                  {/* Cart Items */}
+                  <div className="space-y-3">
+                    {items.map(({ product, quantity }) => (
+                      <div key={product.id} className="flex items-center gap-3">
+                        <div className="w-16 h-16 flex-shrink-0">
+                          <AspectRatio
+                            ratio={1 / 1}
+                            className="rounded-lg bg-gray-50 border overflow-hidden"
+                          >
+                            <Image
+                              src={
+                                product.image ||
+                                (product.images && product.images[0]) ||
+                                '/images/placeholder-product.jpg'
+                              }
+                              alt={product.name}
+                              fill
+                              className="object-cover"
+                              sizes="64px"
+                            />
+                          </AspectRatio>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm line-clamp-2">
+                            {product.name}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {product.weight}g
+                            </Badge>
+                            <span className="text-xs text-gray-500">x{quantity}</span>
+                          </div>
+                        </div>
+                        <div className="font-semibold text-[#a10000] text-sm">
+                          {currencyFormatter.format(product.price * quantity)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Price Breakdown */}
+                  <div className="border-t pt-4 space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Tạm tính:</span>
+                      <span className="font-medium">{currencyFormatter.format(subtotal)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Phí vận chuyển:</span>
+                      <span className="font-medium">
+                        {shipping === 0 ? (
+                          <span className="text-green-600 flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            Miễn phí
+                          </span>
+                        ) : (
+                          currencyFormatter.format(shipping)
+                        )}
+                      </span>
+                    </div>
+                    
+                    {shipping > 0 && (
+                      <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+                        <Truck className="w-3 h-3 inline mr-1" />
+                        Mua thêm {currencyFormatter.format(500000 - subtotal)} để được miễn phí vận chuyển
+                      </div>
+                    )}
+                    
+                    <div className="border-t pt-3">
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>Tổng cộng:</span>
+                        <span className="text-[#a10000]">{currencyFormatter.format(total)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-      </main>
+      </section>
     </div>
   );
 }
