@@ -782,8 +782,26 @@ enum RecipientType {
 
 ---
 
+### 19. Update Login Form Styling to Match Global Design System [X]
 
-### 19. CI/CD and Deployment Readiness [X]
+- [X] File: `app/(auth)/login/page.tsx`
+- [X] Align layout and visual style with pages like `app/contact/page.tsx`, `app/products/page.tsx`, etc.
+- [X] Apply consistent spacing, padding, and border-radius using Tailwind utility classes
+- [X] Use same font family, text sizes, and font weight as other form sections (e.g. checkout, contact)
+- [X] Sync input field styling:
+  - Consistent height, focus ring, and placeholder color
+  - Use `shadcn/ui` `Input` and `Label` components if available
+- [X] Align button design with primary CTA buttons:
+  - Consistent size, color, hover state, icon placement (if any)
+- [X] Add error state visuals matching rest of site (e.g. red border, small helper text)
+- [X] Use centered or split layout depending on current global style
+- [X] Ensure form is responsive and adapts to mobile layout properly
+- [X] Ensure light/dark theme (if supported) is respected
+- [X] Ensure accessibility: `aria-label`, `htmlFor`, and semantic markup
+
+---
+
+### 20. CI/CD and Deployment Readiness [X]
 
 - [X] Setup `.dockerignore`, `.env.example` files
 - [X] Dockerize backend with production-ready Dockerfile
@@ -797,7 +815,7 @@ enum RecipientType {
 
 ---
 
-### 20. Observability and Logging [ ]
+### 21. Observability and Logging [ ]
 
 - [ ] Add global error handler middleware (backend)
 - [ ] Add structured logs (`logger.service.ts` or `pino`)
@@ -806,7 +824,7 @@ enum RecipientType {
 
 ---
 
-### 21. Documentation and Developer Experience [ ]
+### 22. Documentation and Developer Experience [ ]
 
 - [ ] Generate Swagger docs at `/api-docs`
 - [ ] Write `README.md` inside `backend/`:
