@@ -19,22 +19,61 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
+  
+  // Check for localStorage authentication (admin users)
+  const [localUser, setLocalUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const token = localStorage.getItem('auth-token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        setLocalUser(user);
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+      }
+    }
+  }, []);
 
   // Fetch orders from API
   useEffect(() => {
     setLoading(true);
-    fetch('/api/orders')
-      .then((res) => res.json())
-      .then((data: OrdersApiResponse) => {
-        if (data.orders) setOrders(data.orders);
-        else setError(data.error || 'Failed to load orders');
-        setLoading(false);
-      })
-      .catch(() => {
+    
+    const fetchOrders = async () => {
+      try {
+        const isAdminUser = !!localUser;
+        const endpoint = isAdminUser ? 'http://localhost:8080/api/orders' : '/api/orders';
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        
+        if (isAdminUser) {
+          const token = localStorage.getItem('auth-token');
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(endpoint, { headers });
+        const data = await response.json();
+        
+        // Handle different response formats
+        // Frontend API returns { orders: [...] }
+        // Backend API returns [...] directly
+        if (data.orders) {
+          setOrders(data.orders);
+        } else if (Array.isArray(data)) {
+          setOrders(data);
+        } else {
+          setError(data.error || 'Failed to load orders');
+        }
+      } catch (err) {
         setError('Failed to load orders');
+      } finally {
         setLoading(false);
-      });
-  }, []);
+      }
+    };
+    
+    fetchOrders();
+  }, [localUser]);
 
   // Navigation handler
   const handleViewOrder = useCallback(

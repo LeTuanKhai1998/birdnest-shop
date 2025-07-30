@@ -5,6 +5,8 @@ export type UserResponse = {
   id: string;
   email: string;
   name: string | null;
+  phone?: string | null;
+  bio?: string | null;
   isAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -34,6 +36,8 @@ export class UsersService {
         id: true,
         email: true,
         name: true,
+        phone: true,
+        bio: true,
         isAdmin: true,
         createdAt: true,
         updatedAt: true,
@@ -55,6 +59,33 @@ export class UsersService {
         id: true,
         email: true,
         name: true,
+        isAdmin: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async updateProfile(id: string, updateData: any): Promise<UserResponse> {
+    // Only allow updating safe fields
+    const allowedFields = ['name', 'phone', 'bio'];
+    const filteredData: any = {};
+    
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        filteredData[field] = updateData[field];
+      }
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: filteredData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        bio: true,
         isAdmin: true,
         createdAt: true,
         updatedAt: true,

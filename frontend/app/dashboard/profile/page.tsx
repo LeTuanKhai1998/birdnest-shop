@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import useSWR, { mutate } from 'swr';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { LoadingOrEmpty } from '@/components/ui/LoadingOrEmpty';
 import { Input } from '@/components/ui/input';
@@ -53,11 +53,49 @@ function getPasswordStrength(password: string) {
 
 export default function ProfilePage() {
   const { data: session } = useSession();
+  
+  // Check for localStorage authentication (admin users)
+  const [localUser, setLocalUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const token = localStorage.getItem('auth-token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        setLocalUser(user);
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+      }
+    }
+  }, []);
+  
+  // Use backend API for admin users, frontend API for regular users
+  const isAdminUser = !!localUser;
+  const apiEndpoint = isAdminUser ? 'http://localhost:8080/api/users/profile' : '/api/profile';
+  
   const { data: user, isLoading } = useSWR(
-    session?.user ? '/api/profile' : null,
-    fetcher,
+    (session?.user || localUser) ? apiEndpoint : null,
+    async (url) => {
+      if (isAdminUser) {
+        // Use JWT token for backend API
+        const token = localStorage.getItem('auth-token');
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) throw new Error('Failed to fetch profile');
+        return response.json();
+      } else {
+        // Use regular fetcher for frontend API
+        return fetcher(url);
+      }
+    },
     {
-      fallbackData: session?.user,
+      fallbackData: localUser || session?.user,
     },
   );
   const [saving, setSaving] = useState(false);
@@ -99,14 +137,32 @@ export default function ProfilePage() {
   async function onSubmitProfile(data: ProfileForm) {
     setSaving(true);
     try {
-      const res = await fetch('/api/profile', {
+      const endpoint = isAdminUser ? 'http://localhost:8080/api/users/profile' : '/api/profile';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      
+      if (isAdminUser) {
+        const token = localStorage.getItem('auth-token');
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const res = await fetch(endpoint, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Update failed');
-      mutate('/api/profile');
+      
+      // Update local state
+      if (isAdminUser) {
+        // Update localStorage user data
+        const updatedUser = { ...localUser, ...data };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setLocalUser(updatedUser);
+      } else {
+        mutate('/api/profile');
+      }
+      
       toast.success('Profile updated!');
     } catch (e: unknown) {
       if (e instanceof Error) {
@@ -123,18 +179,25 @@ export default function ProfilePage() {
   async function onSubmitPassword(data: PasswordForm) {
     setPwSaving(true);
     try {
-      const res = await fetch('/api/profile/password', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentPassword: data.currentPassword,
-          newPassword: data.newPassword,
-        }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Password change failed');
-      toast.success('Password changed!');
-      resetPw();
+      if (isAdminUser) {
+        // For admin users, we'll need to implement a backend endpoint for password change
+        // For now, show a message that this feature is not available for admin users
+        toast.error('Password change is not available for admin users yet. Please contact support.');
+      } else {
+        // Use frontend API for regular users
+        const res = await fetch('/api/profile/password', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            currentPassword: data.currentPassword,
+            newPassword: data.newPassword,
+          }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Password change failed');
+        toast.success('Password changed!');
+        resetPw();
+      }
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);

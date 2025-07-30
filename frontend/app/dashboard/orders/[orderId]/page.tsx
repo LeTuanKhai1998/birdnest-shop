@@ -37,6 +37,23 @@ export default function OrderDetailPage({
   const { orderId } = use(params);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Check for localStorage authentication (admin users)
+  const [localUser, setLocalUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const token = localStorage.getItem('auth-token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        setLocalUser(user);
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -47,7 +64,16 @@ export default function OrderDetailPage({
       } else {
         // Fetch real order from API
         try {
-          const response = await fetch(`/api/orders/${orderId}`);
+          const isAdminUser = !!localUser;
+          const endpoint = isAdminUser ? `http://localhost:8080/api/orders/${orderId}` : `/api/orders/${orderId}`;
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          
+          if (isAdminUser) {
+            const token = localStorage.getItem('auth-token');
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+          
+          const response = await fetch(endpoint, { headers });
           if (response.ok) {
             const realOrder = await response.json();
             setOrder(realOrder);
@@ -60,7 +86,7 @@ export default function OrderDetailPage({
     };
 
     fetchOrder();
-  }, [orderId]);
+  }, [orderId, localUser]);
 
   if (loading) {
     return (

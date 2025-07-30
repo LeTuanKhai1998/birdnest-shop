@@ -10,14 +10,14 @@ async function fixAdminUser() {
 
     // Update or create admin user with correct email
     const adminUser = await prisma.user.upsert({
-      where: { email: 'admin@birdnest.vn' },
+      where: { email: 'admin@birdnest.com' },
       update: {
         password: hashedPassword,
         isAdmin: true,
         name: 'Admin User',
       },
       create: {
-        email: 'admin@birdnest.vn',
+        email: 'admin@birdnest.com',
         name: 'Admin User',
         password: hashedPassword,
         isAdmin: true,

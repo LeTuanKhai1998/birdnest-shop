@@ -145,11 +145,15 @@ export class OrdersController {
     @Query('take') take?: string,
     @Query('userId') userId?: string,
     @Query('status') status?: string,
+    @Request() req: any,
   ) {
+    // If no userId is provided, use the current user's ID
+    const currentUserId = userId || req.user.userId;
+    
     return this.ordersService.findAll({
       skip: skip ? parseInt(skip) : undefined,
       take: take ? parseInt(take) : undefined,
-      userId,
+      userId: currentUserId,
       status: status as OrderStatus | undefined,
     });
   }
@@ -162,8 +166,15 @@ export class OrdersController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  async findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(id);
+  async findOne(@Param('id') id: string, @Request() req: any) {
+    const order = await this.ordersService.findOne(id);
+    
+    // Ensure the order belongs to the current user (unless admin)
+    if (order && order.userId !== req.user.userId && !req.user.isAdmin) {
+      return { error: 'Order not found' };
+    }
+    
+    return order;
   }
 
   @Post()

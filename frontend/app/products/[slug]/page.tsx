@@ -367,7 +367,9 @@ export default function ProductDetailPage({
                       product={product}
                       disabled={product.quantity === 0}
                       className="flex-1"
-                    />
+                    >
+                      Thêm vào giỏ hàng
+                    </AddToCartButton>
                     <Button
                       onClick={handleBuyNow}
                       disabled={product.quantity === 0}
@@ -409,7 +411,7 @@ export default function ProductDetailPage({
         {/* Reviews Section */}
         <div className="py-12">
           <Card className="mb-8 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader className="pb-6">
+            <CardHeader className="pb-6 pt-6">
               <CardTitle className="text-xl font-semibold">Đánh giá khách hàng</CardTitle>
             </CardHeader>
             <CardContent className="px-8 pb-8">
@@ -714,7 +716,7 @@ function ProductDetailsTabs({ product }: { product: Product }) {
   ];
   return (
     <Card className="mb-8 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-      <CardHeader className="pb-6">
+      <CardHeader className="pb-6 pt-6">
         <CardTitle className="text-xl font-semibold">Thông tin chi tiết</CardTitle>
       </CardHeader>
       <CardContent className="px-8 pb-8">

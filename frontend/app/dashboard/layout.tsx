@@ -1,7 +1,7 @@
 'use client';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { User, ListOrdered, MapPin, Heart, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,14 +22,41 @@ export default function DashboardLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  
+  // Unified authentication check - consider both NextAuth and localStorage
+  const [localUser, setLocalUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    // Check localStorage for admin users
+    const token = localStorage.getItem('auth-token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        setLocalUser(user);
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+        localStorage.removeItem('auth-token');
+        localStorage.removeItem('user');
+      }
+    }
+    setIsLoading(false);
+  }, []);
+  
+  // Use NextAuth session for regular users, localStorage for admin users
+  const user = localUser || session?.user;
+  const isAuthenticated = !!user;
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    // Only redirect if both authentication methods fail
+    if (!isLoading && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [status, router]);
+  }, [isLoading, isAuthenticated, router]);
 
-  if (status === 'loading') {
+  if (isLoading || status === 'loading') {
     return (
       <div className="flex-1 flex items-center justify-center h-screen">
         Loading...
@@ -37,7 +64,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!session) return null;
+  if (!isAuthenticated) return null;
 
   return (
     <div className="min-h-screen flex bg-gray-50">

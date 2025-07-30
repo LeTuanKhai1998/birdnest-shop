@@ -3,6 +3,7 @@ import useSWR from 'swr/immutable';
 import { fetcher } from '@/lib/utils';
 import { Product } from '@/components/ProductCard';
 import { useSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
 
 export interface WishlistItem {
   id: string;
@@ -71,9 +72,30 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
 // SWR hook for fetching wishlist - only for authenticated users
 export function useWishlist() {
   const { data: session } = useSession();
+  
+  // Check for localStorage authentication (admin users)
+  const [localUser, setLocalUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const token = localStorage.getItem('auth-token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        setLocalUser(user);
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+      }
+    }
+  }, []);
+  
+  // Use unified authentication check
+  const isAuthenticated = !!(session?.user || localUser);
+  
   const { data, error, isLoading, mutate } = useSWR<WishlistItem[]>(
     // Only fetch wishlist if user is authenticated
-    session?.user ? '/api/wishlist' : null,
+    isAuthenticated ? '/api/wishlist' : null,
     fetcher,
     {
       // Don't retry on 401 errors

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Patch,
   Param,
   Body,
   UseGuards,
@@ -86,6 +87,22 @@ export class UsersController {
       return await this.usersService.findById(user.userId);
     } catch (error) {
       return { error: 'User not found' };
+    }
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(@Request() req: Request, @Body() updateData: any) {
+    // JWT payload is available in req.user after JwtAuthGuard validation
+    const user = (req as any).user;
+    if (!user || !user.userId) {
+      return { error: 'User not authenticated' };
+    }
+    
+    try {
+      return await this.usersService.updateProfile(user.userId, updateData);
+    } catch (error) {
+      return { error: 'Failed to update profile' };
     }
   }
 
