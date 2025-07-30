@@ -435,279 +435,340 @@ export default function AddressesPage() {
   };
 
   return (
-    <div className="py-8 max-w-2xl mx-auto px-2 md:px-0">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Your Addresses</h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setEditId(null);
-            setShowForm(true);
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center lg:text-left">
+        <h1 
+          className="text-glossy text-3xl md:text-5xl font-black italic"
+          style={{
+            fontWeight: 900,
+            fontStyle: 'italic',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '3.3rem',
+            padding: '20px',
+            color: '#a10000'
           }}
         >
-          <Plus className="w-4 h-4 mr-1" /> Add Address
-        </Button>
+          Địa chỉ của tôi
+        </h1>
+        <p className="text-lg text-gray-600 max-w-2xl">
+          Quản lý địa chỉ giao hàng và thanh toán của bạn
+        </p>
       </div>
-      <LoadingOrEmpty
-        loading={isLoading}
-        empty={addresses.length === 0}
-        emptyText="No addresses saved yet."
-      >
-        <div className="flex flex-col gap-4">
-          {addresses.map((addr: Address) => (
-            <Card
-              key={addr.id}
-              className={`relative p-4 flex flex-col md:flex-row md:items-center gap-2 border ${addr.isDefault ? 'border-primary' : 'border-gray-200'}`}
-            >
-              <div className="flex-1">
-                <div className="font-semibold text-base flex items-center gap-2">
-                  {addr.fullName}
-                  {addr.isDefault && (
-                    <span className="inline-flex items-center px-2 py-0.5 text-xs bg-primary/10 text-primary rounded ml-2">
-                      <Star className="w-4 h-4 mr-1" /> Mặc định
-                    </span>
+
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-[#a10000]">Danh sách địa chỉ</h2>
+          <Button
+            onClick={() => {
+              setEditId(null);
+              setShowForm(true);
+            }}
+            className="bg-[#a10000] hover:bg-red-800"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Thêm địa chỉ
+          </Button>
+        </div>
+        <LoadingOrEmpty
+          loading={isLoading}
+          empty={addresses.length === 0}
+          emptyText="Chưa có địa chỉ nào được lưu."
+        >
+          <div className="flex flex-col gap-4">
+            {addresses.map((addr: Address) => (
+              <Card
+                key={addr.id}
+                className={`relative p-4 flex flex-col md:flex-row md:items-center gap-2 border ${addr.isDefault ? 'border-[#a10000]' : 'border-gray-200'}`}
+              >
+                <div className="flex-1">
+                  <div className="font-semibold text-base flex items-center gap-2">
+                    {addr.fullName}
+                    {addr.isDefault && (
+                      <span className="inline-flex items-center px-2 py-0.5 text-xs bg-[#a10000]/10 text-[#a10000] rounded ml-2">
+                        <Star className="w-4 h-4 mr-1" /> Mặc định
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-gray-500 text-sm">{addr.phone}</div>
+                  <div className="text-gray-700 text-sm mt-1">
+                    <div>{getLine1(addr)}</div>
+                    <div>{getLine2(addr, provinces)}</div>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-2 md:mt-0">
+                  {!addr.isDefault && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Đặt làm mặc định"
+                      onClick={() => handleSetDefault(addr.id)}
+                      className="hover:bg-[#a10000]/10 hover:text-[#a10000]"
+                    >
+                      <StarOff className="w-5 h-5" />
+                    </Button>
                   )}
-                </div>
-                <div className="text-gray-500 text-sm">{addr.phone}</div>
-                <div className="text-gray-700 text-sm mt-1">
-                  <div>{getLine1(addr)}</div>
-                  <div>{getLine2(addr, provinces)}</div>
-                </div>
-              </div>
-              <div className="flex gap-2 mt-2 md:mt-0">
-                {!addr.isDefault && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    title="Đặt làm mặc định"
-                    onClick={() => handleSetDefault(addr.id)}
+                    title="Chỉnh sửa"
+                    onClick={() => {
+                      setEditId(addr.id);
+                      setShowForm(true);
+                    }}
+                    className="hover:bg-[#a10000]/10 hover:text-[#a10000]"
                   >
-                    <StarOff className="w-5 h-5" />
+                    <Edit2 className="w-5 h-5" />
                   </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Chỉnh sửa"
-                  onClick={() => {
-                    setEditId(addr.id);
-                    setShowForm(true);
-                  }}
-                >
-                  <Edit2 className="w-5 h-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Xóa"
-                  className="text-red-500 hover:bg-red-50"
-                  onClick={() => handleDelete(addr.id)}
-                  disabled={deleting === addr.id}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </LoadingOrEmpty>
-      {/* Address Form Modal/Inline */}
-      {showForm && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/30">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg relative animate-in fade-in zoom-in-95">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-              onClick={() => {
-                setShowForm(false);
-                setEditId(null);
-              }}
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <h3 className="text-lg font-semibold mb-4">
-              {editing ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ'}
-            </h3>
-            <form
-              className="grid grid-cols-1 gap-4"
-              onSubmit={handleSubmit(onSubmit)}
-            >
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="fullName"
-                >
-                  Họ tên
-                </label>
-                <Input
-                  id="fullName"
-                  {...register('fullName')}
-                  placeholder="Họ tên"
-                  required
-                  disabled={saving}
-                />
-                {errors.fullName && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.fullName.message}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="phone"
-                >
-                  Số điện thoại
-                </label>
-                <Input
-                  id="phone"
-                  {...register('phone')}
-                  placeholder="Số điện thoại"
-                  required
-                  disabled={saving}
-                />
-                {errors.phone && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.phone.message}
-                  </div>
-                )}
-              </div>
-              {/* Province dropdown */}
-              <div>
-                <label className="block text-sm mb-1">Tỉnh/Thành phố</label>
-                <select
-                  className="w-full border rounded px-2 py-2"
-                  {...register('province')}
-                  onChange={(e) => handleProvinceChange(e.target.value)}
-                  disabled={loadingProvinces || saving}
-                >
-                  <option value="">
-                    {loadingProvinces ? 'Đang tải...' : 'Chọn tỉnh/thành phố'}
-                  </option>
-                  {provinces.map((p) => (
-                    <option key={p.code} value={String(p.code)}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.province && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.province.message}
-                  </div>
-                )}
-              </div>
-              {/* District dropdown */}
-              <div>
-                <label className="block text-sm mb-1">Quận/Huyện</label>
-                <select
-                  className="w-full border rounded px-2 py-2"
-                  {...register('district')}
-                  onChange={(e) => handleDistrictChange(e.target.value)}
-                  disabled={!provinceCode || loadingDistricts || saving}
-                >
-                  <option value="">
-                    {loadingDistricts ? 'Đang tải...' : 'Chọn quận/huyện'}
-                  </option>
-                  {provinceCode &&
-                    !loadingDistricts &&
-                    selectedProvince?.districts.map((d: District) => (
-                      <option key={d.code} value={String(d.code)}>
-                        {d.name}
-                      </option>
-                    ))}
-                </select>
-                {errors.district && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.district.message}
-                  </div>
-                )}
-              </div>
-              {/* Ward dropdown */}
-              <div>
-                <label className="block text-sm mb-1">Phường/Xã</label>
-                <select
-                  className="w-full border rounded px-2 py-2"
-                  {...register('ward')}
-                  disabled={!districtCode || loadingWards || saving}
-                >
-                  <option value="">
-                    {loadingWards ? 'Đang tải...' : 'Chọn phường/xã'}
-                  </option>
-                  {provinceCode &&
-                    districtCode &&
-                    !loadingWards &&
-                    selectedDistrict?.wards.map((w: Ward) => (
-                      <option key={w.code} value={String(w.code)}>
-                        {w.name}
-                      </option>
-                    ))}
-                </select>
-                {errors.ward && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.ward.message}
-                  </div>
-                )}
-              </div>
-              {/* Street/house */}
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="address"
-                >
-                  Đường/Số nhà
-                </label>
-                <Input
-                  id="address"
-                  {...register('address')}
-                  placeholder="Nhập đường/số nhà..."
-                  required
-                  disabled={saving}
-                />
-                {errors.address && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.address.message}
-                  </div>
-                )}
-              </div>
-              {/* Apartment/unit */}
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="apartment"
-                >
-                  Căn hộ/Đơn vị (tùy chọn)
-                </label>
-                <Input
-                  id="apartment"
-                  {...register('apartment')}
-                  placeholder="Căn hộ, suite, v.v."
-                  disabled={saving}
-                />
-                {errors.apartment && (
-                  <div className="text-red-500 text-xs mt-1">
-                    {errors.apartment.message}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                <input
-                  type="checkbox"
-                  id="isDefault"
-                  {...register('isDefault')}
-                  disabled={saving}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="isDefault" className="text-sm">
-                  Đặt làm địa chỉ mặc định
-                </label>
-              </div>
-              <Button type="submit" className="w-full mt-2" disabled={saving}>
-                {editing ? 'Lưu thay đổi' : 'Thêm địa chỉ'}
-              </Button>
-            </form>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Xóa"
+                    className="text-red-500 hover:bg-red-50"
+                    onClick={() => handleDelete(addr.id)}
+                    disabled={deleting === addr.id}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
+                </div>
+              </Card>
+            ))}
           </div>
-        </div>
-      )}
+        </LoadingOrEmpty>
+        {/* Address Form Modal/Inline */}
+        {showForm && (
+          <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/30">
+            <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg relative animate-in fade-in zoom-in-95">
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditId(null);
+                }}
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <h3 className="text-lg font-semibold mb-4 text-[#a10000]">
+                {editing ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ'}
+              </h3>
+              <form
+                className="grid grid-cols-1 gap-4"
+                onSubmit={handleSubmit(onSubmit)}
+              >
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="fullName"
+                  >
+                    Họ tên
+                  </label>
+                  <Input
+                    id="fullName"
+                    {...register('fullName')}
+                    placeholder="Họ tên"
+                    required
+                    disabled={saving}
+                  />
+                  {errors.fullName && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {errors.fullName.message}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="phone"
+                  >
+                    Số điện thoại
+                  </label>
+                  <Input
+                    id="phone"
+                    {...register('phone')}
+                    placeholder="Số điện thoại"
+                    required
+                    disabled={saving}
+                  />
+                  {errors.phone && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {errors.phone.message}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="country"
+                  >
+                    Quốc gia
+                  </label>
+                  <Input
+                    id="country"
+                    {...register('country')}
+                    placeholder="Quốc gia"
+                    required
+                    disabled={saving}
+                  />
+                  {errors.country && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {errors.country.message}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="province"
+                  >
+                    Tỉnh/thành phố
+                  </label>
+                  <select
+                    id="province"
+                    {...register('province')}
+                    disabled={saving || loadingProvinces}
+                    onChange={(e) => handleProvinceChange(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
+                  >
+                    <option value="">Chọn tỉnh/thành phố</option>
+                    {provinces.map((province) => (
+                      <option key={province.code} value={province.code}>
+                        {province.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.province && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {errors.province.message}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="district"
+                  >
+                    Quận/huyện
+                  </label>
+                  <select
+                    id="district"
+                    {...register('district')}
+                    disabled={saving || loadingDistricts || !selectedProvince}
+                    onChange={(e) => handleDistrictChange(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
+                  >
+                    <option value="">Chọn quận/huyện</option>
+                    {selectedProvince?.districts.map((district) => (
+                      <option key={district.code} value={district.code}>
+                        {district.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.district && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {errors.district.message}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="ward"
+                  >
+                    Phường/xã
+                  </label>
+                  <select
+                    id="ward"
+                    {...register('ward')}
+                    disabled={saving || loadingWards || !selectedDistrict}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
+                  >
+                    <option value="">Chọn phường/xã</option>
+                    {selectedDistrict?.wards.map((ward) => (
+                      <option key={ward.code} value={ward.code}>
+                        {ward.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.ward && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {errors.ward.message}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="address"
+                  >
+                    Đường/số nhà
+                  </label>
+                  <Input
+                    id="address"
+                    {...register('address')}
+                    placeholder="Đường/số nhà"
+                    required
+                    disabled={saving}
+                  />
+                  {errors.address && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {errors.address.message}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="apartment"
+                  >
+                    Căn hộ/tòa nhà (tùy chọn)
+                  </label>
+                  <Input
+                    id="apartment"
+                    {...register('apartment')}
+                    placeholder="Căn hộ/tòa nhà"
+                    disabled={saving}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isDefault"
+                    {...register('isDefault')}
+                    disabled={saving}
+                    className="w-4 h-4 text-[#a10000] border-gray-300 rounded focus:ring-[#a10000]"
+                  />
+                  <label
+                    htmlFor="isDefault"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Đặt làm địa chỉ mặc định
+                  </label>
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 bg-[#a10000] hover:bg-red-800"
+                  >
+                    {saving ? 'Đang lưu...' : editing ? 'Cập nhật' : 'Thêm địa chỉ'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowForm(false);
+                      setEditId(null);
+                    }}
+                    disabled={saving}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

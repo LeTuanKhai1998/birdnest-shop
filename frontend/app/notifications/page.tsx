@@ -89,20 +89,44 @@ export default function NotificationsPage() {
   const readNotifications = notifications.filter(n => n.isRead);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center lg:text-left">
+        <h1 
+          className="text-glossy text-3xl md:text-5xl font-black italic"
+          style={{
+            fontWeight: 900,
+            fontStyle: 'italic',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '3.3rem',
+            padding: '20px',
+            color: '#a10000'
+          }}
+        >
+          Thông báo
+        </h1>
+        <p className="text-lg text-gray-600 max-w-2xl">
+          Cập nhật về đơn hàng, khuyến mãi và thông tin quan trọng
+        </p>
+      </div>
+
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+            <h2 className="text-2xl font-bold text-[#a10000]">Tất cả thông báo</h2>
             <p className="text-gray-600 mt-1">
-              {notifications.length} total notifications
+              {notifications.length} thông báo tổng cộng
             </p>
           </div>
           {unreadNotifications.length > 0 && (
-            <Button onClick={handleMarkAllAsRead} variant="outline">
+            <Button 
+              onClick={handleMarkAllAsRead} 
+              variant="outline"
+              className="bg-[#a10000] hover:bg-red-800 text-white border-[#a10000]"
+            >
               <Check className="w-4 h-4 mr-2" />
-              Mark all as read
+              Đánh dấu tất cả đã đọc
             </Button>
           )}
         </div>
@@ -110,48 +134,49 @@ export default function NotificationsPage() {
         {/* Unread Notifications */}
         {unreadNotifications.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Unread ({unreadNotifications.length})
-            </h2>
+            <h3 className="text-lg font-semibold text-[#a10000] mb-4">
+              Chưa đọc ({unreadNotifications.length})
+            </h3>
             <div className="space-y-4">
               {unreadNotifications.map((notification) => (
-                <Card key={notification.id} className="border-l-4 border-l-blue-500">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-semibold text-gray-900">
-                              {notification.title}
-                            </h3>
-                            {notification.body && (
-                              <p className="text-gray-600 mt-1">{notification.body}</p>
-                            )}
-                            <p className="text-sm text-gray-500 mt-2">
-                              {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMarkAsRead(notification.id)}
-                            >
-                              <Check className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(notification.id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                <Card key={notification.id} className="border-l-4 border-l-[#a10000]">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
+                          {getNotificationIcon(notification.type)}
                         </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 mb-1">
+                            {notification.title}
+                          </h4>
+                          {notification.body && (
+                            <p className="text-gray-600 text-sm mb-2">
+                              {notification.body}
+                            </p>
+                          )}
+                          <p className="text-xs text-gray-500">
+                            {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: require('date-fns/locale/vi') })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleMarkAsRead(notification.id)}
+                          className="hover:bg-[#a10000]/10 hover:text-[#a10000]"
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(notification.id)}
+                          className="text-red-500 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -164,40 +189,40 @@ export default function NotificationsPage() {
         {/* Read Notifications */}
         {readNotifications.length > 0 && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Read ({readNotifications.length})
-            </h2>
+            <h3 className="text-lg font-semibold text-[#a10000] mb-4">
+              Đã đọc ({readNotifications.length})
+            </h3>
             <div className="space-y-4">
               {readNotifications.map((notification) => (
                 <Card key={notification.id} className="opacity-75">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-semibold text-gray-900">
-                              {notification.title}
-                            </h3>
-                            {notification.body && (
-                              <p className="text-gray-600 mt-1">{notification.body}</p>
-                            )}
-                            <p className="text-sm text-gray-500 mt-2">
-                              {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 mb-1">
+                            {notification.title}
+                          </h4>
+                          {notification.body && (
+                            <p className="text-gray-600 text-sm mb-2">
+                              {notification.body}
                             </p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(notification.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          )}
+                          <p className="text-xs text-gray-500">
+                            {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: require('date-fns/locale/vi') })}
+                          </p>
                         </div>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(notification.id)}
+                        className="text-red-500 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -210,10 +235,10 @@ export default function NotificationsPage() {
         {notifications.length === 0 && (
           <Card>
             <CardContent className="p-12 text-center">
-              <Bell className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No notifications</h3>
+              <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Không có thông báo</h3>
               <p className="text-gray-600">
-                You&apos;re all caught up! New notifications will appear here.
+                Bạn chưa có thông báo nào. Chúng tôi sẽ thông báo khi có cập nhật mới!
               </p>
             </CardContent>
           </Card>

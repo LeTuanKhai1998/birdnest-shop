@@ -84,9 +84,9 @@ export default function ProductsClient({ products }: { products: Product[] }) {
   );
 
   // Handlers
-  const handleTypeChange = (type: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId) ? prev.filter((c) => c !== categoryId) : [...prev, categoryId],
     );
     setCurrentPage(1);
   };
@@ -118,7 +118,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
   };
   
   const handleResetFilters = () => {
-    setSelectedTypes([]);
+    setSelectedCategories([]);
     setSelectedWeights([]);
     setPrice(PRODUCTS_CONSTANTS.filters.priceRange.max);
     setSearch('');
@@ -169,18 +169,18 @@ export default function ProductsClient({ products }: { products: Product[] }) {
         </button>
         {expandedFilters.includes('type') && (
           <div className="space-y-3">
-            {PRODUCTS_CONSTANTS.filters.types.map((type) => (
+            {categories.map((category) => (
               <label
-                key={type.value}
+                key={category.id}
                 className="flex items-center gap-3 cursor-pointer hover:bg-white/60 p-3 rounded-xl transition-all duration-200 border border-transparent hover:border-red-200"
               >
                 <Checkbox
-                  checked={selectedTypes.includes(type.value)}
-                  onCheckedChange={() => handleTypeChange(type.value)}
-                  id={`type-${type.value}`}
+                  checked={selectedCategories.includes(category.id)}
+                  onCheckedChange={() => handleCategoryChange(category.id)}
+                  id={`category-${category.id}`}
                   className="text-[#a10000] data-[state=checked]:bg-[#a10000] data-[state=checked]:border-[#a10000]"
                 />
-                <span className="text-sm font-medium text-gray-800">{type.label}</span>
+                <span className="text-sm font-medium text-gray-800">{category.name}</span>
               </label>
             ))}
           </div>

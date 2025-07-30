@@ -81,6 +81,17 @@ function Breadcrumbs({ product }: { product: Product }) {
       <Link href="/products" className="hover:text-[#a10000] transition-colors">
         Sản phẩm
       </Link>
+      {product.category && (
+        <>
+          <ChevronRight className="w-4 h-4" />
+          <Link 
+            href={`/products?categoryId=${product.category.id}`} 
+            className="hover:text-[#a10000] transition-colors"
+          >
+            {product.category.name}
+          </Link>
+        </>
+      )}
       <ChevronRight className="w-4 h-4" />
       <span className="text-gray-900 font-medium truncate">{product.name}</span>
     </nav>
