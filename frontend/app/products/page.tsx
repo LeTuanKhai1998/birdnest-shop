@@ -67,13 +67,7 @@ export default async function ProductsPage() {
               return 200;
             return 50;
           })(),
-          type: (() => {
-            // Map category names to filter values
-            if (p.category?.name === 'Yến hủ') return 'Yến tinh chế';
-            if (p.category?.name === 'Yến tinh') return 'Yến rút lông';
-            if (p.category?.name === 'Yến baby') return 'Tổ yến thô';
-            return 'Khác';
-          })(),
+          type: p.category?.name || 'Khác',
           quantity: typeof p.quantity === 'number' ? p.quantity : 0,
           reviews: [],
           sold: 0,
@@ -99,13 +93,7 @@ export default async function ProductsPage() {
         if (typeof p.name === 'string' && p.name.includes('200g')) return 200;
         return 50;
       })(),
-      type: (() => {
-        // Map category names to filter values
-        if (p.category?.name === 'Yến hủ') return 'Yến tinh chế';
-        if (p.category?.name === 'Yến tinh') return 'Yến rút lông';
-        if (p.category?.name === 'Yến baby') return 'Tổ yến thô';
-        return 'Khác';
-      })(),
+      type: p.category?.name || 'Khác',
       quantity: typeof p.quantity === 'number' ? p.quantity : 0,
       reviews: [],
       sold: 0,

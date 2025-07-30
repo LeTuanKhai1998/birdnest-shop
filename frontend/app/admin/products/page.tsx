@@ -156,6 +156,9 @@ export default function AdminProductsPage() {
       try {
         const response = await apiService.getCategories();
         setCategories(response);
+        // Update the global CATEGORIES array with actual category names
+        CATEGORIES.length = 0; // Clear array
+        response.forEach(cat => CATEGORIES.push(cat.name));
       } catch (error) {
         console.error('Error fetching categories:', error);
       }
@@ -504,9 +507,9 @@ export default function AdminProductsPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">All Categories</option>
-                    {CATEGORIES.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.name}>
+                        {category.name}
                       </option>
                     ))}
                   </select>

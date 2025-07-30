@@ -25,7 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PRODUCTS_CONSTANTS } from '@/lib/constants';
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-
+import { apiService } from '@/lib/api';
 
 export default function ProductsClient({ products }: { products: Product[] }) {
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
@@ -34,6 +34,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
     maximumFractionDigits: 0,
   });
   
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedWeights, setSelectedWeights] = useState<number[]>([]);
   const [price, setPrice] = useState<number>(PRODUCTS_CONSTANTS.filters.priceRange.max);
@@ -41,6 +42,19 @@ export default function ProductsClient({ products }: { products: Product[] }) {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [expandedFilters, setExpandedFilters] = useState<string[]>(['type']);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await apiService.getCategories();
+        setCategories(response);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Filtering logic
   const filteredProducts = products.filter((product) => {
@@ -156,16 +170,16 @@ export default function ProductsClient({ products }: { products: Product[] }) {
         </button>
         {expandedFilters.includes('type') && (
           <div className="space-y-3">
-            {PRODUCTS_CONSTANTS.filters.types.map((type) => (
+            {categories.map((category) => (
               <label
-                key={type.value}
+                key={category.id}
                 className="flex items-center gap-3 cursor-pointer hover:bg-white/60 p-3 rounded-xl transition-all duration-200 border border-transparent hover:border-red-200"
               >
                 <Checkbox
-                  checked={selectedCategories.includes(type.value)}
-                  onCheckedChange={() => handleCategoryChange(type.value)}
+                  checked={selectedCategories.includes(category.name)}
+                  onCheckedChange={() => handleCategoryChange(category.name)}
                 />
-                <span className="text-sm font-medium text-gray-800">{type.label}</span>
+                <span className="text-sm font-medium text-gray-800">{category.name}</span>
               </label>
             ))}
           </div>
