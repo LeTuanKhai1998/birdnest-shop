@@ -178,63 +178,7 @@ export function ResponsiveNavbar() {
             </div>
           </nav>
 
-          {/* Bottom Section - User Only */}
-          <div className="p-3 border-t border-gray-200">
-            {session ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex flex-col items-center gap-1 w-full hover:bg-gray-100 transition-colors p-2"
-                    title={user?.name}
-                  >
-                    <ShadcnAvatar
-                      src={user?.image || '/images/user.jpeg'}
-                      name={user?.name}
-                      size={32}
-                      className="w-6 h-6"
-                    />
-                                              <span className="text-xs font-medium text-center leading-tight">Hồ sơ</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 ml-2">
-                  <div className="p-2 border-b">
-                    <p className="text-sm font-medium">{user?.name}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                  </div>
-                  <DropdownMenuItem onClick={() => window.location.href = '/dashboard/profile'}>
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => window.location.href = '/dashboard/orders'}>
-                    <ShoppingBag className="w-4 h-4 mr-2" />
-                    Orders
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => window.location.href = '/dashboard/wishlist'}>
-                    <Heart className="w-4 h-4 mr-2" />
-                    Wishlist
-                  </DropdownMenuItem>
-                  {session.user?.isAdmin && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => window.location.href = '/admin'}>
-                        <Settings className="w-4 h-4 mr-2" />
-                        Admin Dashboard
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => signOut()}
-                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
-          </div>
+
         </div>
       </div>
 
@@ -485,42 +429,9 @@ export function ResponsiveNavbar() {
                         })}
                       </nav>
 
-                      {/* Quick Links Section */}
-                      <div className="mb-8">
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                          Liên kết nhanh
-                        </h3>
-                        <div className="space-y-2">
-                          <Link
-                            href="/products?category=refined"
-                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
-                            onClick={() => setSheetOpen(false)}
-                          >
-                            <Star className="w-5 h-5 text-yellow-500" />
-                            Yến sào tinh chế
-                          </Link>
-                          <Link
-                            href="/products?category=raw"
-                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
-                            onClick={() => setSheetOpen(false)}
-                          >
-                            <Package className="w-5 h-5 text-blue-500" />
-                            Yến sào thô
-                          </Link>
-                          <Link
-                            href="/contact"
-                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
-                            onClick={() => setSheetOpen(false)}
-                          >
-                            <HelpCircle className="w-5 h-5 text-green-500" />
-                            Hỗ trợ khách hàng
-                          </Link>
-                        </div>
-                      </div>
-
                       {/* User Section */}
                       {session && (
-                        <div className="border-t pt-6">
+                        <div className="mb-8">
                           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                             Tài khoản
                           </h3>
@@ -578,7 +489,7 @@ export function ResponsiveNavbar() {
 
                       {/* Guest Sign In */}
                       {!session && (
-                        <div className="border-t pt-6">
+                        <div className="mb-8">
                           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                             Tài khoản
                           </h3>
@@ -597,6 +508,39 @@ export function ResponsiveNavbar() {
                           </Button>
                         </div>
                       )}
+
+                      {/* Quick Links Section */}
+                      <div className="mb-8">
+                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                          Liên kết nhanh
+                        </h3>
+                        <div className="space-y-2">
+                          <Link
+                            href="/products?category=refined"
+                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                            onClick={() => setSheetOpen(false)}
+                          >
+                            <Star className="w-5 h-5 text-yellow-500" />
+                            Yến sào tinh chế
+                          </Link>
+                          <Link
+                            href="/products?category=raw"
+                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                            onClick={() => setSheetOpen(false)}
+                          >
+                            <Package className="w-5 h-5 text-blue-500" />
+                            Yến sào thô
+                          </Link>
+                          <Link
+                            href="/contact"
+                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                            onClick={() => setSheetOpen(false)}
+                          >
+                            <HelpCircle className="w-5 h-5 text-green-500" />
+                            Hỗ trợ khách hàng
+                          </Link>
+                        </div>
+                      </div>
                     </div>
                   </DrawerContent>
                 </Drawer>
@@ -695,42 +639,9 @@ export function ResponsiveNavbar() {
               })}
             </nav>
 
-            {/* Quick Links Section */}
-            <div className="mb-8">
-                              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                  Liên kết nhanh
-                </h3>
-              <div className="space-y-2">
-                <Link
-                  href="/products?category=refined"
-                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
-                  onClick={() => setDesktopSidebarOpen(false)}
-                >
-                  <Star className="w-5 h-5 text-yellow-500" />
-                  Refined Bird's Nest
-                </Link>
-                <Link
-                  href="/products?category=raw"
-                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
-                  onClick={() => setDesktopSidebarOpen(false)}
-                >
-                  <Package className="w-5 h-5 text-blue-500" />
-                  Raw Bird's Nest
-                </Link>
-                <Link
-                  href="/contact"
-                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
-                  onClick={() => setDesktopSidebarOpen(false)}
-                >
-                  <HelpCircle className="w-5 h-5 text-green-500" />
-                  Customer Support
-                </Link>
-              </div>
-            </div>
-
             {/* User Section */}
             {session && (
-              <div className="border-t pt-6">
+              <div className="mb-8">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                   Tài khoản
                 </h3>
@@ -788,7 +699,7 @@ export function ResponsiveNavbar() {
 
             {/* Guest Sign In */}
             {!session && (
-              <div className="border-t pt-6">
+              <div className="mb-8">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                   Account
                 </h3>
@@ -807,6 +718,39 @@ export function ResponsiveNavbar() {
                 </Button>
               </div>
             )}
+
+            {/* Quick Links Section */}
+            <div className="mb-8">
+                              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                  Liên kết nhanh
+                </h3>
+              <div className="space-y-2">
+                <Link
+                  href="/products?category=refined"
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                  onClick={() => setDesktopSidebarOpen(false)}
+                >
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  Refined Bird's Nest
+                </Link>
+                <Link
+                  href="/products?category=raw"
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                  onClick={() => setDesktopSidebarOpen(false)}
+                >
+                  <Package className="w-5 h-5 text-blue-500" />
+                  Raw Bird's Nest
+                </Link>
+                <Link
+                  href="/contact"
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                  onClick={() => setDesktopSidebarOpen(false)}
+                >
+                  <HelpCircle className="w-5 h-5 text-green-500" />
+                  Customer Support
+                </Link>
+              </div>
+            </div>
           </div>
         </DrawerContent>
       </Drawer>

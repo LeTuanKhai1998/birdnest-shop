@@ -238,7 +238,7 @@ export default function AdminDashboardPage() {
     const user = localStorage.getItem('user');
     
     if (!token || !user) {
-      router.push('/admin/login');
+      router.push('/login?callbackUrl=/admin');
       return;
     }
 
@@ -246,11 +246,11 @@ export default function AdminDashboardPage() {
       const userData = JSON.parse(user);
       
       if (!userData.isAdmin) {
-        router.push('/admin/login');
+        router.push('/login?callbackUrl=/admin');
         return;
       }
     } catch (error) {
-      router.push('/admin/login');
+      router.push('/login?callbackUrl=/admin');
       return;
     }
   }, [router]);
@@ -438,7 +438,7 @@ export default function AdminDashboardPage() {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => router.push('/admin/login')} 
+                  onClick={() => router.push('/login?callbackUrl=/admin')} 
                   className="w-full"
                 >
                   <Eye className="w-4 h-4 mr-2" />

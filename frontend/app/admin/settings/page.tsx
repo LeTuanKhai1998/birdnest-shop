@@ -26,13 +26,13 @@ export default function AdminSettingsPage() {
     const user = localStorage.getItem('user');
     
     if (!token || !user) {
-      router.push('/admin/login');
+      router.push('/login?callbackUrl=/admin');
       return;
     }
 
     const userData = JSON.parse(user);
     if (!userData.isAdmin) {
-      router.push('/admin/login');
+      router.push('/login?callbackUrl=/admin');
       return;
     }
 

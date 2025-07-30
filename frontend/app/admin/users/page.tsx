@@ -111,13 +111,13 @@ export default function AdminUsersPage() {
     const user = localStorage.getItem('user');
     
     if (!token || !user) {
-      window.location.href = '/admin/login';
+      window.location.href = '/login?callbackUrl=/admin';
       return;
     }
 
     const userData = JSON.parse(user);
     if (!userData.isAdmin) {
-      window.location.href = '/admin/login';
+      window.location.href = '/login?callbackUrl=/admin';
       return;
     }
   }, []);

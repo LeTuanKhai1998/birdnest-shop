@@ -99,7 +99,7 @@ export function TestimonialsSection() {
                 }}
               >
                 {getVisibleTestimonials().map((testimonial, index) => (
-                  <div className="flex-shrink-0 w-full md:w-80 lg:w-96">
+                  <div key={`testimonial-${currentIndex}-${index}`} className="flex-shrink-0 w-full md:w-80 lg:w-96">
                     <motion.div
                       key={`${currentIndex}-${index}`}
                       initial={{ opacity: 0, y: 30, scale: 0.9, rotateY: -15 }}

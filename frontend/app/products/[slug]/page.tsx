@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Star, Home, ChevronRight, Truck, Shield, Clock, Heart, ShoppingCart } from 'lucide-react';
 import ProductImageGallery from '@/components/ProductImageGallery';
@@ -53,14 +54,14 @@ function ProductSEO({ product }: { product: Product }) {
 function Breadcrumbs({ product }: { product: Product }) {
   return (
     <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-8">
-      <a href="/" className="flex items-center hover:text-[#a10000] transition-colors">
+      <Link href="/" className="flex items-center hover:text-[#a10000] transition-colors">
         <Home className="w-4 h-4 mr-1" />
         Trang chủ
-      </a>
+      </Link>
       <ChevronRight className="w-4 h-4" />
-      <a href="/products" className="hover:text-[#a10000] transition-colors">
+      <Link href="/products" className="hover:text-[#a10000] transition-colors">
         Sản phẩm
-      </a>
+      </Link>
       <ChevronRight className="w-4 h-4" />
       <span className="text-gray-900 font-medium truncate">{product.name}</span>
     </nav>
@@ -401,19 +402,19 @@ export default function ProductDetailPage({
         <Separator className="my-8" />
 
         {/* Product Details Tabs */}
-        <div className="py-8">
+        <div className="py-12">
           <ProductDetailsTabs product={product} />
         </div>
 
         {/* Reviews Section */}
-        <div className="py-8">
+        <div className="py-12">
           <Card className="mb-8 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-            <CardHeader>
+            <CardHeader className="pb-6">
               <CardTitle className="text-xl font-semibold">Đánh giá khách hàng</CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="px-8 pb-8">
             {/* Review Form for authenticated users */}
-            {session?.user && (
+            {session?.user ? (
               <Card className="mb-6 bg-gray-50/50 border-gray-200">
                 <CardContent className="p-4">
                   <h4 className="font-medium mb-3">Viết đánh giá</h4>
@@ -488,12 +489,43 @@ export default function ProductDetailPage({
                   </div>
                 </CardContent>
               </Card>
+            ) : (
+              <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <CardContent className="p-6 text-center">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="p-3 bg-blue-100 rounded-full">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Đăng nhập để viết đánh giá</h4>
+                  <p className="text-gray-600 mb-4 text-sm">
+                    Chia sẻ trải nghiệm của bạn với sản phẩm này để giúp khách hàng khác đưa ra quyết định tốt hơn.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      onClick={() => router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname))}
+                      className="bg-[#a10000] hover:bg-[#8a0000] text-white"
+                    >
+                      Đăng nhập ngay
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => router.push('/signup?callbackUrl=' + encodeURIComponent(window.location.pathname))}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                      Tạo tài khoản
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Reviews List */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {(localReviews.length > 0 ? localReviews : product.reviews || []).map((review) => (
-                <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                <div key={review.id} className="border-b border-gray-200 pb-6 last:border-b-0">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="flex">
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -519,9 +551,17 @@ export default function ProductDetailPage({
               ))}
               
               {(!localReviews.length && !product.reviews?.length) && (
-                <p className="text-gray-500 text-center py-8">
-                  Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!
-                </p>
+                <div className="text-center py-12">
+                  <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-500 text-lg font-medium mb-2">Chưa có đánh giá nào</p>
+                  <p className="text-gray-400 text-sm">
+                    Hãy là người đầu tiên đánh giá sản phẩm này!
+                  </p>
+                </div>
               )}
             </div>
           </CardContent>
@@ -674,10 +714,10 @@ function ProductDetailsTabs({ product }: { product: Product }) {
   ];
   return (
     <Card className="mb-8 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-      <CardHeader>
+      <CardHeader className="pb-6">
         <CardTitle className="text-xl font-semibold">Thông tin chi tiết</CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="px-8 pb-8">
         <div className="flex gap-2 md:gap-4 border-b border-gray-200 mb-6 overflow-x-auto">
           {tabList.map((t) => (
             <button

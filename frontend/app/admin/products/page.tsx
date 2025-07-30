@@ -133,14 +133,14 @@ export default function AdminProductsPage() {
     
     if (!token || !user) {
       console.log('No authentication found, redirecting to login');
-      window.location.href = '/admin/login';
+      window.location.href = '/login?callbackUrl=/admin';
       return;
     }
 
     const userData = JSON.parse(user);
     if (!userData.isAdmin) {
       console.log('User is not admin, redirecting to login');
-      window.location.href = '/admin/login';
+      window.location.href = '/login?callbackUrl=/admin';
       return;
     }
   }, []);

@@ -60,7 +60,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     // Disable notifications on login pages and other auth pages
     const currentPath = window.location.pathname;
     const disabledPaths = [
-      '/admin/login',
+              '/login?callbackUrl=/admin',
       '/login',
       '/signup',
       '/auth',

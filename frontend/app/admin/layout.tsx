@@ -27,23 +27,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [user, setUser] = useState<any>(null);
 
-  // Check if we're on the login page
-  const isLoginPage = pathname === '/admin/login';
-
   useEffect(() => {
-    // Don't check authentication on login page
-    if (isLoginPage) {
-      setIsAuthenticated(true);
-      return;
-    }
-
     const checkAuth = () => {
       const token = localStorage.getItem('auth-token');
       const userData = localStorage.getItem('user');
       
       if (!token || !userData) {
         setIsAuthenticated(false);
-        router.push('/admin/login');
+        router.push('/login?callbackUrl=/admin');
         return;
       }
 
@@ -51,7 +42,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         const user = JSON.parse(userData);
         if (!user.isAdmin) {
           setIsAuthenticated(false);
-          router.push('/admin/login');
+          router.push('/login?callbackUrl=/admin');
           return;
         }
         
@@ -59,21 +50,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         setIsAuthenticated(true);
       } catch (error) {
         setIsAuthenticated(false);
-        router.push('/admin/login');
+        router.push('/login?callbackUrl=/admin');
       }
     };
 
     checkAuth();
-  }, [router, isLoginPage]);
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem('auth-token');
     localStorage.removeItem('user');
-    router.push('/admin/login');
+    router.push('/login');
   };
 
-  // Show loading while checking authentication (except on login page)
-  if (isAuthenticated === null && !isLoginPage) {
+  // Show loading while checking authentication
+  if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="space-y-4">
@@ -84,14 +75,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  // Don't render layout if not authenticated (except on login page)
-  if (!isAuthenticated && !isLoginPage) {
+  // Don't render layout if not authenticated
+  if (!isAuthenticated) {
     return null;
-  }
-
-  // On login page, just render children without admin layout
-  if (isLoginPage) {
-    return <>{children}</>;
   }
 
   return (

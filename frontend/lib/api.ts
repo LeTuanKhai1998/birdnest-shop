@@ -74,14 +74,14 @@ class ApiService {
             console.log('JWT token expired, redirecting to login');
             localStorage.removeItem('auth-token');
             localStorage.removeItem('user');
-            window.location.href = '/admin/login';
+            window.location.href = '/login?callbackUrl=/admin';
             throw new Error('Token expired');
           }
         } catch (error) {
           console.log('Invalid token format, redirecting to login');
           localStorage.removeItem('auth-token');
           localStorage.removeItem('user');
-          window.location.href = '/admin/login';
+          window.location.href = '/login?callbackUrl=/admin';
           throw new Error('Invalid token');
         }
         
@@ -103,7 +103,7 @@ class ApiService {
           console.log('401 Unauthorized - clearing token and redirecting to login');
           localStorage.removeItem('auth-token');
           localStorage.removeItem('user');
-          window.location.href = '/admin/login';
+          window.location.href = '/login?callbackUrl=/admin';
         }
         
         throw new Error(`HTTP error! status: ${response.status}`);

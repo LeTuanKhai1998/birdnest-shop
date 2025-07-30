@@ -26,12 +26,44 @@ function LoginPageInner() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
+    try {
+      // Try custom API login first (for admin users)
+      const response = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Store the JWT token and user info
+        localStorage.setItem('auth-token', data.access_token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Redirect based on user type and callback URL
+        if (data.user.isAdmin) {
+          router.push(callbackUrl.startsWith('/admin') ? callbackUrl : '/admin');
+        } else {
+          router.push(callbackUrl);
+        }
+        return;
+      }
+    } catch (error) {
+      console.log('Custom API login failed, trying NextAuth...');
+    }
+
+    // Fallback to NextAuth for regular users
     const res = await signIn('credentials', {
       email,
       password,
       callbackUrl,
       redirect: false,
     });
+    
     setLoading(false);
     if (res?.error) {
       if (res.error === 'CredentialsSignin') {
