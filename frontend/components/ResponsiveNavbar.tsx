@@ -362,11 +362,15 @@ export function ResponsiveNavbar() {
                               size={32}
                               className="w-8 h-8"
                             />
-                            <div className="hidden lg:block text-left">
+                            <div className="text-left">
                               <div className="text-sm font-medium">{user?.name}</div>
                               {(user as any)?.bio && (
                                 <div className="text-xs text-gray-500 italic truncate max-w-32">"{(user as any).bio}"</div>
                               )}
+                              {/* Debug: Show if bio exists */}
+                              <div className="text-xs text-red-500">
+                                Bio: {(user as any)?.bio ? 'Yes' : 'No'} - {JSON.stringify((user as any)?.bio)}
+                              </div>
                             </div>
                           </Button>
                         </DropdownMenuTrigger>
