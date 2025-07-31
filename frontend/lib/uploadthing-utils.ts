@@ -30,10 +30,33 @@ export function getUploadThingUrls(files: UploadThingFile[]): string[] {
 }
 
 /**
- * Check if a URL is from UploadThing CDN
+ * Extract file key from UploadThing URL
+ * @param url - The UploadThing URL (e.g., "https://ywqliqj69o.ufs.sh/f/snhNmhXZ13Q0kBeGPLA6OKErAYuqCPhw9Z7LtcbWV6S5GaM4")
+ * @returns The file key or null if not a valid UploadThing URL
+ */
+export function extractFileKeyFromUrl(url: string): string | null {
+  if (!url || typeof url !== 'string') {
+    return null;
+  }
+
+  // UploadThing URLs typically follow this pattern:
+  // https://[subdomain].ufs.sh/f/[fileKey]
+  const match = url.match(/\/f\/([^\/\?]+)/);
+  
+  if (match && match[1]) {
+    return match[1];
+  }
+
+  return null;
+}
+
+/**
+ * Check if a URL is from UploadThing
+ * @param url - The URL to check
+ * @returns True if it's an UploadThing URL
  */
 export function isUploadThingUrl(url: string): boolean {
-  return url.includes('utfs.io') || url.includes('.ufs.sh') || url.includes('uploadthing.com');
+  return url.includes('.ufs.sh') || url.includes('uploadthing.com');
 }
 
 /**

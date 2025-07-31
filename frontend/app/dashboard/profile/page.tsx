@@ -29,6 +29,7 @@ import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
 import { UploadThingButton } from '@/components/ui/UploadThingButton';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
+import { extractFileKeyFromUrl, isUploadThingUrl } from '@/lib/uploadthing-utils';
 
 export default function ProfilePage() {
   const { user: authUser, isAuthenticated } = useRequireAuth('/login');
@@ -242,12 +243,33 @@ export default function ProfilePage() {
       const userData = localStorage.getItem('user');
       const isAdminUser = !!(token && userData);
       
-              const endpoint = isAdminUser ? 'http://localhost:8080/api/users/profile' : '/api/profile';
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        
-        if (isAdminUser) {
-          headers['Authorization'] = `Bearer ${token}`;
+      // First, delete the file from UploadThing if it's an UploadThing URL
+      if (avatarUrl && isUploadThingUrl(avatarUrl)) {
+        const fileKey = extractFileKeyFromUrl(avatarUrl);
+        if (fileKey) {
+          try {
+            const deleteResponse = await fetch('/api/uploadthing/delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fileKey }),
+            });
+            
+            if (!deleteResponse.ok) {
+              console.warn('Failed to delete file from UploadThing, but continuing with avatar removal');
+            }
+          } catch (error) {
+            console.warn('Error deleting file from UploadThing:', error);
+            // Continue with avatar removal even if UploadThing deletion fails
+          }
         }
+      }
+      
+      const endpoint = isAdminUser ? 'http://localhost:8080/api/users/profile' : '/api/profile';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      
+      if (isAdminUser) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       
       const response = await fetch(endpoint, {
         method: 'PATCH',
@@ -259,23 +281,17 @@ export default function ProfilePage() {
         throw new Error('Failed to remove avatar');
       }
       
-      console.log('✅ Avatar removed from backend successfully');
-      
       // Clear avatar URL in local state
       setAvatarUrl('');
-      console.log('🧹 Cleared local avatar URL');
       
       // Update local state if admin user
       if (isAdminUser) {
         const updatedUser = { ...JSON.parse(userData), avatar: null };
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        console.log('💾 Updated localStorage with null avatar');
       }
       
       // Refresh user context to get latest data
-      console.log('🔄 Refreshing user context...');
       await refreshUser();
-      console.log('✅ User context refreshed');
       
       // Dispatch single event to notify components of avatar removal
       window.dispatchEvent(new CustomEvent('avatar-updated', { 

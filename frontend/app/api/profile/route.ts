@@ -7,6 +7,7 @@ interface SessionUser {
   id: string;
   name?: string;
   email?: string;
+  avatar?: string;
 }
 
 export async function GET() {
@@ -43,7 +44,7 @@ export async function GET() {
         email: user.email || '',
         phone: '', // Will be updated when user fills the form
         bio: '',   // Will be updated when user fills the form
-        avatar: (user as any).avatar || '',
+        avatar: user.avatar || '',
         createdAt: new Date().toISOString(), // Default to current date
       });
     }
@@ -86,7 +87,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json(user);
     } else {
       // For NextAuth users, use the special endpoint that doesn't require JWT
-      const userId = (session.user as any).id;
+      const userId = (session.user as SessionUser).id;
       if (!userId) {
         return NextResponse.json({ 
           error: 'User ID not found in session' 
