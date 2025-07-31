@@ -1,5 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { useUser } from '@/contexts/UserContext';
 
 interface User {
   id: string;
@@ -17,6 +18,7 @@ interface AuthState {
 
 export function useAuth(): AuthState {
   const { data: session, status } = useSession();
+  const { user: contextUser, isLoading: contextLoading } = useUser();
   const [localUser, setLocalUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,14 +40,14 @@ export function useAuth(): AuthState {
     setIsLoading(false);
   }, []);
 
-  // Use NextAuth session for regular users, localStorage for admin users
-  const user = localUser || session?.user;
+  // Prioritize UserContext data, then localStorage, then NextAuth session
+  const user = contextUser || localUser || session?.user;
   const isAuthenticated = !!user;
   const isAdmin = user?.isAdmin || false;
 
   return {
     user: user as User | null,
-    isLoading: isLoading || status === 'loading',
+    isLoading: isLoading || status === 'loading' || contextLoading,
     isAuthenticated,
     isAdmin,
   };
@@ -67,7 +69,12 @@ export function useRequireAdmin(redirectTo = '/login') {
   const { user, isLoading, isAuthenticated, isAdmin } = useAuth();
   
   useEffect(() => {
-    if (!isLoading && (!isAuthenticated || !isAdmin)) {
+    // Only redirect if we're not loading and definitely not authenticated/admin
+    if (!isLoading && !isAuthenticated) {
+      console.log('useRequireAdmin: Not authenticated, redirecting to:', redirectTo);
+      window.location.href = redirectTo;
+    } else if (!isLoading && isAuthenticated && !isAdmin) {
+      console.log('useRequireAdmin: Authenticated but not admin, redirecting to:', redirectTo);
       window.location.href = redirectTo;
     }
   }, [isLoading, isAuthenticated, isAdmin, redirectTo]);

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
+import { UnifiedAvatar } from '@/components/ui/UnifiedAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
@@ -15,7 +15,7 @@ const navItems = [
   { label: 'Hồ sơ', href: '/dashboard/profile', icon: User, description: 'Cập nhật thông tin cá nhân' },
   { label: 'Địa chỉ', href: '/dashboard/addresses', icon: MapPin, description: 'Quản lý địa chỉ giao hàng' },
   { label: 'Yêu thích', href: '/dashboard/wishlist', icon: Heart, description: 'Sản phẩm yêu thích' },
-  { label: 'Thông báo', href: '/notifications', icon: Bell, description: 'Xem thông báo mới' },
+  { label: 'Thông báo', href: '/dashboard/notifications', icon: Bell, description: 'Xem thông báo mới' },
 ];
 
 const mainNavItems = [
@@ -34,6 +34,8 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated } = useRequireAuth('/login');
+
+
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -90,12 +92,10 @@ export default function DashboardLayout({
             {/* User Info */}
             <Card className="p-4 bg-gray-50 border-gray-200">
               <div className="flex items-center gap-3">
-                <Avatar 
-                  src="/images/user.jpeg" 
-                  alt={user?.name} 
-                  name={user?.name}
+                <UnifiedAvatar
+                  user={user}
                   size={40}
-                  className="bg-[#a10000] text-white"
+                  className=""
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">{user?.name || 'Người dùng'}</p>

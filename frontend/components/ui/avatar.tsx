@@ -16,6 +16,8 @@ export function Avatar({
   className = '',
   ...props
 }: AvatarProps) {
+  const [imageError, setImageError] = React.useState(false);
+  
   // Get initials from name
   const getInitials = (name?: string) => {
     if (!name) return '';
@@ -24,30 +26,52 @@ export function Avatar({
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
+  // Reset error state when src changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [src]);
+
   return (
     <div
       className={`relative flex items-center justify-center rounded-full bg-gray-200 overflow-hidden border border-gray-300 ${className}`}
       style={{ width: size, height: size }}
       {...props}
     >
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={src}
-          alt={alt || name || 'User'}
-          className="object-cover w-full h-full"
-          width={size}
-          height={size}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '';
-          }}
-        />
-      ) : name ? (
-        <span className="text-gray-700 font-semibold text-base select-none">
-          {getInitials(name)}
-        </span>
+      {src && !imageError ? (
+        // Check if this is the default avatar (MP4)
+        src === '/images/default_avatar.mp4' ? (
+          // Default avatar as MP4 video
+          <video
+            src={src}
+            className="object-cover w-full h-full rounded-full opacity-100"
+            width={size}
+            height={size}
+            autoPlay
+            loop
+            muted
+            playsInline
+            onError={() => {
+              setImageError(true);
+            }}
+            aria-label={alt || name || 'User'}
+          />
+        ) : (
+          // Custom avatar as image
+          <img
+            src={src}
+            alt={alt || name || 'User'}
+            className="object-cover w-full h-full rounded-full opacity-100"
+            width={size}
+            height={size}
+            onError={() => {
+              setImageError(true);
+            }}
+          />
+        )
       ) : (
-        <UserIcon className="w-2/3 h-2/3 text-gray-400" />
+        <div className="flex items-center justify-center w-full h-full">
+          <UserIcon className="text-gray-400" style={{ width: `${Math.max(size * 0.5, 16)}px`, height: `${Math.max(size * 0.5, 16)}px` }} />
+        </div>
       )}
     </div>
   );

@@ -39,8 +39,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useSession, signOut, getSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { Avatar as ShadcnAvatar } from '@/components/ui/avatar';
-import { UserAvatar } from '@/components/ui/UserAvatar';
+import { useUser } from '@/contexts/UserContext';
+import { UnifiedAvatar } from '@/components/ui/UnifiedAvatar';
 import { cn } from '@/lib/utils';
 import { useSetting } from '@/lib/settings-context';
 
@@ -52,100 +52,18 @@ export function ResponsiveNavbar() {
   const [isLeftMenuVisible, setIsLeftMenuVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
-  const [localUser, setLocalUser] = useState<any>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
   const pathname = usePathname();
-  const userFromSession = session?.user;
+  const { user, isLoading, refreshUser } = useUser();
   
-  // Check for localStorage authentication and fetch fresh user data
-  useEffect(() => {
-    const checkLocalAuth = async () => {
-      const authToken = localStorage.getItem('auth-token');
-      const userData = localStorage.getItem('user');
-      
-      if (authToken && userData) {
-        try {
-          const user = JSON.parse(userData);
-          
-          // Fetch fresh user data from backend to get updated avatar and bio
-          try {
-            const response = await fetch('http://localhost:8080/api/users/profile', {
-              headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            if (response.ok) {
-              const freshUserData = await response.json();
-              setLocalUser(freshUserData);
-              // Update localStorage with fresh data
-              localStorage.setItem('user', JSON.stringify(freshUserData));
-            } else {
-              // Fallback to localStorage data if API fails
-              setLocalUser(user);
-            }
-          } catch (error) {
-            console.error('Error fetching fresh user data:', error);
-            // Fallback to localStorage data
-            setLocalUser(user);
-          }
-        } catch (error) {
-          console.error('Error parsing user data:', error);
-          localStorage.removeItem('auth-token');
-          localStorage.removeItem('user');
-          setLocalUser(null);
-        }
-      } else {
-        setLocalUser(null);
-      }
-    };
-
-    checkLocalAuth();
-    
-    // Listen for storage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'auth-token' || e.key === 'user') {
-        checkLocalAuth();
-      }
-    };
-
-    // Listen for custom avatar update events
-    const handleAvatarUpdate = () => {
-      console.log('Avatar update detected, refreshing user data...');
-      checkLocalAuth();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('avatar-updated', handleAvatarUpdate);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('avatar-updated', handleAvatarUpdate);
-    };
-  }, []);
 
 
-
-  // Use session data or local user data
-  const user = userFromSession || localUser;
-  const isAuthenticated = !!session || !!localUser;
+  // Use UserContext for authentication state
+  const isAuthenticated = !!session || !!user;
   
-  // Debug: Log user data to see what's available
-  useEffect(() => {
-    if (user) {
-      console.log('Navbar User Data:', {
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        image: user.image,
-        isAdmin: user.isAdmin,
-        bio: (user as any)?.bio,
-        source: userFromSession ? 'NextAuth Session' : 'LocalStorage'
-      });
-    }
-  }, [user, userFromSession]);
+  // UserContext will automatically provide updated user data
+  // No need for additional event listeners in navbar
   
   // Check if we're on dashboard or admin pages to hide left sidebar
   const isDashboardPage = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
@@ -229,7 +147,6 @@ export function ResponsiveNavbar() {
     // Clear localStorage
     localStorage.removeItem('auth-token');
     localStorage.removeItem('user');
-    setLocalUser(null);
     
     // Sign out from NextAuth if session exists
     if (session) {
@@ -408,38 +325,15 @@ export function ResponsiveNavbar() {
                             variant="ghost"
                             className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           >
-                            <ShadcnAvatar
-                              src={user?.avatar || '/images/user.jpeg'}
-                              name={user?.name}
-                              size={32}
-                              className="w-8 h-8"
-                              title={`${user?.name} (Avatar: ${user?.avatar || 'None'})`}
-                              onClick={async () => {
-                                // Force refresh user data
-                                if (session) {
-                                  // For NextAuth, refresh the session
-                                  window.location.reload();
-                                } else {
-                                  // For localStorage auth
-                                  const authToken = localStorage.getItem('auth-token');
-                                  if (authToken) {
-                                    try {
-                                      const response = await fetch('http://localhost:8080/api/users/profile', {
-                                        headers: {
-                                          'Authorization': `Bearer ${authToken}`,
-                                          'Content-Type': 'application/json',
-                                        },
-                                      });
-                                      const freshUserData = await response.json();
-                                      setLocalUser(freshUserData);
-                                      localStorage.setItem('user', JSON.stringify(freshUserData));
-                                    } catch (error) {
-                                      console.error('Error refreshing user data:', error);
-                                    }
-                                  }
-                                }
-                              }}
-                            />
+                            {!isLoading && user ? (
+                              <UnifiedAvatar
+                                user={user}
+                                size={32}
+                                className="w-8 h-8"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+                            )}
                             <div className="text-left">
                               <div className="text-sm font-medium">{user?.name}</div>
                               {(user as any)?.bio && (
@@ -817,12 +711,17 @@ export function ResponsiveNavbar() {
                     className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
                     onClick={() => setDesktopSidebarOpen(false)}
                   >
-                    <UserAvatar
-                      user={user}
-                      size={40}
-                      showName={true}
-                      showEmail={true}
-                    />
+                    {!isLoading && user ? (
+                      <UnifiedAvatar
+                        user={user}
+                        size={40}
+                        showName={true}
+                        showEmail={true}
+                        className="bg-transparent"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+                    )}
                   </Link>
                   <Link
                     href="/dashboard/orders"

@@ -25,17 +25,41 @@ function LoginPageInner() {
 
   // Clear any stuck authentication data on component mount
   useEffect(() => {
-    console.log('Login page mounted - clearing any stuck auth data');
-    // Clear any potentially corrupted auth data
-    localStorage.removeItem('auth-token');
-    localStorage.removeItem('user');
-  }, []);
+    console.log('Login page mounted - checking auth data');
+    
+    // Only clear auth data if we're not trying to access admin pages
+    // This prevents the redirect loop between /admin and /login
+    if (!callbackUrl.includes('/admin')) {
+      console.log('Clearing auth data for non-admin access');
+      localStorage.removeItem('auth-token');
+      localStorage.removeItem('user');
+    } else {
+      console.log('Preserving auth data for admin access');
+    }
+  }, [callbackUrl]);
 
   // Check if user is already authenticated
   useEffect(() => {
     console.log('Login page useEffect - status:', status, 'session:', !!session, 'callbackUrl:', callbackUrl);
     
-    // Only redirect if we have a valid session
+    // Check for admin authentication in localStorage
+    const token = localStorage.getItem('auth-token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.isAdmin && callbackUrl.includes('/admin')) {
+          console.log('Admin user found in localStorage, redirecting to:', callbackUrl);
+          router.push(callbackUrl);
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+    
+    // Check for NextAuth session
     if (status === 'authenticated' && session?.user) {
       console.log('NextAuth session found, redirecting to:', callbackUrl);
       router.push(callbackUrl);

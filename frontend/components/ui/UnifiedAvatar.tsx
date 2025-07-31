@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
-interface UserAvatarProps {
+interface UnifiedAvatarProps {
   user?: {
     name?: string | null;
     email?: string | null;
@@ -16,18 +16,41 @@ interface UserAvatarProps {
   showName?: boolean;
   showEmail?: boolean;
   fallbackImage?: string;
+  onClick?: () => void;
+  title?: string;
 }
 
-export function UserAvatar({
+export function UnifiedAvatar({
   user,
   size = 32,
   className,
   showName = false,
   showEmail = false,
   fallbackImage = "/images/default_avatar.mp4",
-}: UserAvatarProps) {
-  const avatarSrc = user?.avatar || user?.image || fallbackImage;
+  onClick,
+  title,
+}: UnifiedAvatarProps) {
+  // Get avatar URL directly from user data (no local state to avoid race conditions)
+  const getAvatarUrl = React.useCallback((user: any) => {
+    if (user?.avatar && user.avatar.trim() !== '') {
+      return user.avatar;
+    }
+    return fallbackImage;
+  }, [fallbackImage]);
+
+  // Check if using default avatar
+  const isUsingDefaultAvatar = React.useCallback((user: any) => {
+    return !user?.avatar || user.avatar.trim() === '';
+  }, []);
+
+  // Get current avatar URL
+  const avatarSrc = getAvatarUrl(user);
+  const isUsingDefault = isUsingDefaultAvatar(user);
+
+
+
   const displayName = user?.name || user?.email || "User";
+  const avatarTitle = title || `${displayName} (Avatar: ${isUsingDefault ? 'Default' : 'Custom'})`;
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
@@ -36,6 +59,8 @@ export function UserAvatar({
         name={displayName}
         size={size}
         className={cn("flex-shrink-0", className)}
+        onClick={onClick}
+        title={avatarTitle}
       />
       {(showName || showEmail) && (
         <div className="flex flex-col">
@@ -56,37 +81,45 @@ export function UserAvatar({
 }
 
 // Compact version for small spaces
-export function CompactUserAvatar({
+export function CompactUnifiedAvatar({
   user,
   size = 24,
   className,
   fallbackImage = "/images/default_avatar.mp4",
-}: Omit<UserAvatarProps, "showName" | "showEmail">) {
+  onClick,
+  title,
+}: Omit<UnifiedAvatarProps, "showName" | "showEmail">) {
   return (
-    <UserAvatar
+    <UnifiedAvatar
       user={user}
       size={size}
       className={className}
       fallbackImage={fallbackImage}
+      onClick={onClick}
+      title={title}
     />
   );
 }
 
 // Full version with name and email
-export function FullUserAvatar({
+export function FullUnifiedAvatar({
   user,
   size = 40,
   className,
   fallbackImage = "/images/default_avatar.mp4",
-}: Omit<UserAvatarProps, "showName" | "showEmail">) {
+  onClick,
+  title,
+}: Omit<UnifiedAvatarProps, "showName" | "showEmail">) {
   return (
-    <UserAvatar
+    <UnifiedAvatar
       user={user}
       size={size}
       className={className}
       showName={true}
       showEmail={true}
       fallbackImage={fallbackImage}
+      onClick={onClick}
+      title={title}
     />
   );
 } 

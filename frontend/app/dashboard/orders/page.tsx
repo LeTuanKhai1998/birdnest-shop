@@ -211,13 +211,11 @@ export default function OrdersPage() {
                 : 'Bạn chưa có đơn hàng nào. Hãy bắt đầu mua sắm!'
               }
             </p>
-            <Link
-              href="/products"
-              className="inline-block bg-glossy text-red-900 font-bold px-6 py-3 rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 hover:shadow-3xl animate-button-zoom button-glow text-sm"
-              style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)' }}
-            >
-              Mua sắm ngay
-            </Link>
+            <Button asChild className="bg-[#a10000] hover:bg-red-800 h-11">
+              <Link href="/products">
+                Mua sắm ngay
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -269,14 +267,12 @@ export default function OrdersPage() {
                           {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(order.total))}
                         </p>
                       </div>
-                      <Link
-                        href={`/dashboard/orders/${order.id}`}
-                        className="inline-block bg-glossy text-red-900 font-bold px-6 py-3 rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 hover:shadow-3xl animate-button-zoom button-glow text-sm"
-                        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)' }}
-                      >
-                        <Eye className="w-4 h-4 mr-2 inline" />
-                        Xem chi tiết
-                      </Link>
+                      <Button asChild className="bg-[#a10000] hover:bg-red-800 h-11">
+                        <Link href={`/dashboard/orders/${order.id}`}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Xem chi tiết
+                        </Link>
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

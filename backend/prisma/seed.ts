@@ -105,7 +105,7 @@ async function main() {
   console.log('✅ Products created');
 
   // Create admin with hashed password
-  const hashedAdminPassword = await bcrypt.hash('admin123', 12);
+  const hashedAdminPassword = await bcrypt.hash('admin123', 10);
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@birdnest.vn' },
     update: {},
@@ -131,7 +131,7 @@ async function main() {
 
   const createdUsers: any[] = [];
   for (const u of usersData) {
-    const hashedPassword = await bcrypt.hash(u.password, 12);
+    const hashedPassword = await bcrypt.hash(u.password, 10);
     const user = await prisma.user.upsert({
       where: { email: u.email },
       update: {},
@@ -146,29 +146,40 @@ async function main() {
   console.log('✅ Sample users created');
 
   // Reviews
-  const reviews = [
-    {
-      userId: createdUsers[0].id,
-      productId: (await prisma.product.findUnique({ where: { slug: 'premium-refined-birds-nest-100g' } }))!.id,
-      rating: 5,
-      comment: 'Yến chất lượng tuyệt vời, sẽ quay lại mua tiếp.',
-    },
-    {
-      userId: createdUsers[1].id,
-      productId: (await prisma.product.findUnique({ where: { slug: 'raw-birds-nest-100g' } }))!.id,
-      rating: 5,
-      comment: 'Sản phẩm đúng mô tả, thơm ngon và bổ dưỡng.',
-    },
-    {
-      userId: createdUsers[2].id,
-      productId: (await prisma.product.findUnique({ where: { slug: 'bottled-nest-6pack' } }))!.id,
-      rating: 5,
-      comment: 'Tặng mẹ và bà đều rất hài lòng!',
-    },
-  ];
+  console.log('📝 Creating reviews...');
+  
+  // Get products for reviews
+  const product1 = await prisma.product.findUnique({ where: { slug: 'premium-refined-birds-nest-100g' } });
+  const product2 = await prisma.product.findUnique({ where: { slug: 'raw-birds-nest-100g' } });
+  const product3 = await prisma.product.findUnique({ where: { slug: 'bottled-nest-6pack' } });
 
-  for (const review of reviews) {
-    await prisma.review.create({ data: review });
+  if (!product1 || !product2 || !product3) {
+    console.log('⚠️ Some products not found for reviews, skipping...');
+  } else {
+    const reviews = [
+      {
+        userId: createdUsers[0].id,
+        productId: product1.id,
+        rating: 5,
+        comment: 'Yến chất lượng tuyệt vời, sẽ quay lại mua tiếp.',
+      },
+      {
+        userId: createdUsers[1].id,
+        productId: product2.id,
+        rating: 5,
+        comment: 'Sản phẩm đúng mô tả, thơm ngon và bổ dưỡng.',
+      },
+      {
+        userId: createdUsers[2].id,
+        productId: product3.id,
+        rating: 5,
+        comment: 'Tặng mẹ và bà đều rất hài lòng!',
+      },
+    ];
+
+    for (const review of reviews) {
+      await prisma.review.create({ data: review });
+    }
   }
 
   console.log('✅ Sample reviews created');

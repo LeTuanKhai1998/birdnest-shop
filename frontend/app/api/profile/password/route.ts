@@ -21,32 +21,37 @@ export async function PATCH(req: NextRequest) {
   }
   
   try {
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    // For NextAuth users, we need to get the user ID from the session
+    // and make a request to the backend API
+    const userId = session.user.id;
     
-    if (token) {
-      // For admin users, use backend API
-      const response = await fetch(`${API_BASE_URL}/users/profile/password`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update password');
-      }
-      
-      return NextResponse.json({ success: true });
-    } else {
-      // For NextAuth users, we can't update the database directly from frontend
+    if (!userId) {
       return NextResponse.json({ 
-        error: 'Password updates should be handled by the backend API' 
-      }, { status: 501 });
+        error: 'User ID not found in session' 
+      }, { status: 400 });
     }
+    
+    // Make request to backend API
+    const response = await fetch(`${API_BASE_URL}/users/profile/password`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        // For NextAuth users, we'll need to pass the user ID in the request
+        // since we don't have a JWT token
+      },
+      body: JSON.stringify({ 
+        userId,
+        currentPassword, 
+        newPassword 
+      }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update password');
+    }
+    
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to update password' },

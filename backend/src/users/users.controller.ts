@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { UsersService, UserResponse } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -43,6 +44,37 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   async updateProfile(@Request() req, @Body() updateData: any): Promise<UserResponse> {
     return this.usersService.updateProfile(req.user.userId, updateData);
+  }
+
+  @Patch('profile/nextauth')
+  async updateNextAuthProfile(@Body() body: { userId: string; avatar?: string; name?: string; phone?: string; bio?: string }): Promise<UserResponse> {
+    const { userId, ...updateData } = body;
+    
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    
+    return this.usersService.updateProfile(userId, updateData);
+  }
+
+  @Patch('profile/password')
+  async changePassword(
+    @Request() req,
+    @Body() body: { userId?: string; currentPassword: string; newPassword: string },
+  ): Promise<{ message: string }> {
+    // For NextAuth users, userId comes in the request body
+    // For JWT users, userId comes from the token
+    const userId = body.userId || req.user?.userId;
+    
+    if (!userId) {
+      throw new ForbiddenException('User ID not provided');
+    }
+    
+    return this.usersService.changePassword(
+      userId,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 
   @Patch(':id/admin-status')

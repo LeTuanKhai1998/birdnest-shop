@@ -3,16 +3,25 @@ import { auth } from '@/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-export async function GET() {
+// Helper function to get auth token from request headers
+function getAuthToken(req: NextRequest): string | null {
+  const authHeader = req.headers.get('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+  return null;
+}
+
+export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session || !session.user) {
+  const token = getAuthToken(req);
+  
+  // Check if user is authenticated via NextAuth or has a valid token
+  if (!session?.user && !token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
   try {
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
     const response = await fetch(`${API_BASE_URL}/wishlist`, {
       headers: {
         ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -35,7 +44,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session || !session.user) {
+  const token = getAuthToken(req);
+  
+  // Check if user is authenticated via NextAuth or has a valid token
+  if (!session?.user && !token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
@@ -45,9 +57,6 @@ export async function POST(req: NextRequest) {
   }
   
   try {
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
     const response = await fetch(`${API_BASE_URL}/wishlist`, {
       method: 'POST',
       headers: {
@@ -73,7 +82,10 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const session = await auth();
-  if (!session || !session.user) {
+  const token = getAuthToken(req);
+  
+  // Check if user is authenticated via NextAuth or has a valid token
+  if (!session?.user && !token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
@@ -83,9 +95,6 @@ export async function DELETE(req: NextRequest) {
   }
   
   try {
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
     const response = await fetch(`${API_BASE_URL}/wishlist`, {
       method: 'DELETE',
       headers: {

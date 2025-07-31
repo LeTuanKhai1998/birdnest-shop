@@ -1,9 +1,23 @@
 import { create } from 'zustand';
 import useSWR from 'swr/immutable';
-import { fetcher } from '@/lib/utils';
 import { Product } from '@/components/ProductCard';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
+
+// Custom fetcher for wishlist that includes authentication
+const wishlistFetcher = (url: string) => {
+  const token = localStorage.getItem('auth-token');
+  const headers: Record<string, string> = {};
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return fetch(url, { headers }).then((res) => {
+    if (!res.ok) throw new Error(res.statusText);
+    return res.json();
+  });
+};
 
 export interface WishlistItem {
   id: string;
@@ -34,9 +48,17 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       ],
     });
     try {
+      // Get auth token from localStorage (for admin users)
+      const token = localStorage.getItem('auth-token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const res = await fetch('/api/wishlist', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ productId: product.id }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -52,9 +74,17 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     const prev = get().items;
     set({ items: prev.filter((item) => item.productId !== productId) });
     try {
+      // Get auth token from localStorage (for admin users)
+      const token = localStorage.getItem('auth-token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const res = await fetch('/api/wishlist', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ productId }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -96,7 +126,7 @@ export function useWishlist() {
   const { data, error, isLoading, mutate } = useSWR<WishlistItem[]>(
     // Only fetch wishlist if user is authenticated
     isAuthenticated ? '/api/wishlist' : null,
-    fetcher,
+    wishlistFetcher,
     {
       // Don't retry on 401 errors
       onErrorRetry: (error, key, config, revalidate, { retryCount }) => {

@@ -5,6 +5,7 @@ import { ResponsiveNavbar } from '@/components/ResponsiveNavbar';
 import { Providers } from '@/components/Providers';
 import { HydrationSafe } from '@/components/HydrationSafe';
 import { MaintenanceMode } from '@/components/MaintenanceMode';
+import { UserProvider } from '@/contexts/UserContext';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
@@ -29,12 +30,14 @@ export default function RootLayout({
     <html lang="en" className="font-sans" data-scroll-behavior="smooth">
       <body>
         <Providers>
-          <HydrationSafe>
-            <MaintenanceMode />
-            <ResponsiveNavbar />
-          </HydrationSafe>
-          {children}
-          <Footer />
+          <UserProvider>
+            <HydrationSafe>
+              <MaintenanceMode />
+              <ResponsiveNavbar />
+            </HydrationSafe>
+            {children}
+            <Footer />
+          </UserProvider>
         </Providers>
       </body>
     </html>

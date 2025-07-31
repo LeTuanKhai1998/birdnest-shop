@@ -3,6 +3,7 @@ import { LoadingOrEmpty } from '@/components/ui/LoadingOrEmpty';
 import { useWishlist } from '@/lib/wishlist-store';
 import { ProductCard } from '@/components/ProductCard';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Heart, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
@@ -36,14 +37,12 @@ export default function WishlistPage() {
           <h2 className="text-2xl font-bold text-[#a10000]">
             Sản phẩm yêu thích ({items.length})
           </h2>
-          <Link
-            href="/products"
-            className="inline-block bg-glossy text-red-900 font-bold px-6 py-3 rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 hover:shadow-3xl animate-button-zoom button-glow text-sm"
-            style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)' }}
-          >
-            <ShoppingBag className="w-4 h-4 mr-2 inline" />
-            Mua sắm thêm
-          </Link>
+          <Button asChild className="bg-[#a10000] hover:bg-red-800 h-11">
+            <Link href="/products">
+              <ShoppingBag className="w-4 h-4 mr-2" />
+              Mua sắm thêm
+            </Link>
+          </Button>
         </div>
         
         <LoadingOrEmpty
@@ -59,14 +58,12 @@ export default function WishlistPage() {
                 <p className="text-gray-600 mb-6">
                   Bạn chưa có sản phẩm nào trong danh sách yêu thích. Hãy khám phá và thêm sản phẩm bạn thích!
                 </p>
-                <Link
-                  href="/products"
-                  className="inline-block bg-glossy text-red-900 font-bold px-6 py-3 rounded-full shadow-2xl transition-all duration-200 transform hover:scale-110 hover:shadow-3xl animate-button-zoom button-glow text-sm"
-                  style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)' }}
-                >
-                  <ShoppingBag className="w-4 h-4 mr-2 inline" />
-                  Khám phá sản phẩm
-                </Link>
+                <Button asChild className="bg-[#a10000] hover:bg-red-800 h-11">
+                  <Link href="/products">
+                    <ShoppingBag className="w-4 h-4 mr-2" />
+                    Khám phá sản phẩm
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           ) : (

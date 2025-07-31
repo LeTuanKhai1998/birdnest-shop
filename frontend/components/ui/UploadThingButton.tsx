@@ -95,10 +95,13 @@ export function UploadThingButton({
       setUploadedUrls(prev => [...prev, ...urls]);
       onUploadComplete(urls);
       
-      toast({
-        title: "Upload successful",
-        description: `${res.length} image(s) uploaded successfully.`,
-      });
+      // Only show toast for non-avatar uploads to avoid conflicts
+      if (endpoint !== "avatarUploader") {
+        toast({
+          title: "Upload successful",
+          description: `${res.length} image(s) uploaded successfully.`,
+        });
+      }
     } else {
       console.log("UploadThingButton: No results in response");
     }
@@ -231,13 +234,7 @@ export function UploadThingButton({
         </div>
       )}
 
-      {/* Upload Progress */}
-      {isUploading && (
-        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-          <span>Uploading...</span>
-        </div>
-      )}
+      {/* Upload Progress - Removed spinner */}
 
       {children}
     </div>

@@ -8,6 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useCartStore } from '@/lib/cart-store';
 import { useState, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'sonner';
@@ -20,7 +27,6 @@ import useSWR from 'swr';
 import Image from 'next/image';
 
 import { 
-  CreditCard, 
   Truck, 
   MapPin, 
   User, 
@@ -28,10 +34,11 @@ import {
   Loader2,
   ArrowLeft,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Home,
+  Building
 } from 'lucide-react';
-import { useFeatureEnabled, useTaxPercent, useFreeShippingThreshold } from '@/lib/settings-context';
-import { useCurrencyFormat, calculateTax, calculateTotalWithTax, qualifiesForFreeShipping, formatShippingCost } from '@/lib/currency-utils';
+
 
 function fetcher(url: string) {
   return fetch(url).then((r) => r.json());
@@ -115,11 +122,28 @@ export default function CheckoutPage() {
   const user = session?.user;
   const { data: savedAddresses = [] } = useSWR(
     user ? '/api/addresses' : null,
-    fetcher,
+    async (url) => {
+      // Use the API service directly to get addresses
+      const token = localStorage.getItem('auth-token');
+      if (!token) {
+        throw new Error('No auth token');
+      }
+      
+      const response = await fetch('http://localhost:8080/api/addresses', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch addresses');
+      }
+      
+      return response.json();
+    },
   );
-  const [selectedAddressId, setSelectedAddressId] = useState<string | 'new'>(
-    savedAddresses.length > 0 ? savedAddresses[0].id : 'new',
-  );
+  const [selectedAddressId, setSelectedAddressId] = useState<string | 'new'>('new');
   const items = useCartStore((s) => s.items);
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -182,6 +206,18 @@ export default function CheckoutPage() {
       })
       .finally(() => setLoadingProvinces(false));
   }, []);
+
+  // Set default address when addresses are loaded
+  useEffect(() => {
+    if (savedAddresses.length > 0 && selectedAddressId === 'new') {
+      const defaultAddress = savedAddresses.find((a: Address) => a.isDefault);
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.id);
+      } else {
+        setSelectedAddressId(savedAddresses[0].id);
+      }
+    }
+  }, [savedAddresses, selectedAddressId]);
 
   // Pre-fill form when address is selected
   useEffect(() => {
@@ -299,7 +335,7 @@ export default function CheckoutPage() {
     setTimeout(() => setLoadingWards(false), 500);
   };
 
-  const watchedAddress = watch('address');
+
 
   if (items.length === 0) {
     return (
@@ -377,30 +413,125 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                     )}
+
+
+
+                    {user && savedAddresses.length === 0 && (
+                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <MapPin className="w-5 h-5 text-gray-500" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">
+                              Chưa có địa chỉ đã lưu
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Điền thông tin bên dưới để tạo địa chỉ mới
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     
                     {user && savedAddresses.length > 0 && (
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
-                          Chọn địa chỉ đã lưu
-                        </Label>
-                        <select
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
-                          value={selectedAddressId}
-                          onChange={(e) => setSelectedAddressId(e.target.value)}
-                        >
-                          {[...savedAddresses]
-                            .sort(
-                              (a, b) =>
-                                (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0),
-                            )
-                            .map((a: Address) => (
-                              <option key={a.id} value={a.id}>
-                                {getAddressDisplay(a, provinces)}
-                                {a.isDefault ? ' (Mặc định)' : ''}
-                              </option>
-                            ))}
-                          <option value="new">Thêm địa chỉ mới</option>
-                        </select>
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                            Chọn địa chỉ đã lưu
+                          </Label>
+                          <Select
+                            value={selectedAddressId}
+                            onValueChange={(value) => setSelectedAddressId(value)}
+                          >
+                                                      <SelectTrigger className={`h-20 px-6 py-4 border-gray-300 focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000] ${
+                            selectedAddressId !== 'new' ? 'border-green-300 bg-green-50' : 'border-blue-300 bg-blue-50'
+                          }`}>
+                            <SelectValue placeholder="Chọn địa chỉ giao hàng" />
+                          </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {[...savedAddresses]
+                                .sort(
+                                  (a, b) =>
+                                    (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0),
+                                )
+                                .map((a: Address) => (
+                                  <SelectItem key={a.id} value={a.id}>
+                                    <div className="flex items-start gap-3 w-full">
+                                      <div className="flex-shrink-0 mt-0.5">
+                                        {a.isDefault ? (
+                                          <Home className="w-4 h-4 text-[#a10000]" />
+                                        ) : (
+                                          <Building className="w-4 h-4 text-gray-500" />
+                                        )}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className="font-medium text-sm">
+                                            {a.fullName}
+                                          </span>
+                                          {a.isDefault && (
+                                            <Badge variant="secondary" className="text-xs bg-[#a10000] text-white">
+                                              Mặc định
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-gray-600 line-clamp-2">
+                                          {getAddressDisplay(a, provinces)}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                          {a.phone}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              <SelectItem value="new">
+                                <div className="flex items-center gap-3">
+                                  <MapPin className="w-4 h-4 text-blue-600" />
+                                  <span className="font-medium">Thêm địa chỉ mới</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          {/* Status indicator inside the trigger area */}
+                          {selectedAddressId !== 'new' && (
+                            <div className="mt-4 px-4 py-3 flex items-center gap-3 text-base text-green-600">
+                              <CheckCircle className="w-5 h-5" />
+                              <span>Địa chỉ đã chọn</span>
+                            </div>
+                          )}
+                          
+                          {selectedAddressId === 'new' && (
+                            <div className="mt-4 px-4 py-3 flex items-center gap-3 text-base text-blue-600">
+                              <MapPin className="w-5 h-5" />
+                              <span>Thêm địa chỉ mới</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Separator */}
+                    <div className="border-t border-gray-200 my-6"></div>
+                    
+                    {/* Form Header */}
+                    {selectedAddressId === 'new' ? (
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          Thông tin giao hàng
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Điền thông tin để tạo địa chỉ giao hàng mới
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          Thông tin giao hàng
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Thông tin đã được điền sẵn từ địa chỉ đã chọn
+                        </p>
                       </div>
                     )}
                     

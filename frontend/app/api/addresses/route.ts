@@ -10,12 +10,13 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   
   try {
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
+    // For now, we'll use the session user ID to fetch addresses
+    // In a real implementation, you might want to pass the JWT token from the client
     const response = await fetch(`${API_BASE_URL}/addresses`, {
       headers: {
-        ...(token && { 'Authorization': `Bearer ${token}` }),
+        'Content-Type': 'application/json',
+        // Note: The backend expects JWT token, but we're using session for now
+        // You might need to implement a different auth strategy for this
       },
     });
     

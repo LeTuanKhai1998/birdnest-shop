@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
-import { prisma } from '@/lib/prisma';
 import ProductsClient from '@/components/ProductsClient';
+import { apiService } from '@/lib/api';
 import {
   mapDisplayProducts,
   MockUiProduct,
@@ -28,87 +28,58 @@ export const metadata: Metadata = {
   },
 };
 
-function isImageObject(
-  img: unknown,
-): img is { url: string; isPrimary?: boolean } {
-  return typeof img === 'object' && img !== null && 'url' in img;
-}
-
 export default async function ProductsPage() {
-  // Fetch products from the database
-  const dbProducts = await prisma.product.findMany({
-    include: { 
-      images: true,
-      category: true 
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-  // Map DB fields to ProductCard props
-  const uiProducts = dbProducts.map((p) => {
-    if (Array.isArray(p.images) && p.images.length > 0) {
-      const imageObjs = p.images.filter((img) => isImageObject(img));
-      if (imageObjs.length > 0) {
-        const images: string[] = [
-          ...imageObjs.filter((img) => img.isPrimary).map((img) => img.url),
-          ...imageObjs.filter((img) => !img.isPrimary).map((img) => img.url),
-        ];
-        return {
-          id: String(p.id),
-          slug: String(p.slug),
-          name: String(p.name),
-          images,
-          price: Number(p.price),
-          description: String(p.description),
-          weight: (() => {
-            if (typeof p.name === 'string' && p.name.includes('50g')) return 50;
-            if (typeof p.name === 'string' && p.name.includes('100g'))
-              return 100;
-            if (typeof p.name === 'string' && p.name.includes('200g'))
-              return 200;
-            return 50;
-          })(),
-          type: p.category?.name || 'Khác',
-          quantity: typeof p.quantity === 'number' ? p.quantity : 0,
-          reviews: [],
-          sold: 0,
-          categoryId: String(p.categoryId),
-          category: p.category ? {
-            id: String(p.category.id),
-            name: String(p.category.name),
-            slug: String(p.category.slug),
-          } : undefined,
-        };
-      }
-    }
-    return {
-      id: String(p.id),
-      slug: String(p.slug),
-      name: String(p.name),
-      images: [FALLBACK_IMAGE],
-      price: Number(p.price),
-      description: String(p.description),
-      weight: (() => {
-        if (typeof p.name === 'string' && p.name.includes('50g')) return 50;
-        if (typeof p.name === 'string' && p.name.includes('100g')) return 100;
-        if (typeof p.name === 'string' && p.name.includes('200g')) return 200;
-        return 50;
-      })(),
-      type: p.category?.name || 'Khác',
-      quantity: typeof p.quantity === 'number' ? p.quantity : 0,
-      reviews: [],
-      sold: 0,
-      categoryId: String(p.categoryId),
-      category: p.category ? {
-        id: String(p.category.id),
-        name: String(p.category.name),
-        slug: String(p.category.slug),
-      } : undefined,
-    };
-  });
-  const displayProducts: MockUiProduct[] = mapDisplayProducts(
-    uiProducts,
-    mockUiProducts,
-    FALLBACK_IMAGE,
-  );
-  return <ProductsClient products={displayProducts} />;
+  try {
+    // Fetch products from the API
+    const dbProducts = await apiService.getProducts();
+    
+    // Map API response to UI format
+    const uiProducts = dbProducts.map((p) => {
+      const images = p.images && Array.isArray(p.images) && p.images.length > 0 
+        ? p.images.map(img => typeof img === 'string' ? img : img.url)
+        : [FALLBACK_IMAGE];
+      
+      return {
+        id: String(p.id),
+        slug: String(p.slug),
+        name: String(p.name),
+        images,
+        price: Number(p.price),
+        description: String(p.description),
+        weight: (() => {
+          if (typeof p.name === 'string' && p.name.includes('50g')) return 50;
+          if (typeof p.name === 'string' && p.name.includes('100g')) return 100;
+          if (typeof p.name === 'string' && p.name.includes('200g')) return 200;
+          return 50;
+        })(),
+        type: p.category?.name || 'Khác',
+        quantity: typeof p.quantity === 'number' ? p.quantity : 0,
+        reviews: p.reviews || [],
+        sold: 0, // Default value since sold is not in the Product interface
+        categoryId: String(p.categoryId),
+        category: p.category ? {
+          id: String(p.category.id),
+          name: String(p.category.name),
+          slug: String(p.category.slug),
+        } : undefined,
+      };
+    });
+    
+    const displayProducts: MockUiProduct[] = mapDisplayProducts(
+      uiProducts,
+      mockUiProducts,
+      FALLBACK_IMAGE,
+    );
+    
+    return <ProductsClient products={displayProducts} />;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    // Fallback to mock products if API fails
+    const displayProducts: MockUiProduct[] = mapDisplayProducts(
+      [],
+      mockUiProducts,
+      FALLBACK_IMAGE,
+    );
+    return <ProductsClient products={displayProducts} />;
+  }
 }

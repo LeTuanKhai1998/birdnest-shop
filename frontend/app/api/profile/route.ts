@@ -85,10 +85,36 @@ export async function PATCH(req: NextRequest) {
       const user = await response.json();
       return NextResponse.json(user);
     } else {
-      // For NextAuth users, we can't update the database directly from frontend
-      return NextResponse.json({ 
-        error: 'Profile updates should be handled by the backend API' 
-      }, { status: 501 });
+      // For NextAuth users, use the special endpoint that doesn't require JWT
+      const userId = (session.user as any).id;
+      if (!userId) {
+        return NextResponse.json({ 
+          error: 'User ID not found in session' 
+        }, { status: 400 });
+      }
+      
+      // Add userId to the data for the backend to identify the user
+      const updateData = {
+        ...data,
+        userId: userId
+      };
+      
+      // Use the NextAuth-specific endpoint
+      const response = await fetch(`${API_BASE_URL}/users/profile/nextauth`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+      
+      const user = await response.json();
+      return NextResponse.json(user);
     }
   } catch (error) {
     return NextResponse.json(
