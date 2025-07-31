@@ -120,6 +120,9 @@ export default function ProfilePage() {
       // Store complete user data for display
       setCompleteUserData(userResponse);
       
+      // Debug: Log the user response
+      console.log('User data loaded:', userResponse);
+      
       // Update form data with complete user information
       setProfileData({
         name: userResponse.name || '',
@@ -138,6 +141,12 @@ export default function ProfilePage() {
       
     } catch (error) {
       console.error('Error loading user data:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        isAuthenticated,
+        authUser: !!authUser
+      });
       toast.error('Failed to load user data');
       
       // Set fallback data from auth user if available

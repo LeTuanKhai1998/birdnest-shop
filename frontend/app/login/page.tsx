@@ -49,9 +49,16 @@ function LoginPageInner() {
     if (token && userData) {
       try {
         const user = JSON.parse(userData);
+        // For admin users, only redirect to admin pages
         if (user.isAdmin && callbackUrl.includes('/admin')) {
           console.log('Admin user found in localStorage, redirecting to:', callbackUrl);
           router.push(callbackUrl);
+          return;
+        }
+        // For admin users trying to access non-admin pages, redirect to admin dashboard
+        if (user.isAdmin && !callbackUrl.includes('/admin')) {
+          console.log('Admin user trying to access non-admin page, redirecting to admin dashboard');
+          router.push('/admin');
           return;
         }
       } catch (error) {
@@ -103,11 +110,19 @@ function LoginPageInner() {
         if (nextAuthResult?.ok) {
           // NextAuth session created successfully
           router.push(callbackUrl);
+          // Reload the page after successful login
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
           return;
         } else {
           // If NextAuth fails, still proceed with custom auth
           console.log('NextAuth signin failed, but custom auth succeeded');
           router.push(callbackUrl);
+          // Reload the page after successful login
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
           return;
         }
       }
@@ -136,6 +151,10 @@ function LoginPageInner() {
       toast.error('Đăng nhập thất bại: Lỗi không xác định');
     } else if (res.url) {
       router.push(res.url);
+      // Reload the page after successful login
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     }
   };
 

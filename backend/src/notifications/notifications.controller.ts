@@ -12,6 +12,7 @@ import {
   HttpStatus,
   ForbiddenException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,12 +27,13 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('notifications')
 @Controller('notifications')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
+  // JWT protected endpoints
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new notification' })
   @ApiResponse({
     status: 201,
@@ -48,6 +50,8 @@ export class NotificationsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all notifications for the current user' })
   @ApiResponse({
     status: 200,
@@ -59,6 +63,8 @@ export class NotificationsController {
   }
 
   @Get('unread-count')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get unread notification count' })
   @ApiResponse({
     status: 200,
@@ -72,7 +78,27 @@ export class NotificationsController {
     );
   }
 
+  // NextAuth endpoints (no JWT required)
+  @Get('nextauth/:userId')
+  async findAllForNextAuth(@Param('userId') userId: string) {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    return this.notificationsService.findAll(userId, false);
+  }
+
+  @Get('nextauth/unread-count/:userId')
+  async getUnreadCountForNextAuth(@Param('userId') userId: string) {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    return this.notificationsService.findUnreadCount(userId, false);
+  }
+
+  // JWT protected endpoints (continued)
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get a specific notification' })
   @ApiResponse({
     status: 200,
@@ -89,6 +115,8 @@ export class NotificationsController {
   }
 
   @Patch(':id/read')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark a notification as read' })
   @ApiResponse({ status: 200, description: 'Notification marked as read' })
@@ -107,6 +135,8 @@ export class NotificationsController {
   }
 
   @Patch('read-all')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark all notifications as read' })
   @ApiResponse({ status: 200, description: 'All notifications marked as read' })
@@ -119,6 +149,8 @@ export class NotificationsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a notification' })
   @ApiResponse({
     status: 200,
@@ -128,6 +160,42 @@ export class NotificationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async remove(@Param('id') id: string, @Request() req) {
     const notification = await this.notificationsService.remove(id, req.user.userId, req.user.isAdmin);
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+    return notification;
+  }
+
+  // NextAuth endpoints (continued)
+  @Patch('nextauth/:id/read/:userId')
+  async markAsReadForNextAuth(@Param('id') id: string, @Param('userId') userId: string) {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    
+    const notification = await this.notificationsService.markAsRead(id, userId, false);
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+    return notification;
+  }
+
+  @Patch('nextauth/read-all/:userId')
+  async markAllAsReadForNextAuth(@Param('userId') userId: string) {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    
+    return this.notificationsService.markAllAsRead(userId, false);
+  }
+
+  @Delete('nextauth/:id/:userId')
+  async removeForNextAuth(@Param('id') id: string, @Param('userId') userId: string) {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    
+    const notification = await this.notificationsService.remove(id, userId, false);
     if (!notification) {
       throw new NotFoundException('Notification not found');
     }

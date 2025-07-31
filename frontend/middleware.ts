@@ -4,7 +4,7 @@ import authConfig from './auth.config';
 export const { auth: middleware } = NextAuth(authConfig);
 
 export const config = {
-  // Protect all routes under these paths
+  // Protect specific routes that require authentication
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
@@ -14,7 +14,12 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      * - login and signup pages
+     * - home page and public pages
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public|login|signup).*)',
+    '/dashboard/:path*',
+    '/admin/:path*',
+    '/checkout/:path*',
+    '/payment/:path*',
+    '/account/:path*',
   ],
 };

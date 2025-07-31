@@ -77,27 +77,36 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     setError(null);
     
     try {
-      // Get JWT token from localStorage
+      // Get JWT token from localStorage (for admin users)
       const token = localStorage.getItem('auth-token');
-      if (!token) {
-        // Don't throw error, just return silently if no token
-        console.log('No authentication token found for notifications');
-        return;
-      }
-
-      const response = await fetch('http://localhost:8080/api/notifications', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch notifications');
+      if (token) {
+        // For admin users, use backend API directly
+        const response = await fetch('http://localhost:8080/api/notifications', {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch notifications');
+        }
+        
+        const data = await response.json();
+        setNotifications(data);
+      } else {
+        // For NextAuth users, use frontend API route
+        const response = await fetch('/api/notifications');
+        
+        if (response.ok) {
+          const data = await response.json();
+          setNotifications(data);
+        } else {
+          // Return empty array if no notifications found
+          setNotifications([]);
+        }
       }
-      
-      const data = await response.json();
-      setNotifications(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch notifications');
     } finally {
@@ -109,23 +118,32 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!session?.user) return;
     
     try {
-      // Get JWT token from localStorage
+      // Get JWT token from localStorage (for admin users)
       const token = localStorage.getItem('auth-token');
-      if (!token) {
-        // Don't log error, just return silently if no token
-        return;
-      }
-
-      const response = await fetch('http://localhost:8080/api/notifications/unread-count', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
       
-      if (response.ok) {
-        const data = await response.json();
-        setUnreadCount(data);
+      if (token) {
+        // For admin users, use backend API directly
+        const response = await fetch('http://localhost:8080/api/notifications/unread-count', {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadCount(data);
+        }
+      } else {
+        // For NextAuth users, use frontend API route
+        const response = await fetch('/api/notifications/unread-count');
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadCount(data);
+        } else {
+          setUnreadCount(0);
+        }
       }
     } catch (err) {
       // Don't log error for unread count, it's not critical
@@ -137,30 +155,48 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!session?.user) return;
     
     try {
-      // Get JWT token from localStorage
+      // Get JWT token from localStorage (for admin users)
       const token = localStorage.getItem('auth-token');
-      if (!token) {
-        console.log('No authentication token found for marking notification as read');
-        return;
-      }
-
-      const response = await fetch(`http://localhost:8080/api/notifications/${id}/read`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
       
-      if (response.ok) {
-        setNotifications(prev => 
-          prev.map(notification => 
-            notification.id === id 
-              ? { ...notification, isRead: true }
-              : notification
-          )
-        );
-        await refreshUnreadCount();
+      if (token) {
+        // For admin users, use backend API directly
+        const response = await fetch(`http://localhost:8080/api/notifications/${id}/read`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          setNotifications(prev => 
+            prev.map(notification => 
+              notification.id === id 
+                ? { ...notification, isRead: true }
+                : notification
+            )
+          );
+          await refreshUnreadCount();
+        }
+      } else {
+        // For NextAuth users, use frontend API route
+        const response = await fetch(`/api/notifications/${id}/read`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          setNotifications(prev => 
+            prev.map(notification => 
+              notification.id === id 
+                ? { ...notification, isRead: true }
+                : notification
+            )
+          );
+          await refreshUnreadCount();
+        }
       }
     } catch (err) {
       console.log('Failed to mark notification as read:', err);
@@ -171,26 +207,40 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!session?.user) return;
     
     try {
-      // Get JWT token from localStorage
+      // Get JWT token from localStorage (for admin users)
       const token = localStorage.getItem('auth-token');
-      if (!token) {
-        console.log('No authentication token found for marking all notifications as read');
-        return;
-      }
-
-      const response = await fetch('http://localhost:8080/api/notifications/read-all', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
       
-      if (response.ok) {
-        setNotifications(prev => 
-          prev.map(notification => ({ ...notification, isRead: true }))
-        );
-        setUnreadCount(0);
+      if (token) {
+        // For admin users, use backend API directly
+        const response = await fetch('http://localhost:8080/api/notifications/read-all', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          setNotifications(prev => 
+            prev.map(notification => ({ ...notification, isRead: true }))
+          );
+          setUnreadCount(0);
+        }
+      } else {
+        // For NextAuth users, use frontend API route
+        const response = await fetch('/api/notifications/read-all', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          setNotifications(prev => 
+            prev.map(notification => ({ ...notification, isRead: true }))
+          );
+          setUnreadCount(0);
+        }
       }
     } catch (err) {
       console.log('Failed to mark all notifications as read:', err);
@@ -201,24 +251,36 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!session?.user) return;
     
     try {
-      // Get JWT token from localStorage
+      // Get JWT token from localStorage (for admin users)
       const token = localStorage.getItem('auth-token');
-      if (!token) {
-        console.log('No authentication token found for deleting notification');
-        return;
-      }
-
-      const response = await fetch(`http://localhost:8080/api/notifications/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
       
-      if (response.ok) {
-        setNotifications(prev => prev.filter(notification => notification.id !== id));
-        await refreshUnreadCount();
+      if (token) {
+        // For admin users, use backend API directly
+        const response = await fetch(`http://localhost:8080/api/notifications/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          setNotifications(prev => prev.filter(notification => notification.id !== id));
+          await refreshUnreadCount();
+        }
+      } else {
+        // For NextAuth users, use frontend API route
+        const response = await fetch(`/api/notifications/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          setNotifications(prev => prev.filter(notification => notification.id !== id));
+          await refreshUnreadCount();
+        }
       }
     } catch (err) {
       console.log('Failed to delete notification:', err);
@@ -227,12 +289,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Fetch notifications when session changes
   useEffect(() => {
-    // Don't fetch notifications on login pages or when no token
+    // Don't fetch notifications on login pages
     if (isNotificationDisabled()) return;
     
-    // Only fetch if we have both session and JWT token
-    const token = localStorage.getItem('auth-token');
-    if (status === 'authenticated' && session?.user && token) {
+    // Fetch if we have a session (works for both JWT and NextAuth users)
+    if (status === 'authenticated' && session?.user) {
       fetchNotifications();
       refreshUnreadCount();
     }
@@ -240,12 +301,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Set up polling for new notifications (every 30 seconds)
   useEffect(() => {
-    // Don't poll notifications on login pages or when no token
+    // Don't poll notifications on login pages
     if (isNotificationDisabled()) return;
     
-    // Only poll if we have both session and JWT token
-    const token = localStorage.getItem('auth-token');
-    if (status !== 'authenticated' || !session?.user || !token) return;
+    // Poll if we have a session (works for both JWT and NextAuth users)
+    if (status !== 'authenticated' || !session?.user) return;
 
     const interval = setInterval(() => {
       refreshUnreadCount();

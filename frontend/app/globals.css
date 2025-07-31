@@ -82,6 +82,8 @@ html {
     'Inter', 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
   font-size: 16px;
   line-height: 1.6;
+  /* Always show scrollbar to prevent layout shift */
+  overflow-y: scroll;
 }
 
 body {
@@ -93,6 +95,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #fbd8b0 !important;
+  /* Prevent body shifting when dropdowns open */
+  width: 100vw;
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
 }
 
 /* Apply inter to all headings and UI elements */

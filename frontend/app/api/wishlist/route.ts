@@ -14,26 +14,52 @@ function getAuthToken(req: NextRequest): string | null {
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  const token = getAuthToken(req);
-  
-  // Check if user is authenticated via NextAuth or has a valid token
-  if (!session?.user && !token) {
+  if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
   try {
-    const response = await fetch(`${API_BASE_URL}/wishlist`, {
-      headers: {
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      },
-    });
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch wishlist');
+    if (token) {
+      // For admin users, use backend API
+      const response = await fetch(`${API_BASE_URL}/wishlist`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch wishlist');
+      }
+      
+      const wishlist = await response.json();
+      return NextResponse.json(wishlist);
+    } else {
+      // For NextAuth users, use backend API with userId
+      const user = session.user as any;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/wishlist/nextauth/${user.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          const wishlist = await response.json();
+          return NextResponse.json(wishlist);
+        } else {
+          // Return empty array if no wishlist found
+          return NextResponse.json([]);
+        }
+      } catch (error) {
+        // Return empty array if backend fails
+        return NextResponse.json([]);
+      }
     }
-    
-    const wishlist = await response.json();
-    return NextResponse.json(wishlist);
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch wishlist' },
@@ -44,10 +70,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  const token = getAuthToken(req);
-  
-  // Check if user is authenticated via NextAuth or has a valid token
-  if (!session?.user && !token) {
+  if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
@@ -57,21 +80,48 @@ export async function POST(req: NextRequest) {
   }
   
   try {
-    const response = await fetch(`${API_BASE_URL}/wishlist`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      },
-      body: JSON.stringify({ productId }),
-    });
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
     
-    if (!response.ok) {
-      throw new Error('Failed to add to wishlist');
+    if (token) {
+      // For admin users, use backend API
+      const response = await fetch(`${API_BASE_URL}/wishlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to add to wishlist');
+      }
+      
+      const wishlistItem = await response.json();
+      return NextResponse.json(wishlistItem, { status: 201 });
+    } else {
+      // For NextAuth users, use the special endpoint
+      const user = session.user as any;
+      
+      const response = await fetch(`${API_BASE_URL}/wishlist/nextauth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          productId,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to add to wishlist');
+      }
+      
+      const wishlistItem = await response.json();
+      return NextResponse.json(wishlistItem, { status: 201 });
     }
-    
-    const wishlistItem = await response.json();
-    return NextResponse.json(wishlistItem, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to add to wishlist' },
@@ -82,10 +132,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const session = await auth();
-  const token = getAuthToken(req);
-  
-  // Check if user is authenticated via NextAuth or has a valid token
-  if (!session?.user && !token) {
+  if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
@@ -95,20 +142,46 @@ export async function DELETE(req: NextRequest) {
   }
   
   try {
-    const response = await fetch(`${API_BASE_URL}/wishlist`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      },
-      body: JSON.stringify({ productId }),
-    });
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
     
-    if (!response.ok) {
-      throw new Error('Failed to remove from wishlist');
+    if (token) {
+      // For admin users, use backend API
+      const response = await fetch(`${API_BASE_URL}/wishlist`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to remove from wishlist');
+      }
+      
+      return NextResponse.json({ success: true });
+    } else {
+      // For NextAuth users, use the special endpoint
+      const user = session.user as any;
+      
+      const response = await fetch(`${API_BASE_URL}/wishlist/nextauth`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          productId,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to remove from wishlist');
+      }
+      
+      return NextResponse.json({ success: true });
     }
-    
-    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to remove from wishlist' },

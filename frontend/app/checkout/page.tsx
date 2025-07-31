@@ -22,7 +22,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCheckoutStore } from '@/lib/checkout-store';
 import { CartItem } from '@/lib/cart-store';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import useSWR from 'swr';
 import Image from 'next/image';
 
@@ -118,29 +118,19 @@ function getAddressDisplay(addr: Address, provinces: Province[]): string {
 }
 
 export default function CheckoutPage() {
-  const { data: session } = useSession();
-  const user = session?.user;
+  const { user, isAuthenticated } = useAuth();
   const { data: savedAddresses = [] } = useSWR(
-    user ? '/api/addresses' : null,
+    isAuthenticated ? '/api/addresses' : null,
     async (url) => {
-      // Use the API service directly to get addresses
-      const token = localStorage.getItem('auth-token');
-      if (!token) {
-        throw new Error('No auth token');
-      }
-      
-      const response = await fetch('http://localhost:8080/api/addresses', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      // Use the frontend API route which handles both JWT and NextAuth users
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch addresses');
       }
       
-      return response.json();
+      const data = await response.json();
+      return data.addresses || [];
     },
   );
   const [selectedAddressId, setSelectedAddressId] = useState<string | 'new'>('new');
@@ -280,7 +270,7 @@ export default function CheckoutPage() {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     // If user is logged in and selected 'new', auto-save address
-    if (user && (selectedAddressId === 'new' || !selectedAddressId)) {
+    if (isAuthenticated && (selectedAddressId === 'new' || !selectedAddressId)) {
       try {
         await fetch('/api/addresses', {
           method: 'POST',
@@ -400,7 +390,7 @@ export default function CheckoutPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 px-6 pb-6">
-                    {!user && (
+                    {!isAuthenticated && (
                       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <p className="text-sm text-blue-800 text-center">
                           <Link
@@ -416,7 +406,7 @@ export default function CheckoutPage() {
 
 
 
-                    {user && savedAddresses.length === 0 && (
+                    {isAuthenticated && savedAddresses.length === 0 && (
                       <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                         <div className="flex items-center gap-3">
                           <MapPin className="w-5 h-5 text-gray-500" />
@@ -432,7 +422,7 @@ export default function CheckoutPage() {
                       </div>
                     )}
                     
-                    {user && savedAddresses.length > 0 && (
+                    {isAuthenticated && savedAddresses.length > 0 && (
                       <div className="space-y-4">
                         <div>
                           <Label className="text-sm font-medium text-gray-700 mb-2 block">

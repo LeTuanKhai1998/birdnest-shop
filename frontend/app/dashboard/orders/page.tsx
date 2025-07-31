@@ -21,7 +21,7 @@ import { apiService } from '@/lib/api';
 import { Order } from '@/lib/types';
 
 export default function OrdersPage() {
-  const { user } = useRequireAuth('/login');
+  const { user, isLoading, isAuthenticated } = useRequireAuth('/login');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [orders, setOrders] = useState<Order[]>([]);
@@ -74,13 +74,17 @@ export default function OrdersPage() {
     return matchesSearch && matchesStatus;
   });
 
-  if (!user) {
+  if (isLoading || !isAuthenticated) {
     return (
       <Card className="p-8">
         <CardContent className="text-center">
           <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Đang tải...</h3>
-          <p className="text-gray-600">Vui lòng đợi trong giây lát</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {isLoading ? 'Đang tải...' : 'Vui lòng đăng nhập'}
+          </h3>
+          <p className="text-gray-600">
+            {isLoading ? 'Vui lòng đợi trong giây lát' : 'Bạn cần đăng nhập để xem đơn hàng'}
+          </p>
         </CardContent>
       </Card>
     );

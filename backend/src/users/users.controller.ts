@@ -46,6 +46,15 @@ export class UsersController {
     return this.usersService.updateProfile(req.user.userId, updateData);
   }
 
+  @Get('profile/nextauth/:userId')
+  async getNextAuthProfile(@Param('userId') userId: string): Promise<UserResponse | null> {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    
+    return this.usersService.findById(userId);
+  }
+
   @Patch('profile/nextauth')
   async updateNextAuthProfile(@Body() body: { userId: string; avatar?: string; name?: string; phone?: string; bio?: string }): Promise<UserResponse> {
     const { userId, ...updateData } = body;

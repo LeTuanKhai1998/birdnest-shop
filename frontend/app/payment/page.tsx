@@ -9,7 +9,7 @@ import { useCartStore } from '@/lib/cart-store';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCheckoutStore } from '@/lib/checkout-store';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, CreditCard, Smartphone, Building2, DollarSign, CheckCircle, Loader2, Copy, QrCode, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -59,7 +59,7 @@ export default function PaymentPage() {
   const [method, setMethod] = useState('stripe');
   const [confirming, setConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { data: session } = useSession();
+  const { user, isAuthenticated } = useAuth();
   const items = useCheckoutStore((s) => s.products) as ProductCartItem[];
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -91,20 +91,47 @@ export default function PaymentPage() {
 
     setConfirming(true);
     try {
+      // Transform data to match backend DTO structure
       const orderData = {
-        info: checkoutInfo,
-        products: items,
+        items: items.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+        })),
+        shippingAddress: {
+          fullName: checkoutInfo.fullName,
+          phone: checkoutInfo.phone,
+          email: checkoutInfo.email,
+          address: checkoutInfo.address,
+          city: checkoutInfo.ward, // Using ward as city
+          state: checkoutInfo.district, // Using district as state
+          zipCode: '000000', // Default zip code for Vietnam
+          country: 'Vietnam',
+          apartment: checkoutInfo.apartment,
+          note: checkoutInfo.note,
+        },
         deliveryFee: shippingFee,
         paymentMethod: method,
       };
 
       // Use guest endpoint if user is not authenticated, otherwise use regular endpoint
-      const endpoint = session?.user ? '/api/orders' : '/api/orders/guest';
+      const endpoint = isAuthenticated ? '/api/orders' : '/api/orders/guest';
+      
+      // Prepare headers
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authentication header if user is authenticated
+      if (isAuthenticated) {
+        const token = localStorage.getItem('auth-token');
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+      }
+      
       const response = await fetch(`http://localhost:8080${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(orderData),
       });
 
@@ -122,7 +149,7 @@ export default function PaymentPage() {
       toast.success(`Đặt hàng thành công! Mã đơn hàng: ${order.id}`);
       
       // Redirect to order confirmation page
-      router.push(`/order-confirmation/${order.id}`);
+      router.push(`/order/${order.id}`);
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error(`Lỗi tạo đơn hàng: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);

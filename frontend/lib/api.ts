@@ -40,7 +40,7 @@ interface UpdateProductData {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-console.log('API_BASE_URL:', API_BASE_URL);
+
 
 class ApiService {
   private baseURL: string;
@@ -54,7 +54,6 @@ class ApiService {
     options: RequestInit = {},
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    console.log('Making API request to:', url);
 
     const config: RequestInit = {
       headers: {
@@ -74,17 +73,13 @@ class ApiService {
           const now = Math.floor(Date.now() / 1000);
           
           if (payload.exp && payload.exp < now) {
-            console.log('JWT token expired, redirecting to login');
             localStorage.removeItem('auth-token');
             localStorage.removeItem('user');
-            window.location.href = '/login?callbackUrl=/admin';
             throw new Error('Token expired');
           }
         } catch (error) {
-          console.log('Invalid token format, redirecting to login');
           localStorage.removeItem('auth-token');
           localStorage.removeItem('user');
-          window.location.href = '/login?callbackUrl=/admin';
           throw new Error('Invalid token');
         }
         
@@ -112,7 +107,6 @@ class ApiService {
         
         // If 401 Unauthorized, clear token and redirect to login
         if (response.status === 401) {
-          console.log('401 Unauthorized - clearing token and redirecting to login');
           localStorage.removeItem('auth-token');
           localStorage.removeItem('user');
           window.location.href = '/login?callbackUrl=/admin';
@@ -190,7 +184,20 @@ class ApiService {
   }
 
   async getOrder(id: string): Promise<Order> {
-    return this.request<Order>(`/orders/${id}`);
+    // Check if we have a JWT token (admin user)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    if (token) {
+      // For admin users, call backend directly
+      return this.request<Order>(`/orders/${id}`);
+    } else {
+      // For NextAuth users, use frontend API route
+      const response = await fetch(`/api/orders/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch order');
+      }
+      return response.json();
+    }
   }
 
   async getMyOrders(params?: { status?: string }): Promise<Order[]> {
@@ -198,7 +205,22 @@ class ApiService {
     if (params?.status) searchParams.append('status', params.status);
 
     const query = searchParams.toString();
-    return this.request<Order[]>(`/orders/my-orders${query ? `?${query}` : ''}`);
+    
+    // Check if we have a JWT token (admin user)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    if (token) {
+      // For admin users, call backend directly
+      return this.request<Order[]>(`/orders/my-orders${query ? `?${query}` : ''}`);
+    } else {
+      // For NextAuth users, use frontend API route
+      const response = await fetch(`/api/orders${query ? `?${query}` : ''}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+      const data = await response.json();
+      return data.orders || [];
+    }
   }
 
   async getOrderStats(): Promise<OrderStats> {

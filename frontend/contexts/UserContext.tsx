@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 
 interface User {
@@ -27,16 +27,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [localUser, setLocalUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     console.log('UserContext: Refreshing user data...');
     
-    // Check for localStorage authentication
+    // Check for localStorage authentication (admin users)
     const authToken = localStorage.getItem('auth-token');
     const userData = localStorage.getItem('user');
     
     if (authToken && userData) {
       try {
-        // Fetch fresh user data from backend
+        // Fetch fresh user data from backend for admin users
         const response = await fetch('http://localhost:8080/api/users/profile', {
           headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -61,15 +61,32 @@ export function UserProvider({ children }: { children: ReactNode }) {
         const user = JSON.parse(userData);
         setLocalUser(user);
       }
+    } else if (session?.user) {
+      // For NextAuth users, fetch complete profile data
+      try {
+        const response = await fetch('/api/profile');
+        
+        if (response.ok) {
+          const completeUserData = await response.json();
+          setLocalUser(completeUserData);
+          console.log('UserContext: Updated NextAuth user data:', completeUserData);
+        } else {
+          // Fallback to session data
+          console.log('UserContext: Using fallback session data for NextAuth user');
+        }
+      } catch (error) {
+        console.error('UserContext: Error fetching NextAuth user data:', error);
+        // Fallback to session data
+      }
     } else {
       setLocalUser(null);
     }
-  };
+  }, [session]);
 
-  // Initial load
+  // Initial load and when session changes
   useEffect(() => {
     refreshUser();
-  }, []);
+  }, [session, refreshUser]);
 
   // Listen for avatar updates and update local state directly
   useEffect(() => {

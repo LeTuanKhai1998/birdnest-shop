@@ -10,6 +10,7 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -60,6 +61,42 @@ export class OrdersController {
     });
   }
 
+  // NextAuth endpoints (no JWT required)
+  @Get('nextauth/my-orders/:userId')
+  async findMyOrdersForNextAuth(@Param('userId') userId: string, @Query() query: any) {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    
+    const { skip, take, status } = query;
+    return this.ordersService.findAll({
+      skip: skip ? parseInt(skip) : undefined,
+      take: take ? parseInt(take) : undefined,
+      userId,
+      status,
+    });
+  }
+
+  @Get('nextauth/:orderId/:userId')
+  async findOneForNextAuth(@Param('orderId') orderId: string, @Param('userId') userId: string) {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
+    }
+    
+    const order = await this.ordersService.findOne(orderId);
+    
+    if (!order) {
+      throw new ForbiddenException('Order not found');
+    }
+    
+    // Check if user can access this order
+    if (order.userId !== userId) {
+      throw new ForbiddenException('You can only view your own orders');
+    }
+    
+    return order;
+  }
+
   @Get('stats')
   @UseGuards(JwtAuthGuard, AdminGuard)
   async getStats() {
@@ -67,15 +104,26 @@ export class OrdersController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string, @Request() req) {
     const order = await this.ordersService.findOne(id);
     
-    // Check if user can access this order
-    if (order && order.userId !== req.user.userId && !req.user.isAdmin) {
-      throw new ForbiddenException('You can only view your own orders');
+    if (!order) {
+      throw new ForbiddenException('Order not found');
     }
     
+    // If order has a userId, require authentication
+    if (order.userId) {
+      if (!req.user) {
+        throw new ForbiddenException('Authentication required to view this order');
+      }
+      
+      // Check if user can access this order
+      if (order.userId !== req.user.userId && !req.user.isAdmin) {
+        throw new ForbiddenException('You can only view your own orders');
+      }
+    }
+    
+    // For guest orders (no userId), allow access without authentication
     return order;
   }
 

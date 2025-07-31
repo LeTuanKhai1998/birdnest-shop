@@ -35,18 +35,45 @@ export async function GET() {
       const user = await response.json();
       return NextResponse.json(user);
     } else {
-      // For NextAuth users, return the session data directly
+      // For NextAuth users, fetch complete data from backend
       const user = session.user as SessionUser;
       
-      return NextResponse.json({
-        id: user.id,
-        name: user.name || '',
-        email: user.email || '',
-        phone: '', // Will be updated when user fills the form
-        bio: '',   // Will be updated when user fills the form
-        avatar: user.avatar || '',
-        createdAt: new Date().toISOString(), // Default to current date
-      });
+      try {
+        // Use the special GET endpoint for NextAuth users
+        const response = await fetch(`${API_BASE_URL}/users/profile/nextauth/${user.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          return NextResponse.json(userData);
+        } else {
+          // Fallback to session data if backend fails
+          return NextResponse.json({
+            id: user.id,
+            name: user.name || '',
+            email: user.email || '',
+            phone: '',
+            bio: '',
+            avatar: user.avatar || '',
+            createdAt: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        // Fallback to session data if backend fails
+        return NextResponse.json({
+          id: user.id,
+          name: user.name || '',
+          email: user.email || '',
+          phone: '',
+          bio: '',
+          avatar: user.avatar || '',
+          createdAt: new Date().toISOString(),
+        });
+      }
     }
   } catch (error) {
     return NextResponse.json(

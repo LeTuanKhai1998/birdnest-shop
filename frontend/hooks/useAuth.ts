@@ -1,5 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 
 interface User {
@@ -55,29 +56,29 @@ export function useAuth(): AuthState {
 
 export function useRequireAuth(redirectTo = '/login') {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
   
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      window.location.href = redirectTo;
+      router.push(redirectTo);
     }
-  }, [isLoading, isAuthenticated, redirectTo]);
+  }, [isLoading, isAuthenticated, redirectTo, router]);
 
   return { user, isLoading, isAuthenticated };
 }
 
 export function useRequireAdmin(redirectTo = '/login') {
   const { user, isLoading, isAuthenticated, isAdmin } = useAuth();
+  const router = useRouter();
   
   useEffect(() => {
     // Only redirect if we're not loading and definitely not authenticated/admin
     if (!isLoading && !isAuthenticated) {
-      console.log('useRequireAdmin: Not authenticated, redirecting to:', redirectTo);
-      window.location.href = redirectTo;
+      router.push(redirectTo);
     } else if (!isLoading && isAuthenticated && !isAdmin) {
-      console.log('useRequireAdmin: Authenticated but not admin, redirecting to:', redirectTo);
-      window.location.href = redirectTo;
+      router.push(redirectTo);
     }
-  }, [isLoading, isAuthenticated, isAdmin, redirectTo]);
+  }, [isLoading, isAuthenticated, isAdmin, redirectTo, router]);
 
   return { user, isLoading, isAuthenticated, isAdmin };
 } 
