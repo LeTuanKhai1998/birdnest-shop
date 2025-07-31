@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 type ProductCartItem = {
   product: { id: string; price: number };
@@ -13,81 +14,58 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-  if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
-  }
-
   const body = await req.json();
   const { info, products, deliveryFee, paymentMethod } = body;
   if (!info || !products || !products.length) {
     return NextResponse.json({ error: 'Missing order data' }, { status: 400 });
   }
 
-  // Defensive check: ensure all product IDs exist
-  const productIds = (products as ProductCartItem[]).map(
-    (item: ProductCartItem) => item.product.id,
-  );
-  const foundProducts = await prisma.product.findMany({
-    where: { id: { in: productIds } },
-  });
-  if (foundProducts.length !== productIds.length) {
-    return NextResponse.json(
-      {
-        error:
-          'One or more products not found in database. Please refresh your cart.',
+  try {
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    // Prepare order data for backend
+    const orderData = {
+      items: (products as ProductCartItem[]).map((item: ProductCartItem) => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+      })),
+      shippingAddress: {
+        fullName: info.fullName,
+        phone: info.phone,
+        email: info.email,
+        address: info.address,
+        apartment: info.apartment,
+        province: info.province,
+        district: info.district,
+        ward: info.ward,
+        country: info.country || 'Vietnam',
+        note: info.note,
       },
-      { status: 400 },
+      deliveryFee: deliveryFee || 0,
+      paymentMethod: paymentMethod?.toUpperCase() || 'COD',
+    };
+    
+    const response = await fetch(`${API_BASE_URL}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: JSON.stringify(orderData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create order');
+    }
+    
+    const order = await response.json();
+    return NextResponse.json({ order });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to create order' },
+      { status: 500 },
     );
   }
-
-  // Compose shipping address string
-  const shippingAddress = [
-    info.fullName,
-    info.phone,
-    info.email,
-    info.province,
-    info.district,
-    info.ward,
-    info.address,
-    info.apartment,
-    info.note,
-  ]
-    .filter(Boolean)
-    .join(', ');
-
-  // Calculate total
-  const subtotal = products.reduce(
-    (sum: number, item: ProductCartItem) =>
-      sum + item.product.price * item.quantity,
-    0,
-  );
-  const total = subtotal + (deliveryFee || 0);
-
-  // Create order and order items
-  const order = await prisma.order.create({
-    data: {
-      userId: user.id,
-      total,
-      status: 'PENDING',
-      paymentMethod: paymentMethod?.toUpperCase() || 'COD',
-      shippingAddress,
-      orderItems: {
-        create: (products as ProductCartItem[]).map(
-          (item: ProductCartItem) => ({
-            productId: item.product.id,
-            quantity: item.quantity,
-            price: item.product.price,
-          }),
-        ),
-      },
-    },
-    include: {
-      orderItems: true,
-    },
-  });
-
-  return NextResponse.json({ order });
 }

@@ -11,6 +11,7 @@ import { OrdersModule } from './orders/orders.module';
 import { SettingsModule } from './settings/settings.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AddressesModule } from './addresses/addresses.module';
+import { WishlistModule } from './wishlist/wishlist.module';
 import { HealthModule } from './health/health.module';
 import { PrismaService } from './common/prisma.service';
 import { SecurityMiddleware } from './common/security.middleware';
@@ -48,6 +49,7 @@ import { ThrottleAuthGuard } from './common/throttle-auth.guard';
     SettingsModule,
     NotificationsModule,
     AddressesModule,
+    WishlistModule,
     HealthModule,
   ],
   controllers: [AppController],

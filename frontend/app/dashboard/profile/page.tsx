@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Avatar } from '@/components/ui/avatar';
 import { 
   User, 
   Mail, 
@@ -17,15 +18,25 @@ import {
   Save, 
   Key,
   CheckCircle,
-  FileText
+  FileText,
+  Camera,
+  Edit3,
+  Trash2,
+  Download
 } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { UploadThingButton } from '@/components/ui/UploadThingButton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function ProfilePage() {
-  const { user } = useRequireAuth('/login');
+  const { user: authUser, isAuthenticated } = useRequireAuth('/login');
   const [saving, setSaving] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [completeUserData, setCompleteUserData] = useState<any>(null);
 
   // Profile form state
   const [profileData, setProfileData] = useState({
@@ -42,17 +53,215 @@ export default function ProfilePage() {
     confirmPassword: ''
   });
 
-  // Initialize form data when user loads
+  // Load complete user data from database
   useEffect(() => {
-    if (user) {
-      setProfileData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: (user as any)?.phone || '',
-        bio: (user as any)?.bio || ''
-      });
+    const loadUserData = async () => {
+      if (!isAuthenticated) return;
+      
+      try {
+        setIsLoading(true);
+        console.log('Loading user data...');
+        
+        // Check if using NextAuth or localStorage auth
+        const token = localStorage.getItem('auth-token');
+        const userData = localStorage.getItem('user');
+        const isAdminUser = !!(token && userData);
+        
+        console.log('Auth type:', isAdminUser ? 'Admin (localStorage)' : 'NextAuth');
+        
+        let userResponse;
+        
+        if (isAdminUser) {
+          // For admin users, use backend API
+          console.log('Fetching from backend API...');
+          const response = await fetch('http://localhost:8080/api/users/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Backend API failed: ${response.status} ${response.statusText}`);
+          }
+          
+          userResponse = await response.json();
+          console.log('Backend API response:', userResponse);
+        } else {
+          // For NextAuth users, use frontend API
+          console.log('Fetching from frontend API...');
+          const response = await fetch('/api/profile');
+          
+          if (!response.ok) {
+            throw new Error(`Frontend API failed: ${response.status} ${response.statusText}`);
+          }
+          
+          userResponse = await response.json();
+          console.log('Frontend API response:', userResponse);
+        }
+        
+        // Store complete user data for display
+        setCompleteUserData(userResponse);
+        
+        // Update form data with complete user information
+        setProfileData({
+          name: userResponse.name || '',
+          email: userResponse.email || '',
+          phone: userResponse.phone || '',
+          bio: userResponse.bio || ''
+        });
+        
+        setAvatarUrl(userResponse.avatar || '');
+        
+        console.log('Loaded complete user data:', userResponse);
+        
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        toast.error('Failed to load user data');
+        
+        // Set fallback data from auth user if available
+        if (authUser) {
+          const userWithAvatar = authUser as any;
+          setCompleteUserData({
+            id: authUser.id,
+            name: authUser.name || '',
+            email: authUser.email || '',
+            phone: '',
+            bio: '',
+            avatar: userWithAvatar.avatar || '',
+            createdAt: new Date().toISOString(),
+          });
+          
+          setProfileData({
+            name: authUser.name || '',
+            email: authUser.email || '',
+            phone: '',
+            bio: ''
+          });
+          
+          setAvatarUrl(userWithAvatar.avatar || '');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadUserData();
+  }, [isAuthenticated, authUser]);
+
+  const handleAvatarUpload = async (urls: string[]) => {
+    if (urls.length > 0) {
+      const newAvatarUrl = urls[0];
+      setAvatarUrl(newAvatarUrl);
+      
+      try {
+        // Save avatar URL to backend immediately
+        const token = localStorage.getItem('auth-token');
+        const userData = localStorage.getItem('user');
+        const isAdminUser = !!(token && userData);
+        
+        const endpoint = isAdminUser ? 'http://localhost:8080/api/users/profile' : '/api/profile';
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        
+        if (isAdminUser) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(endpoint, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ avatar: newAvatarUrl }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to save avatar');
+        }
+        
+        // Update local state if admin user
+        if (isAdminUser) {
+          const updatedUser = { ...JSON.parse(userData), avatar: newAvatarUrl };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        
+        // Dispatch custom event to notify navbar of avatar update
+        window.dispatchEvent(new CustomEvent('avatar-updated', { 
+          detail: { avatarUrl: newAvatarUrl } 
+        }));
+        
+        // Force page reload to refresh NextAuth session
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        
+        toast.success('Avatar uploaded and saved successfully!');
+        setIsAvatarDialogOpen(false);
+      } catch (error) {
+        console.error('Error saving avatar:', error);
+        toast.error('Failed to save avatar. Please try again.');
+      }
     }
-  }, [user]);
+  };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      const token = localStorage.getItem('auth-token');
+      const userData = localStorage.getItem('user');
+      const isAdminUser = !!(token && userData);
+      
+      const endpoint = isAdminUser ? 'http://localhost:8080/api/users/profile' : '/api/profile';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      
+      if (isAdminUser) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(endpoint, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ avatar: null }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to remove avatar');
+      }
+      
+      setAvatarUrl('');
+      
+      // Update local state if admin user
+      if (isAdminUser) {
+        const updatedUser = { ...JSON.parse(userData), avatar: null };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+      
+      // Dispatch custom event to notify navbar of avatar update
+      window.dispatchEvent(new CustomEvent('avatar-updated', { 
+        detail: { avatarUrl: null } 
+      }));
+      
+      // Force page reload to refresh NextAuth session
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+      toast.success('Avatar removed successfully!');
+      setIsAvatarDialogOpen(false);
+    } catch (error) {
+      console.error('Error removing avatar:', error);
+      toast.error('Failed to remove avatar. Please try again.');
+    }
+  };
+
+  const handleDownloadAvatar = () => {
+    if (avatarUrl) {
+      const link = document.createElement('a');
+      link.href = avatarUrl;
+      link.download = `avatar-${profileData.name || 'user'}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Avatar downloaded successfully!');
+    }
+  };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +283,7 @@ export default function ProfilePage() {
       const response = await fetch(endpoint, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify(profileData),
+        body: JSON.stringify({ ...profileData, avatar: avatarUrl }),
       });
       
       if (!response.ok) {
@@ -86,7 +295,7 @@ export default function ProfilePage() {
       
       // Update local state if admin user
       if (isAdminUser) {
-        const updatedUser = { ...JSON.parse(userData), ...profileData };
+        const updatedUser = { ...JSON.parse(userData), ...profileData, avatar: avatarUrl };
         localStorage.setItem('user', JSON.stringify(updatedUser));
       }
       
@@ -174,7 +383,7 @@ export default function ProfilePage() {
     };
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
       <Card className="p-8">
         <CardContent className="text-center">
@@ -185,6 +394,8 @@ export default function ProfilePage() {
       </Card>
     );
   }
+
+
 
   return (
     <div className="space-y-8">
@@ -214,13 +425,118 @@ export default function ProfilePage() {
           <Card>
             <CardContent className="p-6">
               <div className="text-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="w-12 h-12 text-[#a10000]" />
+                <div className="relative mx-auto mb-4 group">
+                  <div className="relative">
+                    <Avatar
+                      src={avatarUrl}
+                      name={profileData.name}
+                      size={96}
+                      className="mx-auto transition-transform group-hover:scale-105"
+                    />
+                    {!avatarUrl && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-full">
+                        <User className="h-12 w-12 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Edit Avatar Button */}
+                  <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover:opacity-100"
+                        onClick={() => setIsAvatarDialogOpen(true)}
+                      >
+                        <Edit3 className="h-4 w-4" />
+                        <span className="sr-only">Edit avatar</span>
+                      </Button>
+                    </DialogTrigger>
+                    
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Camera className="h-5 w-5" />
+                          Edit Profile Picture
+                        </DialogTitle>
+                      </DialogHeader>
+                      
+                      <div className="space-y-6">
+                        {/* Current Avatar Preview */}
+                        {avatarUrl && (
+                          <div className="text-center space-y-4">
+                            <div className="relative mx-auto">
+                              <Avatar
+                                src={avatarUrl}
+                                name={profileData.name}
+                                size={80}
+                                className="mx-auto"
+                              />
+                            </div>
+                            <div className="flex justify-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleDownloadAvatar}
+                                className="flex items-center gap-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                Download
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleRemoveAvatar}
+                                className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Upload New Avatar */}
+                        <div className="space-y-4">
+                          <div className="text-center">
+                            <h4 className="font-medium text-gray-900 mb-2">
+                              {avatarUrl ? 'Upload New Picture' : 'Upload Profile Picture'}
+                            </h4>
+                            <p className="text-sm text-gray-500 mb-4">
+                              Choose a clear, high-quality image. Recommended size: 400x400 pixels.
+                            </p>
+                          </div>
+                          
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                            <UploadThingButton
+                              endpoint="avatarUploader"
+                              onUploadComplete={handleAvatarUpload}
+                              maxFiles={1}
+                              maxSize={2}
+                              showPreview={false}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Tips */}
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <h5 className="font-medium text-blue-900 mb-2">Tips for a great profile picture:</h5>
+                          <ul className="text-sm text-blue-800 space-y-1">
+                            <li>• Use a clear, well-lit photo</li>
+                            <li>• Face should be clearly visible</li>
+                            <li>• Square format works best</li>
+                            <li>• File size should be under 2MB</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{user.name}</h3>
-                <p className="text-gray-600 mb-2">{user.email}</p>
-                {(user as any)?.bio && (
-                  <p className="text-sm text-gray-500 mb-4 italic">"{(user as any).bio}"</p>
+                                        <h3 className="text-xl font-bold text-gray-900 mb-2">{profileData.name}</h3>
+                <p className="text-gray-600 mb-2">{profileData.email}</p>
+                {profileData.bio && (
+                  <p className="text-sm text-gray-500 mb-4 italic">"{profileData.bio}"</p>
                 )}
                 <Badge className="bg-green-100 text-green-800 border-green-200">
                   <CheckCircle className="w-4 h-4 mr-1" />
@@ -235,7 +551,7 @@ export default function ProfilePage() {
                   <Mail className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Email</p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <p className="text-sm text-gray-600">{completeUserData?.email || authUser?.email || 'Chưa cập nhật'}</p>
                   </div>
                 </div>
                 
@@ -243,7 +559,9 @@ export default function ProfilePage() {
                   <Phone className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Số điện thoại</p>
-                    <p className="text-sm text-gray-600">{(user as any)?.phone || 'Chưa cập nhật'}</p>
+                    <p className="text-sm text-gray-600">
+                      {completeUserData?.phone ? completeUserData.phone : 'Chưa cập nhật'}
+                    </p>
                   </div>
                 </div>
                 
@@ -251,7 +569,9 @@ export default function ProfilePage() {
                   <FileText className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Tiểu sử</p>
-                    <p className="text-sm text-gray-600">{(user as any)?.bio || 'Chưa cập nhật'}</p>
+                    <p className="text-sm text-gray-600">
+                      {completeUserData?.bio ? completeUserData.bio : 'Chưa cập nhật'}
+                    </p>
                   </div>
                 </div>
                 
@@ -260,7 +580,14 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-sm font-medium text-gray-900">Ngày tham gia</p>
                     <p className="text-sm text-gray-600">
-                      {(user as any)?.createdAt ? new Date((user as any).createdAt).toLocaleDateString('vi-VN') : 'Không xác định'}
+                      {completeUserData?.createdAt ? 
+                        new Date(completeUserData.createdAt).toLocaleDateString('vi-VN', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        }) : 
+                        'Không xác định'
+                      }
                     </p>
                   </div>
                 </div>

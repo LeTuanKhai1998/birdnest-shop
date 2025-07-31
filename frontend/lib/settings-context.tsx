@@ -27,7 +27,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setSettings(data);
     } catch (err) {
       console.error('Error loading settings:', err);
-      setError('Failed to load settings');
+      setError('Failed to load settings - using defaults');
       // Set default settings as fallback
       setSettings({
         storeName: 'Birdnest Shop',

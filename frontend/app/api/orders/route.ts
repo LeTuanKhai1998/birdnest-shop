@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
-import { mapOrderToApi } from '@/lib/order-mapper';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 export async function GET() {
   const session = await auth();
@@ -9,30 +9,28 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-  if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
-  }
-
-  const prismaOrders = await prisma.order.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      orderItems: {
-        include: {
-          product: {
-            include: { images: true },
-          },
-        },
+  try {
+    // Get auth token from localStorage (for admin users) or use session for NextAuth users
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    const response = await fetch(`${API_BASE_URL}/orders/my-orders`, {
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` }),
       },
-    },
-  });
-
-  const orders = prismaOrders.map(mapOrderToApi);
-
-  return NextResponse.json({ orders });
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch orders');
+    }
+    
+    const orders = await response.json();
+    return NextResponse.json({ orders });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch orders' },
+      { status: 500 },
+    );
+  }
 }
 
 export async function PATCH(req: NextRequest) {
@@ -40,6 +38,7 @@ export async function PATCH(req: NextRequest) {
   if (!session || !session.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  
   const { id, status } = await req.json();
   if (!id || !status) {
     return NextResponse.json(
@@ -47,13 +46,30 @@ export async function PATCH(req: NextRequest) {
       { status: 400 },
     );
   }
+  
   try {
-    const order = await prisma.order.update({
-      where: { id },
-      data: { status },
+    // Get auth token from localStorage (for admin users) or use session for NextAuth users
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    const response = await fetch(`${API_BASE_URL}/orders/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: JSON.stringify({ status }),
     });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update order');
+    }
+    
+    const order = await response.json();
     return NextResponse.json({ success: true, order });
-  } catch {
-    return NextResponse.json({ error: 'Order update failed' }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Order update failed' },
+      { status: 500 },
+    );
   }
 }

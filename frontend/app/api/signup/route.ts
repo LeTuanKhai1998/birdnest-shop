@@ -1,25 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 export async function POST(req: NextRequest) {
   const { name, email, password } = await req.json();
   if (!name || !email || !password) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, email, password }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Registration failed');
+    }
+    
+    const result = await response.json();
+    return NextResponse.json({
+      success: true,
+      user: { id: result.user.id, email: result.user.email },
+    });
+  } catch (error) {
     return NextResponse.json(
-      { error: 'Email already in use' },
-      { status: 409 },
+      { error: error instanceof Error ? error.message : 'Registration failed' },
+      { status: 400 },
     );
   }
-  const hashed = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({
-    data: { name, email, password: hashed },
-  });
-  return NextResponse.json({
-    success: true,
-    user: { id: user.id, email: user.email },
-  });
 }

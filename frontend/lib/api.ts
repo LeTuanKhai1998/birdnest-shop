@@ -96,7 +96,16 @@ class ApiService {
     }
 
     try {
-      const response = await fetch(url, config);
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(url, {
+        ...config,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         console.error(`API request failed: ${response.status} ${response.statusText}`);
@@ -116,6 +125,9 @@ class ApiService {
       return data;
     } catch (error) {
       console.error('API request failed:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timeout - backend server may not be running');
+      }
       throw error;
     }
   }
@@ -179,6 +191,14 @@ class ApiService {
 
   async getOrder(id: string): Promise<Order> {
     return this.request<Order>(`/orders/${id}`);
+  }
+
+  async getMyOrders(params?: { status?: string }): Promise<Order[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append('status', params.status);
+
+    const query = searchParams.toString();
+    return this.request<Order[]>(`/orders/my-orders${query ? `?${query}` : ''}`);
   }
 
   async getOrderStats(): Promise<OrderStats> {

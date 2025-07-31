@@ -1,36 +1,38 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 
-// Types for Prisma result
-interface PrismaUser {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+
+// Types for API result
+interface ApiUser {
   name: string | null;
 }
 
-interface PrismaReview {
-  user: PrismaUser;
+interface ApiReview {
+  user: ApiUser;
   rating: number;
   comment: string | null;
 }
 
-interface PrismaImage {
+interface ApiImage {
   url: string;
   isPrimary: boolean;
 }
 
-interface PrismaCategory {
+interface ApiCategory {
   name: string;
 }
 
-interface PrismaProduct {
+interface ApiProduct {
   id: string;
   slug: string;
   name: string;
   description: string;
-  price: { toString(): string };
+  price: string;
   quantity: number;
-  images: PrismaImage[];
-  category: PrismaCategory;
-  reviews: PrismaReview[];
+  weight: number;
+  images: ApiImage[];
+  category: ApiCategory;
+  reviews: ApiReview[];
 }
 
 // Type for transformed product
@@ -52,60 +54,21 @@ interface TransformedProduct {
 export async function GET() {
   try {
     // Fetch latest products (excluding combos) - limit to 4
-    const latestProducts = await prisma.product.findMany({
-      where: {
-        category: {
-          name: {
-            not: 'Combo',
-          },
-        },
-      },
-      include: {
-        images: true,
-        category: true,
-        reviews: {
-          include: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 4,
-    });
+    const latestProductsResponse = await fetch(`${API_BASE_URL}/products?categoryId=latest&take=4`);
+    if (!latestProductsResponse.ok) {
+      throw new Error('Failed to fetch latest products');
+    }
+    const latestProducts: ApiProduct[] = await latestProductsResponse.json();
 
     // Fetch all combo products
-    const comboProducts = await prisma.product.findMany({
-      where: {
-        category: {
-          name: 'Combo',
-        },
-      },
-      include: {
-        images: true,
-        category: true,
-        reviews: {
-          include: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const comboProductsResponse = await fetch(`${API_BASE_URL}/products?categoryId=combo`);
+    if (!comboProductsResponse.ok) {
+      throw new Error('Failed to fetch combo products');
+    }
+    const comboProducts: ApiProduct[] = await comboProductsResponse.json();
 
     // Transform data to match the expected format
-    const transformProduct = (product: PrismaProduct): TransformedProduct => ({
+    const transformProduct = (product: ApiProduct): TransformedProduct => ({
       id: product.id,
       slug: product.slug,
       name: product.name,
@@ -117,8 +80,8 @@ export async function GET() {
         product.images.length > 0
           ? product.images.map((img) => img.url)
           : ['/images/fallback.png'],
-      price: parseFloat(product.price.toString()),
-      weight: 100, // Default weight, you might want to add this field to your schema
+      price: parseFloat(product.price),
+      weight: product.weight || 100,
       description: product.description,
       type: product.category.name,
       quantity: product.quantity,

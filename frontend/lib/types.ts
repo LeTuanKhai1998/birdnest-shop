@@ -55,22 +55,25 @@ export interface ProductImage {
 // Order types
 export interface Order {
   id: string;
-  userId: string;
+  userId?: string;
   status: OrderStatus;
   total: string;
-  items: OrderItem[];
-  shippingAddress: Address;
+  orderItems: OrderItem[];
+  shippingAddress: string;
   createdAt: string;
   updatedAt: string;
   user?: User;
+  guestEmail?: string;
+  guestName?: string;
+  guestPhone?: string;
 }
 
 export type OrderStatus =
-  | 'pending'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled';
+  | 'PENDING'
+  | 'PAID'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED';
 
 export interface OrderItem {
   id: string;
@@ -78,7 +81,12 @@ export interface OrderItem {
   productId: string;
   quantity: number;
   price: string;
-  product?: Product;
+  product?: {
+    id: string;
+    name: string;
+    price: string;
+    images?: ProductImage[];
+  };
 }
 
 export interface Address {

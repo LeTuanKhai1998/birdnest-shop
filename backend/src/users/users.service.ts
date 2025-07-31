@@ -7,6 +7,7 @@ export type UserResponse = {
   name: string | null;
   phone?: string | null;
   bio?: string | null;
+  avatar?: string | null;
   isAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +39,7 @@ export class UsersService {
         name: true,
         phone: true,
         bio: true,
+        avatar: true,
         isAdmin: true,
         createdAt: true,
         updatedAt: true,
@@ -68,7 +70,7 @@ export class UsersService {
 
   async updateProfile(id: string, updateData: any): Promise<UserResponse> {
     // Only allow updating safe fields
-    const allowedFields = ['name', 'phone', 'bio'];
+    const allowedFields = ['name', 'phone', 'bio', 'avatar'];
     const filteredData: any = {};
 
     for (const field of allowedFields) {
@@ -86,6 +88,7 @@ export class UsersService {
         name: true,
         phone: true,
         bio: true,
+        avatar: true,
         isAdmin: true,
         createdAt: true,
         updatedAt: true,

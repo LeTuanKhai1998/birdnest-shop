@@ -25,7 +25,8 @@ import {
   DollarSign,
   Hash,
   Tag,
-  X
+  X,
+  Save
 } from 'lucide-react';
 import { useRef } from 'react';
 import { AdminTable } from '@/components/ui/AdminTable';
@@ -61,6 +62,7 @@ import { apiService } from '@/lib/api';
 import type { Product } from '@/lib/types';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Tên sản phẩm là bắt buộc'),
@@ -128,6 +130,17 @@ export default function AdminProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Form setup
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setValue,
+  } = useForm<ProductForm>({
+    resolver: zodResolver(productSchema),
+  });
 
   // Check authentication on component mount
   useEffect(() => {
@@ -638,11 +651,188 @@ export default function AdminProductsPage() {
               </DrawerTitle>
             </DrawerHeader>
             <div className="p-6">
-              {/* Form content would go here - simplified for brevity */}
-              <p className="text-gray-600">Product form implementation would go here...</p>
-              <p className="text-sm text-gray-500 mt-2">
-                Note: Form should use categories from database: {categories.map(c => c.name).join(', ')}
-              </p>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* Product Images */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    Product Images
+                  </label>
+                  <ImageUpload
+                    endpoint="productImageUploader"
+                    onUpload={(urls) => {
+                      const newImages = urls.map((url, index) => ({
+                        url,
+                        isPrimary: images.length === 0 && index === 0,
+                      }));
+                      setImages(prev => [...prev, ...newImages]);
+                    }}
+                    maxFiles={10}
+                    maxSize={4}
+                    showPreview={true}
+                    className="mb-4"
+                  />
+                  
+                  {/* Image Preview */}
+                  {images.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                      {images.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={image.url}
+                            alt={`Product image ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => handleSetPrimary(image.url)}
+                                disabled={image.isPrimary}
+                              >
+                                <Star className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => handleRemoveImage(image.url)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          {image.isPrimary && (
+                            <div className="absolute top-1 left-1">
+                              <Badge className="text-xs bg-primary text-primary-foreground">
+                                Primary
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Name */}
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium mb-2 text-gray-700">
+                    Product Name
+                  </label>
+                  <Input
+                    id="name"
+                    {...register('name')}
+                    placeholder="Enter product name"
+                    className="w-full"
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium mb-2 text-gray-700">
+                    Description
+                  </label>
+                  <Textarea
+                    id="description"
+                    {...register('description')}
+                    placeholder="Enter product description"
+                    rows={4}
+                    className="w-full"
+                  />
+                  {errors.description && (
+                    <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
+                  )}
+                </div>
+
+                {/* Price and Stock */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="price" className="block text-sm font-medium mb-2 text-gray-700">
+                      Price (VND)
+                    </label>
+                    <Input
+                      id="price"
+                      {...register('price')}
+                      placeholder="100000"
+                      className="w-full"
+                    />
+                    {errors.price && (
+                      <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="stock" className="block text-sm font-medium mb-2 text-gray-700">
+                      Stock Quantity
+                    </label>
+                    <Input
+                      id="stock"
+                      {...register('stock')}
+                      placeholder="10"
+                      className="w-full"
+                    />
+                    {errors.stock && (
+                      <p className="text-sm text-red-600 mt-1">{errors.stock.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label htmlFor="category" className="block text-sm font-medium mb-2 text-gray-700">
+                    Category
+                  </label>
+                  <select
+                    id="category"
+                    {...register('categoryId')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.categoryId && (
+                    <p className="text-sm text-red-600 mt-1">{errors.categoryId.message}</p>
+                  )}
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setDrawerOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        {editId ? 'Update Product' : 'Add Product'}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
         </DrawerContent>

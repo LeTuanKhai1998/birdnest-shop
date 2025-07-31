@@ -1,24 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
 
-interface SessionUser {
-  id: string;
-  name?: string;
-  email?: string;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 // GET: List all addresses for current user
 export async function GET() {
   const session = await auth();
   if (!session?.user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const userId = (session.user as SessionUser).id;
-  const addresses = await prisma.address.findMany({
-    where: { userId },
-    orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
-  });
-  return NextResponse.json(addresses);
+  
+  try {
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    const response = await fetch(`${API_BASE_URL}/addresses`, {
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch addresses');
+    }
+    
+    const addresses = await response.json();
+    return NextResponse.json(addresses);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch addresses' },
+      { status: 500 },
+    );
+  }
 }
 
 // POST: Create new address
@@ -26,17 +38,34 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const userId = (session.user as SessionUser).id;
-  const data = await req.json();
-  // If isDefault, unset previous default
-  if (data.isDefault) {
-    await prisma.address.updateMany({
-      where: { userId },
-      data: { isDefault: false },
+  
+  try {
+    const data = await req.json();
+    
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    const response = await fetch(`${API_BASE_URL}/addresses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: JSON.stringify(data),
     });
+    
+    if (!response.ok) {
+      throw new Error('Failed to create address');
+    }
+    
+    const address = await response.json();
+    return NextResponse.json(address);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to create address' },
+      { status: 500 },
+    );
   }
-  const address = await prisma.address.create({ data: { ...data, userId } });
-  return NextResponse.json(address);
 }
 
 // PATCH: Update address
@@ -44,20 +73,34 @@ export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session?.user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const userId = (session.user as SessionUser).id;
-  const { id, ...data } = await req.json();
-  // Only allow updating user's own address
-  const address = await prisma.address.findUnique({ where: { id } });
-  if (!address || address.userId !== userId)
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (data.isDefault) {
-    await prisma.address.updateMany({
-      where: { userId },
-      data: { isDefault: false },
+  
+  try {
+    const { id, ...data } = await req.json();
+    
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    const response = await fetch(`${API_BASE_URL}/addresses/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: JSON.stringify(data),
     });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update address');
+    }
+    
+    const address = await response.json();
+    return NextResponse.json(address);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to update address' },
+      { status: 500 },
+    );
   }
-  const updated = await prisma.address.update({ where: { id }, data });
-  return NextResponse.json(updated);
 }
 
 // DELETE: Delete address
@@ -65,11 +108,29 @@ export async function DELETE(req: NextRequest) {
   const session = await auth();
   if (!session?.user)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const userId = (session.user as SessionUser).id;
-  const { id } = await req.json();
-  const address = await prisma.address.findUnique({ where: { id } });
-  if (!address || address.userId !== userId)
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  await prisma.address.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+  
+  try {
+    const { id } = await req.json();
+    
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    const response = await fetch(`${API_BASE_URL}/addresses/${id}`, {
+      method: 'DELETE',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete address');
+    }
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to delete address' },
+      { status: 500 },
+    );
+  }
 }

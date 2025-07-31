@@ -1295,7 +1295,62 @@ enum RecipientType {
 - [ ] Validate data updates correctly and reflects immediately in UI
 - [ ] Check visual consistency and performance
 
+---
 
+### 26. Image Upload with UploadThing [X]
+
+- [X] Install dependencies:
+  - [X] `uploadthing`
+  - [X] `@uploadthing/react`
+  - [X] `browser-image-compression` (optimize image before upload)
+
+- [X] Backend:
+  - [X] Add UploadThing environment variables to `.env`
+    ```env
+    UPLOADTHING_SECRET=sk_live_your-uploadthing-secret
+    UPLOADTHING_APP_ID=your-uploadthing-app-id
+    ```
+  - [X] In `app/api/uploadthing/core.ts`:
+    - [X] Define routers:
+      - [X] `avatarUploader` (max 2MB, 1 image)
+      - [X] `productImageUploader` (max 4MB, multiple)
+      - [X] `generalImageUploader` (max 4MB, 5 images)
+    - [X] Use:
+      ```ts
+      const f = createUploadthing();
+      ```
+  - [X] Add `app/api/uploadthing/route.ts` for handler
+
+- [X] Frontend:
+  - [X] Create `components/ui/ImageUpload.tsx`
+    - [X] Props: `endpoint`, `onUpload`
+    - [X] Use `UploadButton<OurFileRouter>`
+    - [X] Optimize image before upload (max 1080px width, compress)
+    - [X] Create `SimpleUploadButton` component for basic uploads
+
+- [X] Integrate:
+  - [X] Avatar upload: `/profile`, dashboard
+  - [X] Product image: in add/edit modal (admin dashboard)
+
+- [X] UI:
+  - [X] Show image preview
+  - [X] Loading and error state
+  - [X] Remove image with X icon
+  - [X] Drag and drop interface
+  - [X] Progress indicators
+
+- [X] Validation:
+  - [X] Accept only `.png`, `.jpg`, `.jpeg`, `.webp`
+  - [X] Avatar: 1 image only
+  - [X] Product: multiple images
+  - [X] File size limits
+  - [X] Role-based access control
+
+- [X] Save uploaded URL to DB
+- [X] Style with Tailwind CSS + Shadcn UI
+- [X] Create example component (`ImageUploadExample.tsx`)
+- [X] Create test page (`/test-upload`)
+- [X] Add comprehensive documentation (`IMAGE_UPLOAD_README.md`)
 
 ---
 

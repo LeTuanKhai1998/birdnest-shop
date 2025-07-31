@@ -1,17 +1,13 @@
 import NextAuth from 'next-auth';
-import { PrismaAdapter } from '@auth/prisma-adapter';
-import { prisma } from './lib/prisma';
-import bcrypt from 'bcryptjs';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import Credentials from 'next-auth/providers/credentials';
 
 export const runtime = 'nodejs';
 
-type AuthUser = { id: string; isAdmin: boolean; email: string; name?: string };
+type AuthUser = { id: string; isAdmin: boolean; email: string; name?: string; avatar?: string; bio?: string };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
@@ -30,32 +26,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        // Real DB logic
-        const email = credentials.email?.toString() || '';
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user || !user.password) {
-          await new Promise((res) => setTimeout(res, 5000));
+        try {
+          // Use backend API for authentication
+          const response = await fetch('http://localhost:8080/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
+
+          if (!response.ok) {
+            return null;
+          }
+
+          const data = await response.json();
+          return {
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.name,
+            isAdmin: data.user.isAdmin,
+            avatar: data.user.avatar,
+            bio: data.user.bio,
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
           return null;
         }
-        const password = credentials.password?.toString() || '';
-        const userPassword =
-          typeof user.password === 'string' ? user.password : '';
-        const isValid = await bcrypt.compare(password, userPassword);
-        if (!isValid) {
-          await new Promise((res) => setTimeout(res, 5000));
-          return null;
-        }
-        // Update lastLoginAt
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date() } as any,
-        });
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          isAdmin: user.isAdmin,
-        };
       },
     }),
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
@@ -72,6 +72,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = (user as AuthUser).id;
         token.isAdmin = (user as AuthUser).isAdmin;
+        token.avatar = (user as AuthUser).avatar;
+        token.bio = (user as AuthUser).bio;
       }
       return token;
     },
@@ -79,6 +81,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         (session.user as AuthUser).id = token.id as string;
         (session.user as AuthUser).isAdmin = token.isAdmin as boolean;
+        (session.user as AuthUser).avatar = token.avatar as string;
+        (session.user as AuthUser).bio = token.bio as string;
       }
       return session;
     },

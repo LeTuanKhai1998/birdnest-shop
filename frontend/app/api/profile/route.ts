@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 interface SessionUser {
   id: string;
@@ -13,22 +14,45 @@ export async function GET() {
   if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  const userId = (session.user as SessionUser).id;
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      bio: true,
-      createdAt: true,
-    },
-  });
-  if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  
+  try {
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    if (token) {
+      // For admin users, use backend API
+      const response = await fetch(`${API_BASE_URL}/users/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+      
+      const user = await response.json();
+      return NextResponse.json(user);
+    } else {
+      // For NextAuth users, return the session data directly
+      const user = session.user as SessionUser;
+      
+      return NextResponse.json({
+        id: user.id,
+        name: user.name || '',
+        email: user.email || '',
+        phone: '', // Will be updated when user fills the form
+        bio: '',   // Will be updated when user fills the form
+        avatar: (user as any).avatar || '',
+        createdAt: new Date().toISOString(), // Default to current date
+      });
+    }
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch profile' },
+      { status: 500 },
+    );
   }
-  return NextResponse.json(user);
 }
 
 export async function PATCH(req: NextRequest) {
@@ -36,26 +60,40 @@ export async function PATCH(req: NextRequest) {
   if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  const userId = (session.user as SessionUser).id;
-  const { name, email, phone, bio } = await req.json();
+  
   try {
-    const updated = await prisma.user.update({
-      where: { id: userId },
-      data: { name, email, phone, bio },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        bio: true,
-        createdAt: true,
-      },
-    });
-    return NextResponse.json(updated);
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      return NextResponse.json({ error: e.message }, { status: 400 });
+    const data = await req.json();
+    
+    // Get auth token from localStorage (for admin users)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+    
+    if (token) {
+      // For admin users, use backend API
+      const response = await fetch(`${API_BASE_URL}/users/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      
+      const user = await response.json();
+      return NextResponse.json(user);
+    } else {
+      // For NextAuth users, we can't update the database directly from frontend
+      return NextResponse.json({ 
+        error: 'Profile updates should be handled by the backend API' 
+      }, { status: 501 });
     }
-    return NextResponse.json({ error: 'Unknown error' }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to update profile' },
+      { status: 500 },
+    );
   }
 }
