@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,8 +20,35 @@ interface UploadThingButtonProps {
   children?: React.ReactNode;
 }
 
+interface UploadResponse {
+  ufsUrl?: string;
+  url?: string;
+  serverUrl?: string;
+  name: string;
+  size: number;
+  type: string;
+}
+
+interface ClientUploadButtonProps {
+  endpoint: string;
+  onUploadComplete: (res: UploadResponse[]) => void;
+  onUploadError?: (error: Error) => void;
+  onUploadBegin?: () => void;
+  config?: Record<string, unknown>;
+  appearance?: Record<string, unknown>;
+  content?: Record<string, React.ReactNode>;
+  disabled?: boolean;
+}
+
 // Client-only wrapper for UploadButton
-function ClientUploadButton({ endpoint, onUploadComplete, onUploadError, onUploadBegin, ...props }: any) {
+function ClientUploadButton({ 
+  endpoint, 
+  onUploadComplete, 
+  onUploadError, 
+  onUploadBegin, 
+  ...props 
+}: ClientUploadButtonProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [UploadButtonComponent, setUploadButtonComponent] = useState<any>(null);
 
   useEffect(() => {
@@ -72,13 +100,13 @@ export function UploadThingButton({
     setIsClient(true);
   }, []);
 
-  const handleUploadComplete = React.useCallback((res: any) => {
+  const handleUploadComplete = React.useCallback((res: UploadResponse[]) => {
     console.log("UploadThingButton: Upload completed", res);
     setIsUploading(false);
     
     if (res && res.length > 0) {
       // Use ufsUrl instead of url (as per UploadThing v9 recommendation)
-      const urls = res.map((item: any) => {
+      const urls = res.map((item: UploadResponse) => {
         // Prefer ufsUrl, fallback to url, then serverUrl
         const url = item.ufsUrl || item.url || item.serverUrl;
         console.log(`File ${item.name}:`, { 
@@ -90,7 +118,7 @@ export function UploadThingButton({
           type: item.type
         });
         return url;
-      });
+      }).filter((url): url is string => url !== undefined);
       console.log("UploadThingButton: URLs extracted", urls);
       setUploadedUrls(prev => [...prev, ...urls]);
       onUploadComplete(urls);
@@ -105,7 +133,7 @@ export function UploadThingButton({
     } else {
       console.log("UploadThingButton: No results in response");
     }
-  }, [onUploadComplete]);
+  }, [onUploadComplete, endpoint]);
 
   const handleUploadError = React.useCallback((error: Error) => {
     console.log("UploadThingButton: Upload error", error);
@@ -214,9 +242,11 @@ export function UploadThingButton({
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {uploadedUrls.map((url, index) => (
             <div key={index} className="relative group">
-              <img
+              <Image
                 src={url}
                 alt={`Uploaded image ${index + 1}`}
+                width={96}
+                height={96}
                 className="w-full h-24 object-cover rounded-lg"
               />
               <Button

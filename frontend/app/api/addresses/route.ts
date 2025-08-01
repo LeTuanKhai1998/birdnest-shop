@@ -53,12 +53,12 @@ export async function GET() {
           // Return empty array if no addresses found
           return NextResponse.json([]);
         }
-      } catch (error) {
+      } catch {
         // Return empty array if backend fails
         return NextResponse.json([]);
       }
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch addresses' },
       { status: 500 },
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       const address = await response.json();
       return NextResponse.json(address);
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to create address' },
       { status: 500 },
@@ -176,7 +176,7 @@ export async function PATCH(req: NextRequest) {
       const address = await response.json();
       return NextResponse.json(address);
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to update address' },
       { status: 500 },
@@ -235,7 +235,7 @@ export async function DELETE(req: NextRequest) {
       
       return NextResponse.json({ message: 'Address deleted successfully' });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to delete address' },
       { status: 500 },

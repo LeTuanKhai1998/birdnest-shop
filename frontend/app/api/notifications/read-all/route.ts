@@ -1,7 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+
+// Define proper types for user session
+interface UserSession {
+  id: string;
+  email?: string;
+  name?: string;
+}
 
 export async function PATCH() {
   const session = await auth();
@@ -30,7 +37,7 @@ export async function PATCH() {
       return NextResponse.json(result);
     } else {
       // For NextAuth users, use the special endpoint
-      const user = session.user as any;
+      const user = session.user as UserSession;
       
       const response = await fetch(`${API_BASE_URL}/notifications/nextauth/read-all/${user.id}`, {
         method: 'PATCH',
@@ -49,7 +56,7 @@ export async function PATCH() {
         );
       }
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to mark all notifications as read' },
       { status: 500 },

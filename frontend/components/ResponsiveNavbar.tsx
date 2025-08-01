@@ -16,7 +16,6 @@ import {
   ShoppingBag,
   LogOut,
   Heart,
-  Bell,
   Box,
   Settings,
   Home as HomeIcon,
@@ -37,12 +36,20 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { useSession, signOut, getSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 import { UnifiedAvatar } from '@/components/ui/UnifiedAvatar';
 import { cn } from '@/lib/utils';
 import { useSetting } from '@/lib/settings-context';
+
+// Extend user type to include bio field
+interface ExtendedUser {
+  name?: string | null;
+  email?: string | null;
+  avatar?: string | null;
+  bio?: string | null;
+}
 
 export function ResponsiveNavbar() {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -51,11 +58,10 @@ export function ResponsiveNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLeftMenuVisible, setIsLeftMenuVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
   const pathname = usePathname();
-  const { user, isLoading, refreshUser } = useUser();
+  const { user, isLoading } = useUser();
   
 
 
@@ -98,12 +104,10 @@ export function ResponsiveNavbar() {
       }
       
       setLastScrollY(currentScrollY);
-      setIsScrolling(true);
       
       // Clear timeout and reset scrolling state
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
-        setIsScrolling(false);
       }, 150);
     };
 
@@ -336,8 +340,8 @@ export function ResponsiveNavbar() {
                             )}
                             <div className="text-left">
                               <div className="text-sm font-medium">{user?.name}</div>
-                              {(user as any)?.bio && (
-                                <div className="text-xs text-gray-500 italic truncate max-w-32">"{(user as any).bio}"</div>
+                              {(user as ExtendedUser)?.bio && (
+                                <div className="text-xs text-gray-500 italic truncate max-w-32">&ldquo;{(user as ExtendedUser).bio}&rdquo;</div>
                               )}
                             </div>
                           </Button>
@@ -346,8 +350,8 @@ export function ResponsiveNavbar() {
                         <div className="p-2 border-b">
                           <p className="text-sm font-medium">{user?.name}</p>
                           <p className="text-xs text-gray-500">{user?.email}</p>
-                          {(user as any)?.bio && (
-                            <p className="text-xs text-gray-400 italic mt-1">"{(user as any).bio}"</p>
+                          {(user as ExtendedUser)?.bio && (
+                            <p className="text-xs text-gray-400 italic mt-1">&ldquo;{(user as ExtendedUser).bio}&rdquo;</p>
                           )}
                         </div>
                         <DropdownMenuItem asChild>
@@ -505,8 +509,8 @@ export function ResponsiveNavbar() {
                               <div>
                                 <div className="font-medium">{user?.name}</div>
                                 <div className="text-sm text-gray-500">{user?.email}</div>
-                                {(user as any)?.bio && (
-                                  <div className="text-xs text-gray-400 italic mt-1">"{(user as any).bio}"</div>
+                                {(user as ExtendedUser)?.bio && (
+                                  <div className="text-xs text-gray-400 italic mt-1">&ldquo;{(user as ExtendedUser).bio}&rdquo;</div>
                                 )}
                               </div>
                             </Link>

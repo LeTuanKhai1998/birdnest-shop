@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { UploadButton } from "@/lib/uploadthing";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,11 +18,19 @@ interface ImageUploadProps {
   description?: string;
 }
 
+interface UploadResponse {
+  ufsUrl: string;
+  url?: string;
+  serverUrl?: string;
+  name: string;
+  size: number;
+  type: string;
+}
+
 export function ImageUpload({
   endpoint,
   onUploadComplete,
   onUploadError,
-  maxFiles = 1,
   className = "",
   title = "Upload Image",
   description = "Click to upload or drag and drop"
@@ -29,9 +38,9 @@ export function ImageUpload({
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleUploadComplete = (res: any) => {
+  const handleUploadComplete = (res: UploadResponse[]) => {
     setIsUploading(false);
-    const urls = res.map((file: any) => file.ufsUrl);
+    const urls = res.map((file: UploadResponse) => file.ufsUrl);
     setUploadedUrls(prev => [...prev, ...urls]);
     
     // Call the callback with the first URL (for single file uploads)
@@ -97,9 +106,11 @@ export function ImageUpload({
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {uploadedUrls.map((url, index) => (
               <div key={index} className="relative group">
-                <img
+                <Image
                   src={url}
                   alt={`Uploaded image ${index + 1}`}
+                  width={128}
+                  height={128}
                   className="w-full h-32 object-cover rounded-md border"
                 />
                 <Button
@@ -139,8 +150,8 @@ export function SimpleUploadButton({
   onUploadError?: (error: Error) => void;
   className?: string;
 }) {
-  const handleUploadComplete = (res: any) => {
-    const urls = res.map((file: any) => file.ufsUrl);
+  const handleUploadComplete = (res: UploadResponse[]) => {
+    const urls = res.map((file: UploadResponse) => file.ufsUrl);
     if (onUploadComplete && urls.length > 0) {
       onUploadComplete(urls[0]);
     }

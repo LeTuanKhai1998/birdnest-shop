@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
@@ -31,16 +31,16 @@ export function UnifiedAvatar({
   title,
 }: UnifiedAvatarProps) {
   // Get avatar URL directly from user data (no local state to avoid race conditions)
-  const getAvatarUrl = React.useCallback((user: any) => {
-    if (user?.avatar && user.avatar.trim() !== '') {
-      return user.avatar;
+  const getAvatarUrl = React.useCallback((userData: UnifiedAvatarProps['user']) => {
+    if (userData?.avatar && userData.avatar.trim() !== '') {
+      return userData.avatar;
     }
     return fallbackImage;
   }, [fallbackImage]);
 
   // Check if using default avatar
-  const isUsingDefaultAvatar = React.useCallback((user: any) => {
-    return !user?.avatar || user.avatar.trim() === '';
+  const isUsingDefaultAvatar = React.useCallback((userData: UnifiedAvatarProps['user']) => {
+    return !userData?.avatar || userData.avatar.trim() === '';
   }, []);
 
   // Get current avatar URL

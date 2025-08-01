@@ -3,6 +3,13 @@ import { auth } from '@/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
+// Define proper types for user session
+interface UserSession {
+  id: string;
+  email?: string;
+  name?: string;
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -35,7 +42,7 @@ export async function PATCH(
       return NextResponse.json(notification);
     } else {
       // For NextAuth users, use the special endpoint
-      const user = session.user as any;
+      const user = session.user as UserSession;
       
       const response = await fetch(`${API_BASE_URL}/notifications/nextauth/${id}/read/${user.id}`, {
         method: 'PATCH',
@@ -54,7 +61,7 @@ export async function PATCH(
         );
       }
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to mark notification as read' },
       { status: 500 },

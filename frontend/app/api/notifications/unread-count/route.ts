@@ -1,7 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+
+// Define proper types for user session
+interface UserSession {
+  id: string;
+  email?: string;
+  name?: string;
+}
 
 export async function GET() {
   const session = await auth();
@@ -29,7 +36,7 @@ export async function GET() {
       return NextResponse.json(count);
     } else {
       // For NextAuth users, use the special endpoint
-      const user = session.user as any;
+      const user = session.user as UserSession;
       
       const response = await fetch(`${API_BASE_URL}/notifications/nextauth/unread-count/${user.id}`, {
         method: 'GET',
@@ -46,7 +53,7 @@ export async function GET() {
         return NextResponse.json(0);
       }
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch unread count' },
       { status: 500 },

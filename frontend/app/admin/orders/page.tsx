@@ -169,8 +169,8 @@ export default function AdminOrdersPage() {
     
     return {
       totalOrders: orders.length,
-      pendingOrders: orders.filter((o: Order) => o && o.status === 'pending').length,
-      completedOrders: orders.filter((o: Order) => o && o.status === 'delivered').length,
+      pendingOrders: orders.filter((o: Order) => o && o.status === 'PENDING').length,
+      completedOrders: orders.filter((o: Order) => o && o.status === 'DELIVERED').length,
       totalRevenue,
       recentRevenue,
       revenueTrend: lastMonthRevenue > 0 ? ((recentRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0,

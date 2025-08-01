@@ -3,16 +3,14 @@ import { auth } from '@/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-// Helper function to get auth token from request headers
-function getAuthToken(req: NextRequest): string | null {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
-  return null;
+// Define proper types for user session
+interface UserSession {
+  id: string;
+  email?: string;
+  name?: string;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
   if (!session || !session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -38,7 +36,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(wishlist);
     } else {
       // For NextAuth users, use backend API with userId
-      const user = session.user as any;
+      const user = session.user as UserSession;
       
       try {
         const response = await fetch(`${API_BASE_URL}/wishlist/nextauth/${user.id}`, {
@@ -55,12 +53,12 @@ export async function GET(req: NextRequest) {
           // Return empty array if no wishlist found
           return NextResponse.json([]);
         }
-      } catch (error) {
+      } catch {
         // Return empty array if backend fails
         return NextResponse.json([]);
       }
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch wishlist' },
       { status: 500 },
@@ -102,7 +100,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(wishlistItem, { status: 201 });
     } else {
       // For NextAuth users, use the special endpoint
-      const user = session.user as any;
+      const user = session.user as UserSession;
       
       const response = await fetch(`${API_BASE_URL}/wishlist/nextauth`, {
         method: 'POST',
@@ -122,7 +120,7 @@ export async function POST(req: NextRequest) {
       const wishlistItem = await response.json();
       return NextResponse.json(wishlistItem, { status: 201 });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to add to wishlist' },
       { status: 500 },
@@ -163,7 +161,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: true });
     } else {
       // For NextAuth users, use the special endpoint
-      const user = session.user as any;
+      const user = session.user as UserSession;
       
       const response = await fetch(`${API_BASE_URL}/wishlist/nextauth`, {
         method: 'DELETE',
@@ -182,7 +180,7 @@ export async function DELETE(req: NextRequest) {
       
       return NextResponse.json({ success: true });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to remove from wishlist' },
       { status: 500 },
