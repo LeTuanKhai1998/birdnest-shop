@@ -16,11 +16,35 @@ export function StatusBadge({ status }: { status: string }) {
   const color =
     STATUS_COLORS[status.toUpperCase()] ||
     'bg-gray-100 text-gray-800 border-gray-200';
+  
+  // Custom labels for better UX
+  const getLabel = (status: string) => {
+    const upperStatus = status.toUpperCase();
+    switch (upperStatus) {
+      case 'ACTIVE':
+        return 'Hoạt động';
+      case 'INACTIVE':
+        return 'Vô hiệu';
+      case 'PENDING':
+        return 'Chờ xử lý';
+      case 'PAID':
+        return 'Đã thanh toán';
+      case 'SHIPPED':
+        return 'Đã gửi';
+      case 'DELIVERED':
+        return 'Đã giao';
+      case 'CANCELLED':
+        return 'Đã hủy';
+      default:
+        return status;
+    }
+  };
+
   return (
     <span
       className={`inline-block px-3 py-1 rounded-full border text-xs font-semibold ${color}`}
     >
-      {status}
+      {getLabel(status)}
     </span>
   );
 }

@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsOptional, IsArray } from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsArray, IsBoolean } from 'class-validator';
 
 export class UpdateProductDto {
   @IsString()
@@ -35,4 +35,8 @@ export class UpdateProductDto {
     url: string;
     isPrimary: boolean;
   }>;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }

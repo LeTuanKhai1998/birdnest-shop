@@ -472,6 +472,33 @@ export const apiService = {
     }
   },
 
+  getProductStats: async () => {
+    try {
+      const response = await api.get('/products/stats');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch product stats');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching product stats:', error);
+      return {
+        totalProducts: 0,
+        activeProducts: 0,
+        lowStock: 0,
+        outOfStock: 0,
+        totalValue: '0',
+        averagePrice: '0',
+        totalProductsTrend: 0,
+        totalValueTrend: 0,
+      };
+    }
+  },
+
+
+
   getCategories: async () => {
     try {
       const response = await api.get('/products/categories');
@@ -502,6 +529,26 @@ export const apiService = {
     } catch (error) {
       console.error('Error fetching orders:', error);
       return [];
+    }
+  },
+
+  getOrderStats: async () => {
+    try {
+      const response = await api.get('/orders/stats');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch order stats');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching order stats:', error);
+      return {
+        totalOrders: 0,
+        totalRevenue: 0,
+        ordersByStatus: []
+      };
     }
   },
 
@@ -545,7 +592,7 @@ export const apiService = {
 
   updateOrderStatus: async (orderId: string, status: string) => {
     try {
-      const response = await api.patch(`/orders/${orderId}`, { status });
+      const response = await api.patch(`/orders/${orderId}/status`, { status });
       
       if (!response.ok) {
         const error = await response.json();

@@ -4,7 +4,7 @@ import { getProducts } from '@/lib/api-server';
 import { SEO_CONSTANTS } from '@/lib/constants';
 import { Product, ProductImage } from '@/lib/types';
 
-const FALLBACK_IMAGE = '/images/placeholder.svg';
+const FALLBACK_IMAGE = '/images/placeholder-image.svg';
 
 // SEO Metadata
 export const metadata: Metadata = {

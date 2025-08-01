@@ -39,6 +39,7 @@ model Product {
   discount    Float       @default(0)
   quantity    Int
   categoryId  String
+  isActive    Boolean     @default(true)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   weight      Int         @default(100)

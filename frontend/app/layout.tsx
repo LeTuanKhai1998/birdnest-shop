@@ -36,7 +36,6 @@ export default function RootLayout({
               <ResponsiveNavbar />
             </HydrationSafe>
             {children}
-            <Footer />
           </UserProvider>
         </Providers>
       </body>

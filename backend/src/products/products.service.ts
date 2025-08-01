@@ -208,4 +208,57 @@ export class ProductsService {
       },
     });
   }
+
+  async getStats() {
+    // Try to get from cache first
+    const cacheKey = 'products:stats';
+    const cached = this.cacheService.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // Get all products for statistics
+    const products = await this.prisma.product.findMany({
+      select: {
+        quantity: true,
+        price: true,
+        isActive: true,
+      },
+    });
+
+    // Calculate statistics
+    const totalProducts = products.length;
+    const activeProducts = products.filter(p => p.isActive).length;
+    const lowStock = products.filter(p => (p.quantity || 0) < 10 && p.isActive).length;
+    const outOfStock = products.filter(p => (p.quantity || 0) === 0 && p.isActive).length;
+    
+    // Calculate total inventory value
+    const totalValue = products.reduce((sum, product) => {
+      const quantity = product.quantity || 0;
+      const price = parseFloat(product.price.toString());
+      return sum + (quantity * price);
+    }, 0);
+
+    // Calculate average price
+    const averagePrice = totalProducts > 0 
+      ? products.reduce((sum, product) => sum + parseFloat(product.price.toString()), 0) / totalProducts
+      : 0;
+
+    const stats = {
+      totalProducts,
+      activeProducts,
+      lowStock,
+      outOfStock,
+      totalValue: totalValue.toString(),
+      averagePrice: averagePrice.toString(),
+      // Add trend data (placeholder for now)
+      totalProductsTrend: 0,
+      totalValueTrend: 0,
+    };
+
+    // Cache the result for 5 minutes
+    this.cacheService.set(cacheKey, stats, 300000);
+
+    return stats;
+  }
 }

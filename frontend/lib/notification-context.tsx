@@ -44,6 +44,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const response = await fetch('/api/notifications');
       
       if (!response.ok) {
+        if (response.status === 401) {
+          // User is not authenticated, don't show error
+          return;
+        }
         throw new Error('Failed to fetch notifications');
       }
 
@@ -51,7 +55,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       setNotifications(data);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch notifications');
+      // Don't set error for network issues
     } finally {
       setLoading(false);
     }
@@ -64,6 +68,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const response = await fetch('/api/notifications/unread-count');
       
       if (!response.ok) {
+        if (response.status === 401) {
+          // User is not authenticated, don't show error
+          return;
+        }
         throw new Error('Failed to fetch unread count');
       }
 
@@ -71,6 +79,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       setUnreadCount(data.count || 0);
     } catch (error) {
       console.error('Error fetching unread count:', error);
+      // Don't show error toast for network issues
     }
   };
 

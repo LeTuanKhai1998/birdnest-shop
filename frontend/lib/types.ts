@@ -9,6 +9,7 @@ export interface Product {
   quantity?: number;
   weight: number;
   categoryId?: string;
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
   category?: Category;

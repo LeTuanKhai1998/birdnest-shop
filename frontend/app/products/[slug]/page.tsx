@@ -3,7 +3,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AddToCartButton } from '@/components/AddToCartButton';
-import Footer from '@/components/Footer';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';

@@ -36,6 +36,12 @@ export class ProductsController {
     return this.productsService.getCategories();
   }
 
+  @Get('stats')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async getStats() {
+    return this.productsService.getStats();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const product = await this.productsService.findOne(id);

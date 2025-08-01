@@ -4,6 +4,7 @@ import {
   IsString,
   IsOptional,
   IsArray,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -41,4 +42,8 @@ export class CreateProductDto {
     url: string;
     isPrimary: boolean;
   }>;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }

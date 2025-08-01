@@ -2,14 +2,12 @@
 import Link from 'next/link';
 import React, { ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+
 import {
   LayoutDashboard,
   ShoppingBag,
   Users,
   Settings,
-  Sun,
-  Moon,
   Home as HomeIcon,
   Box,
   Info,
@@ -19,10 +17,14 @@ import {
   Shield,
   Star,
   MessageSquare,
+  Menu,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRequireAdmin } from '@/hooks/useAuth';
+import { Toaster } from '@/components/ui/toaster';
+import Footer from '@/components/Footer';
 
 const navLinks = [
   { href: '/admin', label: 'Bảng điều khiển', icon: LayoutDashboard },
@@ -65,15 +67,13 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated, isAdmin } = useRequireAdmin('/login?callbackUrl=/admin');
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Get current page configuration
   const currentPageConfig = pageConfigs[pathname as keyof typeof pageConfigs];
   const IconComponent = currentPageConfig?.icon || LayoutDashboard;
 
-  const handleLogout = () => {
-    // Only use NextAuth signOut
-    signOut({ callbackUrl: '/login' });
-  };
+
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -93,14 +93,29 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900">
-      <div className="flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 flex flex-col">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Mobile menu button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-gray-200 dark:border-neutral-700"
+        >
+          {mobileMenuOpen ? (
+            <X className="w-6 h-6 text-gray-700 dark:text-gray-200" />
+          ) : (
+            <Menu className="w-6 h-6 text-gray-700 dark:text-gray-200" />
+          )}
+        </button>
+
         {/* Sidebar */}
-        <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700 py-6 px-4 gap-4 sticky top-0 h-screen z-20">
+        <aside className={cn(
+          "flex flex-col w-64 bg-white dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700 py-6 px-4 gap-4 fixed top-0 left-0 h-[calc(100vh-200px)] z-20 overflow-y-auto transition-transform duration-300 ease-in-out",
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}>
           <div className="mb-8 flex items-center gap-2 text-2xl font-bold text-red-700">
             <span>Admin</span>
           </div>
-          <nav className="flex flex-col gap-2 flex-1">
+          <nav className="flex flex-col gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -117,7 +132,7 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
           </nav>
           
           {/* Main Navigation */}
-          <div className="mt-8 pt-8 border-t border-gray-200 dark:border-neutral-700">
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-neutral-700">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
               Điều hướng chính
             </h3>
@@ -160,57 +175,56 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
             </nav>
           </div>
           
-          <div className="mt-auto flex items-center gap-2">
-            {/* User info */}
-            <div className="flex-1 text-sm text-gray-600 dark:text-gray-400">
-              {user?.name || user?.email}
-            </div>
-            {/* Theme toggle placeholder */}
-            <button className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 transition">
-              <Sun className="w-5 h-5 hidden dark:inline" />
-              <Moon className="w-5 h-5 dark:hidden" />
-            </button>
-            {/* Logout button */}
-            <button 
-              onClick={handleLogout}
-              className="p-2 rounded hover:bg-red-100 dark:hover:bg-red-900 transition text-red-600"
-              title="Logout"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          </div>
+          <div className="flex-1"></div>
+          
+          {/* Bottom spacing to prevent touching footer */}
+          <div className="h-6"></div>
         </aside>
         
-        {/* Main content area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Main content */}
-          <main className="flex-1 max-w-7xl mx-auto w-full">
-            {/* Hero Section - Only show for admin pages */}
-            {currentPageConfig && (
-              <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-12">
-                <div className="container mx-auto px-4 text-center">
-                  <div className="mb-6">
-                    <IconComponent className="w-16 h-16 mx-auto" />
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                    {currentPageConfig.title}
-                  </h1>
-                  <p className="text-lg text-red-100">
-                    {currentPageConfig.description}
-                  </p>
-                </div>
-              </div>
-            )}
+        {/* Mobile backdrop */}
+        {mobileMenuOpen && (
+          <div 
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-10"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
 
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col min-w-0 md:ml-64">
+          {/* Hero Section - Only show for admin pages */}
+          {currentPageConfig && (
+            <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-6 w-full">
+              <div className="w-full px-4 text-center">
+                <div className="mb-3">
+                  <IconComponent className="w-8 h-8 mx-auto" />
+                </div>
+                <h1 className="text-2xl md:text-3xl font-bold mb-1">
+                  {currentPageConfig.title}
+                </h1>
+                <p className="text-base text-red-100">
+                  {currentPageConfig.description}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Main content */}
+          <main className="flex-1 max-w-full mx-auto w-full overflow-y-auto">
             {/* Page Content */}
-            <div className="container mx-auto px-4 py-12 max-w-6xl">
+            <div className="container mx-auto px-6 py-6 pb-8 max-w-7xl">
               {children}
             </div>
           </main>
         </div>
       </div>
+      
+      {/* Footer - Top Layer */}
+      <div className="relative z-10">
+        <Footer />
+      </div>
+      
+      {/* Toast Notifications */}
+      <Toaster />
     </div>
   );
 });
