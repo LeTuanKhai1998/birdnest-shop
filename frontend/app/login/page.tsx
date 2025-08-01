@@ -23,43 +23,9 @@ function LoginPageInner() {
   const callbackUrl = searchParams?.get('callbackUrl') || '/';
   const { data: session, status } = useSession();
 
-  // Clear any stuck authentication data on component mount
-  useEffect(() => {
-    
-    // Only clear auth data if we're not trying to access admin pages
-    // This prevents the redirect loop between /admin and /login
-    if (!callbackUrl.includes('/admin')) {
-      localStorage.removeItem('auth-token');
-      localStorage.removeItem('user');
-    }
-  }, [callbackUrl]);
-
   // Check if user is already authenticated
   useEffect(() => {
-    
-    // Check for admin authentication in localStorage
-    const token = localStorage.getItem('auth-token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData);
-        // For admin users, only redirect to admin pages
-        if (user.isAdmin && callbackUrl.includes('/admin')) {
-          router.push(callbackUrl);
-          return;
-        }
-        // For admin users trying to access non-admin pages, redirect to admin dashboard
-        if (user.isAdmin && !callbackUrl.includes('/admin')) {
-          router.push('/admin');
-          return;
-        }
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-      }
-    }
-    
-    // Check for NextAuth session
+    // Only check NextAuth session, not localStorage
     if (status === 'authenticated' && session?.user) {
       router.push(callbackUrl);
       return;

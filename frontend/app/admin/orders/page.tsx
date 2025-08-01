@@ -78,22 +78,7 @@ export default function AdminOrdersPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
-  // Check authentication
-  useEffect(() => {
-    const token = localStorage.getItem('auth-token');
-    const user = localStorage.getItem('user');
-    
-    if (!token || !user) {
-      window.location.href = '/login?callbackUrl=/admin';
-      return;
-    }
 
-    const userData = JSON.parse(user);
-    if (!userData.isAdmin) {
-      window.location.href = '/login?callbackUrl=/admin';
-      return;
-    }
-  }, []);
 
   // Debounce search input
   useEffect(() => {

@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import React, { ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -31,19 +32,11 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
   const router = useRouter();
   const { user, isLoading, isAuthenticated, isAdmin } = useRequireAdmin('/login?callbackUrl=/admin');
 
-  console.log('🏗️ AdminLayout Debug:', {
-    isLoading,
-    isAuthenticated,
-    isAdmin,
-    user: user ? { id: user.id, email: user.email, isAdmin: user.isAdmin } : null,
-    timestamp: new Date().toISOString()
-  });
+
 
   const handleLogout = () => {
-    // Clear both NextAuth and localStorage
-    localStorage.removeItem('auth-token');
-    localStorage.removeItem('user');
-    router.push('/login');
+    // Only use NextAuth signOut
+    signOut({ callbackUrl: '/login' });
   };
 
   // Show loading while checking authentication
@@ -163,4 +156,6 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
       </div>
     </div>
   );
-}
+});
+
+export default AdminLayout;

@@ -49,13 +49,6 @@ const authConfig = {
       return token;
     },
     async session({ session, token }) {
-      console.log('🔐 NextAuth session callback:', {
-        tokenId: token.id,
-        tokenEmail: token.email,
-        tokenIsAdmin: token.isAdmin,
-        timestamp: new Date().toISOString()
-      });
-
       // Send properties to the client
       session.user = {
         id: token.id as string,
@@ -71,13 +64,6 @@ const authConfig = {
       
       // Add access token to session for frontend to use
       session.accessToken = token.accessToken as string;
-      
-      console.log('🔐 Session created:', {
-        userId: session.user.id,
-        userEmail: session.user.email,
-        userIsAdmin: session.user.isAdmin,
-        hasAccessToken: !!session.accessToken
-      });
       
       return session;
     },

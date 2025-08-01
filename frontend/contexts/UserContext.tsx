@@ -31,13 +31,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const refreshUser = async () => {
-    console.log('🔄 refreshUser called:', {
-      sessionEmail: session?.user?.email,
-      timestamp: new Date().toISOString()
-    });
-
     if (!session?.user?.email) {
-      console.log('❌ No session email, setting user to null');
       setUser(null);
       return;
     }
@@ -79,11 +73,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch user data when session changes
   useEffect(() => {
-    console.log('🔄 UserContext useEffect triggered:', {
-      sessionEmail: session?.user?.email,
-      currentUser: user ? { id: user.id, email: user.email, isAdmin: user.isAdmin } : null,
-      timestamp: new Date().toISOString()
-    });
     refreshUser();
   }, [session?.user?.email]);
 

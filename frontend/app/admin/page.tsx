@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -247,45 +247,16 @@ async function exportTopProductsPDF(
   doc.save(`top-products-${Date.now()}.pdf`);
 }
 
-export default function AdminDashboardPage() {
+const AdminDashboardPage = React.memo(function AdminDashboardPage() {
   const { toast } = useToast();
   const { data: session, status } = useSession();
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState('daily');
   const [isExporting, setIsExporting] = useState(false);
 
-  console.log('📊 AdminDashboardPage render:', {
-    session: session ? { 
-      userId: session.user?.id, 
-      userEmail: session.user?.email, 
-      userIsAdmin: session.user?.isAdmin 
-    } : null,
-    status,
-    timestamp: new Date().toISOString()
-  });
 
-  // Check authentication
-  useEffect(() => {
-    const token = localStorage.getItem('auth-token');
-    const user = localStorage.getItem('user');
-    
-    if (!token || !user) {
-      router.push('/login?callbackUrl=/admin');
-      return;
-    }
 
-    try {
-      const userData = JSON.parse(user);
-      
-      if (!userData.isAdmin) {
-        router.push('/login?callbackUrl=/admin');
-        return;
-      }
-    } catch (error) {
-      router.push('/login?callbackUrl=/admin');
-      return;
-    }
-  }, [router]);
+
 
   // Fetch data using apiService
   const { data: orders, isLoading: ordersLoading, error: ordersError } = useSWR(
@@ -807,4 +778,6 @@ export default function AdminDashboardPage() {
       <Toaster />
     </div>
   );
-}
+});
+
+export default AdminDashboardPage;
