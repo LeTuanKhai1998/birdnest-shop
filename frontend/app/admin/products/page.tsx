@@ -144,22 +144,7 @@ export default function AdminProductsPage() {
     resolver: zodResolver(productSchema),
   });
 
-  // Check authentication
-  useEffect(() => {
-    const token = localStorage.getItem('auth-token');
-    const user = localStorage.getItem('user');
-    
-    if (!token || !user) {
-      window.location.href = '/login?callbackUrl=/admin/products';
-      return;
-    }
 
-    const userData = JSON.parse(user);
-    if (!userData.isAdmin) {
-      window.location.href = '/login?callbackUrl=/admin/products';
-      return;
-    }
-  }, []);
 
   const { data: products, isLoading, mutate } = useSWR('admin-products', () => apiService.getProducts());
 
@@ -399,39 +384,22 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <Package className="w-8 h-8 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Quản lý sản phẩm</h1>
-                  <p className="text-gray-600 mt-1">
-                    Quản lý danh mục sản phẩm, kho hàng và giá cả
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                  Làm mới
-                </Button>
-                <Button onClick={() => setDrawerOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Thêm sản phẩm
-                </Button>
-              </div>
-            </div>
-          </div>
+    <div>
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-3 mb-6">
+        <Button
+          variant="outline"
+          onClick={handleRefresh}
+          disabled={refreshing}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          Làm mới
+        </Button>
+        <Button onClick={() => setDrawerOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Thêm sản phẩm
+        </Button>
+      </div>
 
           {/* Metrics Cards */}
           {metrics && (

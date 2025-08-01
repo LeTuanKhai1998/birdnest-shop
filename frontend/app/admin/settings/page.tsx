@@ -22,24 +22,10 @@ export default function AdminSettingsPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showReloadCountdown, setShowReloadCountdown] = useState(false);
 
-  // Check authentication on mount
+  // Load settings on mount
   useEffect(() => {
-    const token = localStorage.getItem('auth-token');
-    const user = localStorage.getItem('user');
-    
-    if (!token || !user) {
-      router.push('/login?callbackUrl=/admin');
-      return;
-    }
-
-    const userData = JSON.parse(user);
-    if (!userData.isAdmin) {
-      router.push('/login?callbackUrl=/admin');
-      return;
-    }
-
     loadSettings();
-  }, [router]);
+  }, []);
 
   const loadSettings = async () => {
     try {
@@ -161,39 +147,22 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <Settings className="w-8 h-8 text-blue-600" />
-                </div>
-                <div>
-                                  <h1 className="text-3xl font-bold text-gray-900">Cài đặt cửa hàng</h1>
-                <p className="text-gray-600 mt-1">
-                  Cấu hình cài đặt cửa hàng, phương thức thanh toán và tùy chọn hệ thống.
-                </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                {lastSaved && (
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500">Lần lưu cuối</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {lastSaved.toLocaleTimeString()}
-                    </p>
-                  </div>
-                )}
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  Hoạt động
-                </Badge>
-              </div>
-            </div>
+    <div>
+      {/* Status Info */}
+      <div className="flex items-center justify-end gap-3 mb-6">
+        {lastSaved && (
+          <div className="text-right">
+            <p className="text-sm text-gray-500">Lần lưu cuối</p>
+            <p className="text-sm font-medium text-gray-900">
+              {lastSaved.toLocaleTimeString()}
+            </p>
           </div>
+        )}
+        <Badge variant="secondary" className="bg-green-100 text-green-800">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          Hoạt động
+        </Badge>
+      </div>
 
           {/* Settings Form */}
           <SettingsForm
@@ -216,8 +185,6 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
       
       {/* Toast Notifications */}
       <Toaster />

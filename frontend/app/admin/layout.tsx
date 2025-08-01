@@ -15,6 +15,10 @@ import {
   Info,
   Mail,
   Package,
+  FileText,
+  Shield,
+  Star,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,11 +32,43 @@ const navLinks = [
   { href: '/admin/settings', label: 'Cài đặt', icon: Settings },
 ];
 
+// Page configurations for hero banners
+const pageConfigs = {
+  '/admin': {
+    title: 'Bảng Điều Khiển',
+    description: 'Tổng quan hiệu suất và phân tích cửa hàng của bạn',
+    icon: LayoutDashboard
+  },
+  '/admin/orders': {
+    title: 'Quản Lý Đơn Hàng',
+    description: 'Xem và quản lý tất cả đơn hàng của khách hàng',
+    icon: ShoppingBag
+  },
+  '/admin/products': {
+    title: 'Quản Lý Sản Phẩm',
+    description: 'Thêm, chỉnh sửa và quản lý danh mục sản phẩm',
+    icon: Box
+  },
+  '/admin/users': {
+    title: 'Quản Lý Khách Hàng',
+    description: 'Xem thông tin và quản lý tài khoản khách hàng',
+    icon: Users
+  },
+  '/admin/settings': {
+    title: 'Cài Đặt Hệ Thống',
+    description: 'Cấu hình cửa hàng và tùy chọn hệ thống',
+    icon: Settings
+  }
+};
+
 const AdminLayout = React.memo(function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isLoading, isAuthenticated, isAdmin } = useRequireAdmin('/login?callbackUrl=/admin');
 
-
+  // Get current page configuration
+  const currentPageConfig = pageConfigs[pathname as keyof typeof pageConfigs];
+  const IconComponent = currentPageConfig?.icon || LayoutDashboard;
 
   const handleLogout = () => {
     // Only use NextAuth signOut
@@ -146,11 +182,32 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
             </button>
           </div>
         </aside>
+        
         {/* Main content area */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Main content */}
-          <main className="flex-1 p-4 md:p-8 bg-gray-50 dark:bg-neutral-900 min-h-[calc(100vh-4rem)]">
-            {children}
+          <main className="flex-1 max-w-7xl mx-auto w-full">
+            {/* Hero Section - Only show for admin pages */}
+            {currentPageConfig && (
+              <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-12">
+                <div className="container mx-auto px-4 text-center">
+                  <div className="mb-6">
+                    <IconComponent className="w-16 h-16 mx-auto" />
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                    {currentPageConfig.title}
+                  </h1>
+                  <p className="text-lg text-red-100">
+                    {currentPageConfig.description}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Page Content */}
+            <div className="container mx-auto px-4 py-12 max-w-6xl">
+              {children}
+            </div>
           </main>
         </div>
       </div>

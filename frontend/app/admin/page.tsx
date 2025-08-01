@@ -474,31 +474,7 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <BarChart3 className="w-8 h-8 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Bảng điều khiển</h1>
-                  <p className="text-gray-600 mt-1">
-                    Tổng quan hiệu suất và phân tích cửa hàng của bạn
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  Dữ liệu trực tiếp
-                </Badge>
-              </div>
-            </div>
-          </div>
+    <div>
 
           {/* Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -653,12 +629,12 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Recent Orders</CardTitle>
-                    <CardDescription>Latest order activity</CardDescription>
+                    <CardTitle>Đơn hàng gần đây</CardTitle>
+                    <CardDescription>Hoạt động đơn hàng mới nhất</CardDescription>
                   </div>
                   <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={isExporting}>
                     <Download className="w-4 h-4 mr-2" />
-                    Export CSV
+                    Xuất CSV
                   </Button>
                 </div>
               </CardHeader>
@@ -672,7 +648,7 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
                         </div>
                         <div>
                           <p className="font-medium text-sm">{order.id}</p>
-                          <p className="text-xs text-gray-500">{order.user?.name || 'Unknown'}</p>
+                          <p className="text-xs text-gray-500">{order.user?.name || 'Không xác định'}</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -692,12 +668,12 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Low Stock Alert</CardTitle>
-                    <CardDescription>Products running low on stock</CardDescription>
+                    <CardTitle>Cảnh báo tồn kho thấp</CardTitle>
+                    <CardDescription>Sản phẩm sắp hết hàng</CardDescription>
                   </div>
                   <Badge className="bg-red-100 text-red-800">
                     <AlertTriangle className="w-3 h-3 mr-1" />
-                    {lowStockProducts.length} items
+                    {lowStockProducts.length} sản phẩm
                   </Badge>
                 </div>
               </CardHeader>
@@ -711,13 +687,13 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
                         </div>
                         <div>
                           <p className="font-medium text-sm">{product.name}</p>
-                          <p className="text-xs text-gray-500">{product.category?.name || 'Unknown'}</p>
+                          <p className="text-xs text-gray-500">{product.category?.name || 'Không xác định'}</p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-sm">{formatVND(parseFloat(product.price))}</p>
                         <Badge className="bg-red-100 text-red-800 text-xs">
-                          Stock: {product.quantity}
+                          Tồn kho: {product.quantity}
                         </Badge>
                       </div>
                     </div>
@@ -730,8 +706,8 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
           {/* Top Products */}
           <Card>
             <CardHeader>
-              <CardTitle>Top Performing Products</CardTitle>
-              <CardDescription>Best selling products by revenue</CardDescription>
+              <CardTitle>Sản phẩm bán chạy nhất</CardTitle>
+              <CardDescription>Sản phẩm bán chạy theo doanh thu</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -749,20 +725,20 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
                       </div>
                       <div>
                         <p className="font-medium text-sm">{product.name}</p>
-                        <p className="text-xs text-gray-500">#{index + 1} Top Seller</p>
+                        <p className="text-xs text-gray-500">#{index + 1} Bán chạy nhất</p>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Units Sold:</span>
+                        <span className="text-gray-600">Đã bán:</span>
                         <span className="font-medium">{product.unitsSold}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Revenue:</span>
+                        <span className="text-gray-600">Doanh thu:</span>
                         <span className="font-medium">{formatVND(product.revenue)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Stock:</span>
+                        <span className="text-gray-600">Tồn kho:</span>
                         <span className="font-medium">{product.stock}</span>
                       </div>
                     </div>
@@ -771,8 +747,6 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
       
       {/* Toast Notifications */}
       <Toaster />

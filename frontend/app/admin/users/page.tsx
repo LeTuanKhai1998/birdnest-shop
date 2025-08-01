@@ -105,22 +105,7 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [showUserDetails, setShowUserDetails] = useState(false);
 
-  // Check authentication
-  useEffect(() => {
-    const token = localStorage.getItem('auth-token');
-    const user = localStorage.getItem('user');
-    
-    if (!token || !user) {
-      window.location.href = '/login?callbackUrl=/admin';
-      return;
-    }
 
-    const userData = JSON.parse(user);
-    if (!userData.isAdmin) {
-      window.location.href = '/login?callbackUrl=/admin';
-      return;
-    }
-  }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -272,62 +257,45 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-xl">
-                  <Users className="w-8 h-8 text-purple-600" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Quản lý người dùng</h1>
-                  <p className="text-gray-600 mt-1">
-                    Quản lý tài khoản khách hàng, quyền quản trị và quyền truy cập người dùng
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-white rounded-lg border p-1">
-                  <Button
-                    variant={viewMode === 'table' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('table')}
-                  >
-                    Bảng
-                  </Button>
-                  <Button
-                    variant={viewMode === 'cards' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('cards')}
-                  >
-                    Thẻ
-                  </Button>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={handleExport}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Xuất
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                  Làm mới
-                </Button>
-                <Button>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Thêm người dùng
-                </Button>
-              </div>
-            </div>
-          </div>
+    <div>
+      {/* View Mode Toggle and Actions */}
+      <div className="flex items-center justify-end gap-3 mb-6">
+        <div className="flex items-center gap-2 bg-white rounded-lg border p-1">
+          <Button
+            variant={viewMode === 'table' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('table')}
+          >
+            Bảng
+          </Button>
+          <Button
+            variant={viewMode === 'cards' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('cards')}
+          >
+            Thẻ
+          </Button>
+        </div>
+        <Button
+          variant="outline"
+          onClick={handleExport}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Xuất
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleRefresh}
+          disabled={refreshing}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          Làm mới
+        </Button>
+        <Button>
+          <UserPlus className="w-4 h-4 mr-2" />
+          Thêm người dùng
+        </Button>
+      </div>
 
           {/* Metrics Cards */}
           {metrics && (
@@ -614,8 +582,6 @@ export default function AdminUsersPage() {
               })}
             </div>
           )}
-        </div>
-      </div>
 
       {/* User Details Dialog */}
       {showUserDetails && (
