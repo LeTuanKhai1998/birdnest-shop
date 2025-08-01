@@ -59,7 +59,7 @@ import type { Product } from '@/lib/types';
 import { getFirstImageUrl, cn } from '@/lib/utils';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ImageUpload } from '@/components/ui/ImageUpload';
+import { ProductImageUpload } from '@/components/ui/ProductImageUpload';
 import type { ProductImage } from '@/lib/types';
 import { getCategoryColor } from '@/lib/category-colors';
 
@@ -1163,28 +1163,15 @@ export default function AdminProductsPage() {
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
                 {/* Product Images Section */}
-                <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
-                  <CardHeader className="pt-4">
-                    <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4 text-blue-600" />
-                      Hình ảnh sản phẩm
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <ImageUpload
-                      endpoint="productImageUploader"
-                      onUpload={(urls) => {
-                        const newImages = urls.map((url, index) => ({
-                          url,
-                          isPrimary: images.length === 0 && index === 0,
-                        }));
-                        setImages(prev => [...prev, ...newImages]);
-                      }}
-                      maxFiles={10}
-                      maxSize={4}
-                      showPreview={true}
-                      className="mb-4"
-                    />
+                <ProductImageUpload
+                  endpoint="productImageUploader"
+                  currentImages={images}
+                  onImagesChange={setImages}
+                  maxFiles={10}
+                  maxSize={4}
+                  title="Hình ảnh sản phẩm"
+                  description="Tải lên hình ảnh sản phẩm chất lượng cao"
+                />
                   
                     {/* Image Preview */}
                     {images.length > 0 && (
@@ -1230,9 +1217,6 @@ export default function AdminProductsPage() {
                         ))}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-
                 {/* Basic Information */}
                 <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
                   <CardHeader className="pt-4">
