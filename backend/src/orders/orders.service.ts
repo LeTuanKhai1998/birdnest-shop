@@ -343,11 +343,32 @@ export class OrdersService {
     return this.prisma.order.findMany({
       where: {
         OR: [
-          { guestEmail: { contains: query, mode: 'insensitive' } },
-          { guestPhone: { contains: query, mode: 'insensitive' } },
+          // Guest orders by email or phone
+          {
+            AND: [
+              {
+                OR: [
+                  { guestEmail: { contains: query, mode: 'insensitive' } },
+                  { guestPhone: { contains: query, mode: 'insensitive' } },
+                  { shippingAddress: { contains: query, mode: 'insensitive' } }, // Also search in shipping address
+                ],
+              },
+              { userId: undefined }, // Only guest orders
+            ],
+          },
+          // Registered user orders by email or phone in shipping address
+          {
+            AND: [
+              {
+                OR: [
+                  { user: { email: { contains: query, mode: 'insensitive' } } },
+                  { shippingAddress: { contains: query, mode: 'insensitive' } }, // Search in shipping address for registered users too
+                ],
+              },
+              { userId: { not: undefined } }, // Only registered user orders
+            ],
+          },
         ],
-        // Only return guest orders (where userId is undefined)
-        userId: undefined,
       },
       select: {
         id: true,
@@ -358,6 +379,13 @@ export class OrdersService {
         guestEmail: true,
         guestPhone: true,
         shippingAddress: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         orderItems: {
           select: {
             quantity: true,

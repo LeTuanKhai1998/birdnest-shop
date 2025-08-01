@@ -25,22 +25,17 @@ function LoginPageInner() {
 
   // Clear any stuck authentication data on component mount
   useEffect(() => {
-    console.log('Login page mounted - checking auth data');
     
     // Only clear auth data if we're not trying to access admin pages
     // This prevents the redirect loop between /admin and /login
     if (!callbackUrl.includes('/admin')) {
-      console.log('Clearing auth data for non-admin access');
       localStorage.removeItem('auth-token');
       localStorage.removeItem('user');
-    } else {
-      console.log('Preserving auth data for admin access');
     }
   }, [callbackUrl]);
 
   // Check if user is already authenticated
   useEffect(() => {
-    console.log('Login page useEffect - status:', status, 'session:', !!session, 'callbackUrl:', callbackUrl);
     
     // Check for admin authentication in localStorage
     const token = localStorage.getItem('auth-token');
@@ -51,13 +46,11 @@ function LoginPageInner() {
         const user = JSON.parse(userData);
         // For admin users, only redirect to admin pages
         if (user.isAdmin && callbackUrl.includes('/admin')) {
-          console.log('Admin user found in localStorage, redirecting to:', callbackUrl);
           router.push(callbackUrl);
           return;
         }
         // For admin users trying to access non-admin pages, redirect to admin dashboard
         if (user.isAdmin && !callbackUrl.includes('/admin')) {
-          console.log('Admin user trying to access non-admin page, redirecting to admin dashboard');
           router.push('/admin');
           return;
         }
@@ -68,7 +61,6 @@ function LoginPageInner() {
     
     // Check for NextAuth session
     if (status === 'authenticated' && session?.user) {
-      console.log('NextAuth session found, redirecting to:', callbackUrl);
       router.push(callbackUrl);
       return;
     }
@@ -84,77 +76,34 @@ function LoginPageInner() {
     setError('');
     
     try {
-      // Try custom API login first (for admin users)
-      const response = await fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      // Use NextAuth signIn with redirect disabled to handle errors
+      const res = await signIn('credentials', {
+        email,
+        password,
+        callbackUrl,
+        redirect: false,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Store the JWT token and user info
-        localStorage.setItem('auth-token', data.access_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        // Now sign in with NextAuth to create a session
-        const nextAuthResult = await signIn('credentials', {
-          email,
-          password,
-          redirect: false,
-        });
-        
-        if (nextAuthResult?.ok) {
-          // NextAuth session created successfully
-          router.push(callbackUrl);
-          // Reload the page after successful login
-          setTimeout(() => {
-            window.location.reload();
-          }, 100);
-          return;
+      
+      setLoading(false);
+      
+      if (res?.error) {
+        if (res.error === 'CredentialsSignin') {
+          setError('Email hoặc mật khẩu không đúng. Vui lòng thử lại.');
         } else {
-          // If NextAuth fails, still proceed with custom auth
-          console.log('NextAuth signin failed, but custom auth succeeded');
-          router.push(callbackUrl);
-          // Reload the page after successful login
-          setTimeout(() => {
-            window.location.reload();
-          }, 100);
-          return;
+          setError(res.error);
+          toast.error('Đăng nhập thất bại: ' + res.error);
         }
+      } else if (res?.ok) {
+        // Success - redirect to the callback URL or home
+        router.push(callbackUrl);
+      } else {
+        setError('Đăng nhập thất bại: Lỗi không xác định');
+        toast.error('Đăng nhập thất bại: Lỗi không xác định');
       }
     } catch (error) {
-      console.log('Custom API login failed, trying NextAuth...');
-    }
-
-    // Fallback to NextAuth for regular users
-    const res = await signIn('credentials', {
-      email,
-      password,
-      callbackUrl,
-      redirect: false,
-    });
-    
-    setLoading(false);
-    if (res?.error) {
-      if (res.error === 'CredentialsSignin') {
-        setError('Email hoặc mật khẩu không đúng. Vui lòng thử lại.');
-      } else {
-        setError(res.error);
-        toast.error('Đăng nhập thất bại: ' + res.error);
-      }
-    } else if (!res?.ok) {
+      setLoading(false);
       setError('Đăng nhập thất bại: Lỗi không xác định');
       toast.error('Đăng nhập thất bại: Lỗi không xác định');
-    } else if (res.url) {
-      router.push(res.url);
-      // Reload the page after successful login
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
     }
   };
 

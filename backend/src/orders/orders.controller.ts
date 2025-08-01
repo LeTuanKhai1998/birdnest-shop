@@ -78,6 +78,16 @@ export class OrdersController {
     throw new BadRequestException('Access denied');
   }
 
+  @Get('public/:id')
+  async findOnePublic(@Param('id') id: string) {
+    // Public endpoint for viewing order details (no authentication required)
+    const order = await this.ordersService.findOne(id);
+    if (!order) {
+      throw new BadRequestException('Order not found');
+    }
+    return order;
+  }
+
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, AdminGuard)
   async updateStatus(

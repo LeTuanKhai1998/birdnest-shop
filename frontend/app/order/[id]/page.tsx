@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Package, Truck, Clock, MapPin, User, FileText } from 'lucide-react';
@@ -49,7 +48,6 @@ export default function OrderConfirmationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = React.use(params);
-  const { isAuthenticated } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,21 +62,14 @@ export default function OrderConfirmationPage({
       try {
         setLoading(true);
         
-        // Prepare headers
+        // Prepare headers (no authentication needed for public endpoint)
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
         };
         
-        // Add authentication header if user is authenticated
-        if (isAuthenticated) {
-          const token = localStorage.getItem('auth-token');
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-          }
-        }
-        
-        // Use frontend API route for authenticated users, backend directly for guest orders
-        const endpoint = isAuthenticated ? `/api/orders/${id}` : `http://localhost:8080/api/orders/${id}`;
+        // Always use the public endpoint for viewing orders
+        // This allows both guest and registered users to view order details
+        const endpoint = `/api/orders/public/${id}`;
         const response = await fetch(endpoint, {
           headers,
         });
@@ -99,7 +90,7 @@ export default function OrderConfirmationPage({
     if (id) {
       fetchOrder();
     }
-  }, [id, isAuthenticated]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -177,16 +168,25 @@ export default function OrderConfirmationPage({
             <CheckCircle className="w-16 h-16 mx-auto animate-bounce-in" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Đặt Hàng Thành Công!
+            Chi Tiết Đơn Hàng
           </h1>
           <p className="text-lg text-red-100">
-            Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất có thể.
+            Thông tin chi tiết về đơn hàng của bạn
           </p>
         </div>
       </div>
 
       {/* Order Details */}
       <div className="container mx-auto px-4 py-12 max-w-4xl">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button asChild variant="outline" className="mb-4">
+            <Link href="/guest-orders">
+              ← Quay lại tìm kiếm đơn hàng
+            </Link>
+          </Button>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Order Summary */}
           <div className="lg:col-span-2 space-y-6">
@@ -320,11 +320,9 @@ export default function OrderConfirmationPage({
                   <Button asChild className="w-full bg-[#a10000] hover:bg-red-800">
                     <Link href="/products">Tiếp Tục Mua Sắm</Link>
                   </Button>
-                  {isAuthenticated && (
-                    <Button asChild variant="outline" className="w-full">
-                      <Link href="/dashboard/orders">Xem Tất Cả Đơn Hàng</Link>
-                    </Button>
-                  )}
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href="/guest-orders">Tìm Kiếm Đơn Hàng Khác</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

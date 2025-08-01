@@ -199,7 +199,9 @@ export default function CheckoutPage() {
     if (items.length === 0) {
       router.push('/cart');
     } else if (!isAuthenticated) {
-      router.push('/login');
+      // Preserve the current URL as callback URL
+      const currentUrl = window.location.pathname + window.location.search;
+      router.push(`/login?callbackUrl=${encodeURIComponent(currentUrl)}`);
     }
   }, [items.length, isAuthenticated, router]);
 
