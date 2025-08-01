@@ -34,6 +34,8 @@ import { Toaster } from '@/components/ui/toaster';
 import useSWR from 'swr';
 import { apiService } from '@/lib/api';
 import { Order, Product, User } from '@/lib/types';
+import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
+import { cn } from '@/lib/utils';
 import { isAfter, isBefore, format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { jsPDF } from 'jspdf';
@@ -687,7 +689,13 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
                         </div>
                         <div>
                           <p className="font-medium text-sm">{product.name}</p>
-                          <p className="text-xs text-gray-500">{product.category?.name || 'Không xác định'}</p>
+                          <p className={cn(
+                            "text-xs font-medium px-2 py-1 rounded-full inline-block",
+                            getCategoryBgColor(product.category?.name, product.category?.colorScheme),
+                            getCategoryTextColor(product.category?.name, product.category?.colorScheme)
+                          )}>
+                            {product.category?.name || 'Không xác định'}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">

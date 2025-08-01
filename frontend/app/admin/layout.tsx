@@ -19,6 +19,7 @@ import {
   MessageSquare,
   Menu,
   X,
+  Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,7 +30,8 @@ import Footer from '@/components/Footer';
 const navLinks = [
   { href: '/admin', label: 'Bảng điều khiển', icon: LayoutDashboard },
   { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingBag },
-  { href: '/admin/products', label: 'Sản phẩm', icon: LayoutDashboard },
+  { href: '/admin/products', label: 'Sản phẩm', icon: Box },
+  { href: '/admin/categories', label: 'Danh mục', icon: Tag },
   { href: '/admin/users', label: 'Khách hàng', icon: Users },
   { href: '/admin/settings', label: 'Cài đặt', icon: Settings },
 ];
@@ -60,6 +62,11 @@ const pageConfigs = {
     title: 'Cài Đặt Hệ Thống',
     description: 'Cấu hình cửa hàng và tùy chọn hệ thống',
     icon: Settings
+  },
+  '/admin/categories': {
+    title: 'Quản Lý Danh Mục',
+    description: 'Quản lý danh mục sản phẩm và màu sắc',
+    icon: Tag
   }
 };
 
@@ -109,7 +116,7 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
 
         {/* Sidebar */}
         <aside className={cn(
-          "flex flex-col w-64 bg-white dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700 py-6 px-4 gap-4 fixed top-0 left-0 h-[calc(100vh-200px)] z-20 overflow-y-auto transition-transform duration-300 ease-in-out",
+          "flex flex-col w-64 bg-white dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700 py-6 px-4 gap-4 fixed top-0 left-0 h-screen z-20 overflow-y-auto transition-transform duration-300 ease-in-out",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}>
           <div className="mb-8 flex items-center gap-2 text-2xl font-bold text-red-700">
@@ -176,9 +183,6 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
           </div>
           
           <div className="flex-1"></div>
-          
-          {/* Bottom spacing to prevent touching footer */}
-          <div className="h-6"></div>
         </aside>
         
         {/* Mobile backdrop */}
@@ -218,10 +222,10 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
         </div>
       </div>
       
-      {/* Footer - Top Layer */}
-      <div className="relative z-10">
+      {/* Footer - Hidden */}
+      {/* <div className="relative z-10">
         <Footer />
-      </div>
+      </div> */}
       
       {/* Toast Notifications */}
       <Toaster />

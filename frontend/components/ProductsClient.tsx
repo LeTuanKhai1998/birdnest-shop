@@ -27,6 +27,8 @@ import { PRODUCTS_CONSTANTS } from '@/lib/constants';
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { apiService } from '@/lib/api';
+import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
+import { cn } from '@/lib/utils';
 
 export default function ProductsClient({ products }: { products: Product[] }) {
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
@@ -35,7 +37,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
     maximumFractionDigits: 0,
   });
   
-  const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string; colorScheme?: string }>>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedWeights, setSelectedWeights] = useState<number[]>([]);
   const [price, setPrice] = useState<number>(PRODUCTS_CONSTANTS.filters.priceRange.max);
@@ -180,7 +182,13 @@ export default function ProductsClient({ products }: { products: Product[] }) {
                   checked={selectedCategories.includes(category.name)}
                   onCheckedChange={() => handleCategoryChange(category.name)}
                 />
-                <span className="text-sm font-medium text-gray-800">{category.name}</span>
+                <span className={cn(
+                  "text-sm font-medium px-2 py-1 rounded-full",
+                  getCategoryBgColor(category.name, category.colorScheme),
+                  getCategoryTextColor(category.name, category.colorScheme)
+                )}>
+                  {category.name}
+                </span>
               </label>
             ))}
           </div>

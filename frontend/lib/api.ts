@@ -515,6 +515,23 @@ export const apiService = {
     }
   },
 
+  updateCategoryColor: async (categoryId: string, colorScheme: string | null) => {
+    try {
+      const response = await api.patch(`/products/categories/${categoryId}/color`, { colorScheme });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update category color');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating category color:', error);
+      throw error;
+    }
+  },
+
   // Order methods
   getOrders: async () => {
     try {

@@ -8,23 +8,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useState, useMemo, useEffect } from 'react';
 import { 
-  Upload, 
   Trash2, 
   Plus, 
   Search, 
-  Filter, 
   RefreshCw, 
   AlertCircle, 
   CheckCircle2,
   Package,
   Edit,
-  Eye,
-  MoreHorizontal,
   Image as ImageIcon,
   Star,
   DollarSign,
   Hash,
-  Tag,
   X,
   Save,
   TrendingUp,
@@ -58,7 +53,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Image from 'next/image';
-import useSWR from 'swr';
+import useSWR, { mutate as globalMutate } from 'swr';
 import { apiService } from '@/lib/api';
 import type { Product } from '@/lib/types';
 import { getFirstImageUrl, cn } from '@/lib/utils';
@@ -66,6 +61,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import type { ProductImage } from '@/lib/types';
+import { getCategoryColor } from '@/lib/category-colors';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Tên sản phẩm là bắt buộc'),
@@ -131,17 +127,7 @@ interface AdminTableRowData {
   _original: Product;
 }
 
-// Category color mapping
-const CATEGORY_COLORS = {
-  'Tổ yến tinh chế': 'bg-blue-100 text-blue-800 border-blue-200',
-  'Tổ yến thô': 'bg-green-100 text-green-800 border-green-200',
-  'Tổ yến đã làm sạch lông': 'bg-purple-100 text-purple-800 border-purple-200',
-  'Combo quà tặng': 'bg-orange-100 text-orange-800 border-orange-200',
-  'Tổ yến cao cấp': 'bg-red-100 text-red-800 border-red-200',
-  'Tổ yến thường': 'bg-gray-100 text-gray-800 border-gray-200',
-  'Tổ yến đặc biệt': 'bg-pink-100 text-pink-800 border-pink-200',
-  'Tổ yến hảo hạng': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-};
+
 
 export default function AdminProductsPage() {
   const { toast } = useToast();
@@ -152,6 +138,8 @@ export default function AdminProductsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [images, setImages] = useState<{ url: string; isPrimary?: boolean }[]>([]);
+  const [cacheKey, setCacheKey] = useState<string>(`admin-products-${Date.now()}`);
+  const [statsCacheKey, setStatsCacheKey] = useState<string>(`admin-product-stats-${Date.now()}`);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -182,8 +170,14 @@ export default function AdminProductsPage() {
     resolver: zodResolver(productSchema),
   });
 
-  const { data: products, isLoading, mutate } = useSWR('admin-products', () => apiService.getProducts());
-  const { data: productStats, isLoading: statsLoading } = useSWR('admin-product-stats', () => apiService.getProductStats());
+  const { data: products, isLoading, mutate } = useSWR(cacheKey, () => apiService.getProducts(), {
+    refreshInterval: 0, // Disable auto-refresh
+    revalidateOnFocus: false, // Disable revalidation on focus
+  });
+  const { data: productStats, isLoading: statsLoading } = useSWR(statsCacheKey, () => apiService.getProductStats(), {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  });
   
 
 
@@ -546,9 +540,24 @@ export default function AdminProductsPage() {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await mutate();
+      // Clear all SWR cache and force revalidation
+      await globalMutate(() => true, undefined, { revalidate: true });
+      
+      // Also clear specific keys
+      await Promise.all([
+        mutate(undefined, { revalidate: true }),
+        globalMutate('admin-product-stats', undefined, { revalidate: true })
+      ]);
+      
+      // Force a small delay to ensure cache is cleared
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Update cache keys to force fresh data fetch
+      setCacheKey(`admin-products-${Date.now()}`);
+      setStatsCacheKey(`admin-product-stats-${Date.now()}`);
+      
     } catch (error) {
-      console.error('Error refreshing products:', error);
+      // Error handling for refresh operation
     } finally {
       setRefreshing(false);
     }
@@ -597,6 +606,7 @@ export default function AdminProductsPage() {
           <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           Làm mới
         </Button>
+
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Thêm sản phẩm
@@ -790,8 +800,7 @@ export default function AdminProductsPage() {
                           variant="secondary" 
                           className={cn(
                             "text-xs border",
-                            CATEGORY_COLORS[product.category?.name as keyof typeof CATEGORY_COLORS] || 
-                            "bg-gray-100 text-gray-800 border-gray-200"
+                            getCategoryColor(product.category?.name, product.category?.colorScheme)
                           )}
                         >
                           {product.category?.name || 'N/A'}
@@ -1078,43 +1087,90 @@ export default function AdminProductsPage() {
 
 
       {/* Product Form Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {editId ? (
-                <>
-                  <Edit className="w-5 h-5" />
-                  Chỉnh sửa sản phẩm
-                </>
-              ) : (
-                <>
-                  <Plus className="w-5 h-5" />
-                  Thêm sản phẩm mới
-                </>
-              )}
-            </DialogTitle>
-            <DialogDescription>
-              {editId ? 'Cập nhật thông tin sản phẩm hiện có' : 'Thêm sản phẩm mới vào hệ thống'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {loadingProduct ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Đang tải thông tin sản phẩm...</p>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                {/* Product Images Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5 text-gray-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">Hình ảnh sản phẩm</h3>
+      {dialogOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    {editId ? (
+                      <Edit className="w-5 h-5" />
+                    ) : (
+                      <Plus className="w-5 h-5" />
+                    )}
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div>
+                    <h2 className="text-xl font-black text-white">
+                      {editId ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
+                    </h2>
+                    <p className="text-white font-medium">
+                      {editId ? 'Cập nhật thông tin sản phẩm hiện có' : 'Thêm sản phẩm mới vào hệ thống'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setDialogOpen(false)}
+                  className="text-white hover:text-white/80 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+                        </div>
+            
+            {/* Content */}
+            <div className="max-h-[calc(90vh-120px)] overflow-y-auto">
+            {loadingProduct ? (
+              <div className="p-8">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                      <Card key={i}>
+                        <CardContent className="p-4">
+                          <Skeleton className="h-4 w-24 mb-2" />
+                          <Skeleton className="h-6 w-16" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  <Card>
+                    <CardContent className="p-4">
+                      <Skeleton className="h-4 w-32 mb-4" />
+                      <div className="space-y-3">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <Skeleton className="h-12 w-12 rounded-lg" />
+                            <div className="flex-1 space-y-2">
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-3 w-2/3" />
+                            </div>
+                            <Skeleton className="h-4 w-16" />
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+                {/* Product Images Section */}
+                <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
+                  <CardHeader className="pt-4">
+                    <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4 text-blue-600" />
+                      Hình ảnh sản phẩm
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <ImageUpload
                       endpoint="productImageUploader"
                       onUpload={(urls) => {
@@ -1130,219 +1186,257 @@ export default function AdminProductsPage() {
                       className="mb-4"
                     />
                   
-                  {/* Image Preview */}
-                  {images.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-                      {images.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={image.url}
-                            alt={`Product image ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => handleSetPrimary(image.url)}
-                                disabled={image.isPrimary}
-                              >
-                                <Star className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => handleRemoveImage(image.url)}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
+                    {/* Image Preview */}
+                    {images.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                        {images.map((image, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={image.url}
+                              alt={`Product image ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => handleSetPrimary(image.url)}
+                                  disabled={image.isPrimary}
+                                >
+                                  <Star className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => handleRemoveImage(image.url)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
+                            {image.isPrimary && (
+                              <div className="absolute top-1 left-1">
+                                <Badge className="text-xs bg-primary text-primary-foreground">
+                                  Primary
+                                </Badge>
+                              </div>
+                            )}
                           </div>
-                          {image.isPrimary && (
-                            <div className="absolute top-1 left-1">
-                              <Badge className="text-xs bg-primary text-primary-foreground">
-                                Primary
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Basic Information */}
+                <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
+                  <CardHeader className="pt-4">
+                    <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Package className="w-4 h-4 text-green-600" />
+                      Thông tin cơ bản
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pb-6">
+                    {/* Product Name */}
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium mb-2 text-gray-700">
+                        Tên sản phẩm
+                      </label>
+                      <Input
+                        id="name"
+                        {...register('name')}
+                        placeholder="Nhập tên sản phẩm"
+                        className="w-full"
+                      />
+                      {errors.name && (
+                        <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+                      )}
                     </div>
-                  )}
-                  </div>
-                </div>
 
-                {/* Product Name */}
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-2 text-gray-700">
-                    Tên sản phẩm
-                  </label>
-                  <Input
-                    id="name"
-                    {...register('name')}
-                    placeholder="Nhập tên sản phẩm"
-                    className="w-full"
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
-                  )}
-                </div>
+                    {/* Description */}
+                    <div>
+                      <label htmlFor="description" className="block text-sm font-medium mb-2 text-gray-700">
+                        Mô tả
+                      </label>
+                      <Textarea
+                        id="description"
+                        {...register('description')}
+                        placeholder="Nhập mô tả sản phẩm"
+                        rows={4}
+                        className="w-full"
+                      />
+                      {errors.description && (
+                        <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
+                      )}
+                    </div>
 
-                {/* Description */}
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium mb-2 text-gray-700">
-                    Mô tả
-                  </label>
-                  <Textarea
-                    id="description"
-                    {...register('description')}
-                    placeholder="Nhập mô tả sản phẩm"
-                    rows={4}
-                    className="w-full"
-                  />
-                  {errors.description && (
-                    <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
-                  )}
-                </div>
+                    {/* Category */}
+                    <div>
+                      <label htmlFor="category" className="block text-sm font-medium mb-2 text-gray-700">
+                        Danh mục
+                      </label>
+                      <select
+                        id="category"
+                        {...register('categoryId')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Chọn danh mục</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.categoryId && (
+                        <p className="text-sm text-red-600 mt-1">{errors.categoryId.message}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* Price and Stock */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="price" className="block text-sm font-medium mb-2 text-gray-700">
-                      Giá (VND)
-                    </label>
-                    <Input
-                      id="price"
-                      {...register('price')}
-                      placeholder="100000"
-                      className="w-full"
-                    />
-                    {errors.price && (
-                      <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="stock" className="block text-sm font-medium mb-2 text-gray-700">
-                      Số lượng tồn kho
-                    </label>
-                    <Input
-                      id="stock"
-                      {...register('stock')}
-                      placeholder="10"
-                      className="w-full"
-                    />
-                    {errors.stock && (
-                      <p className="text-sm text-red-600 mt-1">{errors.stock.message}</p>
-                    )}
-                  </div>
-                </div>
+                {/* Pricing and Inventory */}
+                <Card className="border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
+                  <CardHeader className="pt-4">
+                    <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-purple-600" />
+                      Giá cả và tồn kho
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pb-6">
+                    {/* Price and Stock */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="price" className="block text-sm font-medium mb-2 text-gray-700">
+                          Giá (VND)
+                        </label>
+                        <Input
+                          id="price"
+                          {...register('price')}
+                          placeholder="100000"
+                          className="w-full"
+                        />
+                        {errors.price && (
+                          <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="stock" className="block text-sm font-medium mb-2 text-gray-700">
+                          Số lượng tồn kho
+                        </label>
+                        <Input
+                          id="stock"
+                          {...register('stock')}
+                          placeholder="10"
+                          className="w-full"
+                        />
+                        {errors.stock && (
+                          <p className="text-sm text-red-600 mt-1">{errors.stock.message}</p>
+                        )}
+                      </div>
+                    </div>
 
-                {/* Category */}
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium mb-2 text-gray-700">
-                    Danh mục
-                  </label>
-                  <select
-                    id="category"
-                    {...register('categoryId')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Chọn danh mục</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.categoryId && (
-                    <p className="text-sm text-red-600 mt-1">{errors.categoryId.message}</p>
-                  )}
-                </div>
+                    {/* Weight and Discount */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="weight" className="block text-sm font-medium mb-2 text-gray-700">
+                          Trọng lượng (g)
+                        </label>
+                        <Input
+                          id="weight"
+                          {...register('weight')}
+                          placeholder="100"
+                          className="w-full"
+                        />
+                        {errors.weight && (
+                          <p className="text-sm text-red-600 mt-1">{errors.weight.message}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="discount" className="block text-sm font-medium mb-2 text-gray-700">
+                          Giảm giá (%)
+                        </label>
+                        <Input
+                          id="discount"
+                          {...register('discount')}
+                          placeholder="0"
+                          className="w-full"
+                        />
+                        {errors.discount && (
+                          <p className="text-sm text-red-600 mt-1">{errors.discount.message}</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* Weight and Discount */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="weight" className="block text-sm font-medium mb-2 text-gray-700">
-                      Trọng lượng (g)
-                    </label>
-                    <Input
-                      id="weight"
-                      {...register('weight')}
-                      placeholder="100"
-                      className="w-full"
-                    />
-                    {errors.weight && (
-                      <p className="text-sm text-red-600 mt-1">{errors.weight.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="discount" className="block text-sm font-medium mb-2 text-gray-700">
-                      Giảm giá (%)
-                    </label>
-                    <Input
-                      id="discount"
-                      {...register('discount')}
-                      placeholder="0"
-                      className="w-full"
-                    />
-                    {errors.discount && (
-                      <p className="text-sm text-red-600 mt-1">{errors.discount.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Active Status */}
-                <div>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      {...register('isActive')}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700">Sản phẩm đang hoạt động</span>
-                  </label>
-                  {errors.isActive && (
-                    <p className="text-sm text-red-600 mt-1">{errors.isActive.message}</p>
-                  )}
-                </div>
+                {/* Status and Actions */}
+                <Card className="border-l-4 border-l-orange-500 hover:shadow-md transition-shadow">
+                  <CardHeader className="pt-4">
+                    <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-orange-600" />
+                      Trạng thái và hành động
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pb-6">
+                    {/* Active Status */}
+                    <div>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          {...register('isActive')}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Sản phẩm đang hoạt động</span>
+                      </label>
+                      {errors.isActive && (
+                        <p className="text-sm text-red-600 mt-1">{errors.isActive.message}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Form Actions */}
-                <DialogFooter className="flex justify-end gap-3 pt-4">
+                <div className="flex items-center justify-between pt-4 border-t">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setDialogOpen(false)}
+                    className="flex items-center gap-2"
                   >
+                    <X className="w-4 h-4" />
                     Hủy
                   </Button>
                   <Button
                     type="submit"
                     disabled={isSubmitting}
+                    className="flex items-center gap-2"
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
                         Đang lưu...
                       </>
                     ) : (
                       <>
-                        <Save className="w-4 h-4 mr-2" />
+                        <Save className="w-4 h-4" />
                         {editId ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm'}
                       </>
                     )}
                   </Button>
-                </DialogFooter>
+                </div>
               </form>
             )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       {deleteId && (
@@ -1387,13 +1481,13 @@ export default function AdminProductsPage() {
       <Dialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
+            <h2 className="flex items-center gap-2 text-red-600">
               <X className="w-5 h-5" />
               Vô hiệu hóa sản phẩm
-            </DialogTitle>
-            <DialogDescription>
+            </h2>
+            <p className="text-gray-600">
               Bạn có chắc chắn muốn vô hiệu hóa sản phẩm này? Sản phẩm sẽ không hiển thị cho khách hàng và không thể mua được. Bạn có thể kích hoạt lại bất cứ lúc nào.
-            </DialogDescription>
+            </p>
           </DialogHeader>
           
           <div className="flex items-start gap-3 py-4">

@@ -42,6 +42,7 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  colorScheme?: string;
   createdAt: string;
   updatedAt: string;
   _count?: {

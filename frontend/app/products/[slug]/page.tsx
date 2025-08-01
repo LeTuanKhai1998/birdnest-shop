@@ -30,6 +30,8 @@ import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
+import { cn } from '@/lib/utils';
 
 // Adapter function to convert API product to component product
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,7 +93,11 @@ function Breadcrumbs({ product }: { product: Product }) {
           <ChevronRight className="w-4 h-4" />
           <Link 
             href={`/products?categoryId=${product.category.id}`} 
-            className="hover:text-[#a10000] transition-colors"
+            className={cn(
+              "hover:text-[#a10000] transition-colors px-2 py-1 rounded-full",
+              getCategoryBgColor(product.category.name, product.category.colorScheme),
+              getCategoryTextColor(product.category.name, product.category.colorScheme)
+            )}
           >
             {product.category.name}
           </Link>
@@ -440,7 +446,11 @@ export default function ProductDetailPage({
                           <Package className="w-4 h-4" />
                           Danh mục:
                         </span>
-                        <span className="text-sm text-[#a10000] font-medium bg-red-50 px-3 py-1 rounded-full border border-red-200">
+                        <span className={cn(
+                          "text-sm font-medium px-3 py-1 rounded-full border",
+                          getCategoryBgColor(product.category.name, product.category.colorScheme),
+                          getCategoryTextColor(product.category.name, product.category.colorScheme)
+                        )}>
                           {product.category.name}
                         </span>
                       </div>

@@ -10,7 +10,8 @@ import { useWishlist } from '@/lib/wishlist-store';
 import { useSession } from 'next-auth/react';
 import { useCurrencyFormat } from '@/lib/currency-utils';
 import { Product, Review } from '@/lib/types';
-import { getFirstImageUrl } from '@/lib/utils';
+import { getFirstImageUrl, cn } from '@/lib/utils';
+import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
 
 type ProductCardProps = { product: Product; onClick?: () => void };
 
@@ -120,7 +121,11 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 
                 {/* Product Category */}
                 {product.category && (
-                  <div className="text-xs text-[#a10000] font-medium mb-0.5 sm:mb-1 lg:mb-2 bg-red-50 px-2 py-1 rounded-full inline-block">
+                  <div className={cn(
+                    "text-xs font-medium mb-0.5 sm:mb-1 lg:mb-2 px-2 py-1 rounded-full inline-block",
+                    getCategoryBgColor(product.category.name, product.category.colorScheme),
+                    getCategoryTextColor(product.category.name, product.category.colorScheme)
+                  )}>
                     {product.category.name}
                   </div>
                 )}

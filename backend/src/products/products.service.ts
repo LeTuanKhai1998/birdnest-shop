@@ -209,6 +209,19 @@ export class ProductsService {
     });
   }
 
+  async updateCategoryColor(categoryId: string, colorScheme: string | null) {
+    const updatedCategory = await this.prisma.category.update({
+      where: { id: categoryId },
+      data: { colorScheme },
+    });
+
+    // Invalidate cache for categories
+    this.cacheService.deletePattern('categories:*');
+    this.cacheService.deletePattern('products:*');
+
+    return updatedCategory;
+  }
+
   async getStats() {
     // Try to get from cache first
     const cacheKey = 'products:stats';

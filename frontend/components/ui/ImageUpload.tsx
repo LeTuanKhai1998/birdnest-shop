@@ -84,7 +84,7 @@ export function ImageUpload({
 
   return (
     <Card className={className}>
-      <CardHeader>
+      <CardHeader className="pt-4">
         <CardTitle className="flex items-center gap-2">
           <ImageIcon className="h-5 w-5" />
           {title}

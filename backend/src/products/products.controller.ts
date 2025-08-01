@@ -13,6 +13,7 @@ import {
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { UpdateCategoryColorDto } from './dto/update-category-color.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
 
@@ -109,5 +110,14 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   async remove(@Param('id') id: string) {
     return this.productsService.delete(id);
+  }
+
+  @Patch('categories/:id/color')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async updateCategoryColor(
+    @Param('id') id: string,
+    @Body() updateCategoryColorDto: UpdateCategoryColorDto,
+  ) {
+    return this.productsService.updateCategoryColor(id, updateCategoryColorDto.colorScheme || null);
   }
 }
