@@ -1354,6 +1354,65 @@ enum RecipientType {
 
 ---
 
+### 27. Order Detail Page `/dashboard/orders/[orderId]`
+
+- [ ] **Route Setup**
+  - Create dynamic route: `app/dashboard/orders/[orderId]/page.tsx`
+  - Protect page with auth middleware:
+    - Only allow logged-in user who owns the order
+    - Or allow admin access
+
+- [ ] **Data Fetching**
+  - Use:
+    ```ts
+    prisma.order.findUnique({
+      where: { id: orderId },
+      include: { orderItems: { include: { product: true } } }
+    })
+    ```
+  - Validate: `order.userId === session.user.id || session.user.role === 'ADMIN'`
+
+- [ ] **Header Section**
+  - Display:
+    - Order ID
+    - Order Date (formatted)
+    - Status badge (Pending / Paid / Shipped / Cancelled)
+    - Payment Method
+    - Customer info: name, email, phone
+  - Add link: "← Back to orders"
+
+- [ ] **Shipping Info**
+  - Card UI block with:
+    - Full address
+    - Icons for location, phone
+    - Notes if available
+
+- [ ] **Order Items**
+  - Loop over `orderItems`
+    - Show: product thumbnail, name, quantity, unit price, subtotal
+  - Use responsive grid or table
+  - Display:
+    - Subtotal
+    - Tax (if any)
+    - Shipping Fee
+    - Total
+
+- [ ] **Admin Controls (if admin)**
+  - Show dropdown to update order status
+  - Option to resend invoice email
+
+- [ ] **Style**
+  - Use Tailwind + Shadcn UI components
+  - Responsive design on mobile/tablet
+  - Status badges with color variants
+
+- [ ] **Optional Enhancements**
+  - Timeline for order status (Placed → Shipped → Delivered)
+  - Show invoice PDF download
+
+
+---
+
 ### 20. CI/CD and Deployment Readiness [X]
 
 - [X] Setup `.dockerignore`, `.env.example` files
