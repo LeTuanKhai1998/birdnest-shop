@@ -31,7 +31,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { useRef } from 'react';
 import { AdminTable } from '@/components/ui/AdminTable';
@@ -128,6 +131,18 @@ interface AdminTableRowData {
   _original: Product;
 }
 
+// Category color mapping
+const CATEGORY_COLORS = {
+  'Tổ yến tinh chế': 'bg-blue-100 text-blue-800 border-blue-200',
+  'Tổ yến thô': 'bg-green-100 text-green-800 border-green-200',
+  'Tổ yến đã làm sạch lông': 'bg-purple-100 text-purple-800 border-purple-200',
+  'Combo quà tặng': 'bg-orange-100 text-orange-800 border-orange-200',
+  'Tổ yến cao cấp': 'bg-red-100 text-red-800 border-red-200',
+  'Tổ yến thường': 'bg-gray-100 text-gray-800 border-gray-200',
+  'Tổ yến đặc biệt': 'bg-pink-100 text-pink-800 border-pink-200',
+  'Tổ yến hảo hạng': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+};
+
 export default function AdminProductsPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -141,6 +156,8 @@ export default function AdminProductsPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deactivateId, setDeactivateId] = useState<string | null>(null);
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
@@ -149,6 +166,10 @@ export default function AdminProductsPage() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Sorting state
+  const [sortField, setSortField] = useState<'price' | 'quantity' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Form setup
   const {
@@ -182,17 +203,59 @@ export default function AdminProductsPage() {
     fetchCategories();
   }, []);
 
-  // Filter products
+  // Handle sorting
+  const handleSort = (field: 'price' | 'quantity') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Get sort icon
+  const getSortIcon = (field: 'price' | 'quantity') => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-4 h-4" />;
+    }
+    return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />;
+  };
+
+  // Filter and sort products
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    return products.filter((product: Product) => {
+    
+    let filtered = products.filter((product: Product) => {
       const matchesSearch = !searchValue || 
         product.name.toLowerCase().includes(searchValue.toLowerCase()) ||
         product.description.toLowerCase().includes(searchValue.toLowerCase());
       const matchesCategory = !categoryFilter || product.category?.name === categoryFilter;
       return matchesSearch && matchesCategory;
     });
-  }, [products, searchValue, categoryFilter]);
+
+    // Apply sorting
+    if (sortField) {
+      filtered.sort((a: Product, b: Product) => {
+        let aValue: number, bValue: number;
+        
+        if (sortField === 'price') {
+          aValue = parseFloat(a.price) || 0;
+          bValue = parseFloat(b.price) || 0;
+        } else {
+          aValue = a.quantity || 0;
+          bValue = b.quantity || 0;
+        }
+
+        if (sortDirection === 'asc') {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      });
+    }
+
+    return filtered;
+  }, [products, searchValue, categoryFilter, sortField, sortDirection]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -418,28 +481,66 @@ export default function AdminProductsPage() {
   };
 
   const handleToggleActive = async (product: Product) => {
+    // If activating, proceed immediately
+    if (!product.isActive) {
+      try {
+        await apiService.updateProduct(product.id, {
+          isActive: true,
+        });
+        
+        await mutate();
+        
+        toast({
+          title: "Sản phẩm đã kích hoạt",
+          description: "Sản phẩm đã được kích hoạt thành công và sẽ hiển thị cho khách hàng",
+          variant: "success",
+        });
+      } catch (error) {
+        console.error('Error activating product:', error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể kích hoạt sản phẩm. Vui lòng thử lại.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // If deactivating, show confirmation dialog
+      setDeactivateId(product.id);
+      setDeactivateDialogOpen(true);
+    }
+  };
+
+  const handleConfirmDeactivate = async () => {
+    if (!deactivateId) return;
+    
     try {
-      await apiService.updateProduct(product.id, {
-        isActive: !product.isActive,
+      await apiService.updateProduct(deactivateId, {
+        isActive: false,
       });
       
       await mutate();
       
       toast({
-        title: product.isActive ? "Sản phẩm đã vô hiệu hóa" : "Sản phẩm đã kích hoạt",
-        description: product.isActive 
-          ? "Sản phẩm đã được vô hiệu hóa thành công và sẽ không hiển thị cho khách hàng" 
-          : "Sản phẩm đã được kích hoạt thành công và sẽ hiển thị cho khách hàng",
+        title: "Sản phẩm đã vô hiệu hóa",
+        description: "Sản phẩm đã được vô hiệu hóa thành công và sẽ không hiển thị cho khách hàng",
         variant: "success",
       });
     } catch (error) {
-      console.error('Error toggling product status:', error);
+      console.error('Error deactivating product:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể thay đổi trạng thái sản phẩm. Vui lòng thử lại.",
+        description: "Không thể vô hiệu hóa sản phẩm. Vui lòng thử lại.",
         variant: "destructive",
       });
+    } finally {
+      setDeactivateDialogOpen(false);
+      setDeactivateId(null);
     }
+  };
+
+  const handleCancelDeactivate = () => {
+    setDeactivateDialogOpen(false);
+    setDeactivateId(null);
   };
 
   const handleRefresh = async () => {
@@ -640,14 +741,30 @@ export default function AdminProductsPage() {
                   <tr className="border-b">
                     <th className="text-left p-4 font-medium text-gray-700">Sản phẩm</th>
                     <th className="text-left p-4 font-medium text-gray-700">Danh mục</th>
-                    <th className="text-left p-4 font-medium text-gray-700">Giá</th>
-                    <th className="text-left p-4 font-medium text-gray-700">Tồn kho</th>
+                    <th className="text-left p-4 font-medium text-gray-700">
+                      <button
+                        onClick={() => handleSort('price')}
+                        className="flex items-center gap-1 hover:text-gray-900 transition-colors"
+                      >
+                        Giá
+                        {getSortIcon('price')}
+                      </button>
+                    </th>
+                    <th className="text-left p-4 font-medium text-gray-700">
+                      <button
+                        onClick={() => handleSort('quantity')}
+                        className="flex items-center gap-1 hover:text-gray-900 transition-colors"
+                      >
+                        Tồn kho
+                        {getSortIcon('quantity')}
+                      </button>
+                    </th>
                     <th className="text-left p-4 font-medium text-gray-700">Trạng thái</th>
                     <th className="text-right p-4 font-medium text-gray-700 whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
-                                  <tbody>
-                    {paginatedProducts.map((product: Product) => (
+                <tbody>
+                  {paginatedProducts.map((product: Product) => (
                     <tr key={product.id} className="border-b hover:bg-gray-50 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
@@ -669,7 +786,14 @@ export default function AdminProductsPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge 
+                          variant="secondary" 
+                          className={cn(
+                            "text-xs border",
+                            CATEGORY_COLORS[product.category?.name as keyof typeof CATEGORY_COLORS] || 
+                            "bg-gray-100 text-gray-800 border-gray-200"
+                          )}
+                        >
                           {product.category?.name || 'N/A'}
                         </Badge>
                       </td>
@@ -703,22 +827,25 @@ export default function AdminProductsPage() {
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
-                            variant={product.isActive ? "outline" : "default"}
+                            variant="ghost"
                             size="sm"
                             onClick={() => handleToggleActive(product)}
                             className={cn(
-                              "whitespace-nowrap",
-                              product.isActive && "bg-[#97030B] text-white border-[#97030B] hover:bg-[#7a0209] hover:border-[#7a0209]"
+                              "whitespace-nowrap transition-all duration-200 font-medium",
+                              product.isActive 
+                                ? "text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300" 
+                                : "text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200 hover:border-green-300"
                             )}
+                            title={product.isActive ? "Vô hiệu hóa sản phẩm" : "Kích hoạt sản phẩm"}
                           >
                             {product.isActive ? (
                               <>
-                                <X className="w-4 h-4 mr-1" />
+                                <X className="w-4 h-4 mr-1.5" />
                                 Vô hiệu hóa
                               </>
                             ) : (
                               <>
-                                <CheckCircle2 className="w-4 h-4 mr-1" />
+                                <CheckCircle2 className="w-4 h-4 mr-1.5" />
                                 Kích hoạt
                               </>
                             )}
@@ -731,222 +858,224 @@ export default function AdminProductsPage() {
               </table>
             </div>
           )}
+          
+          {/* Enhanced Pagination Controls - Inside Card */}
+          {totalItems > 0 && (
+            <div className="mt-8">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                {/* Page Info */}
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <span>
+                    Hiển thị <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> - <span className="font-medium">{Math.min(currentPage * pageSize, totalItems)}</span> trong tổng số <span className="font-medium">{totalItems}</span> sản phẩm
+                  </span>
+                  
+                  {/* Page Size Selector */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500">Hiển thị:</span>
+                    <select 
+                      value={pageSize} 
+                      onChange={(e) => {
+                        setPageSize(parseInt(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="w-16 h-8 text-sm border border-gray-300 rounded px-2"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Enhanced Pagination Navigation */}
+                <div className="flex items-center gap-1">
+                  {/* First Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 p-0"
+                    title="Trang đầu"
+                  >
+                    <ChevronsLeft className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Previous Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 p-0"
+                    title="Trang trước"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Page Numbers with Ellipsis */}
+                  <div className="flex items-center gap-1">
+                    {(() => {
+                      const pages = [];
+                      const maxVisible = 5;
+                      
+                      if (totalPages <= maxVisible) {
+                        // Show all pages if total is small
+                        for (let i = 1; i <= totalPages; i++) {
+                          pages.push(
+                            <Button
+                              key={i}
+                              variant={currentPage === i ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(i)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              {i}
+                            </Button>
+                          );
+                        }
+                      } else {
+                        // Show smart pagination with ellipsis
+                        if (currentPage <= 3) {
+                          // Near start
+                          for (let i = 1; i <= 4; i++) {
+                            pages.push(
+                              <Button
+                                key={i}
+                                variant={currentPage === i ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(i)}
+                                className="h-8 w-8 p-0 text-sm font-medium"
+                              >
+                                {i}
+                              </Button>
+                            );
+                          }
+                          pages.push(
+                            <span key="ellipsis1" className="px-2 text-gray-400">...</span>
+                          );
+                          pages.push(
+                            <Button
+                              key={totalPages}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(totalPages)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              {totalPages}
+                            </Button>
+                          );
+                        } else if (currentPage >= totalPages - 2) {
+                          // Near end
+                          pages.push(
+                            <Button
+                              key={1}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(1)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              1
+                            </Button>
+                          );
+                          pages.push(
+                            <span key="ellipsis2" className="px-2 text-gray-400">...</span>
+                          );
+                          for (let i = totalPages - 3; i <= totalPages; i++) {
+                            pages.push(
+                              <Button
+                                key={i}
+                                variant={currentPage === i ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(i)}
+                                className="h-8 w-8 p-0 text-sm font-medium"
+                              >
+                                {i}
+                              </Button>
+                            );
+                          }
+                        } else {
+                          // Middle
+                          pages.push(
+                            <Button
+                              key={1}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(1)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              1
+                            </Button>
+                          );
+                          pages.push(
+                            <span key="ellipsis3" className="px-2 text-gray-400">...</span>
+                          );
+                          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                            pages.push(
+                              <Button
+                                key={i}
+                                variant={currentPage === i ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(i)}
+                                className="h-8 w-8 p-0 text-sm font-medium"
+                              >
+                                {i}
+                              </Button>
+                            );
+                          }
+                          pages.push(
+                            <span key="ellipsis4" className="px-2 text-gray-400">...</span>
+                          );
+                          pages.push(
+                            <Button
+                              key={totalPages}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(totalPages)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              {totalPages}
+                            </Button>
+                          );
+                        }
+                      }
+                      
+                      return pages;
+                    })()}
+                  </div>
+                  
+                  {/* Next Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 p-0"
+                    title="Trang tiếp"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Last Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 p-0"
+                    title="Trang cuối"
+                  >
+                    <ChevronsRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Enhanced Pagination Controls */}
-      {totalItems > 0 && (
-        <div className="mt-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Page Info */}
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <span>
-                Hiển thị <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> - <span className="font-medium">{Math.min(currentPage * pageSize, totalItems)}</span> trong tổng số <span className="font-medium">{totalItems}</span> sản phẩm
-              </span>
-              
-              {/* Page Size Selector */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500">Hiển thị:</span>
-                <select 
-                  value={pageSize} 
-                  onChange={(e) => {
-                    setPageSize(parseInt(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="w-16 h-8 text-sm border border-gray-300 rounded px-2"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-            </div>
-            
-            {/* Enhanced Pagination Navigation */}
-            <div className="flex items-center gap-1">
-              {/* First Page */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="h-8 w-8 p-0"
-                title="Trang đầu"
-              >
-                <ChevronsLeft className="w-4 h-4" />
-              </Button>
-              
-              {/* Previous Page */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="h-8 w-8 p-0"
-                title="Trang trước"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              
-              {/* Page Numbers with Ellipsis */}
-              <div className="flex items-center gap-1">
-                {(() => {
-                  const pages = [];
-                  const maxVisible = 5;
-                  
-                  if (totalPages <= maxVisible) {
-                    // Show all pages if total is small
-                    for (let i = 1; i <= totalPages; i++) {
-                      pages.push(
-                        <Button
-                          key={i}
-                          variant={currentPage === i ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentPage(i)}
-                          className="h-8 w-8 p-0 text-sm font-medium"
-                        >
-                          {i}
-                        </Button>
-                      );
-                    }
-                  } else {
-                    // Show smart pagination with ellipsis
-                    if (currentPage <= 3) {
-                      // Near start
-                      for (let i = 1; i <= 4; i++) {
-                        pages.push(
-                          <Button
-                            key={i}
-                            variant={currentPage === i ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(i)}
-                            className="h-8 w-8 p-0 text-sm font-medium"
-                          >
-                            {i}
-                          </Button>
-                        );
-                      }
-                      pages.push(
-                        <span key="ellipsis1" className="px-2 text-gray-400">...</span>
-                      );
-                      pages.push(
-                        <Button
-                          key={totalPages}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(totalPages)}
-                          className="h-8 w-8 p-0 text-sm font-medium"
-                        >
-                          {totalPages}
-                        </Button>
-                      );
-                    } else if (currentPage >= totalPages - 2) {
-                      // Near end
-                      pages.push(
-                        <Button
-                          key={1}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(1)}
-                          className="h-8 w-8 p-0 text-sm font-medium"
-                        >
-                          1
-                        </Button>
-                      );
-                      pages.push(
-                        <span key="ellipsis2" className="px-2 text-gray-400">...</span>
-                      );
-                      for (let i = totalPages - 3; i <= totalPages; i++) {
-                        pages.push(
-                          <Button
-                            key={i}
-                            variant={currentPage === i ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(i)}
-                            className="h-8 w-8 p-0 text-sm font-medium"
-                          >
-                            {i}
-                          </Button>
-                        );
-                      }
-                    } else {
-                      // Middle
-                      pages.push(
-                        <Button
-                          key={1}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(1)}
-                          className="h-8 w-8 p-0 text-sm font-medium"
-                        >
-                          1
-                        </Button>
-                      );
-                      pages.push(
-                        <span key="ellipsis3" className="px-2 text-gray-400">...</span>
-                      );
-                      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-                        pages.push(
-                          <Button
-                            key={i}
-                            variant={currentPage === i ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(i)}
-                            className="h-8 w-8 p-0 text-sm font-medium"
-                          >
-                            {i}
-                          </Button>
-                        );
-                      }
-                      pages.push(
-                        <span key="ellipsis4" className="px-2 text-gray-400">...</span>
-                      );
-                      pages.push(
-                        <Button
-                          key={totalPages}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(totalPages)}
-                          className="h-8 w-8 p-0 text-sm font-medium"
-                        >
-                          {totalPages}
-                        </Button>
-                      );
-                    }
-                  }
-                  
-                  return pages;
-                })()}
-              </div>
-              
-              {/* Next Page */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="h-8 w-8 p-0"
-                title="Trang tiếp"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              
-              {/* Last Page */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="h-8 w-8 p-0"
-                title="Trang cuối"
-              >
-                <ChevronsRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Product Form Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -1253,6 +1382,49 @@ export default function AdminProductsPage() {
           </div>
         </div>
       )}
+
+      {/* Deactivation Confirmation Dialog */}
+      <Dialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <X className="w-5 h-5" />
+              Vô hiệu hóa sản phẩm
+            </DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn vô hiệu hóa sản phẩm này? Sản phẩm sẽ không hiển thị cho khách hàng và không thể mua được. Bạn có thể kích hoạt lại bất cứ lúc nào.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex items-start gap-3 py-4">
+            <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <X className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900 mb-1">
+                Bạn có chắc chắn muốn vô hiệu hóa sản phẩm này?
+              </p>
+              <p className="text-sm text-gray-600">
+                Sản phẩm sẽ không hiển thị cho khách hàng và không thể mua được. Bạn có thể kích hoạt lại bất cứ lúc nào.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={handleCancelDeactivate}>
+              Hủy
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmDeactivate}
+              className="bg-red-600 hover:bg-red-700 border-red-600 hover:border-red-700"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Vô hiệu hóa
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       {/* Toast Notifications */}
       <Toaster />
