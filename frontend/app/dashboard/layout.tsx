@@ -1,14 +1,14 @@
 'use client';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { User, ListOrdered, MapPin, Heart, Bell, Home as HomeIcon, Box, Info, Mail, Package, Settings, LogOut, FileText, Shield, Star, MessageSquare } from 'lucide-react';
+import { User, ListOrdered, MapPin, Heart, Bell, Home as HomeIcon, Box, Info, Mail, Package, Settings, FileText, Shield, Star, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { UnifiedAvatar } from '@/components/ui/UnifiedAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import Footer from '@/components/Footer';
 
 const navItems = [
   { label: 'Đơn hàng', href: '/dashboard/orders', icon: ListOrdered, description: 'Xem và quản lý đơn hàng' },
@@ -94,51 +94,44 @@ export default function DashboardLayout({
     );
   }
 
-  const handleLogout = async () => {
-    // Clear localStorage
-    localStorage.removeItem('auth-token');
-    localStorage.removeItem('user');
-    
-    // Redirect to home
-    router.push('/');
-  };
+
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white">
-      <div className="flex">
+    <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white flex flex-col">
+      <div className="flex flex-1">
         {/* Sidebar - Desktop */}
-        <aside className="hidden lg:flex flex-col w-80 bg-white border-r border-gray-200 shadow-sm py-8 px-6 sticky top-0 h-screen overflow-y-auto">
+        <aside className="hidden lg:flex flex-col w-80 bg-white border-r border-gray-200 shadow-sm py-6 px-6 sticky top-0 h-screen rounded-br-2xl border-b border-gray-200">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-[#a10000] rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 text-white" />
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#a10000] rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Bảng điều khiển</h1>
-                <p className="text-sm text-gray-600">Quản lý tài khoản của bạn</p>
+                <h1 className="text-lg font-bold text-gray-900">Bảng điều khiển</h1>
+                <p className="text-xs text-gray-600">Quản lý tài khoản của bạn</p>
               </div>
             </div>
             
             {/* User Info */}
-            <Card className="p-4 bg-gray-50 border-gray-200">
+            <Card className="p-3 bg-gray-50 border-gray-200">
               <div className="flex items-center gap-3">
                 <UnifiedAvatar
                   user={user}
-                  size={40}
+                  size={36}
                   className=""
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{user?.name || 'Người dùng'}</p>
-                  <p className="text-sm text-gray-500 truncate">{user?.email}</p>
+                  <p className="font-medium text-gray-900 truncate text-sm">{user?.name || 'Người dùng'}</p>
+                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
               </div>
             </Card>
           </div>
 
           {/* Dashboard Navigation */}
-          <nav className="flex flex-col gap-2 mb-8">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          <nav className="flex flex-col gap-1.5 mb-6">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
               Quản lý tài khoản
             </h3>
             {navItems.map(({ label, href, icon: Icon, description }) => (
@@ -146,7 +139,7 @@ export default function DashboardLayout({
                 key={href}
                 href={href}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 group',
+                  'flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 group',
                   pathname === href
                     ? 'bg-[#a10000] text-white shadow-md'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
@@ -158,24 +151,24 @@ export default function DashboardLayout({
                 )} />
                 <div className="flex-1">
                   <span>{label}</span>
-                  <p className="text-xs opacity-75 mt-0.5">{description}</p>
+                  <p className="text-xs opacity-75 mt-0.5 leading-tight">{description}</p>
                 </div>
               </Link>
             ))}
           </nav>
           
-          <Separator className="my-6" />
+          <Separator className="my-4" />
           
           {/* Main Navigation */}
-          <nav className="flex flex-col gap-2 mb-8">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          <nav className="flex flex-col gap-1.5 mb-6">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
               Điều hướng chính
             </h3>
             {mainNavItems.map(({ label, href, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-700 hover:bg-gray-100 hover:text-[#a10000] transition-all duration-200 group"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 hover:text-[#a10000] transition-all duration-200 group"
               >
                 <Icon className="w-5 h-5 text-gray-500 group-hover:text-[#a10000] transition-colors" />
                 <span>{label}</span>
@@ -183,17 +176,7 @@ export default function DashboardLayout({
             ))}
           </nav>
 
-          {/* Logout */}
-          <div className="mt-auto">
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-            >
-              <LogOut className="w-5 h-5" />
-              Đăng xuất
-            </Button>
-          </div>
+
         </aside>
 
         {/* Mobile Navigation */}
@@ -218,11 +201,11 @@ export default function DashboardLayout({
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-7xl mx-auto w-full pb-20 lg:pb-0">
+        <main className="flex-1 w-full pb-20 lg:pb-0">
           {/* Hero Section - Only show for dashboard pages */}
           {currentPageConfig && (
-            <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-12">
-              <div className="container mx-auto px-4 text-center">
+            <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-12 w-full">
+              <div className="max-w-7xl mx-auto px-4 text-center">
                 <div className="mb-6">
                   <IconComponent className="w-16 h-16 mx-auto" />
                 </div>
@@ -237,11 +220,14 @@ export default function DashboardLayout({
           )}
 
           {/* Page Content */}
-          <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <div className="max-w-6xl mx-auto px-4 py-12">
             {children}
           </div>
         </main>
       </div>
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

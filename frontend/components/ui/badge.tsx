@@ -7,7 +7,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className = '', variant = 'secondary', ...props }, ref) => {
     const base =
-      'inline-block px-3 py-1 rounded-full border text-xs font-semibold align-middle select-none';
+      'inline-flex items-center px-3 py-1 rounded-full border text-xs font-semibold select-none';
     const color =
       variant === 'success'
         ? 'bg-green-100 text-green-800 border-green-200'
