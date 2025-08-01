@@ -11,8 +11,9 @@ This guide explains how to deploy the Birdnest Shop frontend to Vercel. The proj
 ## Configuration Files
 
 ### vercel.json
-The `frontend/vercel.json` file configures Vercel to:
+The root `vercel.json` file configures Vercel to:
 - Use Next.js framework
+- Set root directory to `frontend/` for the Next.js app
 - Set up API routes with Node.js 18.x runtime
 - Map environment variables
 
@@ -84,8 +85,8 @@ NEXT_PUBLIC_MAINTENANCE_MODE=false
 4. Select the repository: `LeTuanKhai1998/birdnest-shop`
 
 ### 2. Configure Project Settings
-1. **Framework Preset**: Next.js
-2. **Root Directory**: `frontend` (set this in Vercel project settings)
+1. **Framework Preset**: Next.js (automatic detection)
+2. **Root Directory**: Automatically set to `frontend` via vercel.json
 3. **Build Command**: `npm run build` (automatic for Next.js)
 4. **Output Directory**: `.next` (automatic for Next.js)
 5. **Install Command**: `npm install` (automatic for Next.js)
