@@ -195,7 +195,7 @@ export class OrdersService {
   }
 
   async createGuestOrder(data: any): Promise<Order> {
-    const { items, shippingAddress, deliveryFee, paymentMethod } = data;
+    const { items, shippingAddress, deliveryFee, paymentMethod, userId } = data;
 
     // Map payment method to correct enum value
     const mapPaymentMethod = (method: string): any => {
@@ -252,11 +252,11 @@ export class OrdersService {
       .join(', ');
 
     // For guest orders, we save the guest information directly to the order
-    // No need to create a user account
+    // If userId is provided, link the order to the user
     const order = await this.prisma.order.create({
       data: {
-        // userId is undefined for guest orders
-        userId: undefined,
+        // Use userId if provided, otherwise undefined for true guest orders
+        userId: userId || undefined,
         // Save guest information
         guestEmail: shippingAddress.email || '',
         guestName: shippingAddress.fullName,

@@ -21,7 +21,7 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  async findAll(@Query() query: any) {
+  async findAll(@Query() query: Record<string, string>) {
     const { skip, take, categoryId, search } = query;
     return this.productsService.findAll({
       skip: skip ? parseInt(skip) : undefined,
@@ -62,15 +62,15 @@ export class ProductsController {
     const prismaData = {
       ...productData,
       category: {
-        connect: { id: categoryId }
+        connect: { id: categoryId },
       },
       ...(images && {
         images: {
-          create: images
-        }
-      })
+          create: images,
+        },
+      }),
     };
-    return this.productsService.create(prismaData as any);
+    return this.productsService.create(prismaData);
   }
 
   @Patch(':id')
@@ -81,21 +81,21 @@ export class ProductsController {
   ) {
     // Convert DTO to Prisma input format
     const { categoryId, images, ...productData } = updateProductDto;
-    const prismaData: any = { ...productData };
-    
+    const prismaData: Record<string, unknown> = { ...productData };
+
     if (categoryId) {
       prismaData.category = {
-        connect: { id: categoryId }
+        connect: { id: categoryId },
       };
     }
-    
+
     if (images) {
       prismaData.images = {
         deleteMany: {},
-        create: images
+        create: images,
       };
     }
-    
+
     return this.productsService.update(id, prismaData);
   }
 

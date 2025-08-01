@@ -2,12 +2,10 @@ import {
   Controller,
   Get,
   Post,
-  Delete,
   Body,
+  Delete,
   UseGuards,
   Request,
-  BadRequestException,
-  Param,
 } from '@nestjs/common';
 import { WishlistService } from './wishlist.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -16,53 +14,21 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class WishlistController {
   constructor(private readonly wishlistService: WishlistService) {}
 
-  // JWT protected endpoints
   @Get()
   @UseGuards(JwtAuthGuard)
-  async findAll(@Request() req: any) {
+  async findAll(@Request() req) {
     return this.wishlistService.findAll(req.user.userId);
   }
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() data: { productId: string }, @Request() req: any) {
-    return this.wishlistService.create(req.user.userId, data.productId);
+  async create(@Request() req, @Body() body: { productId: string }) {
+    return this.wishlistService.create(req.user.userId, body.productId);
   }
 
   @Delete()
   @UseGuards(JwtAuthGuard)
-  async remove(@Body() data: { productId: string }, @Request() req: any) {
-    return this.wishlistService.remove(req.user.userId, data.productId);
-  }
-
-  // NextAuth endpoints (no JWT required)
-  @Get('nextauth/:userId')
-  async findAllForNextAuth(@Param('userId') userId: string) {
-    if (!userId) {
-      throw new BadRequestException('User ID is required');
-    }
-    return this.wishlistService.findAll(userId);
-  }
-
-  @Post('nextauth')
-  async createForNextAuth(@Body() data: { userId: string; productId: string }) {
-    const { userId, productId } = data;
-    
-    if (!userId) {
-      throw new BadRequestException('User ID is required');
-    }
-    
-    return this.wishlistService.create(userId, productId);
-  }
-
-  @Delete('nextauth')
-  async removeForNextAuth(@Body() data: { userId: string; productId: string }) {
-    const { userId, productId } = data;
-    
-    if (!userId) {
-      throw new BadRequestException('User ID is required');
-    }
-    
-    return this.wishlistService.remove(userId, productId);
+  async remove(@Request() req, @Body() body: { productId: string }) {
+    return this.wishlistService.remove(req.user.userId, body.productId);
   }
 } 

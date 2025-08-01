@@ -22,13 +22,13 @@ export class PerformanceInterceptor implements NestInterceptor {
 
     const method = request.method;
     const url = request.url;
-    const userAgent = request.get('User-Agent') || 'Unknown';
+    // const userAgent = request.get('User-Agent') || 'Unknown'; // Unused variable
 
     this.logger.debug(`Request started: ${method} ${url}`);
 
     return next.handle().pipe(
       tap({
-        next: (data) => {
+        next: (_data) => {
           const endTime = Date.now();
           const responseTime = endTime - startTime;
           const statusCode = response.statusCode;

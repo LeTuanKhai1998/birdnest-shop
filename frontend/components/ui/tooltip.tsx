@@ -21,7 +21,7 @@ export function TooltipTrigger({
 }: TooltipPrimitive.TooltipTriggerProps) {
   return (
     <TooltipPrimitive.Trigger asChild {...props}>
-      {children}
+      {children as React.ReactElement}
     </TooltipPrimitive.Trigger>
   );
 }

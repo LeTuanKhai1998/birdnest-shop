@@ -79,19 +79,24 @@ function getLine2(addr: Address, provinces: Province[]): string {
 }
 
 export default function AddressesPage() {
-  // Check for localStorage authentication (admin users)
+  // Check for localStorage authentication (admin users) - client-side only
   const [localUser, setLocalUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean } | null>(null);
+  const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
-    const token = localStorage.getItem('auth-token');
-    const userData = localStorage.getItem('user');
+    setIsClient(true);
     
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData);
-        setLocalUser(user);
-      } catch (error) {
-        console.error('Error parsing user data from localStorage:', error);
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth-token');
+      const userData = localStorage.getItem('user');
+      
+      if (token && userData) {
+        try {
+          const user = JSON.parse(userData);
+          setLocalUser(user);
+        } catch (error) {
+          console.error('Error parsing user data from localStorage:', error);
+        }
       }
     }
   }, []);
@@ -101,11 +106,11 @@ export default function AddressesPage() {
   const apiEndpoint = isAdminUser ? 'http://localhost:8080/api/addresses' : '/api/addresses';
   
   const { data: addressesData, isLoading, mutate, error } = useSWR(
-    apiEndpoint,
+    isClient ? apiEndpoint : null, // Only fetch when client-side
     async (url: string) => {
       if (isAdminUser) {
         // Use JWT token for backend API
-        const token = localStorage.getItem('auth-token');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
         if (!token) {
           throw new Error('Authentication token not found');
         }
@@ -237,8 +242,10 @@ export default function AddressesPage() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       
       if (isAdminUser) {
-        const token = localStorage.getItem('auth-token');
-        headers['Authorization'] = `Bearer ${token}`;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
       }
       
       const res = await fetch(endpoint, {
@@ -315,8 +322,10 @@ export default function AddressesPage() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       
       if (isAdminUser) {
-        const token = localStorage.getItem('auth-token');
-        headers['Authorization'] = `Bearer ${token}`;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
       }
       
       const res = await fetch(endpoint, {
@@ -383,7 +392,7 @@ export default function AddressesPage() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       
       if (isAdminUser) {
-        const token = localStorage.getItem('auth-token');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
         if (!token) {
           toast.error('Authentication token not found');
           return;
@@ -461,26 +470,6 @@ export default function AddressesPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center lg:text-left">
-        <h1 
-          className="text-glossy text-3xl md:text-5xl font-black italic"
-          style={{
-            fontWeight: 900,
-            fontStyle: 'italic',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '3.3rem',
-            padding: '20px',
-            color: '#a10000'
-          }}
-        >
-          Địa chỉ của tôi
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl">
-          Quản lý địa chỉ giao hàng và thanh toán của bạn
-        </p>
-      </div>
-
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-[#a10000]">Danh sách địa chỉ</h2>
@@ -578,15 +567,23 @@ export default function AddressesPage() {
         {showForm && (
           <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/30">
             <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg relative animate-in fade-in zoom-in-95">
-              <button
-                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              <div
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 cursor-pointer"
                 onClick={() => {
                   setShowForm(false);
                   setEditId(null);
                 }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    setShowForm(false);
+                    setEditId(null);
+                  }
+                }}
               >
                 <X className="w-6 h-6" />
-              </button>
+              </div>
               <h3 className="text-lg font-semibold mb-4 text-[#a10000]">
                 {editing ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ'}
               </h3>

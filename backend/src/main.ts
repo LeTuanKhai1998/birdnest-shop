@@ -11,9 +11,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Security middleware
-  app.use(helmet({
-    xFrameOptions: { action: 'deny' },
-  }));
+  app.use(
+    helmet({
+      xFrameOptions: { action: 'deny' },
+    }),
+  );
 
   // Global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());

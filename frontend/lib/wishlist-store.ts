@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import useSWR from 'swr/immutable';
-import { Product } from '@/components/ProductCard';
+import { Product } from '@/lib/types';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 

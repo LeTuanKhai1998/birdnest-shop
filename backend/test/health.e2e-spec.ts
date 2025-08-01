@@ -52,7 +52,11 @@ describe('Health API (e2e)', () => {
         .expect(200);
 
       // Check if memory info is available in the response
-      if (response.body.info && response.body.info.application && response.body.info.application.details) {
+      if (
+        response.body.info &&
+        response.body.info.application &&
+        response.body.info.application.details
+      ) {
         const memory = response.body.info.application.details.memory;
         expect(memory).toHaveProperty('rss');
         expect(memory).toHaveProperty('heapTotal');
@@ -75,7 +79,11 @@ describe('Health API (e2e)', () => {
         .expect(200);
 
       // Check if version info is available in the response
-      if (response.body.info && response.body.info.application && response.body.info.application.details) {
+      if (
+        response.body.info &&
+        response.body.info.application &&
+        response.body.info.application.details
+      ) {
         const version = response.body.info.application.details.version;
         expect(typeof version).toBe('string');
         expect(version).toMatch(/^\d+\.\d+\.\d+$/);
@@ -100,7 +108,9 @@ describe('Health API (e2e)', () => {
       expect(response.body.info.application).toHaveProperty('status');
       expect(response.body.info.application.status).toBe('up');
       expect(response.body.info.application).toHaveProperty('details');
-      expect(response.body.info.application.details).toHaveProperty('timestamp');
+      expect(response.body.info.application.details).toHaveProperty(
+        'timestamp',
+      );
       expect(response.body.info.application.details).toHaveProperty('uptime');
     });
 
@@ -114,12 +124,18 @@ describe('Health API (e2e)', () => {
       expect(response.body).toHaveProperty('info');
       expect(response.body.info).toHaveProperty('application');
       expect(response.body.info.application).toHaveProperty('details');
-      expect(response.body.info.application.details).toHaveProperty('timestamp');
+      expect(response.body.info.application.details).toHaveProperty(
+        'timestamp',
+      );
       expect(response.body.info.application.details).toHaveProperty('uptime');
-      
+
       // Memory and version should not be in readiness check
-      expect(response.body.info.application.details).not.toHaveProperty('memory');
-      expect(response.body.info.application.details).not.toHaveProperty('version');
+      expect(response.body.info.application.details).not.toHaveProperty(
+        'memory',
+      );
+      expect(response.body.info.application.details).not.toHaveProperty(
+        'version',
+      );
     });
   });
 
@@ -136,7 +152,9 @@ describe('Health API (e2e)', () => {
       expect(response.body.info.application).toHaveProperty('status');
       expect(response.body.info.application.status).toBe('up');
       expect(response.body.info.application).toHaveProperty('details');
-      expect(response.body.info.application.details).toHaveProperty('timestamp');
+      expect(response.body.info.application.details).toHaveProperty(
+        'timestamp',
+      );
       expect(response.body.info.application.details).toHaveProperty('uptime');
     });
 
@@ -150,12 +168,18 @@ describe('Health API (e2e)', () => {
       expect(response.body).toHaveProperty('info');
       expect(response.body.info).toHaveProperty('application');
       expect(response.body.info.application).toHaveProperty('details');
-      expect(response.body.info.application.details).toHaveProperty('timestamp');
+      expect(response.body.info.application.details).toHaveProperty(
+        'timestamp',
+      );
       expect(response.body.info.application.details).toHaveProperty('uptime');
-      
+
       // Memory and version should not be in liveness check
-      expect(response.body.info.application.details).not.toHaveProperty('memory');
-      expect(response.body.info.application.details).not.toHaveProperty('version');
+      expect(response.body.info.application.details).not.toHaveProperty(
+        'memory',
+      );
+      expect(response.body.info.application.details).not.toHaveProperty(
+        'version',
+      );
     });
   });
 
@@ -180,8 +204,12 @@ describe('Health API (e2e)', () => {
       ]);
 
       const healthTimestamp = new Date(healthResponse.body.timestamp).getTime();
-      const readyTimestamp = new Date(readyResponse.body.info.application.details.timestamp).getTime();
-      const liveTimestamp = new Date(liveResponse.body.info.application.details.timestamp).getTime();
+      const readyTimestamp = new Date(
+        readyResponse.body.info.application.details.timestamp,
+      ).getTime();
+      const liveTimestamp = new Date(
+        liveResponse.body.info.application.details.timestamp,
+      ).getTime();
 
       expect(healthTimestamp).toBeGreaterThan(0);
       expect(readyTimestamp).toBeGreaterThan(0);
@@ -198,47 +226,31 @@ describe('Health API (e2e)', () => {
   describe('Error handling', () => {
     it('should handle malformed health check requests gracefully', async () => {
       // Test with invalid HTTP method
-      await request(app.getHttpServer())
-        .post('/api/health')
-        .expect(404);
+      await request(app.getHttpServer()).post('/api/health').expect(404);
 
-      await request(app.getHttpServer())
-        .put('/api/health')
-        .expect(404);
+      await request(app.getHttpServer()).put('/api/health').expect(404);
 
-      await request(app.getHttpServer())
-        .delete('/api/health')
-        .expect(404);
+      await request(app.getHttpServer()).delete('/api/health').expect(404);
     });
 
     it('should handle malformed readiness check requests gracefully', async () => {
-      await request(app.getHttpServer())
-        .post('/api/health/ready')
-        .expect(404);
+      await request(app.getHttpServer()).post('/api/health/ready').expect(404);
 
-      await request(app.getHttpServer())
-        .put('/api/health/ready')
-        .expect(404);
+      await request(app.getHttpServer()).put('/api/health/ready').expect(404);
     });
 
     it('should handle malformed liveness check requests gracefully', async () => {
-      await request(app.getHttpServer())
-        .post('/api/health/live')
-        .expect(404);
+      await request(app.getHttpServer()).post('/api/health/live').expect(404);
 
-      await request(app.getHttpServer())
-        .put('/api/health/live')
-        .expect(404);
+      await request(app.getHttpServer()).put('/api/health/live').expect(404);
     });
   });
 
   describe('Performance', () => {
     it('should respond quickly to health checks', async () => {
       const startTime = Date.now();
-      
-      await request(app.getHttpServer())
-        .get('/api/health')
-        .expect(200);
+
+      await request(app.getHttpServer()).get('/api/health').expect(200);
 
       const endTime = Date.now();
       const responseTime = endTime - startTime;
@@ -249,10 +261,8 @@ describe('Health API (e2e)', () => {
 
     it('should respond quickly to readiness checks', async () => {
       const startTime = Date.now();
-      
-      await request(app.getHttpServer())
-        .get('/api/health/ready')
-        .expect(200);
+
+      await request(app.getHttpServer()).get('/api/health/ready').expect(200);
 
       const endTime = Date.now();
       const responseTime = endTime - startTime;
@@ -263,10 +273,8 @@ describe('Health API (e2e)', () => {
 
     it('should respond quickly to liveness checks', async () => {
       const startTime = Date.now();
-      
-      await request(app.getHttpServer())
-        .get('/api/health/live')
-        .expect(200);
+
+      await request(app.getHttpServer()).get('/api/health/live').expect(200);
 
       const endTime = Date.now();
       const responseTime = endTime - startTime;
@@ -275,4 +283,4 @@ describe('Health API (e2e)', () => {
       expect(responseTime).toBeLessThan(100);
     });
   });
-}); 
+});

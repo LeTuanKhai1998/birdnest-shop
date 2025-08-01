@@ -114,10 +114,7 @@ describe('AddressesService', () => {
       expect(result).toEqual(mockAddresses);
       expect(mockPrismaService.address.findMany).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
-        orderBy: [
-          { isDefault: 'desc' },
-          { createdAt: 'desc' },
-        ],
+        orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
       });
     });
   });
@@ -137,13 +134,17 @@ describe('AddressesService', () => {
     it('should throw NotFoundException if address does not exist', async () => {
       mockPrismaService.address.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('1', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('1', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ForbiddenException if address belongs to another user', async () => {
       mockPrismaService.address.findUnique.mockResolvedValue(mockAddress);
 
-      await expect(service.findOne('1', 'user-2')).rejects.toThrow(ForbiddenException);
+      await expect(service.findOne('1', 'user-2')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -186,4 +187,4 @@ describe('AddressesService', () => {
       });
     });
   });
-}); 
+});

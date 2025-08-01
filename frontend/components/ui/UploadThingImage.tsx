@@ -23,47 +23,29 @@ export function UploadThingImage({
   height,
   onLoad,
   onError,
-  fallbackSrc = "/images/placeholder.png",
+  fallbackSrc = "/images/placeholder.svg",
 }: UploadThingImageProps) {
   const [imageSrc, setImageSrc] = useState(src);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  const handleLoad = () => {
-    console.log("UploadThingImage: Image loaded successfully", { src: imageSrc });
-    setIsLoading(false);
+  React.useEffect(() => {
+    if (src && src !== imageSrc) {
+      setImageSrc(src);
+      setHasError(false);
+    }
+  }, [src]);
+
+  const handleImageLoad = () => {
     setHasError(false);
-    onLoad?.();
   };
 
-  const handleError = (error: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error("UploadThingImage: Failed to load image", { 
-      src, 
-      imageSrc,
-      error: error.nativeEvent,
-      target: error.currentTarget
-    });
-    setIsLoading(false);
+  const handleImageError = () => {
     setHasError(true);
-    
-    // Try fallback if available and different from current src
     if (fallbackSrc && fallbackSrc !== imageSrc) {
-      console.log("UploadThingImage: Trying fallback", fallbackSrc);
       setImageSrc(fallbackSrc);
-      setIsLoading(true);
-      setHasError(false);
-    } else {
-      onError?.(error);
     }
   };
-
-  // Reset state when src changes
-  React.useEffect(() => {
-    console.log("UploadThingImage: src changed", { src, currentImageSrc: imageSrc });
-    setImageSrc(src);
-    setIsLoading(true);
-    setHasError(false);
-  }, [src, imageSrc]);
 
   return (
     <div className={cn("relative", className)}>
@@ -101,8 +83,8 @@ export function UploadThingImage({
           "w-full h-full object-cover rounded-lg transition-opacity duration-200",
           isLoading && "opacity-0"
         )}
-        onLoad={handleLoad}
-        onError={handleError}
+        onLoad={handleImageLoad}
+        onError={handleImageError}
         crossOrigin={isUploadThingUrl(src) ? "anonymous" : undefined}
       />
 

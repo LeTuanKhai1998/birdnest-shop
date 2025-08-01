@@ -461,26 +461,6 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center lg:text-left">
-        <h1 
-          className="text-glossy text-3xl md:text-5xl font-black italic"
-          style={{
-            fontWeight: 900,
-            fontStyle: 'italic',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '3.3rem',
-            padding: '20px',
-            color: '#a10000'
-          }}
-        >
-          Hồ sơ cá nhân
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl">
-          Quản lý thông tin cá nhân và bảo mật tài khoản của bạn
-        </p>
-      </div>
-
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Profile Overview */}
         <div className="lg:col-span-1">

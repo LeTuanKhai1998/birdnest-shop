@@ -11,8 +11,11 @@ import { toast } from "@/hooks/use-toast";
 interface ImageUploadProps {
   endpoint: "imageUploader" | "productImageUploader" | "generalImageUploader";
   onUploadComplete?: (url: string) => void;
+  onUpload?: (urls: string[]) => void;
   onUploadError?: (error: Error) => void;
   maxFiles?: number;
+  maxSize?: number;
+  showPreview?: boolean;
   className?: string;
   title?: string;
   description?: string;
@@ -30,7 +33,11 @@ interface UploadResponse {
 export function ImageUpload({
   endpoint,
   onUploadComplete,
+  onUpload,
   onUploadError,
+  maxFiles,
+  maxSize,
+  showPreview = true,
   className = "",
   title = "Upload Image",
   description = "Click to upload or drag and drop"
@@ -43,8 +50,10 @@ export function ImageUpload({
     const urls = res.map((file: UploadResponse) => file.ufsUrl);
     setUploadedUrls(prev => [...prev, ...urls]);
     
-    // Call the callback with the first URL (for single file uploads)
-    if (onUploadComplete && urls.length > 0) {
+    // Call the appropriate callback
+    if (onUpload && urls.length > 0) {
+      onUpload(urls);
+    } else if (onUploadComplete && urls.length > 0) {
       onUploadComplete(urls[0]);
     }
     
@@ -97,12 +106,12 @@ export function ImageUpload({
                 {isUploading ? "Uploading..." : "Choose File"}
               </div>
             ),
-            allowedContent: "Images up to 4MB",
+            allowedContent: `Images up to ${maxSize || 4}MB${maxFiles ? `, max ${maxFiles} files` : ''}`,
           }}
         />
 
         {/* Uploaded Images Preview */}
-        {uploadedUrls.length > 0 && (
+        {showPreview && uploadedUrls.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {uploadedUrls.map((url, index) => (
               <div key={index} className="relative group">

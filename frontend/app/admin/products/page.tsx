@@ -60,9 +60,11 @@ import Image from 'next/image';
 import useSWR from 'swr';
 import { apiService } from '@/lib/api';
 import type { Product } from '@/lib/types';
+import { getFirstImageUrl } from '@/lib/utils';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageUpload } from '@/components/ui/ImageUpload';
+import type { ProductImage } from '@/lib/types';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Tên sản phẩm là bắt buộc'),
@@ -142,21 +144,19 @@ export default function AdminProductsPage() {
     resolver: zodResolver(productSchema),
   });
 
-  // Check authentication on component mount
+  // Check authentication
   useEffect(() => {
     const token = localStorage.getItem('auth-token');
     const user = localStorage.getItem('user');
     
     if (!token || !user) {
-      console.log('No authentication found, redirecting to login');
-      window.location.href = '/login?callbackUrl=/admin';
+      window.location.href = '/login?callbackUrl=/admin/products';
       return;
     }
 
     const userData = JSON.parse(user);
     if (!userData.isAdmin) {
-      console.log('User is not admin, redirecting to login');
-      window.location.href = '/login?callbackUrl=/admin';
+      window.location.href = '/login?callbackUrl=/admin/products';
       return;
     }
   }, []);
@@ -186,7 +186,7 @@ export default function AdminProductsPage() {
       const matchesSearch = !searchValue || 
         product.name.toLowerCase().includes(searchValue.toLowerCase()) ||
         product.description.toLowerCase().includes(searchValue.toLowerCase());
-      const matchesCategory = !categoryFilter || product.category.name === categoryFilter;
+      const matchesCategory = !categoryFilter || product.category?.name === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [products, searchValue, categoryFilter]);
@@ -196,9 +196,9 @@ export default function AdminProductsPage() {
     if (!products) return null;
     return {
       totalProducts: products.length,
-      lowStock: products.filter((p: Product) => p.quantity < 10).length,
-      outOfStock: products.filter((p: Product) => p.quantity === 0).length,
-      totalValue: products.reduce((sum: number, p: Product) => sum + (p.quantity * parseFloat(p.price)), 0),
+      lowStock: products.filter((p: Product) => (p.quantity || 0) < 10).length,
+      outOfStock: products.filter((p: Product) => (p.quantity || 0) === 0).length,
+      totalValue: products.reduce((sum: number, p: Product) => sum + ((p.quantity || 0) * parseFloat(p.price)), 0),
     };
   }, [products]);
 
@@ -253,7 +253,15 @@ export default function AdminProductsPage() {
 
   const handleEdit = (product: Product) => {
     setEditId(product.id);
-    setImages(product.images || []);
+    setImages(
+      product.images?.map((img: string | ProductImage) => {
+        if (typeof img === 'string') {
+          return { url: img, isPrimary: false };
+        } else {
+          return { url: (img as ProductImage).url, isPrimary: (img as ProductImage).isPrimary };
+        }
+      }) || []
+    );
     setDrawerOpen(true);
   };
 
@@ -582,7 +590,7 @@ export default function AdminProductsPage() {
                              <div className="flex items-center gap-3">
                                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                                  <Image
-                                   src={product.images?.[0]?.url || FALLBACK_IMAGE}
+                                   src={getFirstImageUrl(product.images) || FALLBACK_IMAGE}
                                    alt={product.name}
                                    width={40}
                                    height={40}
@@ -598,7 +606,7 @@ export default function AdminProductsPage() {
                            <td className="p-4">
                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                                <Tag className="w-3 h-3 mr-1" />
-                               {product.category.name}
+                               {product.category?.name || 'N/A'}
                              </Badge>
                            </td>
                            <td className="p-4">
@@ -608,8 +616,8 @@ export default function AdminProductsPage() {
                            </td>
                            <td className="p-4">
                              <div className="flex items-center gap-2">
-                               <span className="font-medium text-sm">{product.quantity}</span>
-                               {product.quantity < 10 && (
+                               <span className="font-medium text-sm">{product.quantity || 0}</span>
+                               {(product.quantity || 0) < 10 && (
                                  <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
                                    Low
                                  </Badge>
@@ -618,7 +626,7 @@ export default function AdminProductsPage() {
                            </td>
                            <td className="p-4">
                              <StatusBadge 
-                               status={product.quantity > 0 ? 'active' : 'inactive'} 
+                               status={(product.quantity || 0) > 0 ? 'active' : 'inactive'} 
                              />
                            </td>
                           <td className="p-4 text-right">

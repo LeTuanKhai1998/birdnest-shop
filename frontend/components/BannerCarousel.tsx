@@ -1,7 +1,6 @@
 'use client';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback, useEffect } from 'react';
@@ -49,7 +48,7 @@ export default function BannerCarousel() {
               <div className="flex">
                 {banners.map((banner, i) => (
                   <div className="min-w-0 flex-[0_0_100%]" key={banner.src}>
-                    <AspectRatio ratio={16 / 9}>
+                    <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
                       <Image
                         src={banner.src}
                         alt={banner.alt}
@@ -58,7 +57,7 @@ export default function BannerCarousel() {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1152px"
                         priority={i === 0}
                       />
-                    </AspectRatio>
+                    </div>
                   </div>
                 ))}
               </div>

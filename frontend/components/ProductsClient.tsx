@@ -1,7 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { ProductCard, type Product } from '@/components/ProductCard';
+import { ProductCard } from '@/components/ProductCard';
+import { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
@@ -64,7 +65,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
       (product.type && selectedCategories.includes(product.type));
     const weightMatch =
       selectedWeights.length === 0 || selectedWeights.includes(product.weight);
-    const priceMatch = product.price <= price;
+    const priceMatch = parseFloat(product.price) <= price;
     const searchMatch =
       !search ||
       product.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -212,8 +213,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
                 <Checkbox
                   checked={selectedWeights.includes(weight.value)}
                   onCheckedChange={() => handleWeightChange(weight.value)}
-                  id={`weight-${weight.value}`}
-                  className="text-[#a10000] data-[state=checked]:bg-[#a10000] data-[state=checked]:border-[#a10000]"
+                  // id={`weight-${weight.value}`}
                 />
                 <span className="text-sm font-medium text-gray-800">{weight.label}</span>
               </label>
@@ -301,25 +301,24 @@ export default function ProductsClient({ products }: { products: Product[] }) {
           {/* Filter Button - Mobile and Tablet */}
           <div className="lg:hidden">
             <Drawer>
-              <DrawerTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full py-3 px-4 text-base border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors"
+              <DrawerTrigger>
+                <div 
+                  className="w-full py-3 px-4 text-base border border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors cursor-pointer flex items-center justify-center rounded-md"
                 >
                   <Filter className="w-4 h-4 mr-2" />
                   Bộ lọc
-                </Button>
+                </div>
               </DrawerTrigger>
               <DrawerContent className="max-w-sm mx-auto rounded-t-lg">
                 <DrawerHeader className="border-b border-gray-200">
-                  <DrawerTitle className="text-[#a10000] font-semibold">
+                  <div className="text-[#a10000] font-semibold text-lg">
                     Bộ Lọc Sản Phẩm
-                  </DrawerTitle>
+                  </div>
                 </DrawerHeader>
                 <div className="p-6 pb-8 max-h-[70vh] overflow-y-auto">
                   {FilterContent}
                 </div>
-                <DrawerClose asChild>
+                <DrawerClose>
                   <Button 
                     variant="outline" 
                     className="w-full mb-4 py-3 text-base border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors"

@@ -1,7 +1,7 @@
 'use client';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { User, ListOrdered, MapPin, Heart, Bell, Home as HomeIcon, Box, Info, Mail, Package, Settings, LogOut } from 'lucide-react';
+import { User, ListOrdered, MapPin, Heart, Bell, Home as HomeIcon, Box, Info, Mail, Package, Settings, LogOut, FileText, Shield, Star, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +26,35 @@ const mainNavItems = [
   { label: 'Tra đơn', href: '/guest-orders', icon: Package },
 ];
 
+// Page configurations for hero banners
+const pageConfigs = {
+  '/dashboard/orders': {
+    title: 'Đơn Hàng Của Tôi',
+    description: 'Theo dõi trạng thái và lịch sử đơn hàng của bạn',
+    icon: FileText
+  },
+  '/dashboard/profile': {
+    title: 'Hồ Sơ Cá Nhân',
+    description: 'Quản lý thông tin cá nhân và bảo mật tài khoản của bạn',
+    icon: User
+  },
+  '/dashboard/addresses': {
+    title: 'Địa Chỉ Của Tôi',
+    description: 'Quản lý địa chỉ giao hàng và thanh toán của bạn',
+    icon: MapPin
+  },
+  '/dashboard/wishlist': {
+    title: 'Danh Sách Yêu Thích',
+    description: 'Lưu trữ và quản lý các sản phẩm bạn yêu thích',
+    icon: Heart
+  },
+  '/dashboard/notifications': {
+    title: 'Thông Báo',
+    description: 'Cập nhật về đơn hàng, khuyến mãi và thông tin quan trọng',
+    icon: Bell
+  }
+};
+
 export default function DashboardLayout({
   children,
 }: {
@@ -35,7 +64,9 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated } = useRequireAuth('/login');
 
-
+  // Get current page configuration
+  const currentPageConfig = pageConfigs[pathname as keyof typeof pageConfigs];
+  const IconComponent = currentPageConfig?.icon || FileText;
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -187,8 +218,26 @@ export default function DashboardLayout({
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full pb-20 lg:pb-8">
-          <div className="max-w-6xl mx-auto">
+        <main className="flex-1 max-w-7xl mx-auto w-full pb-20 lg:pb-0">
+          {/* Hero Section - Only show for dashboard pages */}
+          {currentPageConfig && (
+            <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-12">
+              <div className="container mx-auto px-4 text-center">
+                <div className="mb-6">
+                  <IconComponent className="w-16 h-16 mx-auto" />
+                </div>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                  {currentPageConfig.title}
+                </h1>
+                <p className="text-lg text-red-100">
+                  {currentPageConfig.description}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Page Content */}
+          <div className="container mx-auto px-4 py-12 max-w-6xl">
             {children}
           </div>
         </main>

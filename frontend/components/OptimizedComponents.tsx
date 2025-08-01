@@ -14,7 +14,7 @@ export const OptimizedProductList = memo(({
   // Memoize the sorted/filtered products
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()
     );
   }, [products]);
 

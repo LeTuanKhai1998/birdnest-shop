@@ -1,288 +1,648 @@
-import {
-  Product,
-  Category,
-  Order,
-  User,
-  ProductsParams,
-  OrdersParams,
-  CreateOrderData,
-  OrderStats,
-  SettingsData,
-} from './types';
+import { getSession } from 'next-auth/react';
 
-// API payload types for create/update operations
-interface CreateProductData {
-  name: string;
-  slug: string;
-  description: string;
-  price: string;
-  quantity: number;
-  categoryId: string;
-  images?: Array<{
-    url: string;
-    isPrimary: boolean;
-  }>;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-interface UpdateProductData {
-  name?: string;
-  slug?: string;
-  description?: string;
-  price?: string;
-  quantity?: number;
-  categoryId?: string;
-  images?: Array<{
-    url: string;
-    isPrimary: boolean;
-  }>;
-}
+// Helper function to get authenticated headers
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const session = await getSession();
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
-
-
-
-class ApiService {
-  private baseURL: string;
-
-  constructor() {
-    this.baseURL = API_BASE_URL;
+  // Add JWT token from session
+  if (session?.accessToken) {
+    headers['Authorization'] = `Bearer ${session.accessToken}`;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {},
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
+  return headers;
+}
 
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
+// Generic API call function with authentication
+export async function apiCall(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const headers = await getAuthHeaders();
+  
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+  
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...headers,
+      ...(options.headers as Record<string, string> || {}),
+    },
+  });
+}
 
-    // Add auth token if available
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth-token');
-      if (token) {
-        // Check if token is expired
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const now = Math.floor(Date.now() / 1000);
-          
-          if (payload.exp && payload.exp < now) {
-            localStorage.removeItem('auth-token');
-            localStorage.removeItem('user');
-            throw new Error('Token expired');
-          }
-        } catch (error) {
-          localStorage.removeItem('auth-token');
-          localStorage.removeItem('user');
-          throw new Error('Invalid token');
+// Convenience methods for common HTTP verbs
+export const api = {
+  get: (endpoint: string, options?: RequestInit) => 
+    apiCall(endpoint, { ...options, method: 'GET' }),
+  
+  post: (endpoint: string, data?: Record<string, unknown>, options?: RequestInit) => 
+    apiCall(endpoint, { 
+      ...options, 
+      method: 'POST', 
+      body: data ? JSON.stringify(data) : undefined 
+    }),
+  
+  put: (endpoint: string, data?: Record<string, unknown>, options?: RequestInit) => 
+    apiCall(endpoint, { 
+      ...options, 
+      method: 'PUT', 
+      body: data ? JSON.stringify(data) : undefined 
+    }),
+  
+  patch: (endpoint: string, data?: Record<string, unknown>, options?: RequestInit) => 
+    apiCall(endpoint, { 
+      ...options, 
+      method: 'PATCH', 
+      body: data ? JSON.stringify(data) : undefined 
+    }),
+  
+  delete: (endpoint: string, data?: Record<string, unknown>, options?: RequestInit) => 
+    apiCall(endpoint, { 
+      ...options, 
+      method: 'DELETE',
+      body: data ? JSON.stringify(data) : undefined 
+    }),
+};
+
+// Legacy functions for backward compatibility
+export async function fetchProducts(filters?: Record<string, unknown>) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, String(value));
         }
-        
-        config.headers = {
-          ...config.headers,
-          Authorization: `Bearer ${token}`,
-        };
-      }
+      });
     }
 
-    try {
-      // Add timeout to prevent hanging requests
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch(url, {
-        ...config,
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
+    const response = await fetch(`${API_BASE_URL}/products?${queryParams.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch products');
+    }
 
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    return [];
+  }
+}
+
+export async function fetchProductBySlug(slug: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/products/slug/${slug}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch product');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    return null;
+  }
+}
+
+export async function fetchCategories() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/products/categories`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch categories');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+}
+
+export async function fetchUserProfile() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/profile`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+}
+
+export async function updateUserProfile(profileData: Record<string, unknown>) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profileData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update profile');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+}
+
+export async function fetchUserOrders() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/orders`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch orders');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return [];
+  }
+}
+
+export async function fetchUserAddresses() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/addresses`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch addresses');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    return [];
+  }
+}
+
+export async function createUserAddress(addressData: Record<string, unknown>) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/addresses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(addressData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create address');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error creating address:', error);
+    throw error;
+  }
+}
+
+export async function updateUserAddress(id: string, addressData: Record<string, unknown>) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/addresses/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(addressData),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update address');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error updating address:', error);
+    throw error;
+  }
+}
+
+export async function deleteUserAddress(id: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/addresses/${id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete address');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting address:', error);
+    throw error;
+  }
+}
+
+export async function fetchUserWishlist() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/wishlist`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch wishlist');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching wishlist:', error);
+    return [];
+  }
+}
+
+export async function addToWishlist(productId: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/wishlist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ productId }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to add to wishlist');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error adding to wishlist:', error);
+    throw error;
+  }
+}
+
+export async function removeFromWishlist(productId: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/wishlist`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ productId }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to remove from wishlist');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error removing from wishlist:', error);
+    throw error;
+  }
+}
+
+export async function fetchUserNotifications() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch notifications');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    return [];
+  }
+}
+
+export async function fetchUnreadNotificationCount() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/unread-count`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch unread count');
+    }
+
+    const data = await response.json();
+    return data.count || 0;
+  } catch (error) {
+    console.error('Error fetching unread count:', error);
+    return 0;
+  }
+}
+
+export async function markNotificationAsRead(id: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+      method: 'PATCH',
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to mark as read');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error marking as read:', error);
+    throw error;
+  }
+}
+
+export async function markAllNotificationsAsRead() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
+      method: 'PATCH',
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to mark all as read');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error marking all as read:', error);
+    throw error;
+  }
+}
+
+export async function deleteNotification(id: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete notification');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    throw error;
+  }
+}
+
+// API Service object with all required methods
+export const apiService = {
+  // Product methods
+  getProducts: async (filters?: Record<string, unknown>) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            queryParams.append(key, String(value));
+          }
+        });
+      }
+
+      const response = await api.get(`/products?${queryParams.toString()}`);
+      
       if (!response.ok) {
-        console.error(`API request failed: ${response.status} ${response.statusText}`);
-        
-        // If 401 Unauthorized, clear token and redirect to login
-        if (response.status === 401) {
-          localStorage.removeItem('auth-token');
-          localStorage.removeItem('user');
-          window.location.href = '/login?callbackUrl=/admin';
-        }
-        
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('Failed to fetch products');
       }
 
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timeout - backend server may not be running');
-      }
-      throw error;
+      console.error('Error fetching products:', error);
+      return [];
     }
-  }
+  },
 
-  // Products API
-  async getProducts(params?: ProductsParams): Promise<Product[]> {
-    const searchParams = new URLSearchParams();
-    if (params?.skip) searchParams.append('skip', params.skip.toString());
-    if (params?.take) searchParams.append('take', params.take.toString());
-    if (params?.categoryId)
-      searchParams.append('categoryId', params.categoryId);
-    if (params?.search) searchParams.append('search', params.search);
-
-    const query = searchParams.toString();
-    return this.request<Product[]>(`/products${query ? `?${query}` : ''}`);
-  }
-
-  async getProduct(id: string): Promise<Product> {
-    return this.request<Product>(`/products/${id}`);
-  }
-
-  async getProductBySlug(slug: string): Promise<Product> {
-    return this.request<Product>(`/products/slug/${slug}`);
-  }
-
-  async createProduct(data: CreateProductData): Promise<Product> {
-    return this.request<Product>('/products', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateProduct(id: string, data: UpdateProductData): Promise<Product> {
-    return this.request<Product>(`/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deleteProduct(id: string): Promise<void> {
-    return this.request<void>(`/products/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getCategories(): Promise<Category[]> {
-    return this.request<Category[]>(`/products/categories`);
-  }
-
-  // Orders API
-  async getOrders(params?: OrdersParams): Promise<Order[]> {
-    const searchParams = new URLSearchParams();
-    if (params?.skip) searchParams.append('skip', params.skip.toString());
-    if (params?.take) searchParams.append('take', params.take.toString());
-    if (params?.userId) searchParams.append('userId', params.userId);
-    if (params?.status) searchParams.append('status', params.status);
-
-    const query = searchParams.toString();
-    return this.request<Order[]>(`/orders${query ? `?${query}` : ''}`);
-  }
-
-  async getOrder(id: string): Promise<Order> {
-    // Check if we have a JWT token (admin user)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
-    if (token) {
-      // For admin users, call backend directly
-      return this.request<Order>(`/orders/${id}`);
-    } else {
-      // For NextAuth users, use frontend API route
-      const response = await fetch(`/api/orders/${id}`);
+  getProductBySlug: async (slug: string) => {
+    try {
+      const response = await api.get(`/products/slug/${slug}`);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch order');
+        throw new Error('Failed to fetch product');
       }
-      return response.json();
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      return null;
     }
-  }
+  },
 
-  async getMyOrders(params?: { status?: string }): Promise<Order[]> {
-    const searchParams = new URLSearchParams();
-    if (params?.status) searchParams.append('status', params.status);
+  getCategories: async () => {
+    try {
+      const response = await api.get('/products/categories');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
 
-    const query = searchParams.toString();
-    
-    // Check if we have a JWT token (admin user)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
-    if (token) {
-      // For admin users, call backend directly
-      return this.request<Order[]>(`/orders/my-orders${query ? `?${query}` : ''}`);
-    } else {
-      // For NextAuth users, use frontend API route
-      const response = await fetch(`/api/orders${query ? `?${query}` : ''}`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+  },
+
+  // Order methods
+  getOrders: async () => {
+    try {
+      const response = await api.get('/orders');
+      
       if (!response.ok) {
         throw new Error('Failed to fetch orders');
       }
+
       const data = await response.json();
-      return data.orders || [];
+      return data;
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      return [];
     }
-  }
+  },
 
-  async getOrderStats(): Promise<OrderStats> {
-    return this.request<OrderStats>(`/orders/stats`);
-  }
+  getMyOrders: async () => {
+    try {
+      const response = await api.get('/orders/my-orders');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
 
-  async createOrder(data: CreateOrderData): Promise<Order> {
-    return this.request<Order>('/orders', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      return [];
+    }
+  },
 
-  async updateOrderStatus(id: string, status: string): Promise<Order> {
-    return this.request<Order>(`/orders/${id}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status }),
-    });
-  }
+  getOrder: async (orderId: string) => {
+    try {
+      const response = await api.get(`/orders/${orderId}`);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized - Please log in to view order details');
+        } else if (response.status === 404) {
+          throw new Error('Order not found');
+        } else {
+          throw new Error('Failed to fetch order');
+        }
+      }
 
-  // Users API
-  async getUsers(): Promise<User[]> {
-    return this.request<User[]>('/users');
-  }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching order:', error);
+      throw error; // Re-throw the error instead of returning null
+    }
+  },
 
-  async getUser(id: string): Promise<User> {
-    return this.request<User>(`/users/${id}`);
-  }
+  updateOrderStatus: async (orderId: string, status: string) => {
+    try {
+      const response = await api.patch(`/orders/${orderId}`, { status });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update order status');
+      }
 
-  async updateUserAdminStatus(id: string, isAdmin: boolean): Promise<User> {
-    return this.request<User>(`/users/${id}/admin`, {
-      method: 'PUT',
-      body: JSON.stringify({ isAdmin }),
-    });
-  }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      throw error;
+    }
+  },
 
-  // Auth API
-  async login(email: string, password: string): Promise<{ access_token: string; user: User }> {
-    return this.request<{ access_token: string; user: User }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-  }
+  // User methods
+  getUsers: async () => {
+    try {
+      const response = await api.get('/users');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
 
-  async register(email: string, password: string, name: string): Promise<{ access_token: string; user: User }> {
-    return this.request<{ access_token: string; user: User }>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, name }),
-    });
-  }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+  },
 
-  // Settings API
-  async getSettings(): Promise<SettingsData> {
-    return this.request<SettingsData>('/settings');
-  }
+  // Product management methods (for admin)
+  createProduct: async (productData: Record<string, unknown>) => {
+    try {
+      const response = await api.post('/products', productData);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create product');
+      }
 
-  async updateSettings(data: Partial<SettingsData>): Promise<SettingsData> {
-    return this.request<SettingsData>('/settings', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-}
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating product:', error);
+      throw error;
+    }
+  },
 
-export const apiService = new ApiService();
+  updateProduct: async (productId: string, productData: Record<string, unknown>) => {
+    try {
+      const response = await api.patch(`/products/${productId}`, productData);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update product');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  },
+
+  deleteProduct: async (productId: string) => {
+    try {
+      const response = await api.delete(`/products/${productId}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete product');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      throw error;
+    }
+  },
+
+  // Settings methods
+  getSettings: async () => {
+    try {
+      const response = await api.get('/settings');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch settings');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+      return {};
+    }
+  },
+
+  updateSettings: async (settingsData: Record<string, unknown>) => {
+    try {
+      const response = await api.patch('/settings', settingsData);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update settings');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      throw error;
+    }
+  },
+};

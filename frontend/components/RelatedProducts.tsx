@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Product } from '@/components/ProductCard';
+import { Product } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { apiService } from '@/lib/api';
 
@@ -69,7 +69,7 @@ export default function RelatedProducts({
                 src={
                   product.images?.[0] ||
                   product.image ||
-                  '/images/placeholder.png'
+                  '/images/placeholder.svg'
                 }
                 alt={product.name}
                 fill
@@ -84,7 +84,7 @@ export default function RelatedProducts({
                 style: 'currency',
                 currency: 'VND',
                 maximumFractionDigits: 0,
-              }).format(product.price)}
+              }).format(parseFloat(product.price))}
             </div>
           </Link>
         ))}

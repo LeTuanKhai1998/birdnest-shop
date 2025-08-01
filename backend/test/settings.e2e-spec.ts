@@ -238,4 +238,4 @@ describe('Settings API (e2e)', () => {
       expect(getResponse.body.maintenance_mode).toBe(true);
     });
   });
-}); 
+});

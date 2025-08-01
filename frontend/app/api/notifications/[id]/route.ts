@@ -3,67 +3,128 @@ import { auth } from '@/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-// Define proper types for user session
-interface UserSession {
-  id: string;
-  email?: string;
-  name?: string;
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const session = await auth();
+  if (!session || !session.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    // Use JWT authentication with the backend
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add JWT token from session
+    if (session.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch notification');
+    }
+
+    const notification = await response.json();
+    return NextResponse.json(notification);
+  } catch (error) {
+    console.error('Error fetching notification:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch notification' },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const session = await auth();
+  if (!session || !session.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+
+    // Use JWT authentication with the backend
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add JWT token from session
+    if (session.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update notification');
+    }
+
+    const notification = await response.json();
+    return NextResponse.json(notification);
+  } catch (error) {
+    console.error('Error updating notification:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to update notification' },
+      { status: 500 },
+    );
+  }
 }
 
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await auth();
-  if (!session || !session.user) {
+  if (!session || !session.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id } = await params;
-
   try {
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
-    if (token) {
-      // For admin users, use backend API
-      const response = await fetch(`${API_BASE_URL}/notifications/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete notification');
-      }
-      
-      const result = await response.json();
-      return NextResponse.json(result);
-    } else {
-      // For NextAuth users, use the special endpoint
-      const user = session.user as UserSession;
-      
-      const response = await fetch(`${API_BASE_URL}/notifications/nextauth/${id}/${user.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        return NextResponse.json(result);
-      } else {
-        return NextResponse.json(
-          { error: 'Failed to delete notification' },
-          { status: 404 }
-        );
-      }
+    // Use JWT authentication with the backend
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add JWT token from session
+    if (session.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`;
     }
-  } catch {
+
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete notification');
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
     return NextResponse.json(
-      { error: 'Failed to delete notification' },
+      { error: error instanceof Error ? error.message : 'Failed to delete notification' },
       { status: 500 },
     );
   }

@@ -208,14 +208,12 @@ describe('Orders API (e2e)', () => {
     });
 
     it('should reject unauthenticated access', async () => {
-      await request(app.getHttpServer())
-        .get('/api/orders')
-        .expect(401);
+      await request(app.getHttpServer()).get('/api/orders').expect(401);
     });
   });
 
   describe('GET /api/orders/my-orders', () => {
-    it('should return user\'s own orders', async () => {
+    it("should return user's own orders", async () => {
       const response = await request(app.getHttpServer())
         .get('/api/orders/my-orders')
         .set('Authorization', `Bearer ${userToken}`)
@@ -276,7 +274,7 @@ describe('Orders API (e2e)', () => {
       expect(response.body.id).toBe(testOrder.id);
     });
 
-    it('should reject access to other user\'s order', async () => {
+    it("should reject access to other user's order", async () => {
       // Create another user and try to access the order
       const otherUser = await prisma.user.create({
         data: {
@@ -368,4 +366,4 @@ describe('Orders API (e2e)', () => {
       expect(response.body.length).toBe(0);
     });
   });
-}); 
+});

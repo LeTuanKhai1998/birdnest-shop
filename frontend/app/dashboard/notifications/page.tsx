@@ -133,26 +133,6 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center lg:text-left">
-        <h1 
-          className="text-glossy text-3xl md:text-5xl font-black italic"
-          style={{
-            fontWeight: 900,
-            fontStyle: 'italic',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '3.3rem',
-            padding: '20px',
-            color: '#a10000'
-          }}
-        >
-          Thông báo
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl">
-          Cập nhật về đơn hàng, khuyến mãi và thông tin quan trọng
-        </p>
-      </div>
-
       {/* Search and Filter */}
       <Card>
         <CardContent className="p-6">

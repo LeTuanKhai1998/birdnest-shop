@@ -14,7 +14,9 @@ export class SettingsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, AdminGuard)
-  async createOrUpdate(@Body() data: Partial<SettingsData>): Promise<SettingsData> {
+  async createOrUpdate(
+    @Body() data: Partial<SettingsData>,
+  ): Promise<SettingsData> {
     return this.settingsService.updateSettings(data);
   }
 }

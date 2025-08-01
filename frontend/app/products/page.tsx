@@ -1,14 +1,10 @@
 import { Metadata } from 'next';
 import ProductsClient from '@/components/ProductsClient';
-import { apiService } from '@/lib/api';
-import {
-  mapDisplayProducts,
-  MockUiProduct,
-  mockUiProducts,
-} from '@/lib/products-mapper';
+import { getProducts } from '@/lib/api-server';
 import { SEO_CONSTANTS } from '@/lib/constants';
+import { Product, ProductImage } from '@/lib/types';
 
-const FALLBACK_IMAGE = '/images/placeholder.png';
+const FALLBACK_IMAGE = '/images/placeholder.svg';
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -31,12 +27,12 @@ export const metadata: Metadata = {
 export default async function ProductsPage() {
   try {
     // Fetch products from the API
-    const dbProducts = await apiService.getProducts();
+    const dbProducts = await getProducts();
     
     // Map API response to UI format
-    const uiProducts = dbProducts.map((p) => {
+    const uiProducts = dbProducts.map((p: any) => {
       const images = p.images && Array.isArray(p.images) && p.images.length > 0 
-        ? p.images.map(img => typeof img === 'string' ? img : img.url)
+        ? p.images.map((img: any) => typeof img === 'string' ? img : (img as ProductImage).url)
         : [FALLBACK_IMAGE];
       
       return {
@@ -44,7 +40,7 @@ export default async function ProductsPage() {
         slug: String(p.slug),
         name: String(p.name),
         images,
-        price: Number(p.price),
+        price: String(p.price),
         description: String(p.description),
         weight: (() => {
           if (typeof p.name === 'string' && p.name.includes('50g')) return 50;
@@ -65,21 +61,10 @@ export default async function ProductsPage() {
       };
     });
     
-    const displayProducts: MockUiProduct[] = mapDisplayProducts(
-      uiProducts,
-      mockUiProducts,
-      FALLBACK_IMAGE,
-    );
-    
-    return <ProductsClient products={displayProducts} />;
+    return <ProductsClient products={uiProducts as Product[]} />;
   } catch (error) {
     console.error('Error fetching products:', error);
-    // Fallback to mock products if API fails
-    const displayProducts: MockUiProduct[] = mapDisplayProducts(
-      [],
-      mockUiProducts,
-      FALLBACK_IMAGE,
-    );
-    return <ProductsClient products={displayProducts} />;
+    // Return empty products array instead of mock data
+    return <ProductsClient products={[]} />;
   }
 }

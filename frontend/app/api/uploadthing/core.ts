@@ -23,7 +23,6 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Avatar uploaded:", file.ufsUrl);
       return { uploadedBy: metadata.userId };
     }),
 
@@ -43,8 +42,6 @@ export const ourFileRouter = {
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
-      console.log("Upload complete for userId:", metadata.userId);
-      console.log("file url", file.ufsUrl);
       
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { uploadedBy: metadata.userId };
@@ -62,7 +59,6 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Product image uploaded:", file.ufsUrl);
       return { uploadedBy: metadata.userId };
     }),
 
@@ -78,7 +74,6 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("General image uploaded:", file.ufsUrl);
       return { uploadedBy: metadata.userId };
     }),
 } satisfies FileRouter;

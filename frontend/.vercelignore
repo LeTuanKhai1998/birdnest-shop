@@ -1,0 +1,44 @@
+# Development files
+*.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test files
+__tests__/
+*.test.*
+*.spec.*
+
+# Build artifacts (keep .next for deployment)
+out/
+dist/
+
+# Dependencies
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md
+
+# Coverage
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backend files (not needed for frontend deployment)
+../backend/ 

@@ -88,17 +88,19 @@ describe('Security (e2e)', () => {
     it('should apply rate limiting to requests', async () => {
       // Test that rate limiting infrastructure is in place by making a few sequential requests
       const responses: any[] = [];
-      
+
       for (let i = 0; i < 5; i++) {
-        const response = await request(app.getHttpServer()).get('/api/products');
+        const response = await request(app.getHttpServer()).get(
+          '/api/products',
+        );
         responses.push(response);
       }
-      
+
       // All requests should succeed in test environment
       responses.forEach((res) => {
         expect(res.status).toBe(200);
       });
-      
+
       // Verify that the rate limiting infrastructure is in place
       expect(responses.length).toBe(5);
     }, 10000); // Increase timeout for rate limiting test
@@ -117,7 +119,9 @@ describe('Security (e2e)', () => {
           .expect((res) => {
             expect(res.body).toHaveProperty('message');
             expect(res.body).not.toHaveProperty('stack');
-            expect(res.body.message).toBe('Cannot GET /api/non-existent-endpoint');
+            expect(res.body.message).toBe(
+              'Cannot GET /api/non-existent-endpoint',
+            );
           });
       } finally {
         // Restore original environment

@@ -1,26 +1,14 @@
 'use client';
-import { AdminTable } from '@/components/ui/AdminTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState, useMemo, useEffect } from 'react';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { 
-  ChevronDown, 
   Search, 
-  Filter, 
   RefreshCw, 
-  AlertCircle, 
   CheckCircle2,
   Package,
   Eye,
-  MoreHorizontal,
   Calendar,
   User,
   DollarSign,
@@ -29,22 +17,10 @@ import {
   CheckCircle,
   XCircle,
   Download,
-  Settings,
-  Info,
   TrendingUp,
   TrendingDown,
-  ArrowUpRight,
-  ArrowDownRight,
   X
 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -517,7 +493,7 @@ export default function AdminOrdersPage() {
                                   <div>
                                     <p className="font-medium text-sm">{order.id}</p>
                                     <p className="text-xs text-gray-500">
-                                      {(order.items?.length || 0)} items
+                                      {(order.orderItems?.length || 0)} items
                                     </p>
                                   </div>
                                 </div>
@@ -604,7 +580,7 @@ export default function AdminOrdersPage() {
                       <div className="pt-2 border-t">
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-gray-500">
-                            {(order.items?.length || 0)} items
+                            {(order.orderItems?.length || 0)} items
                           </span>
                           <Button
                             variant="outline"

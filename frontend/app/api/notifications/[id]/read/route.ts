@@ -3,67 +3,43 @@ import { auth } from '@/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-// Define proper types for user session
-interface UserSession {
-  id: string;
-  email?: string;
-  name?: string;
-}
-
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await auth();
-  if (!session || !session.user) {
+  if (!session || !session.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id } = await params;
-
   try {
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
-    if (token) {
-      // For admin users, use backend API
-      const response = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to mark notification as read');
-      }
-      
-      const notification = await response.json();
-      return NextResponse.json(notification);
-    } else {
-      // For NextAuth users, use the special endpoint
-      const user = session.user as UserSession;
-      
-      const response = await fetch(`${API_BASE_URL}/notifications/nextauth/${id}/read/${user.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const notification = await response.json();
-        return NextResponse.json(notification);
-      } else {
-        return NextResponse.json(
-          { error: 'Failed to mark notification as read' },
-          { status: 404 }
-        );
-      }
+    // Use JWT authentication with the backend
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add JWT token from session
+    if (session.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`;
     }
-  } catch {
+
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+      method: 'PATCH',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to mark as read');
+    }
+
+    const result = await response.json();
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Error marking as read:', error);
     return NextResponse.json(
-      { error: 'Failed to mark notification as read' },
+      { error: error instanceof Error ? error.message : 'Failed to mark as read' },
       { status: 500 },
     );
   }

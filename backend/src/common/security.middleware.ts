@@ -1,3 +1,4 @@
+/* eslint-disable no-control-regex */
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
@@ -45,10 +46,8 @@ export class SecurityMiddleware implements NestMiddleware {
 
     return (
       str
-        // Remove null bytes
-        .replace(/\0/g, '')
-        // Remove control characters except newlines and tabs
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        // Remove null bytes and control characters except newlines and tabs
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
         // Trim whitespace
         .trim()
     );

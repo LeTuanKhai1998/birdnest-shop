@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import {
   Carousel,
   CarouselContent,
@@ -69,7 +68,7 @@ export function HomeCarousel({ banners }: HomeCarouselProps) {
             >
               <Card className="w-full rounded-2xl overflow-hidden shadow-xl border-0">
                 <CardContent className="p-0 m-0 border-0">
-                  <AspectRatio ratio={16 / 7}>
+                  <div className="relative w-full" style={{ aspectRatio: '16/7' }}>
                     <Image
                       src={banner.src}
                       alt={banner.alt}
@@ -78,7 +77,7 @@ export function HomeCarousel({ banners }: HomeCarouselProps) {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1152px"
                       priority={i === 0}
                     />
-                  </AspectRatio>
+                  </div>
                 </CardContent>
               </Card>
             </CarouselItem>

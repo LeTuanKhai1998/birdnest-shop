@@ -101,57 +101,32 @@ export function UploadThingButton({
   }, []);
 
   const handleUploadComplete = React.useCallback((res: UploadResponse[]) => {
-    console.log("UploadThingButton: Upload completed", res);
-    setIsUploading(false);
-    
     if (res && res.length > 0) {
-      // Use ufsUrl instead of url (as per UploadThing v9 recommendation)
-      const urls = res.map((item: UploadResponse) => {
-        // Prefer ufsUrl, fallback to url, then serverUrl
-        const url = item.ufsUrl || item.url || item.serverUrl;
-        console.log(`File ${item.name}:`, { 
-          ufsUrl: item.ufsUrl, 
-          url: item.url, 
-          serverUrl: item.serverUrl, 
-          final: url,
-          size: item.size,
-          type: item.type
-        });
-        return url;
-      }).filter((url): url is string => url !== undefined);
-      console.log("UploadThingButton: URLs extracted", urls);
-      setUploadedUrls(prev => [...prev, ...urls]);
-      onUploadComplete(urls);
+      const urls: string[] = [];
       
-      // Only show toast for non-avatar uploads to avoid conflicts
-      if (endpoint !== "avatarUploader") {
-        toast({
-          title: "Upload successful",
-          description: `${res.length} image(s) uploaded successfully.`,
-        });
+      res.forEach((item) => {
+        if (item.url) {
+          urls.push(item.url);
+        }
+      });
+      
+      if (urls.length > 0) {
+        onUploadComplete(urls);
       }
-    } else {
-      console.log("UploadThingButton: No results in response");
     }
-  }, [onUploadComplete, endpoint]);
+  }, [onUploadComplete]);
 
   const handleUploadError = React.useCallback((error: Error) => {
-    console.log("UploadThingButton: Upload error", error);
-    setIsUploading(false);
     console.error("Upload failed:", error);
-    
     toast({
       title: "Upload failed",
-      description: error.message || "Failed to upload image(s). Please try again.",
+      description: error.message || "Failed to upload file",
       variant: "destructive",
     });
-    
-    onUploadError?.(error);
-  }, [onUploadError]);
+  }, [toast]);
 
   const handleUploadBegin = React.useCallback(() => {
-    console.log("UploadThingButton: Upload started");
-    setIsUploading(true);
+    // Upload started
   }, []);
 
   const removeImage = React.useCallback((index: number) => {

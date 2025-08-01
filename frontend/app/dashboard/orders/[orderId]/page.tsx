@@ -1,5 +1,5 @@
 'use client';
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -103,30 +103,70 @@ export default function OrderDetailPage({
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const hasFetched = useRef(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchOrder = async () => {
       if (!isAuthenticated) {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
         return;
       }
 
       try {
-        setLoading(true);
-        setError('');
+        if (isMounted) {
+          setLoading(true);
+          setError('');
+        }
         const orderData = await apiService.getOrder(orderId);
-        setOrder(orderData);
+        if (isMounted) {
+          setOrder(orderData);
+        }
       } catch (err) {
         console.error('Error fetching order:', err);
-        setError('Không thể tải thông tin đơn hàng');
+        if (isMounted) {
+          if (err instanceof Error) {
+            if (err.message.includes('Unauthorized')) {
+              setError('Vui lòng đăng nhập để xem đơn hàng');
+            } else if (err.message.includes('Order not found')) {
+              setError('Không tìm thấy đơn hàng');
+            } else {
+              setError('Không thể tải thông tin đơn hàng');
+            }
+          } else {
+            setError('Không thể tải thông tin đơn hàng');
+          }
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    if (!isLoading) {
-      fetchOrder();
+    // Reset fetch flag when orderId changes
+    if (hasFetched.current) {
+      hasFetched.current = false;
+      setOrder(null);
+      setError('');
     }
+
+    // Only fetch once when we have a stable authenticated state
+    if (!isLoading && isAuthenticated && !hasFetched.current) {
+      hasFetched.current = true;
+      fetchOrder();
+    } else if (!isLoading && !isAuthenticated) {
+      // If we're not loading and not authenticated, stop loading
+      setLoading(false);
+    }
+
+    // Cleanup function to prevent race conditions
+    return () => {
+      isMounted = false;
+    };
   }, [orderId, isAuthenticated, isLoading]);
 
   if (isLoading || loading) {
@@ -152,9 +192,15 @@ export default function OrderDetailPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="text-red-500 font-semibold">{error}</div>
-        <Link href="/dashboard/orders">
-          <Button className="mt-4">Quay lại đơn hàng</Button>
-        </Link>
+        {error.includes('đăng nhập') ? (
+          <Link href="/login">
+            <Button className="mt-4">Đăng nhập</Button>
+          </Link>
+        ) : (
+          <Link href="/dashboard/orders">
+            <Button className="mt-4">Quay lại đơn hàng</Button>
+          </Link>
+        )}
       </div>
     );
   }
@@ -199,8 +245,8 @@ export default function OrderDetailPage({
         {/* Order Details */}
         <div className="lg:col-span-2 space-y-6">
           {/* Order Items */}
-          <Card>
-            <CardHeader>
+          <Card className="py-6">
+            <CardHeader className="pt-6">
               <CardTitle className="flex items-center gap-2">
                 <Package className="w-5 h-5" />
                 Sản phẩm đã đặt
@@ -212,7 +258,7 @@ export default function OrderDetailPage({
                   <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
                     {item.product?.images?.[0] ? (
                       <Image
-                        src={item.product.images[0]}
+                        src={item.product.images[0].url}
                         alt={item.product.name}
                         width={80}
                         height={80}
@@ -240,8 +286,8 @@ export default function OrderDetailPage({
           </Card>
 
           {/* Order Timeline */}
-          <Card>
-            <CardHeader>
+          <Card className="py-6">
+            <CardHeader className="pt-6">
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
                 Lịch sử đơn hàng
@@ -291,8 +337,8 @@ export default function OrderDetailPage({
         {/* Order Summary */}
         <div className="space-y-6">
           {/* Order Info */}
-          <Card>
-            <CardHeader>
+          <Card className="py-6">
+            <CardHeader className="pt-6">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5" />
                 Thông tin đơn hàng
@@ -316,8 +362,8 @@ export default function OrderDetailPage({
 
           {/* Shipping Address */}
           {order.shippingAddress && (
-            <Card>
-              <CardHeader>
+            <Card className="py-6">
+              <CardHeader className="pt-6">
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="w-5 h-5" />
                   Địa chỉ giao hàng
@@ -332,8 +378,8 @@ export default function OrderDetailPage({
           )}
 
           {/* Order Summary */}
-          <Card>
-            <CardHeader>
+          <Card className="py-6">
+            <CardHeader className="pt-6">
               <CardTitle>Tổng cộng</CardTitle>
             </CardHeader>
             <CardContent>

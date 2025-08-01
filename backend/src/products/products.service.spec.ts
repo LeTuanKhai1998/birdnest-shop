@@ -6,7 +6,6 @@ import { Product, Category, Image, Prisma } from '@prisma/client';
 
 describe('ProductsService', () => {
   let service: ProductsService;
-  let prismaService: PrismaService;
 
   const mockPrismaService = {
     product: {
@@ -34,7 +33,9 @@ describe('ProductsService', () => {
     image: {
       deleteMany: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(mockPrismaService)),
+    $transaction: jest.fn((callback: (prisma: any) => unknown) =>
+      callback(mockPrismaService),
+    ),
   };
 
   const mockProduct: Product = {
@@ -89,7 +90,6 @@ describe('ProductsService', () => {
     }).compile();
 
     service = module.get<ProductsService>(ProductsService);
-    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -98,9 +98,9 @@ describe('ProductsService', () => {
 
   describe('findAll', () => {
     it('should return all products without filters', async () => {
-      const mockProducts = [
-        { ...mockProduct, category: mockCategory, images: [mockImage] },
-      ];
+      const mockProducts: Array<
+        Product & { category: Category; images: Image[] }
+      > = [{ ...mockProduct, category: mockCategory, images: [mockImage] }];
       mockPrismaService.product.findMany.mockResolvedValue(mockProducts);
 
       const result = await service.findAll({});
@@ -123,9 +123,9 @@ describe('ProductsService', () => {
     });
 
     it('should return products with category filter', async () => {
-      const mockProducts = [
-        { ...mockProduct, category: mockCategory, images: [mockImage] },
-      ];
+      const mockProducts: Array<
+        Product & { category: Category; images: Image[] }
+      > = [{ ...mockProduct, category: mockCategory, images: [mockImage] }];
       mockPrismaService.product.findMany.mockResolvedValue(mockProducts);
 
       const result = await service.findAll({ categoryId: '1' });
@@ -148,9 +148,9 @@ describe('ProductsService', () => {
     });
 
     it('should return products with search filter', async () => {
-      const mockProducts = [
-        { ...mockProduct, category: mockCategory, images: [mockImage] },
-      ];
+      const mockProducts: Array<
+        Product & { category: Category; images: Image[] }
+      > = [{ ...mockProduct, category: mockCategory, images: [mockImage] }];
       mockPrismaService.product.findMany.mockResolvedValue(mockProducts);
 
       const result = await service.findAll({ search: 'test' });

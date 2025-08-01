@@ -3,81 +3,38 @@ import { auth } from '@/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-interface SessionUser {
-  id: string;
-  name?: string;
-  email?: string;
-  avatar?: string;
-}
-
 export async function GET() {
   const session = await auth();
-  if (!session || !session.user) {
+  if (!session || !session.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  
+
   try {
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
-    if (token) {
-      // For admin users, use backend API
-      const response = await fetch(`${API_BASE_URL}/users/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile');
-      }
-      
-      const user = await response.json();
-      return NextResponse.json(user);
-    } else {
-      // For NextAuth users, fetch complete data from backend
-      const user = session.user as SessionUser;
-      
-      try {
-        // Use the special GET endpoint for NextAuth users
-        const response = await fetch(`${API_BASE_URL}/users/profile/nextauth/${user.id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (response.ok) {
-          const userData = await response.json();
-          return NextResponse.json(userData);
-        } else {
-          // Fallback to session data if backend fails
-          return NextResponse.json({
-            id: user.id,
-            name: user.name || '',
-            email: user.email || '',
-            phone: '',
-            bio: '',
-            avatar: user.avatar || '',
-            createdAt: new Date().toISOString(),
-          });
-        }
-      } catch (error) {
-        // Fallback to session data if backend fails
-        return NextResponse.json({
-          id: user.id,
-          name: user.name || '',
-          email: user.email || '',
-          phone: '',
-          bio: '',
-          avatar: user.avatar || '',
-          createdAt: new Date().toISOString(),
-        });
-      }
+    // Use JWT authentication with the backend
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add JWT token from session
+    if (session.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`;
     }
+
+    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile');
+    }
+
+    const userData = await response.json();
+    return NextResponse.json(userData);
   } catch (error) {
+    console.error('Error fetching user profile:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch profile' },
+      { error: 'Failed to fetch user profile' },
       { status: 500 },
     );
   }
@@ -85,68 +42,46 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   const session = await auth();
-  if (!session || !session.user) {
+  if (!session || !session.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  
+
   try {
-    const data = await req.json();
-    
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
-    if (token) {
-      // For admin users, use backend API
-      const response = await fetch(`${API_BASE_URL}/users/profile`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-      
-      const user = await response.json();
-      return NextResponse.json(user);
-    } else {
-      // For NextAuth users, use the special endpoint that doesn't require JWT
-      const userId = (session.user as SessionUser).id;
-      if (!userId) {
-        return NextResponse.json({ 
-          error: 'User ID not found in session' 
-        }, { status: 400 });
-      }
-      
-      // Add userId to the data for the backend to identify the user
-      const updateData = {
-        ...data,
-        userId: userId
-      };
-      
-      // Use the NextAuth-specific endpoint
-      const response = await fetch(`${API_BASE_URL}/users/profile/nextauth`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to update profile');
-      }
-      
-      const user = await response.json();
-      return NextResponse.json(user);
+    const body = await req.json();
+    const { avatar, name, phone, bio } = body;
+
+    // Use JWT authentication with the backend
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add JWT token from session
+    if (session.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`;
     }
+
+    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({
+        avatar,
+        name,
+        phone,
+        bio,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update profile');
+    }
+
+    const updatedUser = await response.json();
+    return NextResponse.json(updatedUser);
   } catch (error) {
+    console.error('Error updating user profile:', error);
     return NextResponse.json(
-      { error: 'Failed to update profile' },
+      { error: error instanceof Error ? error.message : 'Failed to update profile' },
       { status: 500 },
     );
   }

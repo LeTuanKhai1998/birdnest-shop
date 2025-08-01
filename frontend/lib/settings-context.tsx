@@ -23,8 +23,30 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiService.getSettings();
-      setSettings(data);
+      
+      // Only try to load settings on the client side
+      if (typeof window !== 'undefined') {
+        const data = await apiService.getSettings();
+        setSettings(data);
+      } else {
+        // Server-side fallback to default settings
+        setSettings({
+          storeName: 'Birdnest Shop',
+          storeEmail: 'admin@birdnest.com',
+          storePhone: '',
+          defaultLanguage: 'en',
+          currency: 'VND',
+          taxPercent: 0,
+          freeShippingThreshold: 500000,
+          enableStripe: true,
+          enableMomo: true,
+          enableCOD: true,
+          maintenanceMode: false,
+          logoUrl: '',
+          address: '',
+          country: 'Vietnam',
+        });
+      }
     } catch (err) {
       console.error('Error loading settings:', err);
       setError('Failed to load settings - using defaults');
@@ -56,11 +78,17 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const updateSettings = async (data: Partial<SettingsData>) => {
     try {
-      const updatedSettings = await apiService.updateSettings(data);
-      setSettings(updatedSettings);
-      
-      // Refresh settings to ensure all components get the latest data
-      await refreshSettings();
+      // Only try to update settings on the client side
+      if (typeof window !== 'undefined') {
+        const updatedSettings = await apiService.updateSettings(data);
+        setSettings(updatedSettings);
+        
+        // Refresh settings to ensure all components get the latest data
+        await refreshSettings();
+      } else {
+        // Server-side: just update local state
+        setSettings(prev => prev ? { ...prev, ...data } : null);
+      }
     } catch (err) {
       console.error('Error updating settings:', err);
       throw err;

@@ -60,9 +60,9 @@ export default function PaymentPage() {
   const [confirming, setConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
   const { user, isAuthenticated } = useAuth();
-  const items = useCheckoutStore((s) => s.products) as ProductCartItem[];
+  const items = useCheckoutStore((s) => s.products);
   const subtotal = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
     0,
   );
   const shippingFee = useCheckoutStore((s) => s.deliveryFee);
@@ -77,7 +77,9 @@ export default function PaymentPage() {
   const router = useRouter();
 
   const handleCopyOrderId = () => {
-    navigator.clipboard.writeText('MOCK123');
+    // Use a temporary order ID until the real order is created
+    const tempOrderId = `TEMP-${Date.now()}`;
+    navigator.clipboard.writeText(tempOrderId);
     setCopied(true);
     toast.success('Đã sao chép mã đơn hàng!');
     setTimeout(() => setCopied(false), 2000);
@@ -86,6 +88,11 @@ export default function PaymentPage() {
   const handleConfirm = async () => {
     if (!method) {
       toast.error('Vui lòng chọn phương thức thanh toán');
+      return;
+    }
+
+    if (!checkoutInfo) {
+      toast.error('Thông tin giao hàng không hợp lệ. Vui lòng quay lại trang checkout.');
       return;
     }
 
@@ -113,23 +120,15 @@ export default function PaymentPage() {
         paymentMethod: method,
       };
 
-      // Use guest endpoint if user is not authenticated, otherwise use regular endpoint
-      const endpoint = isAuthenticated ? '/api/orders' : '/api/orders/guest';
+      // Use frontend API route for authenticated users, backend guest endpoint for guests
+      const endpoint = isAuthenticated ? '/api/create-order' : 'http://localhost:8080/api/orders/guest';
       
       // Prepare headers
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
       
-      // Add authentication header if user is authenticated
-      if (isAuthenticated) {
-        const token = localStorage.getItem('auth-token');
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-      }
-      
-      const response = await fetch(`http://localhost:8080${endpoint}`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers,
         body: JSON.stringify(orderData),
@@ -140,7 +139,10 @@ export default function PaymentPage() {
         throw new Error(errorData.message || 'Failed to create order');
       }
 
-      const order = await response.json();
+      const responseData = await response.json();
+      
+      // Handle different response formats
+      const order = responseData.order || responseData;
       
       // Clear cart after successful order
       clearCart();
@@ -315,7 +317,7 @@ export default function PaymentPage() {
                       <div className="text-center space-y-2">
                         <p className="text-sm text-gray-600">Mã đơn hàng để tham khảo:</p>
                         <div className="flex items-center gap-2 justify-center">
-                          <code className="bg-gray-100 px-3 py-1 rounded text-sm font-mono">MOCK123</code>
+                          <code className="bg-gray-100 px-3 py-1 rounded text-sm font-mono">TEMP-{Date.now()}</code>
                           <Button
                             variant="outline"
                             size="sm"
@@ -371,7 +373,7 @@ export default function PaymentPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="font-medium text-gray-700">Nội dung:</span>
-                        <span className="text-gray-900 font-mono">MOCK123</span>
+                        <span className="text-gray-900 font-mono">TEMP-{Date.now()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="font-medium text-gray-700">Số tiền:</span>
@@ -504,7 +506,7 @@ export default function PaymentPage() {
                           </div>
                           <div className="text-right">
                             <p className="font-semibold text-base text-gray-900">
-                              {currencyFormatter.format(product.price * quantity)}
+                              {currencyFormatter.format(parseFloat(product.price) * quantity)}
                             </p>
                           </div>
                         </div>

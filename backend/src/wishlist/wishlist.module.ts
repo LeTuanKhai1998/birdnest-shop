@@ -8,4 +8,4 @@ import { PrismaService } from '../common/prisma.service';
   providers: [WishlistService, PrismaService],
   exports: [WishlistService],
 })
-export class WishlistModule {} 
+export class WishlistModule {}

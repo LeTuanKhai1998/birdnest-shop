@@ -5,7 +5,8 @@ import {
   NotificationType,
   RecipientType,
 } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
+
+import { Notification } from '@prisma/client';
 
 @Injectable()
 export class NotificationsService {
@@ -32,25 +33,22 @@ export class NotificationsService {
     });
   }
 
-  async findAll(userId: string, isAdmin: boolean) {
-    console.log('Finding notifications for user:', userId, 'isAdmin:', isAdmin);
-
+  async findAll(
+    userId: string,
+    isAdmin: boolean = false,
+  ): Promise<Notification[]> {
     const where: any = {
       OR: [
-        // User-specific notifications
+        { userId: null, recipientType: isAdmin ? 'ADMIN' : 'USER' },
         { userId: userId },
-        // Broadcast notifications for the user's role
-        {
-          userId: null,
-          recipientType: isAdmin ? RecipientType.ADMIN : RecipientType.USER,
-        },
       ],
     };
 
-    console.log('Query where clause:', JSON.stringify(where, null, 2));
-
     const result = await this.prisma.notification.findMany({
       where,
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         user: {
           select: {
@@ -60,12 +58,8 @@ export class NotificationsService {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
     });
 
-    console.log('Found notifications:', result.length);
     return result;
   }
 

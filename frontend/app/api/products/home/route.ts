@@ -75,11 +75,11 @@ export async function GET() {
       image:
         product.images.find((img) => img.isPrimary)?.url ||
         product.images[0]?.url ||
-        '/images/fallback.png',
+        '/images/placeholder-image.svg',
       images:
         product.images.length > 0
           ? product.images.map((img) => img.url)
-          : ['/images/fallback.png'],
+          : ['/images/placeholder-image.svg'],
       price: parseFloat(product.price),
       weight: product.weight || 100,
       description: product.description,

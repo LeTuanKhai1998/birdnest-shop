@@ -3,62 +3,39 @@ import { auth } from '@/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-// Define proper types for user session
-interface UserSession {
-  id: string;
-  email?: string;
-  name?: string;
-}
-
 export async function PATCH() {
   const session = await auth();
-  if (!session || !session.user) {
+  if (!session || !session.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    // Get auth token from localStorage (for admin users)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
-    
-    if (token) {
-      // For admin users, use backend API
-      const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to mark all notifications as read');
-      }
-      
-      const result = await response.json();
-      return NextResponse.json(result);
-    } else {
-      // For NextAuth users, use the special endpoint
-      const user = session.user as UserSession;
-      
-      const response = await fetch(`${API_BASE_URL}/notifications/nextauth/read-all/${user.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        return NextResponse.json(result);
-      } else {
-        return NextResponse.json(
-          { error: 'Failed to mark all notifications as read' },
-          { status: 404 }
-        );
-      }
+    // Use JWT authentication with the backend
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add JWT token from session
+    if (session.accessToken) {
+      headers['Authorization'] = `Bearer ${session.accessToken}`;
     }
-  } catch {
+
+    const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
+      method: 'PATCH',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to mark all as read');
+    }
+
+    const result = await response.json();
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Error marking all as read:', error);
     return NextResponse.json(
-      { error: 'Failed to mark all notifications as read' },
+      { error: error instanceof Error ? error.message : 'Failed to mark all as read' },
       { status: 500 },
     );
   }

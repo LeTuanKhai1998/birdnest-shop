@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/lib/cart-store';
 import { ReactNode } from 'react';
-import { Product } from '@/components/ProductCard';
+import { Product } from '@/lib/types';
 
 export function AddToCartButton({
   product,

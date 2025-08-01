@@ -21,6 +21,7 @@ import { Toaster, toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCheckoutStore } from '@/lib/checkout-store';
+import { getFirstImageUrl } from '@/lib/utils';
 import { CartItem } from '@/lib/cart-store';
 import { useAuth } from '@/hooks/useAuth';
 import useSWR from 'swr';
@@ -62,7 +63,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-// Mock data for administrative selection
+// Address selection and form handling
 interface Province {
   code: string;
   name: string;
@@ -119,7 +120,7 @@ function getAddressDisplay(addr: Address, provinces: Province[]): string {
 
 export default function CheckoutPage() {
   const { user, isAuthenticated } = useAuth();
-  const { data: savedAddresses = [] } = useSWR(
+  const { data: savedAddresses = [], error: addressesError, isLoading: addressesLoading, mutate: mutateAddresses } = useSWR(
     isAuthenticated ? '/api/addresses' : null,
     async (url) => {
       // Use the frontend API route which handles both JWT and NextAuth users
@@ -130,13 +131,30 @@ export default function CheckoutPage() {
       }
       
       const data = await response.json();
-      return data.addresses || [];
+      // The API returns addresses directly, not wrapped in an addresses property
+      const addresses = Array.isArray(data) ? data : (data.addresses || []);
+      return addresses;
     },
+    {
+      revalidateOnFocus: true, // Changed to true to refresh when tab becomes active
+      revalidateOnReconnect: true,
+      refreshInterval: 0,
+    }
   );
+  
   const [selectedAddressId, setSelectedAddressId] = useState<string | 'new'>('new');
+  
+  // Prevent selectedAddressId from being set to empty string
+  const safeSetSelectedAddressId = (id: string | 'new') => {
+    if (id === '') {
+      return;
+    }
+    setSelectedAddressId(id);
+  };
+
   const items = useCartStore((s) => s.items);
   const subtotal = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
     0,
   );
   const shipping = subtotal >= 500000 ? 0 : 30000; // Free shipping over 500K VND
@@ -166,7 +184,6 @@ export default function CheckoutPage() {
     },
   });
   const [addressMode, setAddressMode] = useState<'manual' | 'map'>('manual');
-  const [mockMarker, setMockMarker] = useState({ lat: 10.776, lng: 106.7 });
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [loadingProvinces, setLoadingProvinces] = useState(true);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -174,14 +191,32 @@ export default function CheckoutPage() {
   const setCheckoutInfo = useCheckoutStore((s) => s.setCheckoutInfo);
   const setProducts = useCheckoutStore((s) => s.setProducts);
   const setDeliveryFee = useCheckoutStore((s) => s.setDeliveryFee);
+  const setPaymentMethod = useCheckoutStore((s) => s.setPaymentMethod);
   const lastResetId = useRef<string | null>(null);
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty or user is not authenticated
   useEffect(() => {
     if (items.length === 0) {
       router.push('/cart');
+    } else if (!isAuthenticated) {
+      router.push('/login');
     }
-  }, [items.length, router]);
+  }, [items.length, isAuthenticated, router]);
+
+  // Refresh addresses data when component mounts to ensure we have latest data
+  useEffect(() => {
+    if (isAuthenticated && mutateAddresses) {
+      mutateAddresses();
+    }
+  }, [isAuthenticated, mutateAddresses]);
+
+  // Set products in checkout store when component mounts
+  useEffect(() => {
+    if (items.length > 0) {
+      setProducts(items);
+      setDeliveryFee(shipping);
+    }
+  }, [items, setProducts, setDeliveryFee, shipping]);
 
   useEffect(() => {
     setLoadingProvinces(true);
@@ -199,12 +234,23 @@ export default function CheckoutPage() {
 
   // Set default address when addresses are loaded
   useEffect(() => {
+    // Only auto-select if we have addresses and haven't selected one yet
     if (savedAddresses.length > 0 && selectedAddressId === 'new') {
       const defaultAddress = savedAddresses.find((a: Address) => a.isDefault);
+      
       if (defaultAddress) {
-        setSelectedAddressId(defaultAddress.id);
+        safeSetSelectedAddressId(defaultAddress.id);
       } else {
-        setSelectedAddressId(savedAddresses[0].id);
+        // If no default address, select the first one
+        safeSetSelectedAddressId(savedAddresses[0].id);
+      }
+    }
+    
+    // Also check if the currently selected address is still valid
+    if (selectedAddressId !== 'new' && savedAddresses.length > 0) {
+      const currentAddress = savedAddresses.find((a: Address) => a.id === selectedAddressId);
+      if (!currentAddress) {
+        safeSetSelectedAddressId('new');
       }
     }
   }, [savedAddresses, selectedAddressId]);
@@ -242,7 +288,7 @@ export default function CheckoutPage() {
           lastResetId.current = selectedAddressId;
         }
       }
-    } else if (lastResetId.current !== 'new') {
+    } else if (selectedAddressId === 'new' && lastResetId.current !== 'new') {
       reset({
         fullName: '',
         phone: '',
@@ -269,35 +315,30 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
-    // If user is logged in and selected 'new', auto-save address
-    if (isAuthenticated && (selectedAddressId === 'new' || !selectedAddressId)) {
-      try {
-        await fetch('/api/addresses', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fullName: data.fullName,
-            phone: data.phone,
-            province: String(data.province),
-            district: String(data.district),
-            ward: String(data.ward),
-            address: data.address,
-            apartment: data.apartment,
-            country: 'Vietnam',
-            isDefault: savedAddresses.length === 0,
-          }),
-        });
-      } catch {
-        /* ignore for now */
-      }
-    }
-    setCheckoutInfo({ ...data, email: data.email ?? '' });
-    setProducts(items as CartItem[]);
-    setDeliveryFee(shipping);
-    setTimeout(() => {
-      setLoading(false);
+    
+    try {
+      // Save checkout info to store
+      setCheckoutInfo({
+        fullName: data.fullName,
+        phone: data.phone,
+        email: data.email || '',
+        province: data.province,
+        district: data.district,
+        ward: data.ward,
+        address: data.address,
+        apartment: data.apartment || '',
+        note: data.note || '',
+      });
+      
+      setPaymentMethod(data.paymentMethod as 'stripe' | 'momo' | 'cod' || 'cod');
+
+      // Navigate to payment page
       router.push('/payment');
-    }, 1200);
+    } catch (error) {
+      toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Register addressMode and set value on toggle
@@ -378,7 +419,6 @@ export default function CheckoutPage() {
             <div className="lg:col-span-2 space-y-8">
               <form onSubmit={handleSubmit(onSubmit, (errors) => {
                 toast.error('Vui lòng điền đầy đủ thông tin bắt buộc.');
-                console.log(errors);
               })} className="space-y-6">
                 
                 {/* Customer Information */}
@@ -406,7 +446,41 @@ export default function CheckoutPage() {
 
 
 
-                    {isAuthenticated && savedAddresses.length === 0 && (
+                    {isAuthenticated && addressesLoading && (
+                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">
+                              Đang tải địa chỉ...
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Vui lòng chờ trong giây lát
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+
+
+                    {isAuthenticated && !addressesLoading && addressesError && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                          <div>
+                            <p className="text-sm font-medium text-red-700">
+                              Lỗi khi tải địa chỉ
+                            </p>
+                            <p className="text-xs text-red-500">
+                              Vui lòng thử lại hoặc tạo địa chỉ mới
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {isAuthenticated && !addressesLoading && !addressesError && savedAddresses.length === 0 && (
                       <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                         <div className="flex items-center gap-3">
                           <MapPin className="w-5 h-5 text-gray-500" />
@@ -422,7 +496,7 @@ export default function CheckoutPage() {
                       </div>
                     )}
                     
-                    {isAuthenticated && savedAddresses.length > 0 && (
+                    {isAuthenticated && !addressesLoading && !addressesError && savedAddresses.length > 0 && (
                       <div className="space-y-4">
                         <div>
                           <Label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -430,12 +504,56 @@ export default function CheckoutPage() {
                           </Label>
                           <Select
                             value={selectedAddressId}
-                            onValueChange={(value) => setSelectedAddressId(value)}
+                            onValueChange={(value: string) => {
+                              if (value === '') {
+                                return;
+                              }
+                              safeSetSelectedAddressId(value);
+                            }}
                           >
                                                       <SelectTrigger className={`h-20 px-6 py-4 border-gray-300 focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000] ${
-                            selectedAddressId !== 'new' ? 'border-green-300 bg-green-50' : 'border-blue-300 bg-blue-50'
+                            selectedAddressId !== 'new' ? 'border-green-300 bg-green-50' : 'border-gray-300 bg-gray-50'
                           }`}>
-                            <SelectValue placeholder="Chọn địa chỉ giao hàng" />
+                            <SelectValue placeholder="Chọn địa chỉ giao hàng">
+                              {selectedAddressId !== 'new' && (() => {
+                                const selectedAddr = savedAddresses.find((a: Address) => a.id === selectedAddressId);
+                                if (selectedAddr) {
+                                  return (
+                                    <div className="flex items-start gap-3 w-full">
+                                      <div className="flex-shrink-0 mt-0.5">
+                                        {selectedAddr.isDefault ? (
+                                          <Home className="w-4 h-4 text-green-600" />
+                                        ) : (
+                                          <Building className="w-4 h-4 text-gray-500" />
+                                        )}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className="font-medium text-sm">
+                                            {selectedAddr.fullName}
+                                          </span>
+                                          {selectedAddr.isDefault && (
+                                            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 border border-gray-200">
+                                              Mặc định
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-gray-600 line-clamp-2">
+                                          {provinces.length > 0 
+                                            ? getAddressDisplay(selectedAddr, provinces)
+                                            : `${selectedAddr.address}${selectedAddr.apartment ? `, ${selectedAddr.apartment}` : ''}`
+                                          }
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                          {selectedAddr.phone}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </SelectValue>
                           </SelectTrigger>
                             <SelectContent className="max-h-60">
                               {[...savedAddresses]
@@ -448,7 +566,7 @@ export default function CheckoutPage() {
                                     <div className="flex items-start gap-3 w-full">
                                       <div className="flex-shrink-0 mt-0.5">
                                         {a.isDefault ? (
-                                          <Home className="w-4 h-4 text-[#a10000]" />
+                                          <Home className="w-4 h-4 text-green-600" />
                                         ) : (
                                           <Building className="w-4 h-4 text-gray-500" />
                                         )}
@@ -459,7 +577,7 @@ export default function CheckoutPage() {
                                             {a.fullName}
                                           </span>
                                           {a.isDefault && (
-                                            <Badge variant="secondary" className="text-xs bg-[#a10000] text-white">
+                                            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 border border-gray-200">
                                               Mặc định
                                             </Badge>
                                           )}
@@ -487,12 +605,18 @@ export default function CheckoutPage() {
                           {selectedAddressId !== 'new' && (
                             <div className="mt-4 px-4 py-3 flex items-center gap-3 text-base text-green-600">
                               <CheckCircle className="w-5 h-5" />
-                              <span>Địa chỉ đã chọn</span>
+                              <span>
+                                Địa chỉ đã chọn
+                                {(() => {
+                                  const selectedAddr = savedAddresses.find((a: Address) => a.id === selectedAddressId);
+                                  return selectedAddr?.isDefault ? ' (mặc định)' : '';
+                                })()}
+                              </span>
                             </div>
                           )}
                           
                           {selectedAddressId === 'new' && (
-                            <div className="mt-4 px-4 py-3 flex items-center gap-3 text-base text-blue-600">
+                            <div className="mt-4 px-4 py-3 flex items-center gap-3 text-base text-gray-600">
                               <MapPin className="w-5 h-5" />
                               <span>Thêm địa chỉ mới</span>
                             </div>
@@ -772,37 +896,12 @@ export default function CheckoutPage() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center relative border">
-                          {/* Mock map with marker */}
-                          <div
-                            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-                            onClick={() =>
-                              setMockMarker({
-                                lat: mockMarker.lat + 0.001,
-                                lng: mockMarker.lng + 0.001,
-                              })
-                            }
-                          >
-                            <svg
-                              width="32"
-                              height="32"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              className="text-[#a10000]"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 21c-4-4-7-7-7-11a7 7 0 1 1 14 0c0 4-3 7-7 11z"
-                              />
-                              <circle cx="12" cy="10" r="3" fill="currentColor" />
-                            </svg>
+                        <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center border">
+                          <div className="text-center">
+                            <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-600">Map integration coming soon</p>
+                            <p className="text-xs text-gray-400">Please use manual address input for now</p>
                           </div>
-                          <span className="text-xs text-gray-400 absolute bottom-2 left-2">
-                            (Bản đồ mô phỏng, click để di chuyển)
-                          </span>
                         </div>
                       </div>
                     )}
@@ -861,8 +960,8 @@ export default function CheckoutPage() {
                             <Image
                               src={
                                 product.image ||
-                                (product.images && product.images[0]) ||
-                                '/images/placeholder-product.jpg'
+                                getFirstImageUrl(product.images) ||
+                                '/images/placeholder-image.svg'
                               }
                               alt={product.name}
                               fill
@@ -883,7 +982,7 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                         <div className="font-semibold text-[#a10000] text-sm">
-                          {currencyFormatter.format(product.price * quantity)}
+                          {currencyFormatter.format(parseFloat(product.price) * quantity)}
                         </div>
                       </div>
                     ))}

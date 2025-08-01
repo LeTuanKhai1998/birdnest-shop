@@ -192,13 +192,13 @@ export default function OrderConfirmationPage({
           <div className="lg:col-span-2 space-y-6">
             {/* Order Status */}
             <Card className="border-0 shadow-lg">
-              <CardHeader className="pb-4">
+              <CardHeader className="pt-6">
                 <CardTitle className="flex items-center gap-2 text-xl font-bold text-[#a10000]">
                   <FileText className="w-5 h-5" />
                   Thông Tin Đơn Hàng
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pb-6">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Mã đơn hàng:</span>
                   <span className="font-mono font-semibold">{order.id}</span>
@@ -224,13 +224,13 @@ export default function OrderConfirmationPage({
 
             {/* Customer Information */}
             <Card className="border-0 shadow-lg">
-              <CardHeader className="pb-4">
+              <CardHeader className="pt-6">
                 <CardTitle className="flex items-center gap-2 text-xl font-bold text-[#a10000]">
                   <User className="w-5 h-5" />
                   Thông Tin Khách Hàng
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pb-6">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">
@@ -256,13 +256,13 @@ export default function OrderConfirmationPage({
 
             {/* Order Items */}
             <Card className="border-0 shadow-lg">
-              <CardHeader className="pb-4">
+              <CardHeader className="pt-6">
                 <CardTitle className="flex items-center gap-2 text-xl font-bold text-[#a10000]">
                   <Package className="w-5 h-5" />
                   Sản Phẩm Đã Đặt
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pb-6">
                 <div className="space-y-4">
                   {order.orderItems.map((item) => (
                     <div key={item.id} className="flex items-center gap-4 p-4 border border-gray-100 rounded-lg">
@@ -272,7 +272,7 @@ export default function OrderConfirmationPage({
                             src={
                               item.product.image ||
                               (item.product.images && item.product.images[0]) ||
-                              '/images/placeholder-product.jpg'
+                              '/images/placeholder-image.svg'
                             }
                             alt={item.product.name}
                             fill
@@ -302,13 +302,13 @@ export default function OrderConfirmationPage({
           {/* Order Summary Sidebar */}
           <div className="lg:col-span-1">
             <Card className="sticky top-8 border-0 shadow-lg">
-              <CardHeader className="pb-4">
+              <CardHeader className="pt-6">
                 <CardTitle className="flex items-center gap-2 text-xl font-bold text-[#a10000]">
                   <FileText className="w-5 h-5" />
                   Tóm Tắt Đơn Hàng
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pb-6">
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Tổng cộng:</span>

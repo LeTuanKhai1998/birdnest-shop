@@ -19,26 +19,7 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip';
 import { useReducedMotion } from 'framer-motion';
-import { Product as ApiProduct } from '@/lib/types';
-import { Product, Review } from '@/components/ProductCard';
-
-// Adapter function to convert API product to component product
-function adaptProduct(apiProduct: ApiProduct): Product {
-  return {
-    id: apiProduct.id,
-    slug: apiProduct.slug,
-    name: apiProduct.name,
-    image: apiProduct.image,
-    images: apiProduct.images?.map(img => img.url) || [],
-    price: parseFloat(apiProduct.price),
-    weight: apiProduct.weight,
-    description: apiProduct.description,
-    quantity: apiProduct.quantity,
-    reviews: apiProduct.reviews || [],
-    categoryId: apiProduct.categoryId,
-    category: apiProduct.category,
-  };
-}
+import { Product, Review } from '@/lib/types';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
@@ -49,6 +30,30 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+
+// Adapter function to convert API product to component product
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function adaptProduct(apiProduct: any): Product {
+  return {
+    id: apiProduct.id,
+    slug: apiProduct.slug,
+    name: apiProduct.name,
+    image: apiProduct.image,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    images: apiProduct.images?.map((img: any) => img.url) || [],
+    price: apiProduct.price,
+    weight: apiProduct.weight,
+    description: apiProduct.description,
+    quantity: apiProduct.quantity,
+    reviews: apiProduct.reviews || [],
+    categoryId: apiProduct.categoryId,
+    category: apiProduct.category,
+    discount: apiProduct.discount || 0,
+    createdAt: apiProduct.createdAt,
+    updatedAt: apiProduct.updatedAt,
+    _count: apiProduct._count || { reviews: 0 },
+  } as Product;
+}
 
 // SEO Metadata component
 function ProductSEO({ product }: { product: Product }) {
@@ -137,7 +142,7 @@ export default function ProductDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Review form state (mocked, local only)
+  // Review form state (local-only for now, will be connected to backend later)
   const [reviewRating, setReviewRating] = React.useState(0);
   const [reviewComment, setReviewComment] = React.useState('');
   const [localReviews, setLocalReviews] = React.useState<Review[]>([]);
@@ -146,7 +151,7 @@ export default function ProductDetailPage({
   
   // Hooks that need to be called unconditionally
   const { data: session } = useSession();
-  const { isInWishlist, add, remove, loading: wishlistLoading } = useWishlist();
+  const { isInWishlist, add, remove, loading: wishlistLoading, mutate } = useWishlist();
   const shouldReduceMotion = useReducedMotion();
 
   // Fetch product data
@@ -235,7 +240,7 @@ export default function ProductDetailPage({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Image Gallery */}
               <div className="space-y-4">
-                <ProductImageGallery images={images} productName={product.name} />
+                <ProductImageGallery images={product.images} productName={product.name} />
                 <MoreImagesGallery product={product} />
               </div>
 
@@ -260,10 +265,10 @@ export default function ProductDetailPage({
                               className={`rounded-full bg-white/90 shadow p-2 hover:bg-red-50 transition-colors border border-gray-200 ${favorited ? 'text-red-600' : 'text-gray-400 hover:text-red-500'}`}
                               onClick={() => {
                                 if (favorited) {
-                                  remove(product.id);
+                                  remove(product.id, mutate);
                                   toast.success('Đã xóa khỏi danh sách yêu thích');
                                 } else {
-                                  add(product);
+                                  add(product, mutate);
                                   toast.success('Đã thêm vào danh sách yêu thích');
                                 }
                               }}
@@ -326,11 +331,11 @@ export default function ProductDetailPage({
                 <div className="space-y-2">
                   <div className="flex items-baseline gap-3">
                     <span className="text-3xl md:text-4xl font-bold text-[#a10000]">
-                      {product.price.toLocaleString('vi-VN')}₫
+                      {parseFloat(product.price).toLocaleString('vi-VN')}₫
                     </span>
                     {product.discount && product.discount > 0 && (
                       <span className="text-lg text-gray-500 line-through">
-                        {((product.price / (1 - product.discount / 100))).toLocaleString('vi-VN')}₫
+                        {((parseFloat(product.price) / (1 - product.discount / 100))).toLocaleString('vi-VN')}₫
                       </span>
                     )}
                   </div>
@@ -367,8 +372,8 @@ export default function ProductDetailPage({
                     )}
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-600">Tình trạng:</span>
-                      <span className={`text-sm font-medium ${product.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {product.quantity > 0 ? `Còn ${product.quantity} sản phẩm` : 'Hết hàng'}
+                      <span className={`text-sm font-medium ${(product.quantity || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {(product.quantity || 0) > 0 ? `Còn ${product.quantity} sản phẩm` : 'Hết hàng'}
                       </span>
                     </div>
                   </CardContent>
@@ -390,8 +395,8 @@ export default function ProductDetailPage({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
-                      disabled={quantity >= product.quantity}
+                      onClick={() => setQuantity(Math.min(product.quantity || 0, quantity + 1))}
+                      disabled={quantity >= (product.quantity || 0)}
                     >
                       +
                     </Button>
@@ -611,7 +616,7 @@ export default function ProductDetailPage({
 
 
         {/* Related Products */}
-        <RelatedProducts currentProductId={product.id} categoryId={product.categoryId} />
+        <RelatedProducts currentProductId={product.id} categoryId={product.categoryId || ''} />
       </main>
     </div>
   );
@@ -660,9 +665,9 @@ function MoreImagesGallery({ product }: { product: Product }) {
             className="fixed inset-0 flex items-center justify-center z-50 outline-none transition-transform duration-300 animate-zoomIn p-0 w-screen h-screen max-w-full max-h-full"
             onPointerDownOutside={() => setOpen(false)}
           >
-            <DialogPrimitive.Title className="sr-only">
+            <div className="sr-only">
               Product Image Gallery
-            </DialogPrimitive.Title>
+            </div>
             <div className="relative bg-white rounded-xl shadow-lg w-full h-full max-w-full max-h-full flex flex-col animate-fadeInContent">
               <button
                 onClick={() => setOpen(false)}

@@ -90,11 +90,9 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ className })
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={`relative ${className}`}
+      <DropdownMenuTrigger>
+        <div
+          className={`relative inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-accent hover:text-accent-foreground ${className}`}
           aria-label="Notifications"
         >
           <Bell className="w-7 h-7" />
@@ -103,7 +101,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ className })
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
-        </Button>
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
         <div className="p-4 border-b">
@@ -135,7 +133,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ className })
                   {group}
                 </div>
                 {groupNotifications.map((notification) => (
-                  <DropdownMenuItem
+                  <div
                     key={notification.id}
                     className={`p-4 cursor-pointer hover:bg-gray-50 ${
                       !notification.isRead ? 'bg-blue-50' : ''
@@ -175,7 +173,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ className })
                         </div>
                       )}
                     </div>
-                  </DropdownMenuItem>
+                  </div>
                 ))}
               </div>
             ))}

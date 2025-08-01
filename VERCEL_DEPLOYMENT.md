@@ -11,8 +11,7 @@ This guide explains how to deploy the Birdnest Shop frontend to Vercel. The proj
 ## Configuration Files
 
 ### vercel.json
-The `vercel.json` file configures Vercel to:
-- Build from the `frontend/` directory
+The `frontend/vercel.json` file configures Vercel to:
 - Use Next.js framework
 - Set up API routes with Node.js 18.x runtime
 - Map environment variables
@@ -86,10 +85,10 @@ NEXT_PUBLIC_MAINTENANCE_MODE=false
 
 ### 2. Configure Project Settings
 1. **Framework Preset**: Next.js
-2. **Root Directory**: `frontend`
-3. **Build Command**: `npm run build`
-4. **Output Directory**: `.next`
-5. **Install Command**: `npm install`
+2. **Root Directory**: `frontend` (set this in Vercel project settings)
+3. **Build Command**: `npm run build` (automatic for Next.js)
+4. **Output Directory**: `.next` (automatic for Next.js)
+5. **Install Command**: `npm install` (automatic for Next.js)
 
 ### 3. Set Environment Variables
 1. In project settings, go to "Environment Variables"
@@ -106,7 +105,7 @@ NEXT_PUBLIC_MAINTENANCE_MODE=false
 ### Common Issues
 
 #### 1. "No Next.js version detected"
-- **Solution**: Ensure `rootDirectory` is set to `frontend` in vercel.json
+- **Solution**: Ensure Root Directory is set to `frontend` in Vercel project settings
 - **Check**: Verify `next` is in `frontend/package.json` dependencies
 
 #### 2. Build failures

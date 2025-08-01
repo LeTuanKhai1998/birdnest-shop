@@ -1,5 +1,6 @@
 'use client';
 import { useCartStore } from '@/lib/cart-store';
+import { getFirstImageUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -15,7 +16,7 @@ export default function CartPage() {
   const clearCart = useCartStore((s) => s.clearCart);
 
   const subtotal = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
     0,
   );
   
@@ -102,8 +103,8 @@ export default function CartPage() {
                               <Image
                                 src={
                                   product.image ||
-                                  (product.images && product.images[0]) ||
-                                  '/images/placeholder-product.jpg'
+                                  getFirstImageUrl(product.images) ||
+                                  '/images/placeholder-image.svg'
                                 }
                                 alt={product.name}
                                 fill
@@ -134,7 +135,7 @@ export default function CartPage() {
                                   )}
                                 </div>
                                 <div className="font-bold text-[#a10000] text-lg mt-2">
-                                  {currencyFormatter.format(product.price)}
+                                  {currencyFormatter.format(parseFloat(product.price))}
                                 </div>
                               </div>
 

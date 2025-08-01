@@ -12,26 +12,6 @@ export default function WishlistPage() {
   
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center lg:text-left">
-        <h1 
-          className="text-glossy text-3xl md:text-5xl font-black italic"
-          style={{
-            fontWeight: 900,
-            fontStyle: 'italic',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '3.3rem',
-            padding: '20px',
-            color: '#a10000'
-          }}
-        >
-          Danh sách yêu thích
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl">
-          Lưu trữ và quản lý các sản phẩm bạn yêu thích
-        </p>
-      </div>
-
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-[#a10000]">

@@ -5,19 +5,23 @@ export interface Product {
   slug: string;
   description: string;
   price: string;
-  discount: number;
-  quantity: number;
+  discount?: number;
+  quantity?: number;
   weight: number;
-  categoryId: string;
-  createdAt: string;
-  updatedAt: string;
-  category: Category;
+  categoryId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  category?: Category;
   image?: string;
-  images: ProductImage[];
+  images: string[];
   reviews?: Review[];
-  _count: {
+  _count?: {
     reviews: number;
   };
+  // Additional fields for UI compatibility
+  type?: string;
+  sold?: number;
+  soldCount?: number;
 }
 
 export interface Review {
@@ -60,6 +64,8 @@ export interface Order {
   total: string;
   orderItems: OrderItem[];
   shippingAddress: string;
+  paymentMethod?: string;
+  deliveryFee?: number;
   createdAt: string;
   updatedAt: string;
   user?: User;

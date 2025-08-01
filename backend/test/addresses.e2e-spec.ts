@@ -1,17 +1,19 @@
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
 import { createTestingApp } from './test-setup';
 import { PrismaService } from '../src/common/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { TestApp, AuthResponse, AddressResponse } from './test-types';
+import { createTestClient, TestClient, TestData } from './test-utils';
 
 describe('Addresses API (e2e)', () => {
-  let app: INestApplication;
+  let app: TestApp;
   let prisma: PrismaService;
+  let client: TestClient;
   let userToken: string;
   let otherUserToken: string;
-  let regularUser: any;
-  let otherUser: any;
-  let testAddress: any;
+  let regularUser: { id: string; email: string; name: string | null };
+  let otherUser: { id: string; email: string; name: string | null };
+  let testAddress: AddressResponse;
 
   beforeAll(async () => {
     app = await createTestingApp();
@@ -44,14 +46,18 @@ describe('Addresses API (e2e)', () => {
     });
 
     // Login to get tokens
-    const userLoginResponse = await request(app.getHttpServer())
+    const userLoginResponse: RequestResponse<AuthResponse> = await request(
+      app.getHttpServer(),
+    )
       .post('/api/auth/login')
       .send({
         email: 'addresses-user@test.com',
         password: 'test123',
       });
 
-    const otherUserLoginResponse = await request(app.getHttpServer())
+    const otherUserLoginResponse: RequestResponse<AuthResponse> = await request(
+      app.getHttpServer(),
+    )
       .post('/api/auth/login')
       .send({
         email: 'addresses-other@test.com',
@@ -83,7 +89,9 @@ describe('Addresses API (e2e)', () => {
         isDefault: true,
       };
 
-      const response = await request(app.getHttpServer())
+      const response: RequestResponse<AddressResponse> = await request(
+        app.getHttpServer(),
+      )
         .post('/api/addresses')
         .set('Authorization', `Bearer ${userToken}`)
         .send(addressData)
@@ -136,7 +144,7 @@ describe('Addresses API (e2e)', () => {
   });
 
   describe('GET /api/addresses', () => {
-    it('should return user\'s addresses', async () => {
+    it("should return user's addresses", async () => {
       const response = await request(app.getHttpServer())
         .get('/api/addresses')
         .set('Authorization', `Bearer ${userToken}`)
@@ -148,9 +156,7 @@ describe('Addresses API (e2e)', () => {
     });
 
     it('should reject unauthenticated access', async () => {
-      await request(app.getHttpServer())
-        .get('/api/addresses')
-        .expect(401);
+      await request(app.getHttpServer()).get('/api/addresses').expect(401);
     });
 
     it('should only return addresses for the authenticated user', async () => {
@@ -192,7 +198,7 @@ describe('Addresses API (e2e)', () => {
       expect(response.body.userId).toBe(regularUser.id);
     });
 
-    it('should reject access to other user\'s address', async () => {
+    it("should reject access to other user's address", async () => {
       // Create an address for the other user
       const otherUserAddress = await prisma.address.create({
         data: {
@@ -246,7 +252,7 @@ describe('Addresses API (e2e)', () => {
       expect(response.body.isDefault).toBe(false);
     });
 
-    it('should reject update of other user\'s address', async () => {
+    it("should reject update of other user's address", async () => {
       // Create an address for the other user
       const otherUserAddress = await prisma.address.create({
         data: {
@@ -318,7 +324,7 @@ describe('Addresses API (e2e)', () => {
         .expect(404);
     });
 
-    it('should reject deletion of other user\'s address', async () => {
+    it("should reject deletion of other user's address", async () => {
       // Create an address for the other user
       const otherUserAddress = await prisma.address.create({
         data: {
@@ -365,4 +371,4 @@ describe('Addresses API (e2e)', () => {
         .expect(400);
     });
   });
-}); 
+});

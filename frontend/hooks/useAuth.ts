@@ -1,5 +1,5 @@
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 
@@ -19,36 +19,16 @@ interface AuthState {
 
 export function useAuth(): AuthState {
   const { data: session, status } = useSession();
-  const { user: contextUser, isLoading: contextLoading } = useUser();
-  const [localUser, setLocalUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user: contextUser, loading: contextLoading } = useUser();
 
-  useEffect(() => {
-    // Check localStorage for admin users (legacy auth)
-    const token = localStorage.getItem('auth-token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData);
-        setLocalUser(user);
-      } catch (error) {
-        console.error('Error parsing user data from localStorage:', error);
-        localStorage.removeItem('auth-token');
-        localStorage.removeItem('user');
-      }
-    }
-    setIsLoading(false);
-  }, []);
-
-  // Prioritize UserContext data, then localStorage, then NextAuth session
-  const user = contextUser || localUser || session?.user;
+  // Use UserContext data if available, otherwise fall back to session
+  const user = contextUser || session?.user;
   const isAuthenticated = !!user;
   const isAdmin = user?.isAdmin || false;
 
   return {
     user: user as User | null,
-    isLoading: isLoading || status === 'loading' || contextLoading,
+    isLoading: status === 'loading' || contextLoading,
     isAuthenticated,
     isAdmin,
   };

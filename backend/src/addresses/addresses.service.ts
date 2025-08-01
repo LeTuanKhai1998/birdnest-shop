@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
@@ -27,10 +31,7 @@ export class AddressesService {
   async findAll(userId: string) {
     return this.prisma.address.findMany({
       where: { userId },
-      orderBy: [
-        { isDefault: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
     });
   }
 
@@ -52,7 +53,7 @@ export class AddressesService {
 
   async update(id: string, updateAddressDto: UpdateAddressDto, userId: string) {
     // Verify ownership
-    const existingAddress = await this.findOne(id, userId);
+    await this.findOne(id, userId);
 
     // If this address is being set as default, unset other default addresses
     if (updateAddressDto.isDefault) {
@@ -76,4 +77,4 @@ export class AddressesService {
       where: { id },
     });
   }
-} 
+}

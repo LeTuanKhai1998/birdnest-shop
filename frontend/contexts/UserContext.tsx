@@ -1,136 +1,85 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
 interface User {
   id: string;
-  name?: string | null;
-  email?: string | null;
-  avatar?: string | null;
-  image?: string | null;
-  isAdmin?: boolean;
+  email?: string;
+  name?: string;
+  avatar?: string;
   bio?: string;
   phone?: string;
+  isAdmin: boolean;
+  role: string;
+  createdAt: string;
 }
 
 interface UserContextType {
   user: User | null;
-  isLoading: boolean;
+  loading: boolean;
+  error: string | null;
   refreshUser: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export function UserProvider({ children }: { children: ReactNode }) {
-  const { data: session, status } = useSession();
-  const [localUser, setLocalUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function UserProvider({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const refreshUser = useCallback(async () => {
-    console.log('UserContext: Refreshing user data...');
-    
-    // Check for localStorage authentication (admin users)
-    const authToken = localStorage.getItem('auth-token');
-    const userData = localStorage.getItem('user');
-    
-    if (authToken && userData) {
-      try {
-        // Fetch fresh user data from backend for admin users
-        const response = await fetch('http://localhost:8080/api/users/profile', {
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (response.ok) {
-          const freshUserData = await response.json();
-          setLocalUser(freshUserData);
-          localStorage.setItem('user', JSON.stringify(freshUserData));
-          console.log('UserContext: Updated local user data:', freshUserData);
-        } else {
-          // Fallback to localStorage data
-          const user = JSON.parse(userData);
-          setLocalUser(user);
-          console.log('UserContext: Using fallback localStorage data:', user);
-        }
-      } catch (error) {
-        console.error('UserContext: Error fetching fresh user data:', error);
-        // Fallback to localStorage data
-        const user = JSON.parse(userData);
-        setLocalUser(user);
-      }
-    } else if (session?.user) {
-      // For NextAuth users, fetch complete profile data
-      try {
-        const response = await fetch('/api/profile');
-        
-        if (response.ok) {
-          const completeUserData = await response.json();
-          setLocalUser(completeUserData);
-          console.log('UserContext: Updated NextAuth user data:', completeUserData);
-        } else {
-          // Fallback to session data
-          console.log('UserContext: Using fallback session data for NextAuth user');
-        }
-      } catch (error) {
-        console.error('UserContext: Error fetching NextAuth user data:', error);
-        // Fallback to session data
-      }
-    } else {
-      setLocalUser(null);
+  const refreshUser = async () => {
+    if (!session?.user?.email) {
+      setUser(null);
+      return;
     }
-  }, [session]);
 
-  // Initial load and when session changes
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/profile');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user profile');
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch user profile');
+      
+      // Fallback to session data if API fails
+      if (session.user && session.user.email) {
+        setUser({
+          id: session.user.id || '',
+          email: session.user.email,
+          name: session.user.name || undefined,
+          avatar: session.user.avatar || undefined,
+          bio: session.user.bio || undefined,
+          phone: session.user.phone || undefined,
+          isAdmin: session.user.isAdmin || false,
+          role: session.user.role || 'USER',
+          createdAt: new Date().toISOString(),
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch user data when session changes
   useEffect(() => {
     refreshUser();
-  }, [session, refreshUser]);
+  }, [session?.user?.email]);
 
-  // Listen for avatar updates and update local state directly
-  useEffect(() => {
-    const handleAvatarUpdate = () => {
-      console.log('UserContext: Avatar update detected - updating from localStorage');
-      // Update from localStorage instead of making API call
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        setLocalUser(user);
-        console.log('UserContext: Updated from localStorage:', user);
-      }
-    };
-
-    window.addEventListener('avatar-updated', handleAvatarUpdate);
-    
-    return () => {
-      window.removeEventListener('avatar-updated', handleAvatarUpdate);
-    };
-  }, []);
-
-  // Determine which user data to use
-  // Prioritize localUser if it has more complete data (like avatar)
-  const user = localUser || (session?.user ? {
-    id: session.user.id || '',
-    name: session.user.name,
-    email: session.user.email,
-    avatar: (session.user as any).avatar,
-    image: session.user.image,
-    isAdmin: (session.user as any).isAdmin,
-    bio: (session.user as any).bio,
-    phone: (session.user as any).phone,
-  } : null);
-
-
-
-  // Set loading state
-  useEffect(() => {
-    setIsLoading(status === 'loading');
-  }, [status]);
-
-  const value = {
+  const value: UserContextType = {
     user,
-    isLoading,
+    loading,
+    error,
     refreshUser,
   };
 

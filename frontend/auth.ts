@@ -1,41 +1,86 @@
-import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
-import GitHubProvider from 'next-auth/providers/github';
-import Credentials from 'next-auth/providers/credentials';
+import NextAuth from "next-auth"
+import Credentials from "next-auth/providers/credentials"
 
-export const runtime = 'nodejs';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-type AuthUser = { id: string; isAdmin: boolean; email: string; name?: string; avatar?: string; bio?: string };
+// Extend NextAuth types
+declare module "next-auth" {
+  interface Session {
+    accessToken?: string;
+  }
+  
+  interface User {
+    accessToken?: string;
+  }
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: 'jwt' },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   pages: {
     signIn: '/login',
     signOut: '/',
     error: '/login',
   },
+  callbacks: {
+    async jwt({ token, user, account }) {
+      // Initial sign in
+      if (account && user) {
+        return {
+          ...token,
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role || (user.isAdmin ? 'ADMIN' : 'USER'),
+          isAdmin: user.isAdmin,
+          avatar: user.avatar,
+          bio: user.bio,
+          phone: user.phone,
+          accessToken: user.accessToken, // Use the actual JWT from backend
+        };
+      }
+      
+      // Return previous token if the access token has not expired yet
+      if (token.accessToken) {
+        return token;
+      }
+      
+      return token;
+    },
+    async session({ session, token }) {
+      // Send properties to the client
+      session.user = {
+        id: token.id as string,
+        email: token.email as string,
+        name: token.name as string,
+        role: token.role as string,
+        isAdmin: token.isAdmin as boolean,
+        avatar: token.avatar as string,
+        bio: token.bio as string,
+        phone: token.phone as string,
+        emailVerified: null, // Add required property
+      };
+      
+      // Add access token to session for frontend to use
+      session.accessToken = token.accessToken as string;
+      
+      return session;
+    },
+  },
   providers: [
     Credentials({
-      name: 'Credentials',
-      credentials: {
-        email: {
-          label: 'Email',
-          type: 'email',
-          placeholder: 'you@example.com',
-        },
-        password: { label: 'Password', type: 'password' },
-      },
       async authorize(credentials) {
         try {
-          // Use backend API for authentication
-          const response = await fetch('http://localhost:8080/api/auth/login', {
+          const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
+              email: credentials?.email,
+              password: credentials?.password,
             }),
           });
 
@@ -44,6 +89,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           const data = await response.json();
+          
+          // Return user data that will be stored in JWT
           return {
             id: data.user.id,
             email: data.user.email,
@@ -51,6 +98,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             isAdmin: data.user.isAdmin,
             avatar: data.user.avatar,
             bio: data.user.bio,
+            phone: data.user.phone,
+            role: data.user.isAdmin ? 'ADMIN' : 'USER',
+            accessToken: data.access_token, // Store the backend JWT token
+            emailVerified: null, // Add required property
           };
         } catch (error) {
           console.error('Auth error:', error);
@@ -58,38 +109,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       },
     }),
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [
-          GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          }),
-        ]
-      : []),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = (user as AuthUser).id;
-        token.isAdmin = (user as AuthUser).isAdmin;
-        token.avatar = (user as AuthUser).avatar;
-        token.bio = (user as AuthUser).bio;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        (session.user as AuthUser).id = token.id as string;
-        (session.user as AuthUser).isAdmin = token.isAdmin as boolean;
-        (session.user as AuthUser).avatar = token.avatar as string;
-        (session.user as AuthUser).bio = token.bio as string;
-      }
-      return session;
-    },
-  },
   secret: process.env.NEXTAUTH_SECRET,
-});
-
-if (!process.env.NEXTAUTH_SECRET) {
-  console.warn('[AUTH] WARNING: NEXTAUTH_SECRET is not set in the environment. Credential logins will fail.');
-}
+})

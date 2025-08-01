@@ -9,41 +9,8 @@ import ProductMeta from '@/components/ProductMeta';
 import { useWishlist } from '@/lib/wishlist-store';
 import { useSession } from 'next-auth/react';
 import { useCurrencyFormat } from '@/lib/currency-utils';
-
-export interface Product {
-  id: string;
-  slug: string;
-  name: string;
-  image?: string;
-  images?: string[];
-  price: number;
-  weight: number;
-  description: string;
-  type?: string;
-  quantity?: number;
-  discount?: number;
-  reviews?: Review[];
-  sold?: number;
-  categoryId?: string;
-  category?: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-}
-
-export interface Review {
-  id: string;
-  userId: string;
-  productId: string;
-  rating: number;
-  comment?: string;
-  createdAt: string;
-  user: {
-    id: string;
-    name: string;
-  };
-}
+import { Product, Review } from '@/lib/types';
+import { getFirstImageUrl } from '@/lib/utils';
 
 type ProductCardProps = { product: Product; onClick?: () => void };
 
@@ -112,7 +79,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               </div>
 
               {/* Popular Badge */}
-              {product.sold && product.sold > 1000 && (
+              {product.soldCount && product.soldCount > 1000 && (
                 <div className="absolute top-2 sm:top-4 left-16 sm:left-20 z-20 bg-orange-500/90 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg border border-white/20">
                   <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 inline mr-0.5 sm:mr-1" />
                   Hot
@@ -126,9 +93,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               >
                 <div className="relative w-full" style={{ aspectRatio: '5/3' }}>
                   <Image
-                    src={
-                      product.image || (product.images && product.images[0]) || ''
-                    }
+                    src={product.image || getFirstImageUrl(product.images) || '/images/placeholder-image.svg'}
                     alt={product.name}
                     fill
                     className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
@@ -160,9 +125,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                   </div>
                 )}
                 {/* Product Type (fallback) */}
-                {!product.category && product.type && (
+                {!product.category && (
                   <div className="text-xs text-gray-500 font-medium mb-0.5 sm:mb-1 lg:mb-2">
-                    {product.type}
+                    Sản phẩm
                   </div>
                 )}
               </div>
@@ -171,7 +136,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               <ProductMeta
                 rating={avgRating}
                 reviewCount={product.reviews?.length ?? 120}
-                soldCount={product.sold ?? 1500}
+                soldCount={1500}
                 className="flex-wrap gap-x-1 sm:gap-x-2 gap-y-0.5 sm:gap-y-1 min-w-0 mb-0.5 sm:mb-1 lg:mb-1.5"
               />
 

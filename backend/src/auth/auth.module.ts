@@ -15,17 +15,26 @@ import { PasswordService } from '../common/password.service';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'fallback-secret',
-        signOptions: {
-          expiresIn: `${configService.get<number>('JWT_ACCESS_EXP_MINUTES') || 30}m`,
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('NEXTAUTH_SECRET') || 
+                configService.get<string>('JWT_SECRET') || 
+                'fallback-secret-key',
+        signOptions: { 
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '7d' 
         },
       }),
       inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],
-  providers: [JwtStrategy, JwtAuthGuard, RolesGuard, AdminGuard, PrismaService, PasswordService],
-  exports: [JwtModule, JwtAuthGuard, RolesGuard, AdminGuard],
+  providers: [
+    JwtStrategy,
+    JwtAuthGuard,
+    AdminGuard,
+    RolesGuard,
+    PrismaService,
+    PasswordService,
+  ],
+  exports: [JwtAuthGuard, AdminGuard, RolesGuard],
 })
 export class AuthModule {}
