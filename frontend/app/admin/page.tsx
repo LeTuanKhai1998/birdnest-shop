@@ -102,9 +102,13 @@ function groupOrders(orders: Order[], filter: string) {
     } else {
       key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     }
-    map.set(key, (map.get(key) || 0) + parseFloat(order.total));
+    const total = parseFloat(order.total) || 0;
+    map.set(key, (map.get(key) || 0) + total);
   });
-  return Array.from(map.entries()).map(([date, revenue]) => ({ date, revenue }));
+  return Array.from(map.entries()).map(([date, revenue]) => ({ 
+    date, 
+    revenue: isNaN(revenue) ? 0 : revenue 
+  }));
 }
 
 // --- Export helpers for tables ---
@@ -250,6 +254,16 @@ export default function AdminDashboardPage() {
   const [selectedFilter, setSelectedFilter] = useState('daily');
   const [isExporting, setIsExporting] = useState(false);
 
+  console.log('📊 AdminDashboardPage render:', {
+    session: session ? { 
+      userId: session.user?.id, 
+      userEmail: session.user?.email, 
+      userIsAdmin: session.user?.isAdmin 
+    } : null,
+    status,
+    timestamp: new Date().toISOString()
+  });
+
   // Check authentication
   useEffect(() => {
     const token = localStorage.getItem('auth-token');
@@ -321,18 +335,26 @@ export default function AdminDashboardPage() {
 
   // Process chart data
   const chartData = useMemo(() => {
-    if (!orders) return [];
-    return groupOrders(orders, selectedFilter);
+    if (!orders || orders.length === 0) return [];
+    const data = groupOrders(orders, selectedFilter);
+    // Ensure all revenue values are valid numbers
+    return data.map(item => ({
+      ...item,
+      revenue: isNaN(item.revenue) ? 0 : item.revenue
+    }));
   }, [orders, selectedFilter]);
 
   // Status distribution
   const statusDistribution = useMemo(() => {
-    if (!orders) return [];
+    if (!orders || orders.length === 0) return [];
     const statusCount = orders.reduce((acc: Record<string, number>, order: Order) => {
       acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    return Object.entries(statusCount).map(([status, count]) => ({ status, count }));
+    return Object.entries(statusCount).map(([status, count]) => ({ 
+      status, 
+      count: isNaN(count) ? 0 : count 
+    }));
   }, [orders]);
 
   // Low stock products
@@ -349,7 +371,7 @@ export default function AdminDashboardPage() {
       unitsSold: (p.quantity || 0) > 0 ? Math.max(0, 100 - (p.quantity || 0)) : 50, // Estimate based on stock reduction
       revenue: (p.quantity || 0) > 0 ? Math.max(0, 100 - (p.quantity || 0)) * parseFloat(p.price) : parseFloat(p.price) * 50,
       stock: p.quantity || 0,
-                      image: p.images?.[0] || '/images/placeholder.svg',
+                      image: p.images?.[0] || '/images/placeholder-image.svg',
     }));
   }, [products]);
 

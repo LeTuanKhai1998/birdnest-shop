@@ -66,9 +66,17 @@ function LoginPageInner() {
     }
   }, [session, status, router, callbackUrl]);
 
-  // Temporarily bypass all authentication checks to show login form
-  console.log('Bypassing authentication checks to show login form');
-  console.log('Status:', status, 'Session:', !!session);
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a10000] mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang kiểm tra đăng nhập...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

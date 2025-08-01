@@ -52,11 +52,24 @@ export function useRequireAdmin(redirectTo = '/login') {
   const router = useRouter();
   
   useEffect(() => {
+    console.log('🔍 useRequireAdmin Debug:', {
+      isLoading,
+      isAuthenticated,
+      isAdmin,
+      user: user ? { id: user.id, email: user.email, isAdmin: user.isAdmin } : null,
+      redirectTo,
+      timestamp: new Date().toISOString()
+    });
+
     // Only redirect if we're not loading and definitely not authenticated/admin
     if (!isLoading && !isAuthenticated) {
+      console.log('🚫 Redirecting: Not authenticated');
       router.push(redirectTo);
     } else if (!isLoading && isAuthenticated && !isAdmin) {
+      console.log('🚫 Redirecting: Authenticated but not admin');
       router.push(redirectTo);
+    } else if (!isLoading && isAuthenticated && isAdmin) {
+      console.log('✅ Access granted: Authenticated and admin');
     }
   }, [isLoading, isAuthenticated, isAdmin, redirectTo, router]);
 

@@ -23,7 +23,7 @@ export function UploadThingImage({
   height,
   onLoad,
   onError,
-  fallbackSrc = "/images/placeholder.svg",
+  fallbackSrc = "/images/placeholder-image.svg",
 }: UploadThingImageProps) {
   const [imageSrc, setImageSrc] = useState(src);
   const [isLoading, setIsLoading] = useState(true);

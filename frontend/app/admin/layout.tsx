@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -27,9 +27,17 @@ const navLinks = [
   { href: '/admin/settings', label: 'Cài đặt', icon: Settings },
 ];
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+const AdminLayout = React.memo(function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { user, isLoading, isAuthenticated, isAdmin } = useRequireAdmin('/login?callbackUrl=/admin');
+
+  console.log('🏗️ AdminLayout Debug:', {
+    isLoading,
+    isAuthenticated,
+    isAdmin,
+    user: user ? { id: user.id, email: user.email, isAdmin: user.isAdmin } : null,
+    timestamp: new Date().toISOString()
+  });
 
   const handleLogout = () => {
     // Clear both NextAuth and localStorage
