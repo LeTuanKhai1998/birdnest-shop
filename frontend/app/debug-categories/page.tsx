@@ -16,7 +16,7 @@ export default function DebugCategoriesPage() {
       try {
         setLoading(true);
         const response = await apiService.getCategories();
-        console.log('Categories from API:', response);
+    
         setCategories(response);
       } catch (err) {
         console.error('Error fetching categories:', err);

@@ -41,7 +41,7 @@ import { vi } from 'date-fns/locale';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
-import Image from 'next/image';
+import { SmartImage } from '@/components/ui/SmartImage';
 import {
   BarChart,
   Bar,
@@ -723,7 +723,7 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
                   <div key={index} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Image
+                        <SmartImage
                           src={product.image}
                           alt={product.name}
                           width={40}

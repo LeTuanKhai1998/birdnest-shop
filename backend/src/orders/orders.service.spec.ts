@@ -38,6 +38,7 @@ describe('OrdersService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     lastLoginAt: null,
+    avatar: null,
   };
 
   const mockProduct: Product = {
@@ -50,6 +51,7 @@ describe('OrdersService', () => {
     quantity: 10,
     categoryId: '1',
     weight: 100,
+    isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

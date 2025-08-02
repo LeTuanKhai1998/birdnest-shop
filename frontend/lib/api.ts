@@ -725,4 +725,54 @@ export const apiService = {
       throw error;
     }
   },
+
+  // Review methods
+  getProductReviews: async (productId: string) => {
+    try {
+      const response = await api.get(`/reviews/product/${productId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch product reviews');
+      }
+
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error('Error fetching product reviews:', error);
+      return [];
+    }
+  },
+
+  createReview: async (reviewData: { productId: string; rating: number; comment?: string }) => {
+    try {
+      const response = await api.post('/reviews', reviewData);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create review');
+      }
+
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error creating review:', error);
+      throw error;
+    }
+  },
+
+  getUserReviews: async (userId: string) => {
+    try {
+      const response = await api.get(`/reviews/user/${userId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user reviews');
+      }
+
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error('Error fetching user reviews:', error);
+      return [];
+    }
+  },
 };

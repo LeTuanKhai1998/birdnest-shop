@@ -48,6 +48,7 @@ describe('ProductsService', () => {
     quantity: 10,
     categoryId: '1',
     weight: 100,
+    isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -56,6 +57,7 @@ describe('ProductsService', () => {
     id: '1',
     name: 'Test Category',
     slug: 'test-category',
+    colorScheme: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

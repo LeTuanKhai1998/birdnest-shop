@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { apiService } from '@/lib/api';
 import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
 import { cn } from '@/lib/utils';
+import Footer from '@/components/Footer';
 
 export default function ProductsClient({ products }: { products: Product[] }) {
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
@@ -495,6 +496,9 @@ export default function ProductsClient({ products }: { products: Product[] }) {
           </div>
         </div>
       </main>
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

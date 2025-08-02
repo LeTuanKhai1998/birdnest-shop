@@ -124,8 +124,8 @@ describe('NotificationsService', () => {
       expect(mockPrismaService.notification.findMany).toHaveBeenCalledWith({
         where: {
           OR: [
-            { userId: 'user-123' },
             { userId: null, recipientType: RecipientType.USER },
+            { userId: 'user-123' },
           ],
         },
         include: {
@@ -155,8 +155,8 @@ describe('NotificationsService', () => {
       expect(mockPrismaService.notification.findMany).toHaveBeenCalledWith({
         where: {
           OR: [
-            { userId: 'admin-123' },
             { userId: null, recipientType: RecipientType.ADMIN },
+            { userId: 'admin-123' },
           ],
         },
         include: {

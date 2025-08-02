@@ -137,9 +137,35 @@ export class ProductsService {
   }
 
   async update(id: string, data: Prisma.ProductUpdateInput): Promise<Product> {
+    // Clean up the data to prevent Prisma validation errors
+    const cleanData = { ...data };
+    
+    // If images data is provided, ensure it's valid
+    if (cleanData.images && typeof cleanData.images === 'object') {
+      const imagesData = cleanData.images as any;
+      
+      // If create array is empty or contains invalid items, remove the images update
+      if (imagesData.create && Array.isArray(imagesData.create)) {
+        const validCreateItems = imagesData.create.filter((item: any) => 
+          item && typeof item === 'object' && 
+          typeof item.url === 'string' && 
+          item.url.trim() !== '' &&
+          typeof item.isPrimary === 'boolean'
+        );
+        
+        if (validCreateItems.length === 0) {
+          // Remove the entire images object if no valid items
+          delete cleanData.images;
+        } else {
+          // Replace with only valid items
+          imagesData.create = validCreateItems;
+        }
+      }
+    }
+
     const product = await this.prisma.product.update({
       where: { id },
-      data,
+      data: cleanData,
       include: {
         category: true,
         images: true,

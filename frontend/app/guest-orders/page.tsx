@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Package, Calendar, User, Phone, Mail, Eye, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 
 interface GuestOrder {
   id: string;
@@ -373,6 +374,9 @@ export default function GuestOrdersPage() {
           )}
         </div>
       </main>
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 } 

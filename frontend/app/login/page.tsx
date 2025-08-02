@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Loader2, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import Footer from '@/components/Footer';
 
 function LoginPageInner() {
   const [email, setEmail] = useState('');
@@ -317,6 +318,9 @@ function LoginPageInner() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

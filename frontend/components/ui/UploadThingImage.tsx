@@ -32,26 +32,42 @@ export function UploadThingImage({
   React.useEffect(() => {
     if (src && src !== imageSrc) {
       setImageSrc(src);
+      setIsLoading(true);
       setHasError(false);
     }
-  }, [src]);
+  }, [src, imageSrc]);
+
+  // Auto-hide loading state after 5 seconds as fallback
+  React.useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   const handleImageLoad = () => {
+    setIsLoading(false);
     setHasError(false);
+    onLoad?.();
   };
 
-  const handleImageError = () => {
+  const handleImageError = (error: React.SyntheticEvent<HTMLImageElement, Event>) => {
     setHasError(true);
+    setIsLoading(false);
     if (fallbackSrc && fallbackSrc !== imageSrc) {
       setImageSrc(fallbackSrc);
     }
+    onError?.(error);
   };
 
   return (
     <div className={cn("relative", className)}>
       {/* Loading State */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg z-10 pointer-events-none">
           <div className="flex flex-col items-center space-y-2">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
             <div className="text-xs text-gray-500">Loading image...</div>
@@ -61,7 +77,7 @@ export function UploadThingImage({
 
       {/* Error State */}
       {hasError && !isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg z-10 pointer-events-none">
           <div className="flex flex-col items-center space-y-2">
             <div className="w-8 h-8 text-gray-400">
               <svg fill="currentColor" viewBox="0 0 20 20">
@@ -80,20 +96,15 @@ export function UploadThingImage({
         width={width}
         height={height}
         className={cn(
-          "w-full h-full object-cover rounded-lg transition-opacity duration-200",
+          "w-full h-full transition-opacity duration-200",
+          className || "object-cover rounded-lg",
           isLoading && "opacity-0"
         )}
         onLoad={handleImageLoad}
         onError={handleImageError}
-        crossOrigin={isUploadThingUrl(src) ? "anonymous" : undefined}
       />
 
-      {/* UploadThing Badge */}
-      {isUploadThingUrl(src) && !isLoading && !hasError && (
-        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-          CDN
-        </div>
-      )}
+
     </div>
   );
 } 

@@ -121,7 +121,7 @@ export default function ProfilePage() {
       setCompleteUserData(userResponse);
       
       // Debug: Log the user response
-      console.log('User data loaded:', userResponse);
+      
       
       // Update form data with complete user information
       setProfileData({

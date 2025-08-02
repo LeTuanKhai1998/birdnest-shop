@@ -220,7 +220,7 @@ export default function AboutPage() {
             <Button size="lg" className="bg-white text-[#a10000] hover:bg-gray-100 font-semibold">
               Xem Tất Cả Sản Phẩm
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-[#a10000]">
+            <Button size="lg" className="bg-white text-[#a10000] hover:bg-gray-100 font-semibold">
               Tìm Hiểu Thêm
             </Button>
           </div>

@@ -52,7 +52,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import Image from 'next/image';
+import { SmartImage } from '@/components/ui/SmartImage';
 import useSWR, { mutate as globalMutate } from 'swr';
 import { apiService } from '@/lib/api';
 import type { Product } from '@/lib/types';
@@ -284,15 +284,18 @@ export default function AdminProductsPage() {
       setLoading(true);
       
       if (editId) {
+        const { stock, ...dataWithoutStock } = data;
         await apiService.updateProduct(editId, {
-          ...data,
+          ...dataWithoutStock,
           price: data.price,
           quantity: parseInt(data.stock),
           categoryId: data.categoryId,
           weight: parseFloat(data.weight),
           discount: data.discount ? parseFloat(data.discount) : 0,
           isActive: data.isActive,
-          images: images.map(img => ({ url: img.url, isPrimary: img.isPrimary || false })),
+          images: images
+            .filter(img => img && img.url && img.url.trim() !== '')
+            .map(img => ({ url: img.url, isPrimary: img.isPrimary || false })),
         });
         toast({
           title: "Sản phẩm đã cập nhật",
@@ -300,8 +303,9 @@ export default function AdminProductsPage() {
           variant: "success",
         });
       } else {
+        const { stock, ...dataWithoutStock } = data;
         await apiService.createProduct({
-          ...data,
+          ...dataWithoutStock,
           price: data.price,
           quantity: parseInt(data.stock),
           categoryId: data.categoryId,
@@ -309,7 +313,9 @@ export default function AdminProductsPage() {
           discount: data.discount ? parseFloat(data.discount) : 0,
           isActive: data.isActive,
           slug: data.name.toLowerCase().replace(/\s+/g, '-'),
-          images: images.map(img => ({ url: img.url, isPrimary: img.isPrimary || false })),
+          images: images
+            .filter(img => img && img.url && img.url.trim() !== '')
+            .map(img => ({ url: img.url, isPrimary: img.isPrimary || false })),
         });
         toast({
           title: "Sản phẩm đã tạo",
@@ -779,7 +785,7 @@ export default function AdminProductsPage() {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                            <Image
+                            <SmartImage
                               src={getFirstImageUrl(product.images) || FALLBACK_IMAGE}
                               alt={product.name}
                               width={48}

@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import { Eye, ShoppingCart, Heart, HeartOff, Star, Package, TrendingUp } from 'lucide-react';
-import Image from 'next/image';
+import { SmartImage } from '@/components/ui/SmartImage';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import ProductMeta from '@/components/ProductMeta';
@@ -93,12 +93,12 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 className="block min-w-0"
               >
                 <div className="relative w-full" style={{ aspectRatio: '5/3' }}>
-                  <Image
+                  <SmartImage
                     src={product.image || getFirstImageUrl(product.images) || '/images/placeholder-image.svg'}
                     alt={product.name}
-                    fill
+                    width={400}
+                    height={240}
                     className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   
                   {/* Overlay on hover */}

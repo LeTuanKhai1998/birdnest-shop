@@ -39,6 +39,7 @@ export default async function ProductsPage() {
         id: String(p.id),
         slug: String(p.slug),
         name: String(p.name),
+        image: images[0], // Set the first image as the main image
         images,
         price: String(p.price),
         description: String(p.description),

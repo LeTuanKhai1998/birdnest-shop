@@ -7,6 +7,7 @@ import { ProductHighlight } from '@/components/home/ProductHighlight';
 import { TestimonialsSection } from '@/components/home/TestimonialsSection';
 import { CustomerServiceSection } from '@/components/home/CustomerServiceSection';
 import { NewsletterSignup } from '@/components/home/NewsletterSignup';
+import Footer from '@/components/Footer';
 import { SEO_CONSTANTS } from '@/lib/constants';
 
 // SEO Metadata
@@ -53,6 +54,9 @@ export default function HomePage() {
       
       {/* Newsletter Signup */}
       <NewsletterSignup />
+      
+      {/* Footer */}
+      <Footer />
     </main>
   );
 }

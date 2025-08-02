@@ -71,9 +71,14 @@ export class ProductsController {
       category: {
         connect: { id: categoryId },
       },
-      ...(images && {
+      ...(images && Array.isArray(images) && images.length > 0 && {
         images: {
-          create: images,
+          create: images.filter(img => 
+            img && typeof img === 'object' && 
+            typeof img.url === 'string' && 
+            img.url.trim() !== '' &&
+            typeof img.isPrimary === 'boolean'
+          ),
         },
       }),
     };
@@ -96,11 +101,22 @@ export class ProductsController {
       };
     }
 
-    if (images) {
-      prismaData.images = {
-        deleteMany: {},
-        create: images,
-      };
+    // Handle images update if provided
+    if (images && Array.isArray(images)) {
+      // Filter out invalid image objects
+      const validImages = images.filter(img => 
+        img && typeof img === 'object' && 
+        typeof img.url === 'string' && 
+        img.url.trim() !== '' &&
+        typeof img.isPrimary === 'boolean'
+      );
+
+      if (validImages.length > 0) {
+        prismaData.images = {
+          deleteMany: {}, // Delete existing images
+          create: validImages, // Create new images
+        };
+      }
     }
 
     return this.productsService.update(id, prismaData);
@@ -120,4 +136,6 @@ export class ProductsController {
   ) {
     return this.productsService.updateCategoryColor(id, updateCategoryColorDto.colorScheme || null);
   }
+
+
 }

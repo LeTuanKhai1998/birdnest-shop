@@ -25,6 +25,10 @@ export class UpdateProductDto {
   @IsOptional()
   quantity?: number;
 
+  @IsNumber()
+  @IsOptional()
+  weight?: number;
+
   @IsString()
   @IsOptional()
   categoryId?: string;

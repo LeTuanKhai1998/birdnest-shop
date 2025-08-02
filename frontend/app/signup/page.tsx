@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Loader2, Lock, AlertCircle, CheckCircle, User } from 'lucide-react';
+import Footer from '@/components/Footer';
 
 function SignupPageInner() {
   const [name, setName] = useState('');
@@ -381,6 +382,9 @@ function SignupPageInner() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

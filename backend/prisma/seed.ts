@@ -105,7 +105,7 @@ async function main() {
   console.log('✅ Products created');
 
   // Create admin with hashed password
-  const hashedAdminPassword = await bcrypt.hash('admin123', 10);
+  const hashedAdminPassword = await bcrypt.hash('admin123', 12);
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@birdnest.vn' },
     update: {},
@@ -131,7 +131,7 @@ async function main() {
 
   const createdUsers: any[] = [];
   for (const u of usersData) {
-    const hashedPassword = await bcrypt.hash(u.password, 10);
+    const hashedPassword = await bcrypt.hash(u.password, 12);
     const user = await prisma.user.upsert({
       where: { email: u.email },
       update: {},
