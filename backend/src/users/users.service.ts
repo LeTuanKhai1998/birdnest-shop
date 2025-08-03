@@ -34,6 +34,39 @@ export class UsersService {
     });
   }
 
+  async create(createUserDto: any): Promise<UserResponse> {
+    const { email, password, name, isAdmin = false } = createUserDto;
+
+    // Check if user already exists
+    const existingUser = await this.findByEmail(email);
+    if (existingUser) {
+      throw new BadRequestException('User with this email already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await this.passwordService.hashPassword(password);
+
+    // Create user
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        isAdmin,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isAdmin: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return user;
+  }
+
   async findById(id: string): Promise<UserResponse | null> {
     return this.prisma.user.findUnique({
       where: { id },
@@ -100,6 +133,31 @@ export class UsersService {
     });
   }
 
+  async update(id: string, updateUserDto: any): Promise<UserResponse> {
+    // Only allow updating safe fields
+    const allowedFields = ['name', 'email', 'isAdmin'];
+    const filteredData: any = {};
+
+    for (const field of allowedFields) {
+      if (updateUserDto[field] !== undefined) {
+        filteredData[field] = updateUserDto[field];
+      }
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: filteredData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isAdmin: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
   async changePassword(id: string, currentPassword: string, newPassword: string): Promise<{ message: string }> {
     // Get user with password
     const user = await this.prisma.user.findUnique({
@@ -134,5 +192,40 @@ export class UsersService {
     });
 
     return { message: 'Password updated successfully' };
+  }
+
+  async getStats() {
+    const totalUsers = await this.prisma.user.count();
+    const adminUsers = await this.prisma.user.count({
+      where: { isAdmin: true },
+    });
+    const regularUsers = totalUsers - adminUsers;
+
+    // Get user growth (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const newUsersLastMonth = await this.prisma.user.count({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo,
+        },
+      },
+    });
+
+    return {
+      totalUsers,
+      adminUsers,
+      regularUsers,
+      newUsersLastMonth,
+    };
+  }
+
+  async remove(id: string): Promise<{ message: string }> {
+    await this.prisma.user.delete({
+      where: { id },
+    });
+
+    return { message: 'User deleted successfully' };
   }
 }

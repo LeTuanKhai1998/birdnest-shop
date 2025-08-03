@@ -26,6 +26,12 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Post()
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async create(@Body() createUserDto: any): Promise<UserResponse> {
+    return this.usersService.create(createUserDto);
+  }
+
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req): Promise<UserResponse | null> {
@@ -60,6 +66,15 @@ export class UsersController {
     );
   }
 
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: any,
+  ): Promise<UserResponse> {
+    return this.usersService.update(id, updateUserDto);
+  }
+
   @Patch(':id/admin-status')
   @UseGuards(JwtAuthGuard, AdminGuard)
   async updateAdminStatus(
@@ -72,8 +87,6 @@ export class UsersController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, AdminGuard)
   async remove(@Param('id') id: string): Promise<{ message: string }> {
-    // Note: Remove method not implemented in service yet
-    // For now, just return success message
-    return { message: 'User deletion not implemented yet' };
+    return this.usersService.remove(id);
   }
 }

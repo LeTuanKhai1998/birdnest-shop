@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { AddToCartButton } from '@/components/AddToCartButton';
-import { Eye, ShoppingCart, Heart, Package, TrendingUp } from 'lucide-react';
+import { Eye, ShoppingCart, Heart, Package, TrendingUp, Truck } from 'lucide-react';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ import { useCurrencyFormat, formatPriceWithDiscount } from '@/lib/currency-utils
 import { Product, Review } from '@/lib/types';
 import { getFirstImageUrl, cn } from '@/lib/utils';
 import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
+import { useFreeShippingThreshold } from '@/lib/settings-context';
 
 type ProductCardProps = { product: Product; onClick?: () => void };
 
@@ -18,6 +19,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const { data: session } = useSession();
   const wishlist = useWishlist();
   const { format } = useCurrencyFormat();
+  const freeShippingThreshold = useFreeShippingThreshold();
   
   // Don't show products that are out of stock
   if ((product.quantity || 0) <= 0) {
@@ -87,6 +89,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 <div className="absolute top-2 sm:top-4 left-16 sm:left-20 z-20 bg-orange-500/90 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg border border-white/20">
                   <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 inline mr-0.5 sm:mr-1" />
                   Hot
+                </div>
+              )}
+
+              {/* Free Shipping Badge */}
+              {parseFloat(product.price) >= freeShippingThreshold && (
+                <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-20 bg-green-500/90 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg border border-white/20">
+                  <Truck className="w-3 h-3 sm:w-4 sm:h-4 inline mr-0.5 sm:mr-1" />
+                  Miễn phí vận chuyển
                 </div>
               )}
 

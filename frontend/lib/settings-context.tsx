@@ -34,17 +34,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           storeName: 'Birdnest Shop',
           storeEmail: 'admin@birdnest.com',
           storePhone: '',
-          defaultLanguage: 'en',
-          currency: 'VND',
-          taxPercent: 0,
-          freeShippingThreshold: 500000,
-          enableStripe: true,
+                  currency: 'VND',
+        taxPercent: 0,
+        freeShippingThreshold: 950000,
+        enableStripe: true,
           enableMomo: true,
           enableCOD: true,
           maintenanceMode: false,
           logoUrl: '',
           address: '',
-          country: 'Vietnam',
+          province: '',
+          district: '',
+          ward: '',
         });
       }
     } catch (err) {
@@ -55,17 +56,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         storeName: 'Birdnest Shop',
         storeEmail: 'admin@birdnest.com',
         storePhone: '',
-        defaultLanguage: 'en',
         currency: 'VND',
         taxPercent: 0,
-        freeShippingThreshold: 500000,
+        freeShippingThreshold: 950000,
         enableStripe: true,
         enableMomo: true,
         enableCOD: true,
         maintenanceMode: false,
         logoUrl: '',
         address: '',
-        country: 'Vietnam',
+        province: '',
+        district: '',
+        ward: '',
       });
     } finally {
       setLoading(false);
@@ -98,6 +100,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadSettings();
   }, []);
+
+
 
   return (
     <SettingsContext.Provider
@@ -160,7 +164,7 @@ export function useTaxPercent() {
 // Hook for getting free shipping threshold
 export function useFreeShippingThreshold() {
   const { settings } = useSettings();
-  return settings?.freeShippingThreshold || 0;
+  return settings?.freeShippingThreshold || 950000;
 }
 
 // Hook for checking maintenance mode

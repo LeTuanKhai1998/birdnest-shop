@@ -1,67 +1,67 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
-import useSWR from 'swr';
-import { UserCard } from '@/components/UserCard';
-import { UserTable } from '@/components/UserTable';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { 
-  Users, 
+  Trash2, 
+  Plus, 
   Search, 
-  Filter, 
   RefreshCw, 
-  UserPlus, 
-  Shield, 
-  Mail, 
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  Download,
-  Settings,
-  Eye,
-  MoreHorizontal,
+  AlertCircle, 
+  Users,
+  User as UserIcon,
+  Edit,
+  Mail,
   Crown,
+  X,
+  Save,
+  TrendingUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   UserCheck,
   UserX,
-  Clock
+  Calendar,
+  Shield,
+  Eye
 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { formatReadableId, getEntityTypeColor, getEntityTypeLabel } from '@/lib/id-utils';
-import { UserId } from '@/components/ui/ReadableId';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-type AdminUser = {
-  id: string;
-  name: string;
-  email: string;
-  isAdmin: boolean;
-  role: string;
-  status: string;
-  createdAt?: string;
-  lastLoginAt?: string | null;
-};
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import useSWR, { mutate as globalMutate } from 'swr';
+import { apiService } from '@/lib/api';
+import type { User } from '@/lib/types';
 
+import { cn } from '@/lib/utils';
+
+import { Skeleton } from '@/components/ui/skeleton';
+import { UnifiedAvatar } from '@/components/ui/UnifiedAvatar';
+
+const userSchema = z.object({
+  name: z.string().min(2, 'Tên người dùng là bắt buộc'),
+  email: z.string().email('Email không hợp lệ'),
+  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự').optional(),
+  isAdmin: z.boolean().optional(),
+});
+
+type UserForm = z.infer<typeof userSchema>;
+
+
+
+// Role configuration
 const ROLE_CONFIG = {
   admin: { 
     label: 'Quản trị viên', 
@@ -77,133 +77,284 @@ const ROLE_CONFIG = {
   },
 };
 
-const STATUS_CONFIG = {
-  active: { 
-    label: 'Hoạt động', 
-    color: 'bg-green-100 text-green-800 border-green-200', 
-    icon: UserCheck
-  },
-  inactive: { 
-    label: 'Không hoạt động', 
-    color: 'bg-gray-100 text-gray-800 border-gray-200', 
-    icon: UserX
-  },
-  pending: { 
-    label: 'Chờ xử lý', 
-    color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
-    icon: Clock
-  },
-};
+
 
 export default function AdminUsersPage() {
-  const { data, mutate, isLoading } = useSWR('/api/users', fetcher);
-  const users = data?.users || [];
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [editId, setEditId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [cacheKey, setCacheKey] = useState<string>(`admin-users-${Date.now()}`);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [roleFilter, setRoleFilter] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserDetails, setShowUserDetails] = useState(false);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const userDetailsModalRef = useRef<HTMLDivElement | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Sorting state
+  const [sortField, setSortField] = useState<'name' | 'email' | 'createdAt' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Form setup
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setValue,
+  } = useForm<UserForm>({
+    resolver: zodResolver(userSchema),
+  });
+
+  const { data: users, isLoading, mutate } = useSWR(cacheKey, () => apiService.getUsers(), {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  });
 
 
 
-  // Debounce search input
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchValue);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [searchValue]);
+  // Handle sorting
+  const handleSort = (field: 'name' | 'email' | 'createdAt') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
-  // Filter users in-memory
+  // Get sort icon
+  const getSortIcon = (field: 'name' | 'email' | 'createdAt') => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-4 h-4" />;
+    }
+    return sortDirection === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />;
+  };
+
+  // Filter and sort users
   const filteredUsers = useMemo(() => {
-    return users.filter((user: AdminUser) => {
-      const matchesSearch =
-        !debouncedSearch ||
-        user.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        user.email.toLowerCase().includes(debouncedSearch.toLowerCase());
-      const matchesRole = !roleFilter || roleFilter === 'all' || (roleFilter === 'admin' ? user.isAdmin : !user.isAdmin);
-      const matchesStatus = !statusFilter || statusFilter === 'all' || user.status === statusFilter;
-      return matchesSearch && matchesRole && matchesStatus;
+    if (!users) return [];
+    
+    let filtered = users.filter((user: User) => {
+      const matchesSearch = !searchValue || 
+        (user.name && user.name.toLowerCase().includes(searchValue.toLowerCase())) ||
+        user.email.toLowerCase().includes(searchValue.toLowerCase());
+      const matchesRole = !roleFilter || 
+        (roleFilter === 'admin' ? user.isAdmin : !user.isAdmin);
+      return matchesSearch && matchesRole;
     });
-  }, [users, debouncedSearch, roleFilter, statusFilter]);
 
-  // Calculate metrics with trends
+    // Apply sorting
+    if (sortField) {
+      filtered.sort((a: User, b: User) => {
+        let aValue: string, bValue: string;
+        
+        if (sortField === 'name') {
+          aValue = (a.name || '').toLowerCase();
+          bValue = (b.name || '').toLowerCase();
+        } else if (sortField === 'email') {
+          aValue = a.email.toLowerCase();
+          bValue = b.email.toLowerCase();
+        } else {
+          aValue = a.createdAt ? new Date(a.createdAt).toISOString() : '';
+          bValue = b.createdAt ? new Date(b.createdAt).toISOString() : '';
+        }
+
+        if (sortDirection === 'asc') {
+          return aValue.localeCompare(bValue);
+        } else {
+          return bValue.localeCompare(aValue);
+        }
+      });
+    }
+
+    return filtered;
+  }, [users, searchValue, roleFilter, sortField, sortDirection]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchValue, roleFilter]);
+
+  // Handle clicks outside modals
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside user form modal
+      if (dialogOpen && modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setDialogOpen(false);
+      }
+      
+      // Check if click is outside user details modal
+      if (showUserDetails && userDetailsModalRef.current && !userDetailsModalRef.current.contains(event.target as Node)) {
+        setShowUserDetails(false);
+      }
+    };
+
+    if (dialogOpen || showUserDetails) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dialogOpen, showUserDetails]);
+
+  // Pagination logic
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredUsers.length / pageSize);
+  const totalItems = filteredUsers.length;
+
+  // Calculate metrics from real API data
   const metrics = useMemo(() => {
-    if (!users.length) return null;
+    if (!users) return null;
     
     const now = new Date();
     const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
-    const recentUsers = users.filter((u: AdminUser) => u.createdAt && new Date(u.createdAt) >= lastWeek);
-    const lastMonthUsers = users.filter((u: AdminUser) => u.createdAt && new Date(u.createdAt) >= lastMonth);
+    const recentUsers = users.filter((u: User) => u.createdAt && new Date(u.createdAt) >= lastWeek);
+    const lastMonthUsers = users.filter((u: User) => u.createdAt && new Date(u.createdAt) >= lastMonth);
     
     return {
       totalUsers: users.length,
-      adminUsers: users.filter((u: AdminUser) => u.isAdmin).length,
-      activeUsers: users.filter((u: AdminUser) => u.status === 'active').length,
+      adminUsers: users.filter((u: User) => u.isAdmin).length,
+      activeUsers: users.length, // All users are considered active for now
       recentSignups: recentUsers.length,
       userGrowth: lastMonthUsers.length > 0 ? ((recentUsers.length - lastMonthUsers.length) / lastMonthUsers.length) * 100 : 0,
     };
   }, [users]);
 
-  const handleRoleChange = async (id: string, isAdmin: boolean) => {
+  const onSubmit = async (data: UserForm) => {
     try {
-      const res = await fetch('/api/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, isAdmin }),
-      });
-      if (res.ok) {
-        toast.success('Role updated successfully');
-        mutate();
+      setLoading(true);
+      
+      if (editId) {
+        await apiService.updateUser(editId, {
+          name: data.name,
+          email: data.email,
+          isAdmin: data.isAdmin,
+        });
+        toast({
+          title: "Người dùng đã cập nhật",
+          description: "Thông tin người dùng đã được cập nhật thành công",
+          variant: "success",
+        });
       } else {
-        toast.error('Failed to update role. Please try again.');
+        await apiService.createUser({
+          name: data.name,
+          email: data.email,
+          password: data.password || 'changeme123', // Default password if not provided
+          isAdmin: data.isAdmin,
+        });
+        toast({
+          title: "Người dùng đã tạo",
+          description: "Người dùng mới đã được tạo thành công",
+          variant: "success",
+        });
       }
+      
+      await mutate();
+      setDialogOpen(false);
+      setEditId(null);
     } catch (error) {
-      toast.error('Failed to update role. Please try again.');
+      console.error('Error saving user:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể lưu người dùng. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+  const handleEdit = async (user: User) => {
+    setEditId(user.id);
+    setDialogOpen(true);
+    
+    // Populate form with user data
+    setValue('name', user.name || '');
+    setValue('email', user.email);
+    setValue('isAdmin', user.isAdmin);
+    // Don't populate password for security reasons
+  };
+
+  const handleCancelEdit = () => {
+    setEditId(null);
+    setDialogOpen(false);
+  };
+
+  const handleDeleteClick = (userId: string) => {
+    setDeleteId(userId);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+    
     try {
-      const res = await fetch('/api/users', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
+      setDeleting(true);
+      await apiService.deleteUser(deleteId);
+      await mutate(undefined, { revalidate: true });
+      toast({
+        title: "Người dùng đã xóa",
+        description: "Người dùng đã được xóa thành công",
+        variant: "success",
       });
-      if (res.ok) {
-        toast.success('User deleted successfully');
-        mutate();
-      } else {
-        toast.error('Failed to delete user. Please try again.');
-      }
     } catch (error) {
-      toast.error('Failed to delete user. Please try again.');
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể xóa người dùng. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+      setDeleteId(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteId(null);
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await mutate();
-      toast.success('User list refreshed successfully');
+      // Clear all SWR cache and force revalidation
+      await globalMutate(() => true, undefined, { revalidate: true });
+      
+      // Also clear specific keys
+      await Promise.all([
+        mutate(undefined, { revalidate: true }),
+      ]);
+      
+      // Force a small delay to ensure cache is cleared
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Update cache keys to force fresh data fetch
+      setCacheKey(`admin-users-${Date.now()}`);
+      
     } catch (error) {
-      toast.error('Failed to refresh data. Please try again.');
+      // Error handling for refresh operation
     } finally {
       setRefreshing(false);
     }
   };
 
-  const handleExport = () => {
-    toast.info('Export functionality will be implemented soon');
-  };
-
-  const handleViewUser = (user: AdminUser) => {
+  const handleViewUser = (user: User) => {
     setSelectedUser(user);
     setShowUserDetails(true);
   };
@@ -221,9 +372,9 @@ export default function AdminUsersPage() {
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60));
     
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInHours < 48) return 'Yesterday';
+    if (diffInHours < 1) return 'Vừa xong';
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    if (diffInHours < 48) return 'Hôm qua';
     return d.toLocaleDateString('vi-VN');
   }
 
@@ -259,386 +410,940 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div>
-      {/* View Mode Toggle and Actions */}
-      <div className="flex items-center justify-end gap-3 mb-6">
-        <div className="flex items-center gap-2 bg-white rounded-lg border p-1">
+    <div className="space-y-8">
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-2 order-2 sm:order-1">
           <Button
-            variant={viewMode === 'table' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('table')}
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="hover:shadow-lg transition-shadow duration-200 flex-1 sm:flex-none"
           >
-            Bảng
-          </Button>
-          <Button
-            variant={viewMode === 'cards' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('cards')}
-          >
-            Thẻ
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Làm mới</span>
+            <span className="sm:hidden">Làm mới</span>
           </Button>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleExport}
+
+        <Button 
+          onClick={() => setDialogOpen(true)}
+          className="bg-[#a10000] hover:bg-red-800 hover:shadow-lg transition-all duration-200 order-1 sm:order-2 flex-1 sm:flex-none"
         >
-          <Download className="w-4 h-4 mr-2" />
-          Xuất
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={refreshing}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Làm mới
-        </Button>
-        <Button>
-          <UserPlus className="w-4 h-4 mr-2" />
-          Thêm người dùng
+          <Plus className="w-4 h-4 mr-2" />
+          <span className="hidden sm:inline">Thêm người dùng</span>
+          <span className="sm:hidden">Thêm người dùng</span>
         </Button>
       </div>
 
-          {/* Metrics Cards */}
-          {metrics && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card className="border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Tổng người dùng</p>
-                      <p className="text-2xl font-bold text-gray-900">{metrics.totalUsers}</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        {metrics.userGrowth > 0 ? (
-                          <TrendingUp className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4 text-red-600" />
-                        )}
-                        <span className={`text-sm ${metrics.userGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {Math.abs(metrics.userGrowth).toFixed(1)}%
-                        </span>
-                        <span className="text-sm text-gray-500">so với tháng trước</span>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-purple-100 rounded-lg">
-                      <Users className="w-6 h-6 text-purple-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Active Users</p>
-                      <p className="text-2xl font-bold text-gray-900">{metrics.activeUsers}</p>
-                      <p className="text-sm text-gray-500 mt-2">Currently active</p>
-                    </div>
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <UserCheck className="w-6 h-6 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-orange-500 hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Administrators</p>
-                      <p className="text-2xl font-bold text-gray-900">{metrics.adminUsers}</p>
-                      <p className="text-sm text-gray-500 mt-2">System admins</p>
-                    </div>
-                    <div className="p-3 bg-orange-100 rounded-lg">
-                      <Crown className="w-6 h-6 text-orange-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Recent Signups</p>
-                      <p className="text-2xl font-bold text-gray-900">{metrics.recentSignups}</p>
-                      <p className="text-sm text-gray-500 mt-2">Last 7 days</p>
-                    </div>
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <UserPlus className="w-6 h-6 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Filters */}
-          <Card className="mb-6 border-l-4 border-l-gray-500">
+      {/* Stats Cards */}
+      {metrics && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <Card className="hover:shadow-lg transition-shadow duration-200">
             <CardContent className="p-6">
-              <div className="flex flex-wrap gap-4 items-end">
-                <div className="flex-1 min-w-[200px]">
-                  <Label className="block text-xs font-medium mb-1 text-gray-700">
-                    Search Users
-                  </Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Search by name or email..."
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      className="pl-10"
-                    />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Tổng người dùng</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics.totalUsers}</p>
+                  <div className="flex items-center gap-1 mt-2">
+                    {metrics.userGrowth > 0 ? (
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <TrendingUp className="w-4 h-4 text-red-600" />
+                    )}
+                    <span className={`text-sm ${metrics.userGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {Math.abs(metrics.userGrowth).toFixed(1)}%
+                    </span>
+                    <span className="text-sm text-gray-500">so với tháng trước</span>
                   </div>
                 </div>
-                <div className="min-w-[150px]">
-                  <Label className="block text-xs font-medium mb-1 text-gray-700">
-                    Role Filter
-                  </Label>
-                  <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Roles" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Roles</SelectItem>
-                      <SelectItem value="admin">Administrators</SelectItem>
-                      <SelectItem value="user">Customers</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="min-w-[150px]">
-                  <Label className="block text-xs font-medium mb-1 text-gray-700">
-                    Status Filter
-                  </Label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-                    {filteredUsers.length} users
-                  </Badge>
+                <div className="p-3 rounded-full bg-purple-50">
+                  <Users className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Users Display */}
-          {viewMode === 'table' ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>User List</CardTitle>
-                <CardDescription>
-                  View and manage user accounts
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!filteredUsers || filteredUsers.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-                    <p className="text-gray-600 mb-4">
-                      {searchValue || roleFilter || statusFilter 
-                        ? 'Try adjusting your search or filter criteria'
-                        : 'No users have been registered yet'
-                      }
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left p-4 font-medium text-gray-700">User</th>
-                          <th className="text-left p-4 font-medium text-gray-700">Email</th>
-                          <th className="text-left p-4 font-medium text-gray-700">Role</th>
-                          <th className="text-left p-4 font-medium text-gray-700">Status</th>
-                          <th className="text-left p-4 font-medium text-gray-700">Joined</th>
-                          <th className="text-right p-4 font-medium text-gray-700">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredUsers.map((user: AdminUser) => {
-                          const roleConfig = ROLE_CONFIG[user.isAdmin ? 'admin' : 'user'];
-                          const statusConfig = STATUS_CONFIG[user.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.active;
-                          const RoleIcon = roleConfig.icon;
-                          const StatusIcon = statusConfig.icon;
-                          
-                          return (
-                            <tr key={user.id} className="border-b hover:bg-gray-50 transition-colors">
-                              <td className="p-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                    <Users className="w-5 h-5 text-purple-600" />
-                                  </div>
-                                  <div>
-                                    <p className="font-medium text-sm">{user.name}</p>
-                                    <UserId readableId={user.readableId} fallbackId={user.id} variant="text" size="sm" />
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                <div className="flex items-center gap-2">
-                                  <Mail className="w-4 h-4 text-gray-400" />
-                                  <span className="text-sm">{user.email}</span>
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                <Badge className={`${roleConfig.color} flex items-center gap-1 border`}>
-                                  <RoleIcon className="w-3 h-3" />
+          <Card className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Người dùng hoạt động</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics.activeUsers}</p>
+                </div>
+                <div className="p-3 rounded-full bg-blue-50">
+                  <UserCheck className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Quản trị viên</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics.adminUsers}</p>
+                </div>
+                <div className="p-3 rounded-full bg-orange-50">
+                  <Crown className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Đăng ký gần đây</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics.recentSignups}</p>
+                  <p className="text-sm text-gray-500">7 ngày qua</p>
+                </div>
+                <div className="p-3 rounded-full bg-green-50">
+                  <Plus className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Filters Section */}
+      <div>
+        <h2 
+          className="text-2xl font-bold text-[#a10000] mb-6"
+        >
+          Tìm kiếm và lọc
+        </h2>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Tìm kiếm người dùng..."
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="w-full sm:w-48">
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Tất cả vai trò</option>
+                  <option value="admin">Quản trị viên</option>
+                  <option value="user">Khách hàng</option>
+                </select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Users Table Section */}
+      <div>
+        <h2 
+          className="text-2xl font-bold text-[#a10000] mb-6"
+        >
+          Danh sách người dùng
+        </h2>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-4 sm:p-6">
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Không có người dùng</h3>
+              <p className="text-gray-600 mb-4">Bắt đầu bằng cách thêm người dùng đầu tiên.</p>
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Thêm người dùng
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2 sm:p-4 font-medium text-gray-700">Người dùng</th>
+                    <th className="hidden sm:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">Email</th>
+                    <th className="hidden md:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">
+                      <button
+                        onClick={() => handleSort('createdAt')}
+                        className="flex items-center gap-1 hover:text-gray-900 transition-colors"
+                      >
+                        Ngày tham gia
+                        {getSortIcon('createdAt')}
+                      </button>
+                    </th>
+                    <th className="hidden sm:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">Vai trò</th>
+                    <th className="text-right p-2 sm:p-4 font-medium text-gray-700 whitespace-nowrap">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedUsers.map((user: User) => {
+                    const roleConfig = ROLE_CONFIG[user.isAdmin ? 'admin' : 'user'];
+                    const RoleIcon = roleConfig.icon;
+                    
+                    return (
+                      <tr key={user.id} className="border-b hover:bg-gray-50 transition-colors">
+                        <td className="p-2 sm:p-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <UnifiedAvatar
+                                user={{ name: user.name || 'User', email: user.email }}
+                                size={40}
+                                className="rounded-lg"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm truncate">{user.name || 'Không có tên'}</p>
+                              <p className="text-xs text-gray-500 truncate hidden sm:block">
+                                {user.email}
+                              </p>
+                              <div className="flex items-center gap-2 sm:hidden mt-1">
+                                <Badge 
+                                  variant="secondary" 
+                                  className={cn(
+                                    "text-xs border",
+                                    roleConfig.color
+                                  )}
+                                >
+                                  <RoleIcon className="w-3 h-3 mr-1" />
                                   {roleConfig.label}
                                 </Badge>
-                              </td>
-                              <td className="p-4">
-                                <Badge className={`${statusConfig.color} flex items-center gap-1 border`}>
-                                  <StatusIcon className="w-3 h-3" />
-                                  {statusConfig.label}
-                                </Badge>
-                              </td>
-                              <td className="p-4">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4 text-gray-400" />
-                                  <div>
-                                    <span className="text-sm">{user.createdAt ? formatDate(user.createdAt) : 'N/A'}</span>
-                                    <p className="text-xs text-gray-500">{user.createdAt ? formatRelativeDate(user.createdAt) : ''}</p>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="p-4 text-right">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleViewUser(user)}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredUsers?.map((user: AdminUser) => {
-                const roleConfig = ROLE_CONFIG[user.isAdmin ? 'admin' : 'user'];
-                const statusConfig = STATUS_CONFIG[user.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.active;
-                const RoleIcon = roleConfig.icon;
-                const StatusIcon = statusConfig.icon;
-                
-                return (
-                  <Card key={user.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-5 h-5 text-purple-600" />
-                          <span className="font-medium text-sm">{user.name}</span>
-                        </div>
-                        <Badge className={`${roleConfig.color} text-xs border`}>
-                          <RoleIcon className="w-3 h-3 mr-1" />
-                          {roleConfig.label}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-gray-400" />
-                        <span className="truncate">{user.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span>{user.createdAt ? formatRelativeDate(user.createdAt) : 'N/A'}</span>
-                      </div>
-                      <div className="pt-2 border-t">
-                        <div className="flex items-center justify-between">
-                          <Badge className={`${statusConfig.color} text-xs border`}>
-                            <StatusIcon className="w-3 h-3 mr-1" />
-                            {statusConfig.label}
-                          </Badge>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewUser(user)}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="hidden sm:table-cell p-2 sm:p-4">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm">{user.email}</span>
+                          </div>
+                        </td>
+                        <td className="hidden md:table-cell p-2 sm:p-4">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            <div>
+                              <span className="text-sm">{user.createdAt ? formatDate(user.createdAt) : 'N/A'}</span>
+                              <p className="text-xs text-gray-500">{user.createdAt ? formatRelativeDate(user.createdAt) : ''}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="hidden sm:table-cell p-2 sm:p-4">
+                          <Badge 
+                            variant="secondary" 
+                            className={cn(
+                              "text-xs border",
+                              roleConfig.color
+                            )}
                           >
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                            <RoleIcon className="w-3 h-3 mr-1" />
+                            {roleConfig.label}
+                          </Badge>
+                        </td>
+                        <td className="p-2 sm:p-4 text-right">
+                          <div className="flex items-center gap-1 sm:gap-2 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewUser(user)}
+                              className="h-8 w-8 sm:h-9 sm:w-9 p-0"
+                            >
+                              <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(user)}
+                              className="h-8 w-8 sm:h-9 sm:w-9 p-0"
+                            >
+                              <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
-
-      {/* User Details Dialog */}
-      {showUserDetails && (
-        <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
-          <DialogContent className="max-w-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">User Details</h2>
+          
+          {/* Enhanced Pagination Controls - Inside Card */}
+          {totalItems > 0 && (
+            <div className="mt-8">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                {/* Page Info */}
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <span>
+                    Hiển thị <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> - <span className="font-medium">{Math.min(currentPage * pageSize, totalItems)}</span> trong tổng số <span className="font-medium">{totalItems}</span> người dùng
+                  </span>
+                  
+                  {/* Page Size Selector */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500">Hiển thị:</span>
+                    <select 
+                      value={pageSize} 
+                      onChange={(e) => {
+                        setPageSize(parseInt(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="w-16 h-8 text-sm border border-gray-300 rounded px-2"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Enhanced Pagination Navigation */}
+                <div className="flex items-center gap-1">
+                  {/* First Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 p-0"
+                    title="Trang đầu"
+                  >
+                    <ChevronsLeft className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Previous Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 p-0"
+                    title="Trang trước"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Page Numbers with Ellipsis */}
+                  <div className="flex items-center gap-1">
+                    {(() => {
+                      const pages = [];
+                      const maxVisible = 5;
+                      
+                      if (totalPages <= maxVisible) {
+                        // Show all pages if total is small
+                        for (let i = 1; i <= totalPages; i++) {
+                          pages.push(
+                            <Button
+                              key={i}
+                              variant={currentPage === i ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(i)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              {i}
+                            </Button>
+                          );
+                        }
+                      } else {
+                        // Show smart pagination with ellipsis
+                        if (currentPage <= 3) {
+                          // Near start
+                          for (let i = 1; i <= 4; i++) {
+                            pages.push(
+                              <Button
+                                key={i}
+                                variant={currentPage === i ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(i)}
+                                className="h-8 w-8 p-0 text-sm font-medium"
+                              >
+                                {i}
+                              </Button>
+                            );
+                          }
+                          pages.push(
+                            <span key="ellipsis1" className="px-2 text-gray-400">...</span>
+                          );
+                          pages.push(
+                            <Button
+                              key={totalPages}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(totalPages)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              {totalPages}
+                            </Button>
+                          );
+                        } else if (currentPage >= totalPages - 2) {
+                          // Near end
+                          pages.push(
+                            <Button
+                              key={1}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(1)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              1
+                            </Button>
+                          );
+                          pages.push(
+                            <span key="ellipsis2" className="px-2 text-gray-400">...</span>
+                          );
+                          for (let i = totalPages - 3; i <= totalPages; i++) {
+                            pages.push(
+                              <Button
+                                key={i}
+                                variant={currentPage === i ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(i)}
+                                className="h-8 w-8 p-0 text-sm font-medium"
+                              >
+                                {i}
+                              </Button>
+                            );
+                          }
+                        } else {
+                          // Middle
+                          pages.push(
+                            <Button
+                              key={1}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(1)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              1
+                            </Button>
+                          );
+                          pages.push(
+                            <span key="ellipsis3" className="px-2 text-gray-400">...</span>
+                          );
+                          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                            pages.push(
+                              <Button
+                                key={i}
+                                variant={currentPage === i ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(i)}
+                                className="h-8 w-8 p-0 text-sm font-medium"
+                              >
+                                {i}
+                              </Button>
+                            );
+                          }
+                          pages.push(
+                            <span key="ellipsis4" className="px-2 text-gray-400">...</span>
+                          );
+                          pages.push(
+                            <Button
+                              key={totalPages}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(totalPages)}
+                              className="h-8 w-8 p-0 text-sm font-medium"
+                            >
+                              {totalPages}
+                            </Button>
+                          );
+                        }
+                      }
+                      
+                      return pages;
+                    })()}
+                  </div>
+                  
+                  {/* Next Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 p-0"
+                    title="Trang tiếp"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Last Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 p-0"
+                    title="Trang cuối"
+                  >
+                    <ChevronsRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
-              View complete user information and activity
-            </p>
-            <div className="max-h-96 overflow-y-auto">
-              {selectedUser && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Name</Label>
-                      <p className="text-sm text-gray-900">{selectedUser.name}</p>
+          )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* User Form Dialog */}
+      {dialogOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div ref={modalRef} className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    {editId ? (
+                      <Edit className="w-5 h-5" />
+                    ) : (
+                      <Plus className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-white">
+                      {editId ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
+                    </h2>
+                    <p className="text-white font-medium">
+                      {editId ? 'Cập nhật thông tin người dùng hiện có' : 'Thêm người dùng mới vào hệ thống'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setDialogOpen(false)}
+                  className="text-white hover:text-white/80 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div className="max-h-[calc(90vh-120px)] overflow-y-auto">
+              <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+                {/* Header with status */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[#a10000] rounded-lg">
+                      <UserIcon className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-700">Email</Label>
-                      <p className="text-sm text-gray-900">{selectedUser.email}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Role</Label>
-                      <Badge className={`${ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].color} mt-1`}>
-                        {ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].label}
-                      </Badge>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Status</Label>
-                      <Badge className={`${STATUS_CONFIG[selectedUser.status as keyof typeof STATUS_CONFIG]?.color || STATUS_CONFIG.active.color} mt-1`}>
-                        {STATUS_CONFIG[selectedUser.status as keyof typeof STATUS_CONFIG]?.label || 'Active'}
-                      </Badge>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Joined</Label>
-                      <p className="text-sm text-gray-900">{selectedUser.createdAt ? formatDate(selectedUser.createdAt) : 'N/A'}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Last Login</Label>
-                      <p className="text-sm text-gray-900">{selectedUser.lastLoginAt ? formatDate(selectedUser.lastLoginAt) : 'Never'}</p>
+                      <h2 className="text-lg font-semibold text-[#a10000]">
+                        {editId ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'}
+                      </h2>
+                      <p className="text-sm text-gray-600">
+                        {editId ? 'Cập nhật thông tin người dùng hiện có' : 'Thêm người dùng mới vào hệ thống'}
+                      </p>
                     </div>
                   </div>
                 </div>
-              )}
+
+                {/* Basic Information */}
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <UserIcon className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                          Thông tin cơ bản
+                          <Badge variant="secondary" className="text-xs">Bắt buộc</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Thông tin cá nhân và thông tin đăng nhập của người dùng
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="flex items-center gap-2">
+                          Tên người dùng
+                          <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="name"
+                          {...register('name')}
+                          placeholder="Nhập tên người dùng"
+                          className={errors.name ? 'border-red-300 focus:border-red-500' : ''}
+                        />
+                        {errors.name && (
+                          <p className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.name.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="flex items-center gap-2">
+                          Email
+                          <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          {...register('email')}
+                          placeholder="Nhập email"
+                          className={errors.email ? 'border-red-300 focus:border-red-500' : ''}
+                        />
+                        {errors.email && (
+                          <p className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.email.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Password - Only show when creating new user */}
+                    {!editId && (
+                      <div className="space-y-2">
+                        <Label htmlFor="password" className="flex items-center gap-2">
+                          Mật khẩu
+                          <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          {...register('password')}
+                          placeholder="Nhập mật khẩu"
+                          className={errors.password ? 'border-red-300 focus:border-red-500' : ''}
+                        />
+                        {errors.password && (
+                          <p className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.password.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Permissions and Status */}
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <Shield className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                          Quyền hạn và trạng thái
+                          <Badge variant="secondary" className="text-xs">Tùy chọn</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Cấu hình quyền truy cập và trạng thái hoạt động của người dùng
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pb-6">
+                    {/* Admin Status */}
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          {...register('isAdmin')}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-medium">Quyền quản trị viên</span>
+                      </Label>
+                      <p className="text-xs text-gray-500 ml-6">
+                        Người dùng có quyền truy cập vào tất cả tính năng quản trị và cài đặt hệ thống
+                      </p>
+                      {errors.isAdmin && (
+                        <p className="text-sm text-red-600 flex items-center gap-1 ml-6">
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.isAdmin.message}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Form Actions */}
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setDialogOpen(false)}
+                    className="flex items-center gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex items-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                        Đang lưu...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        {editId ? 'Cập nhật người dùng' : 'Thêm người dùng'}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowUserDetails(false)}>
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteId && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Xóa người dùng</h2>
+              <Button variant="ghost" size="sm" onClick={() => setDeleteId(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={handleCancelDelete}>
+                Hủy
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    Đang xóa...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Xóa
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Details Dialog */}
+      {showUserDetails && selectedUser && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div ref={userDetailsModalRef} className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 border-b bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-white">Chi tiết người dùng</h2>
+                    <p className="text-white font-medium">
+                      Xem thông tin chi tiết và hoạt động của người dùng
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowUserDetails(false)}
+                  className="text-white hover:text-white/80 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div className="max-h-[calc(90vh-120px)] overflow-y-auto">
+              <div className="p-6 space-y-6">
+                {/* Header with status */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[#a10000] rounded-lg">
+                      <UserIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-[#a10000]">
+                        Thông tin người dùng
+                      </h2>
+                      <p className="text-sm text-gray-600">
+                        Chi tiết thông tin cá nhân và quyền hạn của người dùng
+                      </p>
+                    </div>
+                  </div>
+                  <Badge className={`${ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].color} text-sm font-medium`}>
+                    {ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].label}
+                  </Badge>
+                </div>
+
+                {/* Basic Information */}
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <UserIcon className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                          Thông tin cơ bản
+                          <Badge variant="secondary" className="text-xs">Thông tin</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Thông tin cá nhân và thông tin đăng nhập của người dùng
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                          Tên người dùng
+                        </Label>
+                        <div className="p-3 bg-gray-50 rounded-lg border">
+                          <p className="text-sm text-gray-900 font-medium">
+                            {selectedUser.name || 'Không có tên'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                          Email
+                        </Label>
+                        <div className="p-3 bg-gray-50 rounded-lg border">
+                          <p className="text-sm text-gray-900 font-medium">
+                            {selectedUser.email}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Account Status and Permissions */}
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <Shield className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                          Trạng thái và quyền hạn
+                          <Badge variant="secondary" className="text-xs">Hệ thống</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Thông tin về quyền truy cập và trạng thái hoạt động
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                          Vai trò
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Badge className={`${ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].color} text-sm font-medium`}>
+                            {ROLE_CONFIG[selectedUser.isAdmin ? 'admin' : 'user'].label}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {selectedUser.isAdmin ? 'Quyền truy cập toàn hệ thống' : 'Quyền truy cập khách hàng tiêu chuẩn'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                          Ngày tham gia
+                        </Label>
+                        <div className="p-3 bg-gray-50 rounded-lg border">
+                          <p className="text-sm text-gray-900 font-medium">
+                            {selectedUser.createdAt ? formatDate(selectedUser.createdAt) : 'N/A'}
+                          </p>
+                          {selectedUser.createdAt && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatRelativeDate(selectedUser.createdAt)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        Trạng thái tài khoản
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-sm text-gray-900 font-medium">Hoạt động</span>
+                        <span className="text-xs text-gray-500">Tài khoản đang hoạt động bình thường</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Account Statistics */}
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <TrendingUp className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                          Thống kê hoạt động
+                          <Badge variant="secondary" className="text-xs">Tùy chọn</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Thông tin về hoạt động và tương tác của người dùng
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">0</div>
+                        <div className="text-sm text-gray-600">Đơn hàng</div>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">0</div>
+                        <div className="text-sm text-gray-600">Đánh giá</div>
+                      </div>
+                      <div className="text-center p-4 bg-purple-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">0</div>
+                        <div className="text-sm text-gray-600">Sản phẩm yêu thích</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Toast Notifications */}
+      <Toaster />
     </div>
   );
 }

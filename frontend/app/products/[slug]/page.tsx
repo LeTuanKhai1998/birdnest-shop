@@ -30,9 +30,10 @@ import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
 import { cn } from '@/lib/utils';
-import { useSetting } from '@/lib/settings-context';
+import { useSetting, useFreeShippingThreshold } from '@/lib/settings-context';
 import Footer from '@/components/Footer';
 import { formatReadableId, getEntityTypeColor, getEntityTypeLabel } from '@/lib/id-utils';
+import { formatCurrency } from '@/lib/shipping-utils';
 
 // Format sold count for display
 function formatSoldCount(count: number): string {
@@ -148,15 +149,6 @@ function Breadcrumbs({ product }: { product: Product }) {
 function ProductBenefits() {
   const benefits = [
     {
-      icon: Truck,
-      text: 'Miễn phí vận chuyển',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
-      description: 'Cho đơn hàng từ 1.000.000đ',
-      gradient: 'from-green-50 to-emerald-50'
-    },
-    {
       icon: Shield,
       text: 'Đảm bảo chất lượng',
       color: 'text-blue-600',
@@ -182,6 +174,15 @@ function ProductBenefits() {
       borderColor: 'border-purple-200',
       description: 'Bảo mật thông tin',
       gradient: 'from-purple-50 to-violet-50'
+    },
+    {
+      icon: CheckCircle,
+      text: 'Chất lượng đảm bảo',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      description: 'Kiểm định nghiêm ngặt',
+      gradient: 'from-green-50 to-emerald-50'
     }
   ];
 
@@ -222,6 +223,7 @@ export default function ProductDetailPage({
   const storePhone = useSetting('storePhone') || '0919.844.822';
   const address = useSetting('address') || '45 Trần Hưng Đạo, Đảo, Rạch Giá, Kiên Giang';
   const logoUrl = useSetting('logoUrl') || '/images/logo.png';
+  const freeShippingThreshold = useFreeShippingThreshold();
   
   // State for product data
   const [product, setProduct] = useState<Product | null>(null);
@@ -238,10 +240,31 @@ export default function ProductDetailPage({
   const [userHasReviewed, setUserHasReviewed] = React.useState(false);
   const [userReview, setUserReview] = React.useState<Review | null>(null);
   
+  // Edit review state
+  const [editingReview, setEditingReview] = React.useState<Review | null>(null);
+  const [editComment, setEditComment] = React.useState('');
+  const [editRating, setEditRating] = React.useState(0);
+  const [editing, setEditing] = React.useState(false);
+  
   // Hooks that need to be called unconditionally
   const { data: session } = useSession();
   const { isInWishlist, add, remove, loading: wishlistLoading, mutate } = useWishlist();
   const shouldReduceMotion = useReducedMotion();
+
+  // Sort reviews to show user's review first - must be called before any early returns
+  const sortedReviews = React.useMemo(() => {
+    const reviews = localReviews.length > 0 ? localReviews : (product?.reviews || []);
+    if (!session?.user?.id) return reviews;
+    
+    return reviews.sort((a, b) => {
+      // User's own review comes first
+      if (a.userId === session.user.id && b.userId !== session.user.id) return -1;
+      if (a.userId !== session.user.id && b.userId === session.user.id) return 1;
+      
+      // Then sort by date (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [localReviews, product?.reviews, session?.user?.id]);
 
   // Fetch product data and reviews
   useEffect(() => {
@@ -278,6 +301,8 @@ export default function ProductDetailPage({
             }
           } catch (error) {
             console.error('Error checking user review:', error);
+            // Don't fail the whole page if user reviews fail to load
+            // This could happen due to auth issues or network problems
           }
         }
       } catch (err) {
@@ -290,7 +315,7 @@ export default function ProductDetailPage({
     };
 
     fetchProductAndReviews();
-  }, [decodedSlug]);
+  }, [decodedSlug, session?.user?.id]);
 
   // Handle Buy Now
   const handleBuyNow = () => {
@@ -384,6 +409,60 @@ export default function ProductDetailPage({
   const averageRating = product.reviews && product.reviews.length > 0
     ? product.reviews.reduce((acc: number, review: Review) => acc + review.rating, 0) / product.reviews.length
     : 0;
+
+  // Handle edit review
+  const handleEditReview = (review: Review) => {
+    setEditingReview(review);
+    setEditComment(review.comment || '');
+    setEditRating(review.rating);
+    setEditing(false); // Reset editing state when starting edit
+  };
+
+  // Handle save edit
+  const handleSaveEdit = async () => {
+    if (!editingReview || !editComment.trim()) return;
+    
+    setEditing(true);
+    try {
+      // Update both rating and comment
+      const updatedReview = await apiService.updateReview(editingReview.id, {
+        rating: editRating,
+        comment: editComment
+      });
+      
+      // Update local reviews
+      setLocalReviews(prev => 
+        prev.map(review => 
+          review.id === editingReview.id 
+            ? { ...review, rating: updatedReview.rating, comment: updatedReview.comment }
+            : review
+        )
+      );
+      
+      // Update user review if it's the user's review
+      if (userReview && userReview.id === editingReview.id) {
+        setUserReview({ ...userReview, rating: updatedReview.rating, comment: updatedReview.comment });
+      }
+      
+      setEditingReview(null);
+      setEditComment('');
+      setEditRating(0);
+      toast.success('Đánh giá đã được cập nhật thành công!');
+    } catch (error) {
+      console.error('Error updating review:', error);
+      toast.error('Có lỗi xảy ra khi cập nhật đánh giá. Vui lòng thử lại.');
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditingReview(null);
+    setEditComment('');
+    setEditRating(0);
+    setEditing(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fbd8b0] to-white">
@@ -576,7 +655,7 @@ export default function ProductDetailPage({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs md:text-sm font-semibold text-gray-900">Miễn phí vận chuyển</div>
-                        <div className="text-xs text-gray-600">Cho đơn từ 1.000.000đ</div>
+                        <div className="text-xs text-gray-600">Cho đơn từ {formatCurrency(freeShippingThreshold)}</div>
                       </div>
                     </div>
                   </div>
@@ -928,7 +1007,7 @@ export default function ProductDetailPage({
                   </div>
                 </CardContent>
               </Card>
-            ) : (
+            ) : !session?.user ? (
               <Card className="mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-lg">
                 <CardContent className="p-8 text-center">
                   <div className="flex items-center justify-center mb-6">
@@ -957,7 +1036,7 @@ export default function ProductDetailPage({
                   </div>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
 
             {/* User's Existing Review */}
             {userHasReviewed && userReview && (
@@ -1009,53 +1088,140 @@ export default function ProductDetailPage({
 
             {/* Reviews List */}
             <div className="space-y-6">
-              {(localReviews.length > 0 ? localReviews : product.reviews || []).map((review) => (
-                <div key={review.id} className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-sm">
-                          {(review.user?.name || 'K').charAt(0).toUpperCase()}
-                        </span>
+              {sortedReviews.map((review) => {
+                const isUserReview = session?.user?.id === review.userId;
+                const isEditing = editingReview?.id === review.id;
+                
+                return (
+                  <div key={review.id} className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-semibold text-sm">
+                            {(review.user?.name || 'K').charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-gray-900">{review.user?.name || 'Khách hàng'}</span>
+                            {isUserReview && (
+                              <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                                Bạn
+                              </Badge>
+                            )}
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-4 h-4 ${
+                                    star <= review.rating
+                                      ? 'text-yellow-400 fill-current'
+                                      : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <span className="text-sm text-gray-500">
+                            {new Date(review.createdAt).toLocaleDateString('vi-VN', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-900">{review.user?.name || 'Khách hàng'}</span>
-                          <div className="flex">
+                      <div className="flex items-center gap-2">
+                        <div className="text-lg font-bold text-[#a10000]">
+                          {review.rating}.0
+                        </div>
+                        {isUserReview && !isEditing && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditReview(review)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            Chỉnh sửa
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold mb-2 text-gray-700">Đánh giá của bạn</label>
+                          <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
+                              <button
                                 key={star}
-                                className={`w-4 h-4 ${
-                                  star <= review.rating
-                                    ? 'text-yellow-400 fill-current'
-                                    : 'text-gray-300'
-                                }`}
-                              />
+                                type="button"
+                                onClick={() => setEditRating(star)}
+                                className="text-3xl hover:scale-110 transition-transform duration-200 p-1"
+                              >
+                                <Star
+                                  className={`w-8 h-8 ${
+                                    star <= editRating
+                                      ? 'text-yellow-400 fill-current'
+                                      : 'text-gray-300 hover:text-yellow-300'
+                                  }`}
+                                />
+                              </button>
                             ))}
                           </div>
+                          {editRating > 0 && (
+                            <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                              <p className="text-sm font-medium text-yellow-800">
+                                {editRating === 1 && '😞 Rất không hài lòng'}
+                                {editRating === 2 && '😐 Không hài lòng'}
+                                {editRating === 3 && '😊 Bình thường'}
+                                {editRating === 4 && '😄 Hài lòng'}
+                                {editRating === 5 && '🥰 Rất hài lòng'}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        <span className="text-sm text-gray-500">
-                          {new Date(review.createdAt).toLocaleDateString('vi-VN', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </span>
+                        
+                        <div>
+                          <label className="block text-sm font-semibold mb-2 text-gray-700">Chỉnh sửa nhận xét</label>
+                          <textarea
+                            value={editComment}
+                            onChange={(e) => setEditComment(e.target.value)}
+                            className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all duration-200"
+                            rows={4}
+                            placeholder="Chia sẻ trải nghiệm của bạn với sản phẩm này..."
+                          />
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleSaveEdit}
+                            disabled={editing || !editComment.trim() || editRating === 0}
+                            className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] hover:from-[#8a0000] hover:to-[#a10000] text-white font-semibold"
+                          >
+                            {editing ? 'Đang lưu...' : 'Lưu thay đổi'}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={handleCancelEdit}
+                            disabled={editing}
+                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            Hủy
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-[#a10000]">
-                        {review.rating}.0
-                      </div>
-                    </div>
+                    ) : (
+                      review.comment && (
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                          <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+                        </div>
+                      )
+                    )}
                   </div>
-                  {review.comment && (
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                      <p className="text-gray-700 leading-relaxed">{review.comment}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
               
               {(!localReviews.length && !product.reviews?.length) && (
                 <div className="text-center py-16">

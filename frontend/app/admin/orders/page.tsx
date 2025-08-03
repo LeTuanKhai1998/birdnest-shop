@@ -50,7 +50,7 @@ import useSWR from 'swr';
 import { apiService } from '@/lib/api';
 import { Order } from '@/lib/types';
 import { formatReadableId, getEntityTypeColor, getEntityTypeLabel } from '@/lib/id-utils';
-import { OrderId } from '@/components/ui/ReadableId';
+import { OrderId, UserId } from '@/components/ui/ReadableId';
 
 
 const STATUS = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
@@ -337,184 +337,177 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div>
-      {/* View Mode Toggle and Actions */}
-      <div className="flex items-center justify-end gap-3 mb-6">
-        <div className="flex items-center gap-2 bg-white rounded-lg border p-1">
+    <div className="space-y-8">
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-2 bg-white rounded-lg border p-1 order-2 sm:order-1">
           <Button
             variant={viewMode === 'table' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('table')}
+            className="hover:shadow-lg transition-shadow duration-200"
           >
-            Bảng
+            <span className="hidden sm:inline">Bảng</span>
+            <span className="sm:hidden">📊</span>
           </Button>
           <Button
             variant={viewMode === 'cards' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('cards')}
+            className="hover:shadow-lg transition-shadow duration-200"
           >
-            Thẻ
+            <span className="hidden sm:inline">Thẻ</span>
+            <span className="sm:hidden">🃏</span>
           </Button>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleExport}
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Xuất
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={refreshing}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Làm mới
-        </Button>
+        <div className="flex items-center gap-2 order-1 sm:order-2">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            className="hover:shadow-lg transition-shadow duration-200 flex-1 sm:flex-none"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Xuất</span>
+            <span className="sm:hidden">Xuất</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="hover:shadow-lg transition-shadow duration-200 flex-1 sm:flex-none"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Làm mới</span>
+            <span className="sm:hidden">Làm mới</span>
+          </Button>
+        </div>
       </div>
 
-          {/* Metrics Cards */}
-          {metrics && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
-                      <p className="text-2xl font-bold text-gray-900">{metrics.totalOrders}</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        {metrics.orderTrend > 0 ? (
-                          <TrendingUp className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4 text-red-600" />
-                        )}
-                        <span className={`text-sm ${metrics.orderTrend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {Math.abs(metrics.orderTrend).toFixed(1)}%
-                        </span>
-                        <span className="text-sm text-gray-500">so với tháng trước</span>
-                      </div>
-                    </div>
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Package className="w-4.8 h-4.8 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-yellow-500 hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-600">Đơn hàng chờ xử lý</p>
-                      <p className="text-2xl font-bold text-gray-900">{metrics.pendingOrders}</p>
-                      <p className="text-sm text-gray-500 mt-2">Cần chú ý</p>
-                    </div>
-                    <div className="p-2 bg-yellow-100 rounded-lg">
-                      <Clock className="w-4.8 h-4.8 text-yellow-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-600">Đơn hàng hoàn thành</p>
-                      <p className="text-2xl font-bold text-gray-900">{metrics.completedOrders}</p>
-                      <p className="text-sm text-gray-500 mt-2">Đã giao thành công</p>
-                    </div>
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <CheckCircle2 className="w-4.8 h-4.8 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(metrics.totalRevenue)}
-                      </p>
-                      <div className="flex items-center gap-1 mt-2">
-                        {metrics.revenueTrend > 0 ? (
-                          <TrendingUp className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4 text-red-600" />
-                        )}
-                        <span className={`text-sm ${metrics.revenueTrend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {Math.abs(metrics.revenueTrend).toFixed(1)}%
-                        </span>
-                        <span className="text-sm text-gray-500">so với tháng trước</span>
-                      </div>
-                    </div>
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <DollarSign className="w-4.8 h-4.8 text-purple-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Filters */}
-          <Card className="mb-6 border-l-4 border-l-gray-500">
+      {/* Stats Cards */}
+      {metrics && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <Card className="hover:shadow-lg transition-shadow duration-200">
             <CardContent className="p-6">
-              <div className="flex flex-wrap gap-4 items-end">
-                <div className="flex-1 min-w-[200px]">
-                  <Label className="block text-xs font-medium mb-1 text-gray-700">
-                    Tìm kiếm đơn hàng
-                  </Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Tìm theo ID đơn hàng hoặc tên khách hàng..."
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics.totalOrders}</p>
                 </div>
-                <div className="min-w-[150px]">
-                  <Label className="block text-xs font-medium mb-1 text-gray-700">
-                    Lọc theo trạng thái
-                  </Label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Tất cả trạng thái" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                      {STATUS.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-                    {filteredOrders?.length || 0} đơn hàng
-                  </Badge>
+                <div className="p-3 rounded-full bg-blue-50">
+                  <Package className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Orders Display */}
-          {viewMode === 'table' ? (
-            <Card>
-              <CardHeader className="pt-6">
-                <CardTitle>Danh sách đơn hàng</CardTitle>
-                <CardDescription>
-                  Xem và quản lý đơn hàng của khách hàng
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pb-6">
+          <Card className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Đơn hàng chờ xử lý</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics.pendingOrders}</p>
+                </div>
+                <div className="p-3 rounded-full bg-orange-50">
+                  <Clock className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Đơn hàng hoàn thành</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics.completedOrders}</p>
+                </div>
+                <div className="p-3 rounded-full bg-green-50">
+                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(metrics.totalRevenue)}
+                  </p>
+                </div>
+                <div className="p-3 rounded-full bg-purple-50">
+                  <DollarSign className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Filters Section */}
+      <div>
+        <h2 
+          className="text-2xl font-bold text-[#a10000] mb-6"
+        >
+          Tìm kiếm và lọc
+        </h2>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Label className="block text-xs font-medium mb-1 text-gray-700">
+                  Tìm kiếm đơn hàng
+                </Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Tìm theo ID đơn hàng hoặc tên khách hàng..."
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="w-full sm:w-48">
+                <Label className="block text-xs font-medium mb-1 text-gray-700">
+                  Lọc theo trạng thái
+                </Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tất cả trạng thái" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                    {STATUS.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                  {filteredOrders?.length || 0} đơn hàng
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Orders Display Section */}
+      <div>
+        <h2 
+          className="text-2xl font-bold text-[#a10000] mb-6"
+        >
+          Danh sách đơn hàng
+        </h2>
+        {viewMode === 'table' ? (
+          <Card className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-4 sm:p-6">
                 {!paginatedOrders || paginatedOrders.length === 0 ? (
                   <div className="text-center py-12">
                     <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -531,9 +524,9 @@ export default function AdminOrdersPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b">
-                          <th className="text-left p-4 font-medium text-gray-700">Đơn hàng</th>
-                          <th className="text-left p-4 font-medium text-gray-700">Khách hàng</th>
-                          <th className="text-left p-4 font-medium text-gray-700">
+                          <th className="text-left p-2 sm:p-4 font-medium text-gray-700">Đơn hàng</th>
+                          <th className="hidden sm:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">Khách hàng</th>
+                          <th className="hidden md:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">
                             <button
                               onClick={() => handleSort('total')}
                               className="flex items-center gap-1 hover:text-gray-900 transition-colors"
@@ -550,8 +543,8 @@ export default function AdminOrdersPage() {
                               )}
                             </button>
                           </th>
-                          <th className="text-left p-4 font-medium text-gray-700">Trạng thái</th>
-                          <th className="text-left p-4 font-medium text-gray-700">
+                          <th className="hidden sm:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">Trạng thái</th>
+                          <th className="hidden md:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">
                             <button
                               onClick={() => handleSort('createdAt')}
                               className="flex items-center gap-1 hover:text-gray-900 transition-colors"
@@ -568,7 +561,7 @@ export default function AdminOrdersPage() {
                               )}
                             </button>
                           </th>
-                          <th className="text-right p-4 font-medium text-gray-700 whitespace-nowrap">Thao tác</th>
+                          <th className="text-right p-2 sm:p-4 font-medium text-gray-700 whitespace-nowrap">Thao tác</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -578,37 +571,47 @@ export default function AdminOrdersPage() {
                           
                           return (
                             <tr key={order.id} className="border-b hover:bg-gray-50 transition-colors">
-                              <td className="p-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <Package className="w-5 h-5 text-blue-600" />
+                              <td className="p-2 sm:p-4">
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <Package className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                                   </div>
-                                  <div>
+                                  <div className="min-w-0 flex-1">
                                     <OrderId readableId={order.readableId} fallbackId={order.id} size="sm" />
                                     <p className="text-xs text-gray-500">
                                       {(order.orderItems?.length || 0)} sản phẩm
                                     </p>
+                                    <div className="flex items-center gap-2 sm:hidden mt-1">
+                                      <div className="flex items-center gap-1">
+                                        <User className="w-3 h-3 text-gray-400" />
+                                        <span className="text-xs truncate">{order.user?.name || 'Không xác định'}</span>
+                                      </div>
+                                      <Badge className={`${statusConfig?.color} inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium border-0`}>
+                                        <StatusIcon className="w-3 h-3 flex-shrink-0" />
+                                        <span className="truncate">{statusConfig?.label}</span>
+                                      </Badge>
+                                    </div>
                                   </div>
                                 </div>
                               </td>
-                              <td className="p-4">
+                              <td className="hidden sm:table-cell p-2 sm:p-4">
                                 <div className="flex items-center gap-2">
                                   <User className="w-4 h-4 text-gray-400" />
                                   <span className="text-sm">{order.user?.name || 'Không xác định'}</span>
                                 </div>
                               </td>
-                              <td className="p-4">
+                              <td className="hidden md:table-cell p-2 sm:p-4">
                                 <p className="font-medium text-sm">
                                   {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(order.total))}
                                 </p>
                               </td>
-                              <td className="p-4">
+                              <td className="hidden sm:table-cell p-2 sm:p-4">
                                 <Badge className={`${statusConfig?.color} inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border-0 whitespace-nowrap`}>
                                   <StatusIcon className="w-4 h-4 flex-shrink-0" />
                                   <span className="truncate">{statusConfig?.label}</span>
                                 </Badge>
                               </td>
-                              <td className="p-4">
+                              <td className="hidden md:table-cell p-2 sm:p-4">
                                 <div className="flex items-center gap-2">
                                   <Calendar className="w-4 h-4 text-gray-400" />
                                   <div>
@@ -617,13 +620,14 @@ export default function AdminOrdersPage() {
                                   </div>
                                 </div>
                               </td>
-                              <td className="p-4 text-right">
+                              <td className="p-2 sm:p-4 text-right">
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => setViewId(order.id)}
+                                  className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                                 >
-                                  <Eye className="w-4 h-4" />
+                                  <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </Button>
                               </td>
                             </tr>
@@ -848,10 +852,10 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
               )}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </CardContent>
+          </Card>
+        ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {!paginatedOrders || paginatedOrders.length === 0 ? (
                 <div className="col-span-full text-center py-12">
                   <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -917,12 +921,13 @@ export default function AdminOrdersPage() {
                 );
               })
             )}
-            </div>
-          )}
+          </div>
+        )}
+      </div>
 
       {/* Order Details Dialog */}
       <Dialog open={!!viewId} onOpenChange={(open) => !open && setViewId(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 [&>button]:text-white [&>button]:hover:text-white [&>button]:hover:bg-white/20 [&>button]:opacity-100 [&>button]:text-lg [&>button]:font-bold">
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden p-0 [&>button]:text-white [&>button]:hover:text-white [&>button]:hover:bg-white/20 [&>button]:opacity-100 [&>button]:text-lg [&>button]:font-bold">
           <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white/20 rounded-lg">
@@ -1030,132 +1035,281 @@ export default function AdminOrdersPage() {
                 {/* Customer and Order Info Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
                   {/* Customer Information */}
-                  <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
-                    <CardHeader className="pt-4">
-                      <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <User className="w-4 h-4 text-blue-600" />
-                          Thông tin khách hàng
-                        </CardTitle>
-                      </CardHeader>
-                                         <CardContent className="space-y-3">
-                       <div className="flex items-center gap-3">
-                         <Avatar 
-                           src="" 
-                           name={detailedOrder.user?.name || 'User'}
-                           size={40}
-                           className="bg-blue-100"
-                         />
-                         <div>
-                           <p className="font-medium text-sm">{detailedOrder.user?.name || 'Khách hàng'}</p>
-                           <p className="text-xs text-gray-500">ID: <UserId readableId={detailedOrder.user?.readableId} fallbackId={detailedOrder.user?.id} variant="text" size="sm" /></p>
+                  <Card className="hover:shadow-lg transition-shadow duration-200">
+                    <CardHeader className="pt-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <User className="w-5 h-5 text-blue-600" />
                         </div>
-                       </div>
-                       <Separator />
-                       <div className="space-y-2">
-                         <div className="flex items-center gap-2 text-sm">
-                           <Mail className="w-4 h-4 text-gray-400" />
-                           <span className="text-gray-600">{detailedOrder.user?.email || 'Không có email'}</span>
-                         </div>
-                         <div className="flex items-center gap-2 text-sm">
-                           <Phone className="w-4 h-4 text-gray-400" />
-                           <span className="text-gray-600">Không có số điện thoại</span>
-                         </div>
+                        <div>
+                          <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                            Thông tin khách hàng
+                            <Badge variant="secondary" className="text-xs">Thông tin</Badge>
+                          </CardTitle>
+                          <CardDescription>
+                            Thông tin cá nhân và liên hệ của khách hàng
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                                         <CardContent className="space-y-4 pb-6">
+                        {/* Customer Avatar and Basic Info */}
+                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border">
+                          <Avatar 
+                            src="" 
+                            name={detailedOrder.user?.name || 'User'}
+                            size={48}
+                            className="bg-blue-100 border-2 border-blue-200"
+                          />
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900 text-lg">
+                              {detailedOrder.user?.name || 'Khách hàng'}
+                            </h4>
+                            <p className="text-sm text-gray-600 mb-1">
+                              ID: <UserId readableId={detailedOrder.user?.readableId} fallbackId={detailedOrder.user?.id} variant="text" size="sm" />
+                            </p>
+                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                              Khách hàng
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Contact Information */}
+                        <div className="space-y-3">
+                          <h5 className="text-sm font-medium text-gray-700 mb-3">Thông tin liên hệ</h5>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border hover:bg-gray-50 transition-colors">
+                              <div className="p-2 bg-blue-100 rounded-lg">
+                                <Mail className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-xs text-gray-500 mb-1">Email</p>
+                                <p className="text-sm font-medium text-gray-900">
+                                  {detailedOrder.user?.email || 'Không có email'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border hover:bg-gray-50 transition-colors">
+                              <div className="p-2 bg-green-100 rounded-lg">
+                                <Phone className="w-4 h-4 text-green-600" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-xs text-gray-500 mb-1">Số điện thoại</p>
+                                <p className="text-sm font-medium text-gray-900">
+                                  Không có số điện thoại
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
                     
                   {/* Order Summary */}
-                  <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
-                    <CardHeader className="pt-4">
-                      <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <ShoppingBag className="w-4 h-4 text-green-600" />
-                        Tóm tắt đơn hàng
-                        </CardTitle>
-                      </CardHeader>
-                    <CardContent className="space-y-3 pb-4">
-                      <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Số sản phẩm:</span>
-                        <span className="font-medium text-sm">{(detailedOrder.orderItems?.length || 0)} sản phẩm</span>
+                  <Card className="hover:shadow-lg transition-shadow duration-200">
+                    <CardHeader className="pt-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <ShoppingBag className="w-5 h-5 text-green-600" />
                         </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Phương thức thanh toán:</span>
-                        <div className="flex items-center gap-1">
-                          <CreditCard className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm font-medium">Thanh toán trực tuyến</span>
-                  </div>
-                              </div>
-                      <Separator />
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Tổng thanh toán:</span>
-                        <span className="text-lg font-bold text-[#a10000]">
-                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(detailedOrder.total))}
-                        </span>
-                              </div>
+                        <div>
+                          <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                            Tóm tắt đơn hàng
+                            <Badge variant="secondary" className="text-xs">Tổng quan</Badge>
+                          </CardTitle>
+                          <CardDescription>
+                            Thông tin tổng quan về đơn hàng và thanh toán
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pb-6">
+                      {/* Order Statistics */}
+                      <div className="grid grid-cols-1 gap-3">
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <Package className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Số sản phẩm</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {(detailedOrder.orderItems?.length || 0)} sản phẩm
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-green-100 rounded-lg">
+                              <CreditCard className="w-4 h-4 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Phương thức thanh toán</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                Thanh toán trực tuyến
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Total Payment */}
+                      <div className="p-4 bg-gradient-to-r from-[#a10000] to-[#c41e3a] rounded-lg text-white">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white/20 rounded-lg">
+                              <DollarSign className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-white/90 mb-1">Tổng thanh toán</p>
+                              <p className="text-xl font-bold text-white">
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(detailedOrder.total))}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                   
                   {/* Shipping Information */}
-                  <Card className="border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
-                    <CardHeader className="pt-4">
-                      <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <TruckIcon className="w-4 h-4 text-purple-600" />
-                        Thông tin giao hàng
-                      </CardTitle>
-                      </CardHeader>
-                    <CardContent className="space-y-3">
-                      {detailedOrder.shippingAddress ? (
-                        <div className="space-y-2">
-                          {(() => {
-                            try {
-                              const address = typeof detailedOrder.shippingAddress === 'string' 
-                                ? JSON.parse(detailedOrder.shippingAddress) 
-                                : detailedOrder.shippingAddress;
-                              
-                              return (
-                                <>
-                                  <div className="flex items-start gap-2 text-sm">
-                                    <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                                    <div>
-                                      <p className="font-medium">{address.fullName || 'Không có tên'}</p>
-                                      <p className="text-gray-600">{address.address || 'Không có địa chỉ'}</p>
-                                      {address.city && address.province && (
-                                        <p className="text-gray-600">{address.city}, {address.province}</p>
-                                      )}
+                  <Card className="hover:shadow-lg transition-shadow duration-200">
+                    <CardHeader className="pt-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <TruckIcon className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                            Thông tin giao hàng
+                            <Badge variant="secondary" className="text-xs">Địa chỉ</Badge>
+                          </CardTitle>
+                          <CardDescription>
+                            Địa chỉ giao hàng và thông tin liên hệ
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                                          <CardContent className="space-y-4 pb-6">
+                        {detailedOrder.shippingAddress ? (
+                          <div className="space-y-4">
+                            {(() => {
+                              try {
+                                const address = typeof detailedOrder.shippingAddress === 'string' 
+                                  ? JSON.parse(detailedOrder.shippingAddress) 
+                                  : detailedOrder.shippingAddress;
+                                
+                                return (
+                                  <>
+                                    {/* Recipient Information */}
+                                    <div className="p-4 bg-gray-50 rounded-lg border">
+                                      <div className="flex items-center gap-3 mb-3">
+                                        <div className="p-2 bg-purple-100 rounded-lg">
+                                          <User className="w-4 h-4 text-purple-600" />
+                                        </div>
+                                        <div>
+                                          <p className="text-xs text-gray-500 mb-1">Người nhận</p>
+                                          <p className="text-sm font-semibold text-gray-900">
+                                            {address.fullName || 'Không có tên'}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Address Information */}
+                                    <div className="p-4 bg-gray-50 rounded-lg border">
+                                      <div className="flex items-start gap-3 mb-3">
+                                        <div className="p-2 bg-blue-100 rounded-lg">
+                                          <MapPin className="w-4 h-4 text-blue-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                          <p className="text-xs text-gray-500 mb-2">Địa chỉ giao hàng</p>
+                                          <div className="space-y-1">
+                                            <p className="text-sm font-medium text-gray-900">
+                                              {address.address || 'Không có địa chỉ'}
+                                            </p>
+                                            {address.city && address.province && (
+                                              <p className="text-sm text-gray-600">
+                                                {address.city}, {address.province}
+                                              </p>
+                                            )}
+                                            {address.postalCode && (
+                                              <p className="text-sm text-gray-600">
+                                                Mã bưu điện: {address.postalCode}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Contact Information */}
+                                    <div className="p-4 bg-gray-50 rounded-lg border">
+                                      <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-green-100 rounded-lg">
+                                          <Phone className="w-4 h-4 text-green-600" />
+                                        </div>
+                                        <div>
+                                          <p className="text-xs text-gray-500 mb-1">Số điện thoại</p>
+                                          <p className="text-sm font-semibold text-gray-900">
+                                            {address.phone || 'Không có số điện thoại'}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </>
+                                );
+                              } catch (error) {
+                                return (
+                                  <div className="p-4 bg-gray-50 rounded-lg border">
+                                    <div className="flex items-start gap-3">
+                                      <div className="p-2 bg-blue-100 rounded-lg">
+                                        <MapPin className="w-4 h-4 text-blue-600" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="text-xs text-gray-500 mb-2">Địa chỉ giao hàng</p>
+                                        <p className="text-sm text-gray-900">
+                                          {detailedOrder.shippingAddress}
+                                        </p>
+                                      </div>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <Phone className="w-4 h-4 text-gray-400" />
-                                    <span className="text-gray-600">{address.phone || 'Không có số điện thoại'}</span>
-                                  </div>
-                                </>
-                              );
-                            } catch (error) {
-                              return (
-                                <div className="flex items-start gap-2 text-sm">
-                                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                                  <span className="text-gray-600">{detailedOrder.shippingAddress}</span>
-                                </div>
-                              );
-                            }
-                          })()}
-                        </div>
-                      ) : (
-                        <div className="text-center py-4">
-                          <MapPin className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">Không có thông tin địa chỉ</p>
-                        </div>
-                      )}
+                                );
+                              }
+                            })()}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <MapPin className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <h4 className="text-lg font-medium text-gray-900 mb-2">Không có thông tin địa chỉ</h4>
+                            <p className="text-sm text-gray-600">Địa chỉ giao hàng chưa được cung cấp</p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                 </div>
 
                 {/* Order Items */}
-                <Card className="hover:shadow-md transition-shadow">
+                <Card className="hover:shadow-lg transition-shadow duration-200">
                   <CardHeader className="pt-6">
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <ShoppingBag className="w-5 h-5 text-[#a10000]" />
-                      Sản phẩm đã đặt
-                    </CardTitle>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <ShoppingBag className="w-5 h-5 text-orange-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                          Sản phẩm đã đặt
+                          <Badge variant="secondary" className="text-xs">Chi tiết</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Danh sách sản phẩm và số lượng trong đơn hàng
+                        </CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="pb-6">
                     {(() => {

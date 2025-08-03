@@ -6,7 +6,6 @@ export interface SettingsData {
   storeName: string;
   storeEmail: string;
   storePhone?: string;
-  defaultLanguage: 'en' | 'vi';
   currency: string;
   taxPercent: number;
   freeShippingThreshold: number;
@@ -16,7 +15,9 @@ export interface SettingsData {
   maintenanceMode: boolean;
   logoUrl?: string;
   address?: string;
-  country?: string;
+  province?: string;
+  district?: string;
+  ward?: string;
 }
 
 @Injectable()
@@ -33,8 +34,11 @@ export class SettingsService {
     // Try to get from cache first
     const cached = this.cacheService.get<SettingsData>(this.cacheKey);
     if (cached) {
+      this.logger.log('📦 Returning cached settings');
       return cached;
     }
+    
+    this.logger.log('🔄 Cache miss, loading from database...');
 
     const settings = await this.prisma.setting.findMany();
     const settingsMap = new Map(settings.map((s) => [s.key, s.value]));
@@ -43,12 +47,10 @@ export class SettingsService {
       storeName: settingsMap.get('store_name') || 'Birdnest Shop',
       storeEmail: settingsMap.get('store_email') || 'admin@birdnest.com',
       storePhone: settingsMap.get('store_phone') || '',
-      defaultLanguage:
-        (settingsMap.get('default_language') as 'en' | 'vi') || 'en',
       currency: settingsMap.get('currency') || 'VND',
       taxPercent: parseFloat(settingsMap.get('tax_percent') || '0'),
       freeShippingThreshold: parseFloat(
-        settingsMap.get('free_shipping_threshold') || '0',
+        settingsMap.get('free_shipping_threshold') || '950000',
       ),
       enableStripe: settingsMap.get('enable_stripe') === 'true',
       enableMomo: settingsMap.get('enable_momo') === 'true',
@@ -56,11 +58,14 @@ export class SettingsService {
       maintenanceMode: settingsMap.get('maintenance_mode') === 'true',
       logoUrl: settingsMap.get('logo_url') || '',
       address: settingsMap.get('address') || '',
-      country: settingsMap.get('country') || 'Vietnam',
+      province: settingsMap.get('province') || '',
+      district: settingsMap.get('district') || '',
+      ward: settingsMap.get('ward') || '',
     };
 
     // Cache for 10 minutes
     this.cacheService.set(this.cacheKey, defaultSettings, 600000);
+    this.logger.log('💾 Settings cached with freeShippingThreshold:', defaultSettings.freeShippingThreshold);
 
     return defaultSettings;
   }
@@ -75,9 +80,6 @@ export class SettingsService {
         : []),
       ...(data.storePhone !== undefined
         ? [{ key: 'store_phone', value: data.storePhone }]
-        : []),
-      ...(data.defaultLanguage !== undefined
-        ? [{ key: 'default_language', value: data.defaultLanguage }]
         : []),
       ...(data.currency !== undefined
         ? [{ key: 'currency', value: data.currency }]
@@ -111,8 +113,14 @@ export class SettingsService {
       ...(data.address !== undefined
         ? [{ key: 'address', value: data.address }]
         : []),
-      ...(data.country !== undefined
-        ? [{ key: 'country', value: data.country }]
+      ...(data.province !== undefined
+        ? [{ key: 'province', value: data.province }]
+        : []),
+      ...(data.district !== undefined
+        ? [{ key: 'district', value: data.district }]
+        : []),
+      ...(data.ward !== undefined
+        ? [{ key: 'ward', value: data.ward }]
         : []),
     ];
 
@@ -129,6 +137,7 @@ export class SettingsService {
 
     // Invalidate cache
     this.cacheService.delete(this.cacheKey);
+    this.logger.log('🗑️ Settings cache invalidated');
 
     // Return updated settings
     return this.getAllSettings();

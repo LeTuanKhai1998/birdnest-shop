@@ -16,7 +16,8 @@ import {
   Move,
   CheckCircle2,
   AlertCircle,
-  Info
+  Info,
+  Image as ImageIconAlt
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -149,15 +150,22 @@ export function ProductImageUpload({
   }, []);
 
   return (
-    <Card className={cn("border-l-4 border-l-blue-500 hover:shadow-md transition-shadow", className)}>
-      <CardHeader className="pt-4">
-        <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-          <ImageIcon className="w-4 h-4 text-blue-600" />
-          {title}
-        </CardTitle>
-        <CardDescription className="text-sm text-gray-600">
-          {description}
-        </CardDescription>
+    <Card className={cn("hover:shadow-lg transition-shadow duration-200", className)}>
+      <CardHeader className="pt-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <ImageIconAlt className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <CardTitle className="flex items-center gap-2 text-[#a10000]">
+              {title}
+              <Badge variant="secondary" className="text-xs">Bắt buộc</Badge>
+            </CardTitle>
+            <CardDescription>
+              {description}
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6 pb-6">
         {/* Upload Area */}
@@ -176,8 +184,8 @@ export function ProductImageUpload({
             className={cn(
               "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
               dragActive 
-                ? "border-blue-500 bg-blue-50" 
-                : "border-gray-300 hover:border-gray-400"
+                ? "border-[#a10000] bg-red-50" 
+                : "border-gray-300 hover:border-[#a10000] hover:bg-red-50"
             )}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -186,8 +194,8 @@ export function ProductImageUpload({
           >
             <div className="space-y-4">
               <div className="flex justify-center">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Camera className="w-8 h-8 text-blue-600" />
+                <div className="p-3 bg-[#a10000] rounded-full">
+                  <Camera className="w-8 h-8 text-white" />
                 </div>
               </div>
               
@@ -200,22 +208,24 @@ export function ProductImageUpload({
                 </p>
               </div>
 
-              <UploadButton
-                endpoint={endpoint}
-                onUploadBegin={() => setIsUploading(true)}
-                onClientUploadComplete={handleUploadComplete}
-                onUploadError={handleUploadError}
-                className="ut-button:bg-blue-600 ut-button:text-white ut-button:hover:bg-blue-700 ut-button:rounded-md ut-button:px-6 ut-button:py-2 ut-button:font-medium ut-button:transition-colors"
-                content={{
-                  button: (
-                    <div className="flex items-center gap-2">
-                      <Upload className="h-4 w-4" />
-                      {isUploading ? "Đang tải lên..." : "Chọn hình ảnh"}
-                    </div>
-                  ),
-                  allowedContent: `Tối đa ${maxFiles} file, mỗi file ${maxSize}MB`,
-                }}
-              />
+              <div className="flex justify-center">
+                <UploadButton
+                  endpoint={endpoint}
+                  onUploadBegin={() => setIsUploading(true)}
+                  onClientUploadComplete={handleUploadComplete}
+                  onUploadError={handleUploadError}
+                  className="ut-button:bg-white ut-button:text-[#a10000] ut-button:hover:bg-gray-50 ut-button:hover:text-[#a10000] ut-button:focus:bg-gray-50 ut-button:focus:text-[#a10000] ut-button:active:bg-gray-100 ut-button:active:text-[#a10000] ut-button:rounded-md ut-button:px-6 ut-button:py-3 ut-button:font-medium ut-button:transition-all ut-button:duration-200 ut-button:shadow-md ut-button:border ut-button:border-[#a10000] ut-button:min-w-[200px] ut-button:outline-none"
+                  content={{
+                    button: (
+                      <div className="flex items-center justify-center gap-2 text-[#a10000] font-medium">
+                        <Upload className="h-4 w-4 text-[#a10000]" />
+                        {isUploading ? "Đang tải lên..." : "Chọn hình ảnh"}
+                      </div>
+                    ),
+                    allowedContent: `Tối đa ${maxFiles} file, mỗi file ${maxSize}MB`,
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -237,7 +247,7 @@ export function ProductImageUpload({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {currentImages.map((image, index) => (
                 <div key={index} className="relative group">
-                  <div className="relative aspect-[4/3] rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-300 transition-colors shadow-md">
+                  <div className="relative aspect-[4/3] rounded-lg overflow-hidden border-2 border-gray-200 hover:border-[#a10000] transition-colors shadow-md">
                     <Image
                       src={image.url}
                       alt={`Product image ${index + 1}`}
@@ -252,7 +262,7 @@ export function ProductImageUpload({
                     {/* Primary Badge */}
                     {image.isPrimary && (
                       <div className="absolute top-2 left-2">
-                        <Badge className="bg-blue-600 text-white text-xs px-2 py-1">
+                        <Badge className="bg-[#a10000] text-white text-xs px-2 py-1">
                           <Star className="w-3 h-3 mr-1" />
                           Chính
                         </Badge>
@@ -266,10 +276,10 @@ export function ProductImageUpload({
                           <Button
                             variant="secondary"
                             size="sm"
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 bg-white hover:bg-gray-100"
                             onClick={() => setPrimaryImage(index)}
                           >
-                            <Star className="w-4 h-4" />
+                            <Star className="w-4 h-4 text-[#a10000]" />
                           </Button>
                         )}
                         <Button
@@ -297,44 +307,51 @@ export function ProductImageUpload({
         )}
 
         {/* Tips Section */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-blue-900">
-                Mẹo cho hình ảnh sản phẩm đẹp
-              </h4>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                  Sử dụng ảnh rõ nét, ánh sáng tốt
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                  Sản phẩm phải chiếm ít nhất 70% khung hình
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                  Nền trắng hoặc đơn giản để sản phẩm nổi bật
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                  Tỷ lệ khung hình vuông (1:1) phù hợp nhất
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                  Kích thước file dưới {maxSize}MB để tải nhanh
-                </li>
-              </ul>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Info className="w-4 h-4 text-green-600" />
+              </div>
+              <div>
+                <CardTitle className="flex items-center gap-2 text-[#a10000] text-sm">
+                  Mẹo cho hình ảnh sản phẩm đẹp
+                  <Badge variant="secondary" className="text-xs">Hướng dẫn</Badge>
+                </CardTitle>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardHeader>
+          <CardContent className="pb-4">
+            <ul className="text-sm text-gray-700 space-y-2">
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[#a10000] rounded-full"></div>
+                Sử dụng ảnh rõ nét, ánh sáng tốt
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[#a10000] rounded-full"></div>
+                Sản phẩm phải chiếm ít nhất 70% khung hình
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[#a10000] rounded-full"></div>
+                Nền trắng hoặc đơn giản để sản phẩm nổi bật
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[#a10000] rounded-full"></div>
+                Tỷ lệ khung hình vuông (1:1) phù hợp nhất
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[#a10000] rounded-full"></div>
+                Kích thước file dưới {maxSize}MB để tải nhanh
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
 
         {/* Loading State */}
         {isUploading && (
           <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#a10000]"></div>
               <span className="text-sm text-gray-600">Đang tải lên hình ảnh...</span>
             </div>
           </div>

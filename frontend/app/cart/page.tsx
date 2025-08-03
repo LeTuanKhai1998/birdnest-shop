@@ -3,24 +3,28 @@ import { useCartStore } from '@/lib/cart-store';
 import { getFirstImageUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
+
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft, Package, Truck } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft, Package } from 'lucide-react';
+import { useFreeShippingThreshold } from '@/lib/settings-context';
+import { calculateShippingFee } from '@/lib/shipping-utils';
+import { FreeShippingProgress } from '@/components/FreeShippingProgress';
 
 export default function CartPage() {
   const items = useCartStore((s) => s.items);
   const removeFromCart = useCartStore((s) => s.removeFromCart);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const clearCart = useCartStore((s) => s.clearCart);
+  const freeShippingThreshold = useFreeShippingThreshold();
 
   const subtotal = items.reduce(
     (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
     0,
   );
   
-  const shipping = subtotal >= 500000 ? 0 : 30000; // Free shipping over 500K VND
+  const shipping = calculateShippingFee(subtotal, freeShippingThreshold);
   const total = subtotal + shipping;
   
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
@@ -213,12 +217,8 @@ export default function CartPage() {
                         </span>
                       </div>
                       
-                      {shipping > 0 && (
-                        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-                          <Truck className="w-3 h-3 inline mr-1" />
-                          Mua thêm {currencyFormatter.format(500000 - subtotal)} để được miễn phí vận chuyển
-                        </div>
-                      )}
+                      {/* Free Shipping Progress */}
+                      <FreeShippingProgress cartTotal={subtotal} />
                       
                       <div className="border-t pt-3">
                         <div className="flex justify-between text-lg font-bold">

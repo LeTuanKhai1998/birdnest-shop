@@ -184,7 +184,6 @@ export interface SettingsData {
   storeName: string;
   storeEmail: string;
   storePhone?: string;
-  defaultLanguage: 'en' | 'vi';
   currency: string;
   taxPercent: number;
   freeShippingThreshold: number;
@@ -194,5 +193,7 @@ export interface SettingsData {
   maintenanceMode: boolean;
   logoUrl?: string;
   address?: string;
-  country?: string;
+  province?: string;
+  district?: string;
+  ward?: string;
 }

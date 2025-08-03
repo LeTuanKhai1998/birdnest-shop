@@ -641,6 +641,56 @@ export const apiService = {
     }
   },
 
+  createUser: async (userData: Record<string, unknown>) => {
+    try {
+      const response = await api.post('/users', userData);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create user');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  },
+
+  updateUser: async (userId: string, userData: Record<string, unknown>) => {
+    try {
+      const response = await api.patch(`/users/${userId}`, userData);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update user');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  },
+
+  deleteUser: async (userId: string) => {
+    try {
+      const response = await api.delete(`/users/${userId}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete user');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
+  },
+
   // Product management methods (for admin)
   createProduct: async (productData: Record<string, unknown>) => {
     try {
@@ -726,6 +776,23 @@ export const apiService = {
     }
   },
 
+  // Dashboard methods
+  getDashboardStats: async () => {
+    try {
+      const response = await api.get('/dashboard/stats');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard stats');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
+  },
+
   // Review methods
   getProductReviews: async (productId: string) => {
     try {
@@ -773,14 +840,60 @@ export const apiService = {
       const response = await api.get(`/reviews/user/${userId}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch user reviews');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+        
+        if (response.status === 401) {
+          throw new Error('Authentication required to fetch user reviews');
+        } else if (response.status === 403) {
+          throw new Error('Unauthorized to access user reviews');
+        } else if (response.status === 404) {
+          throw new Error('User not found');
+        } else {
+          throw new Error(`Failed to fetch user reviews: ${errorMessage}`);
+        }
       }
 
       const data = await response.json();
       return data.data || [];
     } catch (error) {
       console.error('Error fetching user reviews:', error);
+      // Return empty array instead of throwing to prevent page crashes
       return [];
+    }
+  },
+
+  updateReview: async (reviewId: string, updateData: { rating?: number; comment?: string }) => {
+    try {
+      const response = await api.patch(`/reviews/${reviewId}`, updateData);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update review');
+      }
+
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error updating review:', error);
+      throw error;
+    }
+  },
+
+  updateReviewComment: async (reviewId: string, comment: string) => {
+    try {
+      const response = await api.put(`/reviews/${reviewId}/comment`, { comment });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update review comment');
+      }
+
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error updating review comment:', error);
+      throw error;
     }
   },
 };

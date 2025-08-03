@@ -22,13 +22,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCheckoutStore } from '@/lib/checkout-store';
 import { getFirstImageUrl } from '@/lib/utils';
-import { CartItem } from '@/lib/cart-store';
+
 import { useAuth } from '@/hooks/useAuth';
 import useSWR from 'swr';
 import Image from 'next/image';
 
 import { 
-  Truck, 
   MapPin, 
   User, 
   FileText,
@@ -39,11 +38,12 @@ import {
   Home,
   Building
 } from 'lucide-react';
+import { useFreeShippingThreshold } from '@/lib/settings-context';
+import { calculateShippingFee } from '@/lib/shipping-utils';
+import { FreeShippingProgress } from '@/components/FreeShippingProgress';
 
 
-function fetcher(url: string) {
-  return fetch(url).then((r) => r.json());
-}
+
 
 const schema = z.object({
   fullName: z.string().min(2, 'Họ và tên phải có ít nhất 2 ký tự'),
@@ -120,6 +120,7 @@ function getAddressDisplay(addr: Address, provinces: Province[]): string {
 
 export default function CheckoutPage() {
   const { user, isAuthenticated } = useAuth();
+  const freeShippingThreshold = useFreeShippingThreshold();
   const { data: savedAddresses = [], error: addressesError, isLoading: addressesLoading, mutate: mutateAddresses } = useSWR(
     isAuthenticated ? '/api/addresses' : null,
     async (url) => {
@@ -157,7 +158,7 @@ export default function CheckoutPage() {
     (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
     0,
   );
-  const shipping = subtotal >= 500000 ? 0 : 30000; // Free shipping over 500K VND
+  const shipping = calculateShippingFee(subtotal, freeShippingThreshold);
   const total = subtotal + shipping;
   
   const currencyFormatter = new Intl.NumberFormat('vi-VN', {
@@ -1011,12 +1012,8 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     
-                    {shipping > 0 && (
-                      <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-                        <Truck className="w-3 h-3 inline mr-1" />
-                        Mua thêm {currencyFormatter.format(500000 - subtotal)} để được miễn phí vận chuyển
-                      </div>
-                    )}
+                    {/* Free Shipping Progress */}
+                    <FreeShippingProgress cartTotal={subtotal} />
                     
                     <div className="border-t pt-3">
                       <div className="flex justify-between text-lg font-bold">

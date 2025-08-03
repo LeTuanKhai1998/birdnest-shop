@@ -80,16 +80,15 @@ describe('Settings API (e2e)', () => {
         .get('/api/settings')
         .expect(200);
 
-      expect(response.body).toHaveProperty('store_name');
-      expect(response.body).toHaveProperty('store_email');
-      expect(response.body).toHaveProperty('default_language');
+      expect(response.body).toHaveProperty('storeName');
+      expect(response.body).toHaveProperty('storeEmail');
       expect(response.body).toHaveProperty('currency');
-      expect(response.body).toHaveProperty('tax_percent');
-      expect(response.body).toHaveProperty('free_shipping_threshold');
-      expect(response.body).toHaveProperty('enable_stripe');
-      expect(response.body).toHaveProperty('enable_momo');
-      expect(response.body).toHaveProperty('enable_cod');
-      expect(response.body).toHaveProperty('maintenance_mode');
+      expect(response.body).toHaveProperty('taxPercent');
+      expect(response.body).toHaveProperty('freeShippingThreshold');
+      expect(response.body).toHaveProperty('enableStripe');
+      expect(response.body).toHaveProperty('enableMomo');
+      expect(response.body).toHaveProperty('enableCOD');
+      expect(response.body).toHaveProperty('maintenanceMode');
     });
 
     it('should return default values when no settings exist', async () => {
@@ -100,32 +99,30 @@ describe('Settings API (e2e)', () => {
         .get('/api/settings')
         .expect(200);
 
-      expect(response.body.store_name).toBe('Birdnest Shop');
-      expect(response.body.store_email).toBe('contact@birdnest.com');
-      expect(response.body.default_language).toBe('vi');
+      expect(response.body.storeName).toBe('Birdnest Shop');
+      expect(response.body.storeEmail).toBe('admin@birdnest.com');
       expect(response.body.currency).toBe('VND');
-      expect(response.body.tax_percent).toBe(10);
-      expect(response.body.free_shipping_threshold).toBe(500000);
-      expect(response.body.enable_stripe).toBe(true);
-      expect(response.body.enable_momo).toBe(true);
-      expect(response.body.enable_cod).toBe(true);
-      expect(response.body.maintenance_mode).toBe(false);
+      expect(response.body.taxPercent).toBe(0);
+      expect(response.body.freeShippingThreshold).toBe(0);
+      expect(response.body.enableStripe).toBe(false);
+      expect(response.body.enableMomo).toBe(false);
+      expect(response.body.enableCOD).toBe(false);
+      expect(response.body.maintenanceMode).toBe(false);
     });
   });
 
   describe('POST /api/settings', () => {
     it('should create/update settings for admin', async () => {
       const settingsData = {
-        store_name: 'Updated Birdnest Shop',
-        store_email: 'updated@birdnest.com',
-        default_language: 'en',
+        storeName: 'Updated Birdnest Shop',
+        storeEmail: 'updated@birdnest.com',
         currency: 'USD',
-        tax_percent: 8,
-        free_shipping_threshold: 1000000,
-        enable_stripe: false,
-        enable_momo: true,
-        enable_cod: false,
-        maintenance_mode: true,
+        taxPercent: 8,
+        freeShippingThreshold: 1000000,
+        enableStripe: false,
+        enableMomo: true,
+        enableCOD: false,
+        maintenanceMode: true,
       };
 
       const response = await request(app.getHttpServer())
@@ -134,21 +131,20 @@ describe('Settings API (e2e)', () => {
         .send(settingsData)
         .expect(200);
 
-      expect(response.body.store_name).toBe('Updated Birdnest Shop');
-      expect(response.body.store_email).toBe('updated@birdnest.com');
-      expect(response.body.default_language).toBe('en');
+      expect(response.body.storeName).toBe('Updated Birdnest Shop');
+      expect(response.body.storeEmail).toBe('updated@birdnest.com');
       expect(response.body.currency).toBe('USD');
-      expect(response.body.tax_percent).toBe(8);
-      expect(response.body.free_shipping_threshold).toBe(1000000);
-      expect(response.body.enable_stripe).toBe(false);
-      expect(response.body.enable_momo).toBe(true);
-      expect(response.body.enable_cod).toBe(false);
-      expect(response.body.maintenance_mode).toBe(true);
+      expect(response.body.taxPercent).toBe(8);
+      expect(response.body.freeShippingThreshold).toBe(1000000);
+      expect(response.body.enableStripe).toBe(false);
+      expect(response.body.enableMomo).toBe(true);
+      expect(response.body.enableCOD).toBe(false);
+      expect(response.body.maintenanceMode).toBe(true);
     });
 
     it('should reject non-admin access', async () => {
       const settingsData = {
-        store_name: 'Unauthorized Update',
+        storeName: 'Unauthorized Update',
       };
 
       await request(app.getHttpServer())
@@ -160,7 +156,7 @@ describe('Settings API (e2e)', () => {
 
     it('should reject unauthenticated access', async () => {
       const settingsData = {
-        store_name: 'Unauthorized Update',
+        storeName: 'Unauthorized Update',
       };
 
       await request(app.getHttpServer())
@@ -171,8 +167,8 @@ describe('Settings API (e2e)', () => {
 
     it('should update partial settings', async () => {
       const partialSettings = {
-        store_name: 'Partial Update Shop',
-        tax_percent: 12,
+        storeName: 'Partial Update Shop',
+        taxPercent: 12,
       };
 
       const response = await request(app.getHttpServer())
@@ -181,17 +177,16 @@ describe('Settings API (e2e)', () => {
         .send(partialSettings)
         .expect(200);
 
-      expect(response.body.store_name).toBe('Partial Update Shop');
-      expect(response.body.tax_percent).toBe(12);
+      expect(response.body.storeName).toBe('Partial Update Shop');
+      expect(response.body.taxPercent).toBe(12);
       // Other settings should remain unchanged
-      expect(response.body.store_email).toBe('updated@birdnest.com');
-      expect(response.body.default_language).toBe('en');
+      expect(response.body.storeEmail).toBe('updated@birdnest.com');
     });
 
     it('should validate numeric values', async () => {
       const invalidSettings = {
-        tax_percent: 'invalid',
-        free_shipping_threshold: -100,
+        taxPercent: 'invalid',
+        freeShippingThreshold: -100,
       };
 
       await request(app.getHttpServer())
@@ -203,8 +198,8 @@ describe('Settings API (e2e)', () => {
 
     it('should validate boolean values', async () => {
       const invalidSettings = {
-        enable_stripe: 'not_boolean',
-        maintenance_mode: 123,
+        enableStripe: 'not_boolean',
+        maintenanceMode: 123,
       };
 
       await request(app.getHttpServer())
@@ -215,16 +210,89 @@ describe('Settings API (e2e)', () => {
     });
   });
 
+  describe('PATCH /api/settings', () => {
+    it('should update settings for admin', async () => {
+      const settingsData = {
+        storeName: 'Patched Birdnest Shop',
+        storeEmail: 'patched@birdnest.com',
+        currency: 'EUR',
+        taxPercent: 15,
+        freeShippingThreshold: 750000,
+        enableStripe: true,
+        enableMomo: false,
+        enableCOD: true,
+        maintenanceMode: false,
+      };
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/settings')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send(settingsData)
+        .expect(200);
+
+      expect(response.body.storeName).toBe('Patched Birdnest Shop');
+      expect(response.body.storeEmail).toBe('patched@birdnest.com');
+      expect(response.body.currency).toBe('EUR');
+      expect(response.body.taxPercent).toBe(15);
+      expect(response.body.freeShippingThreshold).toBe(750000);
+      expect(response.body.enableStripe).toBe(true);
+      expect(response.body.enableMomo).toBe(false);
+      expect(response.body.enableCOD).toBe(true);
+      expect(response.body.maintenanceMode).toBe(false);
+    });
+
+    it('should reject non-admin access for PATCH', async () => {
+      const settingsData = {
+        storeName: 'Unauthorized PATCH Update',
+      };
+
+      await request(app.getHttpServer())
+        .patch('/api/settings')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(settingsData)
+        .expect(403);
+    });
+
+    it('should reject unauthenticated access for PATCH', async () => {
+      const settingsData = {
+        storeName: 'Unauthorized PATCH Update',
+      };
+
+      await request(app.getHttpServer())
+        .patch('/api/settings')
+        .send(settingsData)
+        .expect(401);
+    });
+
+    it('should update partial settings via PATCH', async () => {
+      const partialSettings = {
+        storeName: 'PATCH Partial Update Shop',
+        taxPercent: 18,
+      };
+
+      const response = await request(app.getHttpServer())
+        .patch('/api/settings')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send(partialSettings)
+        .expect(200);
+
+      expect(response.body.storeName).toBe('PATCH Partial Update Shop');
+      expect(response.body.taxPercent).toBe(18);
+      // Other settings should remain unchanged
+      expect(response.body.storeEmail).toBe('patched@birdnest.com');
+    });
+  });
+
   describe('Settings persistence', () => {
     it('should persist settings across requests', async () => {
       // Set a specific setting
       const testSettings = {
-        store_name: 'Persistent Test Shop',
-        maintenance_mode: true,
+        storeName: 'Persistent Test Shop',
+        maintenanceMode: true,
       };
 
       await request(app.getHttpServer())
-        .post('/api/settings')
+        .patch('/api/settings')
         .set('Authorization', `Bearer ${adminToken}`)
         .send(testSettings)
         .expect(200);
@@ -234,8 +302,8 @@ describe('Settings API (e2e)', () => {
         .get('/api/settings')
         .expect(200);
 
-      expect(getResponse.body.store_name).toBe('Persistent Test Shop');
-      expect(getResponse.body.maintenance_mode).toBe(true);
+      expect(getResponse.body.storeName).toBe('Persistent Test Shop');
+      expect(getResponse.body.maintenanceMode).toBe(true);
     });
   });
 });

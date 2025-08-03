@@ -4,28 +4,39 @@
     <title>API Test</title>
 </head>
 <body>
-    <h1>Testing API Call</h1>
-    <button onclick="testAPI()">Test Categories API</button>
+    <h1>API Test</h1>
+    <button onclick="testAPI()">Test API</button>
     <div id="result"></div>
 
     <script>
         async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
             try {
-                console.log('Testing API call to /api/products/categories');
-                const response = await fetch('http://localhost:8080/api/products/categories');
+                console.log('Testing API call...');
+                const response = await fetch('http://localhost:8080/api/settings');
                 console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Categories data:', data);
-                    document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-                } else {
-                    console.error('API call failed:', response.status, response.statusText);
-                    document.getElementById('result').innerHTML = 'Error: ' + response.status + ' ' + response.statusText;
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
+                
+                const data = await response.json();
+                console.log('Data:', data);
+                
+                resultDiv.innerHTML = `
+                    <h3>Success!</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <p><strong>Free Shipping Threshold:</strong> ${data.freeShippingThreshold?.toLocaleString()} VND</p>
+                `;
             } catch (error) {
-                console.error('Error testing API:', error);
-                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <h3>Error!</h3>
+                    <p>${error.message}</p>
+                `;
             }
         }
     </script>

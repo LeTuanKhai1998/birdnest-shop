@@ -5,10 +5,13 @@ import { useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HOME_CONSTANTS } from '@/lib/constants';
+import { useFreeShippingThreshold } from '@/lib/settings-context';
+import { formatCurrency } from '@/lib/shipping-utils';
 
 export function HeroSection() {
   const heroRef = useRef<HTMLDivElement>(null);
   const isHeroInView = useInView(heroRef as React.RefObject<Element>, { once: true, amount: 0.3 });
+  const freeShippingThreshold = useFreeShippingThreshold();
 
   return (
     <section
@@ -173,7 +176,7 @@ export function HeroSection() {
                     {HOME_CONSTANTS.shipping.message}
                   </div>
                   <div className="text-white text-sm md:text-base mt-1">
-                    {HOME_CONSTANTS.shipping.subtitle}
+                    Đơn hàng từ {formatCurrency(freeShippingThreshold)} trở lên
                   </div>
                 </div>
                 {/* Decor to the right of shipping info */}
@@ -333,7 +336,7 @@ export function HeroSection() {
                   marginTop: '0.3em',
                 }}
               >
-                {HOME_CONSTANTS.shipping.subtitle}
+                Đơn hàng từ {formatCurrency(freeShippingThreshold)} trở lên
               </div>
             </div>
           </motion.div>

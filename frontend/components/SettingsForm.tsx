@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,7 +27,6 @@ const settingsSchema = z.object({
   storeName: z.string().min(2, 'Tên cửa hàng phải có ít nhất 2 ký tự'),
   storeEmail: z.string().email('Địa chỉ email không hợp lệ'),
   storePhone: z.string().optional(),
-  defaultLanguage: z.enum(['en', 'vi']),
   currency: z.string().min(1, 'Tiền tệ là bắt buộc'),
   taxPercent: z.number().min(0).max(100),
   freeShippingThreshold: z.number().min(0),
@@ -37,7 +36,9 @@ const settingsSchema = z.object({
   maintenanceMode: z.boolean(),
   logoUrl: z.string().optional(),
   address: z.string().optional(),
-  country: z.string().optional(),
+  province: z.string().optional(),
+  district: z.string().optional(),
+  ward: z.string().optional(),
 });
 
 type SettingsFormData = z.infer<typeof settingsSchema>;
@@ -48,9 +49,30 @@ interface SettingsFormProps {
   isLoading?: boolean;
 }
 
+interface Province {
+  code: string;
+  name: string;
+  districts: District[];
+}
+
+interface District {
+  code: string;
+  name: string;
+  wards: Ward[];
+}
+
+interface Ward {
+  code: string;
+  name: string;
+}
+
 export function SettingsForm({ initialData, onSubmit, isLoading = false }: SettingsFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(true);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingWards, setLoadingWards] = useState(false);
 
   const {
     register,
@@ -64,7 +86,85 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
     defaultValues: initialData,
   });
 
+  // Reset form when initialData changes
+  React.useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+      // Ensure dropdowns are set for province/district/ward after reset
+      setTimeout(() => {
+        if (initialData.province) {
+          setValue('province', initialData.province, { shouldDirty: false });
+        }
+        if (initialData.district) {
+          setValue('district', initialData.district, { shouldDirty: false });
+        }
+        if (initialData.ward) {
+          setValue('ward', initialData.ward, { shouldDirty: false });
+        }
+      }, 100);
+    }
+  }, [initialData, reset, setValue]);
+
   const watchedValues = watch();
+
+  // Load provinces data
+  useEffect(() => {
+    setLoadingProvinces(true);
+    fetch('/lib/provinces-full.json')
+      .then((res) => res.json())
+      .then((data) => {
+        setProvinces(data);
+      })
+      .catch((err) => {
+        setProvinces([]);
+        console.error('Failed to load local provinces data:', err);
+      })
+      .finally(() => setLoadingProvinces(false));
+  }, []);
+
+  // Ensure dropdowns are set when provinces data is loaded
+  useEffect(() => {
+    if (!loadingProvinces && provinces.length > 0 && initialData) {
+      // Set province dropdown
+      if (initialData.province) {
+        setValue('province', initialData.province, { shouldDirty: false });
+      }
+      // Set district dropdown
+      if (initialData.district) {
+        setValue('district', initialData.district, { shouldDirty: false });
+      }
+      // Set ward dropdown
+      if (initialData.ward) {
+        setValue('ward', initialData.ward, { shouldDirty: false });
+      }
+    }
+  }, [loadingProvinces, provinces, initialData, setValue]);
+
+  // Province/district/ward logic
+  const provinceCode = watch('province');
+  const districtCode = watch('district');
+  const selectedProvince = provinces.find(
+    (p) => String(p.code) === String(provinceCode),
+  );
+  const selectedDistrict = selectedProvince?.districts.find(
+    (d) => String(d.code) === String(districtCode),
+  );
+
+  // Address change handlers
+  const handleProvinceChange = (val: string) => {
+    setValue('province', val, { shouldDirty: true });
+    setValue('district', '', { shouldDirty: true });
+    setValue('ward', '', { shouldDirty: true });
+    setLoadingDistricts(true);
+    setTimeout(() => setLoadingDistricts(false), 500);
+  };
+
+  const handleDistrictChange = (val: string) => {
+    setValue('district', val, { shouldDirty: true });
+    setValue('ward', '', { shouldDirty: true });
+    setLoadingWards(true);
+    setTimeout(() => setLoadingWards(false), 500);
+  };
 
   // Track changes
   React.useEffect(() => {
@@ -75,7 +175,19 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
     setIsSubmitting(true);
     try {
       await onSubmit(data);
-      reset(data); // Reset form with new data
+      // Reset form with new data and ensure dropdowns are updated
+      reset(data);
+      setTimeout(() => {
+        if (data.province) {
+          setValue('province', data.province, { shouldDirty: false });
+        }
+        if (data.district) {
+          setValue('district', data.district, { shouldDirty: false });
+        }
+        if (data.ward) {
+          setValue('ward', data.ward, { shouldDirty: false });
+        }
+      }, 100);
       setHasChanges(false);
     } finally {
       setIsSubmitting(false);
@@ -92,11 +204,11 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
       {/* Header with status */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Settings className="w-5 h-5 text-blue-600" />
+          <div className="p-2 bg-[#a10000] rounded-lg">
+            <Settings className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold">Cấu hình cửa hàng</h2>
+            <h2 className="text-lg font-semibold text-[#a10000]">Cấu hình cửa hàng</h2>
             <p className="text-sm text-gray-600">Quản lý cài đặt và tùy chọn cửa hàng</p>
           </div>
         </div>
@@ -110,14 +222,14 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
 
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* General Settings */}
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="pt-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Store className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-[#a10000]">
                   Cài đặt chung
                   <Badge variant="secondary" className="text-xs">Bắt buộc</Badge>
                 </CardTitle>
@@ -127,7 +239,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="storeName" className="flex items-center gap-2">
@@ -167,83 +279,118 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="storePhone">Số điện thoại cửa hàng</Label>
-                <Input
-                  id="storePhone"
-                  {...register('storePhone')}
-                  placeholder="+84 123 456 789"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="defaultLanguage">Ngôn ngữ mặc định</Label>
-                <select
-                  id="defaultLanguage"
-                  {...register('defaultLanguage')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="en">🇺🇸 English</option>
-                  <option value="vi">🇻🇳 Vietnamese</option>
-                </select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="storePhone">Số điện thoại cửa hàng</Label>
+              <Input
+                id="storePhone"
+                {...register('storePhone')}
+                placeholder="+84 123 456 789"
+              />
             </div>
           </CardContent>
         </Card>
 
         {/* Location Settings */}
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="pt-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <MapPin className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <CardTitle>Vị trí & Địa chỉ</CardTitle>
+                <CardTitle className="text-[#a10000]">Vị trí & Địa chỉ</CardTitle>
                 <CardDescription>
                   Vị trí cửa hàng và thông tin liên hệ
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="space-y-4 pb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="address">Địa chỉ</Label>
-                <Input
-                  id="address"
-                  {...register('address')}
-                  placeholder="123 Main Street, District 1"
-                />
+                <Label htmlFor="province">Tỉnh/thành phố</Label>
+                <select
+                  id="province"
+                  {...register('province')}
+                  value={watchedValues.province || ''}
+                  disabled={loadingProvinces}
+                  onChange={(e) => handleProvinceChange(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
+                >
+                  <option value="">Chọn tỉnh/thành phố</option>
+                  {provinces.map((province) => (
+                    <option key={province.code} value={province.code}>
+                      {province.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="country">Quốc gia</Label>
-                <Input
-                  id="country"
-                  {...register('country')}
-                  placeholder="Vietnam"
-                />
+                <Label htmlFor="district">Quận/huyện</Label>
+                <select
+                  id="district"
+                  {...register('district')}
+                  value={watchedValues.district || ''}
+                  disabled={loadingDistricts || !selectedProvince}
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
+                >
+                  <option value="">Chọn quận/huyện</option>
+                  {selectedProvince?.districts.map((district) => (
+                    <option key={district.code} value={district.code}>
+                      {district.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="ward">Phường/xã</Label>
+                <select
+                  id="ward"
+                  {...register('ward')}
+                  value={watchedValues.ward || ''}
+                  disabled={loadingWards || !selectedDistrict}
+                  onChange={(e) => {
+                    setValue('ward', e.target.value, { shouldDirty: true });
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000]"
+                >
+                  <option value="">Chọn phường/xã</option>
+                  {selectedDistrict?.wards.map((ward) => (
+                    <option key={ward.code} value={ward.code}>
+                      {ward.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Đường/số nhà</Label>
+              <Input
+                id="address"
+                {...register('address')}
+                placeholder="123 Main Street, District 1"
+              />
             </div>
           </CardContent>
         </Card>
 
         {/* Order & Checkout Settings */}
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="pt-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <CreditCard className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <CardTitle>Đơn hàng & Thanh toán</CardTitle>
+                <CardTitle className="text-[#a10000]">Đơn hàng & Thanh toán</CardTitle>
                 <CardDescription>
                   Cấu hình xử lý đơn hàng và cài đặt thanh toán
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 pb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="currency" className="flex items-center gap-2">
@@ -365,23 +512,23 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
         </Card>
 
         {/* System Settings */}
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="pt-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <Shield className="w-5 h-5 text-orange-600" />
               </div>
               <div>
-                <CardTitle>Cài đặt hệ thống</CardTitle>
+                <CardTitle className="text-[#a10000]">Cài đặt hệ thống</CardTitle>
                 <CardDescription>
                   Cấu hình hệ thống nâng cao
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 pb-6">
             <div className="space-y-2">
-                              <Label htmlFor="logoUrl">URL Logo</Label>
+              <Label htmlFor="logoUrl">URL Logo</Label>
               <Input
                 id="logoUrl"
                 {...register('logoUrl')}
@@ -422,6 +569,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
                 variant="outline"
                 onClick={handleReset}
                 disabled={isSubmitting || isLoading}
+                className="hover:shadow-lg transition-shadow duration-200"
               >
                 Đặt lại thay đổi
               </Button>
@@ -429,7 +577,7 @@ export function SettingsForm({ initialData, onSubmit, isLoading = false }: Setti
             <Button
               type="submit"
               disabled={isSubmitting || isLoading || !hasChanges}
-              className="min-w-[120px]"
+              className="min-w-[120px] bg-[#a10000] hover:bg-red-800 hover:shadow-lg transition-all duration-200"
             >
               {isSubmitting ? (
                 <>

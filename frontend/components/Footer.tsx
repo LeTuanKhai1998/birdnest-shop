@@ -2,14 +2,110 @@
 import { Instagram, Phone, Mail, MapPin, Globe, Facebook, ShoppingBag, Music } from 'lucide-react';
 import Image from 'next/image';
 import { useSetting } from '@/lib/settings-context';
+import { useState, useEffect } from 'react';
 
 export default function Footer() {
   // Get settings
   const storeName = useSetting('storeName') || 'Birdnest Shop';
   const storeEmail = useSetting('storeEmail') || 'admin@birdnest.com';
   const storePhone = useSetting('storePhone') || '0919.844.822';
-  const address = useSetting('address') || '45 Trần Hưng Đạo, Đảo, Rạch Giá, Kiên Giang';
+  const address = useSetting('address') || '';
+  const province = useSetting('province') || '';
+  const district = useSetting('district') || '';
+  const ward = useSetting('ward') || '';
   const logoUrl = useSetting('logoUrl') || '/images/logo.png';
+
+  // State for provinces data
+  const [provinces, setProvinces] = useState<any[]>([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(true);
+
+  // Load provinces data
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        setLoadingProvinces(true);
+        const response = await fetch('/lib/provinces-full.json');
+        const data = await response.json();
+        setProvinces(data);
+      } catch (error) {
+        console.error('Failed to load provinces data:', error);
+        setProvinces([]);
+      } finally {
+        setLoadingProvinces(false);
+      }
+    };
+
+    loadProvinces();
+  }, []);
+
+  // Build full address with actual names
+  const buildFullAddress = () => {
+    const addressParts = [];
+    
+    if (address) {
+      addressParts.push(address);
+    }
+    
+    if (!loadingProvinces && provinces.length > 0) {
+      // Find province name
+      const selectedProvince = provinces.find(p => String(p.code) === String(province));
+      const provinceName = selectedProvince?.name || province;
+      
+      // Find district name
+      const selectedDistrict = selectedProvince?.districts?.find(d => String(d.code) === String(district));
+      const districtName = selectedDistrict?.name || district;
+      
+      // Find ward name
+      const selectedWard = selectedDistrict?.wards?.find(w => String(w.code) === String(ward));
+      const wardName = selectedWard?.name || ward;
+      
+      // Add address parts in order: ward, district, province
+      if (wardName && wardName !== ward) {
+        addressParts.push(wardName);
+      }
+      
+      if (districtName && districtName !== district) {
+        addressParts.push(districtName);
+      }
+      
+      if (provinceName && provinceName !== province) {
+        addressParts.push(provinceName);
+      }
+      
+      // Add "Việt Nam" at the end
+      addressParts.push('Việt Nam');
+    } else {
+      // Fallback to codes if provinces data not loaded
+      if (ward) {
+        addressParts.push(`Phường/Xã: ${ward}`);
+      }
+      
+      if (district) {
+        addressParts.push(`Quận/Huyện: ${district}`);
+      }
+      
+      if (province) {
+        addressParts.push(`Tỉnh/Thành: ${province}`);
+      }
+      
+      // Add "Việt Nam" at the end
+      addressParts.push('Việt Nam');
+    }
+    
+    // If no address parts, return default
+    if (addressParts.length === 0) {
+      return '45 Trần Hưng Đạo, Đảo, Rạch Giá, Kiên Giang, Việt Nam';
+    }
+    
+    return addressParts.join(', ');
+  };
+
+  const fullAddress = buildFullAddress();
+
+  // Show loading state for address if provinces are still loading
+  const addressDisplay = loadingProvinces && (province || district || ward) 
+    ? 'Đang tải địa chỉ...' 
+    : fullAddress;
 
   return (
     <footer className="w-full bg-gradient-to-b from-[#9A030B] to-[#7A0209] text-white">
@@ -140,8 +236,8 @@ export default function Footer() {
             </h3>
             <div className="space-y-3">
               <div className="flex items-start space-x-2">
-                <MapPin className="w-4 h-4 text-[#e6b17a] mt-0.5" />
-                <span className="text-gray-200 text-sm whitespace-nowrap inline">{address}</span>
+                <MapPin className="w-4 h-4 text-[#e6b17a] mt-0.5 flex-shrink-0" />
+                <span className="text-gray-200 text-sm leading-relaxed">{addressDisplay}</span>
               </div>
               <div className="flex items-start space-x-2">
                 <Phone className="w-4 h-4 text-[#e6b17a] mt-0.5" />

@@ -168,10 +168,27 @@ export default function DashboardLayout({
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 hover:text-[#a10000] transition-all duration-200 group"
+                className={cn(
+                  'flex items-center gap-3 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                  pathname === href
+                    ? 'bg-[#a10000] text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+                )}
               >
-                <Icon className="w-5 h-5 text-gray-500 group-hover:text-[#a10000] transition-colors" />
-                <span>{label}</span>
+                <Icon className={cn(
+                  "w-5 h-5 transition-colors",
+                  pathname === href ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+                )} />
+                <div className="flex-1">
+                  <span>{label}</span>
+                  <p className="text-xs opacity-75 mt-0.5 leading-tight">
+                    {href === '/' && 'Về trang chủ chính'}
+                    {href === '/products' && 'Khám phá sản phẩm'}
+                    {href === '/about' && 'Tìm hiểu về chúng tôi'}
+                    {href === '/contact' && 'Liên hệ hỗ trợ'}
+                    {href === '/guest-orders' && 'Tra cứu đơn hàng'}
+                  </p>
+                </div>
               </Link>
             ))}
           </nav>

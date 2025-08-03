@@ -152,6 +152,7 @@ export default function AdminProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -182,6 +183,23 @@ export default function AdminProductsPage() {
   });
   
 
+
+  // Handle clicks outside modal
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setDialogOpen(false);
+      }
+    };
+
+    if (dialogOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dialogOpen]);
 
   // Fetch categories
   useEffect(() => {
@@ -372,11 +390,7 @@ export default function AdminProductsPage() {
         setImages([]);
       }
       
-      toast({
-        title: "Sản phẩm đã tải",
-        description: "Thông tin sản phẩm đã được tải thành công",
-        variant: "success",
-      });
+
     } catch (error) {
       console.error('Error fetching product details:', error);
       toast({
@@ -603,98 +617,88 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div>
-      {/* View Mode Toggle and Actions */}
-      <div className="flex items-center justify-end gap-3 mb-6">
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={refreshing}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Làm mới
-        </Button>
+    <div className="space-y-8">
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-2 order-2 sm:order-1">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="hover:shadow-lg transition-shadow duration-200 flex-1 sm:flex-none"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Làm mới</span>
+            <span className="sm:hidden">Làm mới</span>
+          </Button>
+        </div>
 
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button 
+          onClick={() => setDialogOpen(true)}
+          className="bg-[#a10000] hover:bg-red-800 hover:shadow-lg transition-all duration-200 order-1 sm:order-2 flex-1 sm:flex-none"
+        >
           <Plus className="w-4 h-4 mr-2" />
-          Thêm sản phẩm
+          <span className="hidden sm:inline">Thêm sản phẩm</span>
+          <span className="sm:hidden">Thêm sản phẩm</span>
         </Button>
       </div>
 
-      {/* Metrics Cards */}
+      {/* Stats Cards */}
       {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <Card className="hover:shadow-lg transition-shadow duration-200">
             <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm font-medium text-gray-600">Tổng sản phẩm</p>
                   <p className="text-2xl font-bold text-gray-900">{metrics.totalProducts}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-600">0.0%</span>
-                    <span className="text-sm text-gray-500">so với tháng trước</span>
-                  </div>
                 </div>
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="w-4.8 h-4.8 text-blue-600" />
+                <div className="p-3 rounded-full bg-blue-50">
+                  <Package className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-orange-500 hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow duration-200">
             <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm font-medium text-gray-600">Tồn kho thấp</p>
                   <p className="text-2xl font-bold text-gray-900">{metrics.lowStock}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <AlertCircle className="w-4 h-4 text-orange-600" />
-                    <span className="text-sm text-orange-600">Cần chú ý</span>
-                  </div>
                 </div>
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <AlertCircle className="w-4.8 h-4.8 text-orange-600" />
+                <div className="p-3 rounded-full bg-orange-50">
+                  <AlertCircle className="w-6 h-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow duration-200">
             <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm font-medium text-gray-600">Hết hàng</p>
                   <p className="text-2xl font-bold text-gray-900">{metrics.outOfStock}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <Hash className="w-4 h-4 text-red-600" />
-                    <span className="text-sm text-red-600">Cần bổ sung</span>
-                  </div>
                 </div>
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <Hash className="w-4.8 h-4.8 text-red-600" />
+                <div className="p-3 rounded-full bg-red-50">
+                  <Hash className="w-6 h-6 text-red-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow duration-200">
             <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm font-medium text-gray-600">Tổng giá trị</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(metrics.totalValue)}
                   </p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-600">0.0%</span>
-                    <span className="text-sm text-gray-500">so với tháng trước</span>
-                  </div>
                 </div>
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="w-4.8 h-4.8 text-green-600" />
+                <div className="p-3 rounded-full bg-green-50">
+                  <DollarSign className="w-6 h-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
@@ -702,46 +706,53 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Tìm kiếm sản phẩm..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                className="pl-10"
-              />
+      {/* Filters Section */}
+      <div>
+        <h2 
+          className="text-2xl font-bold text-[#a10000] mb-6"
+        >
+          Tìm kiếm và lọc
+        </h2>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Tìm kiếm sản phẩm..."
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="w-full sm:w-48">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Tất cả danh mục</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="w-full md:w-48">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Tất cả danh mục</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.name}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Products Table */}
-      <Card>
-        <CardHeader className="pt-6">
-          <CardTitle>Danh sách sản phẩm</CardTitle>
-          <CardDescription>
-            Xem và quản lý tất cả sản phẩm trong cửa hàng
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pb-6">
+      {/* Products Table Section */}
+      <div>
+        <h2 
+          className="text-2xl font-bold text-[#a10000] mb-6"
+        >
+          Danh sách sản phẩm
+        </h2>
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-4 sm:p-6">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -757,9 +768,9 @@ export default function AdminProductsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-4 font-medium text-gray-700">Sản phẩm</th>
-                    <th className="text-left p-4 font-medium text-gray-700">Danh mục</th>
-                    <th className="text-left p-4 font-medium text-gray-700">
+                    <th className="text-left p-2 sm:p-4 font-medium text-gray-700">Sản phẩm</th>
+                    <th className="hidden sm:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">Danh mục</th>
+                    <th className="hidden md:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">
                       <button
                         onClick={() => handleSort('price')}
                         className="flex items-center gap-1 hover:text-gray-900 transition-colors"
@@ -768,7 +779,7 @@ export default function AdminProductsPage() {
                         {getSortIcon('price')}
                       </button>
                     </th>
-                    <th className="text-left p-4 font-medium text-gray-700">
+                    <th className="hidden md:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">
                       <button
                         onClick={() => handleSort('quantity')}
                         className="flex items-center gap-1 hover:text-gray-900 transition-colors"
@@ -777,99 +788,108 @@ export default function AdminProductsPage() {
                         {getSortIcon('quantity')}
                       </button>
                     </th>
-                    <th className="text-left p-4 font-medium text-gray-700">Trạng thái</th>
-                    <th className="text-right p-4 font-medium text-gray-700 whitespace-nowrap">Thao tác</th>
+                    <th className="hidden sm:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">Trạng thái</th>
+                    <th className="text-right p-2 sm:p-4 font-medium text-gray-700 whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedProducts.map((product: Product) => (
-                    <tr key={product.id} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                            <SmartImage
-                              src={getFirstImageUrl(product.images as any) || FALLBACK_IMAGE}
-                              alt={product.name}
-                              width={64}
-                              height={64}
-                              className="rounded-lg object-cover"
-                            />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{product.name}</p>
-                            <p className="text-xs text-gray-500 truncate max-w-32">
-                              {product.description}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <Badge 
-                          variant="secondary" 
-                          className={cn(
-                            "text-xs border",
-                            getCategoryColor(product.category?.name, product.category?.colorScheme)
-                          )}
-                        >
-                          {product.category?.name || 'N/A'}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <p className="font-medium text-sm">
-                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(product.price))}
-                        </p>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{product.quantity || 0}</span>
-                          {(product.quantity || 0) < 10 && (
-                            <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
-                              Low
+                                            <tr key={product.id} className="border-b hover:bg-gray-50 transition-colors">
+                          <td className="p-2 sm:p-4">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <SmartImage
+                                  src={getFirstImageUrl(product.images as any) || FALLBACK_IMAGE}
+                                  alt={product.name}
+                                  width={48}
+                                  height={48}
+                                  className="rounded-lg object-cover w-full h-full"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-sm truncate">{product.name}</p>
+                                <p className="text-xs text-gray-500 truncate hidden sm:block">
+                                  {product.description}
+                                </p>
+                                <div className="flex items-center gap-2 sm:hidden mt-1">
+                                  <Badge 
+                                    variant="secondary" 
+                                    className={cn(
+                                      "text-xs border",
+                                      getCategoryColor(product.category?.name, product.category?.colorScheme)
+                                    )}
+                                  >
+                                    {product.category?.name || 'N/A'}
+                                  </Badge>
+                                  <StatusBadge 
+                                    status={product.isActive ? 'ACTIVE' : 'INACTIVE'} 
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="hidden sm:table-cell p-2 sm:p-4">
+                            <Badge 
+                              variant="secondary" 
+                              className={cn(
+                                "text-xs border",
+                                getCategoryColor(product.category?.name, product.category?.colorScheme)
+                              )}
+                            >
+                              {product.category?.name || 'N/A'}
                             </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <StatusBadge 
-                          status={product.isActive ? 'ACTIVE' : 'INACTIVE'} 
-                        />
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex items-center gap-2 justify-end">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(product)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggleActive(product)}
-                            className={cn(
-                              "whitespace-nowrap transition-all duration-200 font-medium",
-                              product.isActive 
-                                ? "text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300" 
-                                : "text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200 hover:border-green-300"
-                            )}
-                            title={product.isActive ? "Vô hiệu hóa sản phẩm" : "Kích hoạt sản phẩm"}
-                          >
-                            {product.isActive ? (
-                              <>
-                                <X className="w-4 h-4 mr-1.5" />
-                                Vô hiệu hóa
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                                Kích hoạt
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
+                          </td>
+                          <td className="hidden md:table-cell p-2 sm:p-4">
+                            <p className="font-medium text-sm">
+                              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(product.price))}
+                            </p>
+                          </td>
+                          <td className="hidden md:table-cell p-2 sm:p-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">{product.quantity || 0}</span>
+                              {(product.quantity || 0) < 10 && (
+                                <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
+                                  Low
+                                </Badge>
+                              )}
+                            </div>
+                          </td>
+                          <td className="hidden sm:table-cell p-2 sm:p-4">
+                            <StatusBadge 
+                              status={product.isActive ? 'ACTIVE' : 'INACTIVE'} 
+                            />
+                          </td>
+                          <td className="p-2 sm:p-4 text-right">
+                            <div className="flex items-center gap-1 sm:gap-2 justify-end">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(product)}
+                                className="h-8 w-8 sm:h-9 sm:w-9 p-0"
+                              >
+                                <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleActive(product)}
+                                className={cn(
+                                  "whitespace-nowrap transition-all duration-200 font-medium h-8 w-8 sm:h-9 sm:w-9 p-0",
+                                  product.isActive 
+                                    ? "text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300" 
+                                    : "text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200 hover:border-green-300"
+                                )}
+                                title={product.isActive ? "Vô hiệu hóa sản phẩm" : "Kích hoạt sản phẩm"}
+                              >
+                                {product.isActive ? (
+                                  <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                                ) : (
+                                  <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
                   ))}
                 </tbody>
               </table>
@@ -1089,15 +1109,16 @@ export default function AdminProductsPage() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
 
 
       {/* Product Form Dialog */}
       {dialogOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+          <div ref={modalRef} className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
             {/* Header */}
             <div className="px-6 py-4 border-b bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white">
               <div className="flex items-center justify-between">
@@ -1243,56 +1264,77 @@ export default function AdminProductsPage() {
                       </div>
                     )}
                 {/* Basic Information */}
-                <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
-                  <CardHeader className="pt-4">
-                    <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <Package className="w-4 h-4 text-green-600" />
-                      Thông tin cơ bản
-                    </CardTitle>
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Package className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                          Thông tin cơ bản
+                          <Badge variant="secondary" className="text-xs">Bắt buộc</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Thông tin cơ bản và mô tả của sản phẩm
+                        </CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4 pb-6">
                     {/* Product Name */}
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium mb-2 text-gray-700">
+                    <div className="space-y-2">
+                      <label htmlFor="name" className="flex items-center gap-2 text-sm font-medium text-gray-700">
                         Tên sản phẩm
+                        <span className="text-red-500">*</span>
                       </label>
                       <Input
                         id="name"
                         {...register('name')}
                         placeholder="Nhập tên sản phẩm"
-                        className="w-full"
+                        className={errors.name ? 'border-red-300 focus:border-red-500' : ''}
                       />
                       {errors.name && (
-                        <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+                        <p className="text-sm text-red-600 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.name.message}
+                        </p>
                       )}
                     </div>
 
                     {/* Description */}
-                    <div>
-                      <label htmlFor="description" className="block text-sm font-medium mb-2 text-gray-700">
+                    <div className="space-y-2">
+                      <label htmlFor="description" className="flex items-center gap-2 text-sm font-medium text-gray-700">
                         Mô tả
+                        <span className="text-red-500">*</span>
                       </label>
                       <Textarea
                         id="description"
                         {...register('description')}
                         placeholder="Nhập mô tả sản phẩm"
                         rows={4}
-                        className="w-full"
+                        className={errors.description ? 'border-red-300 focus:border-red-500' : ''}
                       />
                       {errors.description && (
-                        <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
+                        <p className="text-sm text-red-600 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.description.message}
+                        </p>
                       )}
                     </div>
 
                     {/* Category */}
-                    <div>
-                      <label htmlFor="category" className="block text-sm font-medium mb-2 text-gray-700">
+                    <div className="space-y-2">
+                      <label htmlFor="category" className="flex items-center gap-2 text-sm font-medium text-gray-700">
                         Danh mục
+                        <span className="text-red-500">*</span>
                       </label>
                       <select
                         id="category"
                         {...register('categoryId')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.categoryId ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                        }`}
                       >
                         <option value="">Chọn danh mục</option>
                         {categories.map((category) => (
@@ -1302,83 +1344,111 @@ export default function AdminProductsPage() {
                         ))}
                       </select>
                       {errors.categoryId && (
-                        <p className="text-sm text-red-600 mt-1">{errors.categoryId.message}</p>
+                        <p className="text-sm text-red-600 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.categoryId.message}
+                        </p>
                       )}
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Pricing and Inventory */}
-                <Card className="border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
-                  <CardHeader className="pt-4">
-                    <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-purple-600" />
-                      Giá cả và tồn kho
-                    </CardTitle>
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <DollarSign className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                          Giá cả và tồn kho
+                          <Badge variant="secondary" className="text-xs">Bắt buộc</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Thông tin về giá cả, tồn kho và trọng lượng sản phẩm
+                        </CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4 pb-6">
                     {/* Price and Stock */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="price" className="block text-sm font-medium mb-2 text-gray-700">
+                      <div className="space-y-2">
+                        <label htmlFor="price" className="flex items-center gap-2 text-sm font-medium text-gray-700">
                           Giá (VND)
+                          <span className="text-red-500">*</span>
                         </label>
                         <Input
                           id="price"
                           {...register('price')}
                           placeholder="100000"
-                          className="w-full"
+                          className={errors.price ? 'border-red-300 focus:border-red-500' : ''}
                         />
                         {errors.price && (
-                          <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
+                          <p className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.price.message}
+                          </p>
                         )}
                       </div>
                       
-                      <div>
-                        <label htmlFor="stock" className="block text-sm font-medium mb-2 text-gray-700">
+                      <div className="space-y-2">
+                        <label htmlFor="stock" className="flex items-center gap-2 text-sm font-medium text-gray-700">
                           Số lượng tồn kho
+                          <span className="text-red-500">*</span>
                         </label>
                         <Input
                           id="stock"
                           {...register('stock')}
                           placeholder="10"
-                          className="w-full"
+                          className={errors.stock ? 'border-red-300 focus:border-red-500' : ''}
                         />
                         {errors.stock && (
-                          <p className="text-sm text-red-600 mt-1">{errors.stock.message}</p>
+                          <p className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.stock.message}
+                          </p>
                         )}
                       </div>
                     </div>
 
                     {/* Weight and Discount */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="weight" className="block text-sm font-medium mb-2 text-gray-700">
+                      <div className="space-y-2">
+                        <label htmlFor="weight" className="flex items-center gap-2 text-sm font-medium text-gray-700">
                           Trọng lượng (g)
+                          <span className="text-red-500">*</span>
                         </label>
                         <Input
                           id="weight"
                           {...register('weight')}
                           placeholder="100"
-                          className="w-full"
+                          className={errors.weight ? 'border-red-300 focus:border-red-500' : ''}
                         />
                         {errors.weight && (
-                          <p className="text-sm text-red-600 mt-1">{errors.weight.message}</p>
+                          <p className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.weight.message}
+                          </p>
                         )}
                       </div>
                       
-                      <div>
-                        <label htmlFor="discount" className="block text-sm font-medium mb-2 text-gray-700">
+                      <div className="space-y-2">
+                        <label htmlFor="discount" className="flex items-center gap-2 text-sm font-medium text-gray-700">
                           Giảm giá (%)
                         </label>
                         <Input
                           id="discount"
                           {...register('discount')}
                           placeholder="0"
-                          className="w-full"
+                          className={errors.discount ? 'border-red-300 focus:border-red-500' : ''}
                         />
                         {errors.discount && (
-                          <p className="text-sm text-red-600 mt-1">{errors.discount.message}</p>
+                          <p className="text-sm text-red-600 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {errors.discount.message}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -1386,12 +1456,22 @@ export default function AdminProductsPage() {
                 </Card>
 
                 {/* Status and Actions */}
-                <Card className="border-l-4 border-l-orange-500 hover:shadow-md transition-shadow">
-                  <CardHeader className="pt-4">
-                    <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-orange-600" />
-                      Trạng thái và hành động
-                    </CardTitle>
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <CheckCircle2 className="w-5 h-5 text-orange-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-[#a10000]">
+                          Trạng thái và hành động
+                          <Badge variant="secondary" className="text-xs">Tùy chọn</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Cài đặt trạng thái hoạt động của sản phẩm
+                        </CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4 pb-6">
                     {/* Active Status */}
@@ -1412,12 +1492,12 @@ export default function AdminProductsPage() {
                 </Card>
 
                 {/* Form Actions */}
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setDialogOpen(false)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-gray-300 hover:bg-gray-50"
                   >
                     <X className="w-4 h-4" />
                     Hủy
@@ -1425,7 +1505,7 @@ export default function AdminProductsPage() {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-[#a10000] hover:bg-[#c41e3a] text-white"
                   >
                     {isSubmitting ? (
                       <>

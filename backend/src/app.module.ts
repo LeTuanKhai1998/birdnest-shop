@@ -22,6 +22,12 @@ import { PerformanceInterceptor } from './common/performance.interceptor';
 import { GlobalExceptionFilter } from './common/global-exception.filter';
 import { AuthErrorFilter } from './common/auth-error.filter';
 import { ThrottleAuthGuard } from './common/throttle-auth.guard';
+import { OrdersService } from './orders/orders.service';
+import { ProductsService } from './products/products.service';
+import { UsersService } from './users/users.service';
+import { PasswordService } from './common/password.service';
+import { IdGeneratorService } from './common/id-generator.service';
+import { SoldCountService } from './products/sold-count.service';
 
 @Module({
   imports: [
@@ -61,6 +67,12 @@ import { ThrottleAuthGuard } from './common/throttle-auth.guard';
     CacheService,
     PerformanceService,
     PerformanceInterceptor,
+    OrdersService,
+    ProductsService,
+    UsersService,
+    PasswordService,
+    IdGeneratorService,
+    SoldCountService,
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,

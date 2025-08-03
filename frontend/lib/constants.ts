@@ -152,9 +152,7 @@ export const HOME_CONSTANTS = {
     ],
   },
   shipping: {
-    freeThreshold: "1.000.000đ",
     message: "Giao hàng MIỄN PHÍ",
-    subtitle: "Đơn hàng từ 1.000.000đ trở lên",
   },
 };
 

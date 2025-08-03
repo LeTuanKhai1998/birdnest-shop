@@ -1410,6 +1410,68 @@ enum RecipientType {
   - Timeline for order status (Placed → Shipped → Delivered)
   - Show invoice PDF download
 
+---
+
+### 28. Upload Filename Convention with Image Compression [✓ Best Practice]
+
+- **Filename Format**:
+  - `[type]-[entityId]-[timestamp].[ext]`
+  - Examples:
+    - `avatar-user123-20250729.jpg`
+    - `product-456-1722260100.png`
+
+- **Naming Rules**:
+  - No Vietnamese accents
+  - Lowercase only
+  - Hyphen `-` for separation
+  - No special characters
+  - Extensions allowed: `.jpg`, `.jpeg`, `.png`, `.webp`
+  - Use `userId` or `productId` + timestamp to ensure uniqueness
+
+---
+
+### Image Compression Before Upload
+
+- Use [`browser-image-compression`](https://www.npmjs.com/package/browser-image-compression)
+- Optimize image before upload to reduce bandwidth without sacrificing quality
+ 
+```ts
+import imageCompression from 'browser-image-compression';
+
+const compressedFile = await imageCompression(file, {
+  maxWidthOrHeight: 1080,
+  maxSizeMB: 1.5,
+  useWebWorker: true,
+});
+```
+
+- Convert to .webp if possible before upload
+- Keep high quality while minimizing file size
+- UploadThing Integration
+  - Backend (app/api/uploadthing/core.ts):
+  - Allow larger files (e.g. 5MB for avatars, 8MB for products)
+  ```ts
+    avatarUploader: f({ image: { maxFileSize: "5MB" } })
+    productImageUploader: f({ image: { maxFileSize: "8MB" } })
+  ```
+  - Rename file inside onUploadComplete using the naming convention
+
+- UI / UX
+  - Show image preview before upload
+  - Show loading and error states
+  - Support removing uploaded image via "X" icon
+- Validation
+  - Accept: .jpg, .jpeg, .png, .webp
+  - Avatar: 1 image max
+  - Product: multiple images allowed
+  - Check file type and extension before upload
+  - Ensure compressed size fits within UploadThing limits
+
+- Environment
+  - Store UPLOADTHING_TOKEN securely in Backend
+  - Do not expose token in frontend
+
+✅ Result: Optimized, uniquely named images uploaded safely with smooth UX across avatar and product image uploads.
 
 ---
 

@@ -3,6 +3,13 @@ import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+// Function to generate readable ID
+function generateReadableId(prefix: string, index: number): string {
+  const year = new Date().getFullYear();
+  const paddedIndex = index.toString().padStart(3, '0');
+  return `${prefix}-${year}-${paddedIndex}`;
+}
+
 async function main() {
   console.log('🌱 Starting database seed...');
 
@@ -13,6 +20,7 @@ async function main() {
     create: {
       name: 'Yến thô',
       slug: 'raw-nest',
+      readableId: generateReadableId('CAT', 1),
     },
   });
 
@@ -22,6 +30,7 @@ async function main() {
     create: {
       name: 'Yến tinh chế',
       slug: 'refined-nest',
+      readableId: generateReadableId('CAT', 2),
     },
   });
 
@@ -31,6 +40,7 @@ async function main() {
     create: {
       name: 'Yến hũ',
       slug: 'bottled-nest',
+      readableId: generateReadableId('CAT', 3),
     },
   });
 
@@ -40,6 +50,7 @@ async function main() {
     create: {
       name: 'Yến baby',
       slug: 'baby-nest',
+      readableId: generateReadableId('CAT', 4),
     },
   });
 
@@ -55,6 +66,7 @@ async function main() {
       quantity: 100,
       weight: 50,
       categoryId: refinedCategory.id,
+      readableId: generateReadableId('PROD', 1),
     },
     {
       name: 'Yến tinh chế cao cấp 100g',
@@ -64,6 +76,7 @@ async function main() {
       quantity: 50,
       weight: 100,
       categoryId: refinedCategory.id,
+      readableId: generateReadableId('PROD', 2),
     },
     {
       name: 'Yến thô nguyên tổ 100g',
@@ -73,6 +86,7 @@ async function main() {
       quantity: 60,
       weight: 100,
       categoryId: rawCategory.id,
+      readableId: generateReadableId('PROD', 3),
     },
     {
       name: 'Yến hũ dinh dưỡng 70ml x6',
@@ -82,6 +96,7 @@ async function main() {
       quantity: 40,
       weight: 420,
       categoryId: bottledCategory.id,
+      readableId: generateReadableId('PROD', 4),
     },
     {
       name: 'Yến baby bổ sung DHA 70ml',
@@ -91,6 +106,7 @@ async function main() {
       quantity: 80,
       weight: 70,
       categoryId: babyCategory.id,
+      readableId: generateReadableId('PROD', 5),
     },
   ];
 
@@ -115,6 +131,7 @@ async function main() {
       name: 'Admin User',
       phone: '0123456789',
       isAdmin: true,
+      readableId: generateReadableId('USR', 1),
     },
   });
 
@@ -130,7 +147,8 @@ async function main() {
   ];
 
   const createdUsers: any[] = [];
-  for (const u of usersData) {
+  for (let i = 0; i < usersData.length; i++) {
+    const u = usersData[i];
     const hashedPassword = await bcrypt.hash(u.password, 12);
     const user = await prisma.user.upsert({
       where: { email: u.email },
@@ -138,6 +156,7 @@ async function main() {
       create: {
         ...u,
         password: hashedPassword,
+        readableId: generateReadableId('USR', i + 2), // +2 because admin is USR-2024-001
       },
     });
     createdUsers.push(user);
@@ -162,27 +181,64 @@ async function main() {
         productId: product1.id,
         rating: 5,
         comment: 'Yến chất lượng tuyệt vời, sẽ quay lại mua tiếp.',
+        readableId: generateReadableId('REV', 1),
       },
       {
         userId: createdUsers[1].id,
         productId: product2.id,
         rating: 5,
         comment: 'Sản phẩm đúng mô tả, thơm ngon và bổ dưỡng.',
+        readableId: generateReadableId('REV', 2),
       },
       {
         userId: createdUsers[2].id,
         productId: product3.id,
         rating: 5,
         comment: 'Tặng mẹ và bà đều rất hài lòng!',
+        readableId: generateReadableId('REV', 3),
       },
     ];
 
     for (const review of reviews) {
-      await prisma.review.create({ data: review });
+      await prisma.review.upsert({
+        where: { readableId: review.readableId },
+        update: {},
+        create: review,
+      });
     }
   }
 
   console.log('✅ Sample reviews created');
+
+  // Setup default settings
+  console.log('⚙️ Setting up default settings...');
+  const defaultSettings = [
+    { key: 'store_name', value: 'Birdnest Shop' },
+    { key: 'store_email', value: 'admin@birdnest.com' },
+    { key: 'store_phone', value: '' },
+    { key: 'currency', value: 'VND' },
+    { key: 'tax_percent', value: '0' },
+    { key: 'free_shipping_threshold', value: '950000' }, // 950,000 VND
+    { key: 'enable_stripe', value: 'true' },
+    { key: 'enable_momo', value: 'true' },
+    { key: 'enable_cod', value: 'true' },
+    { key: 'maintenance_mode', value: 'false' },
+    { key: 'logo_url', value: '' },
+    { key: 'address', value: '' },
+    { key: 'province', value: '' },
+    { key: 'district', value: '' },
+    { key: 'ward', value: '' },
+  ];
+
+  for (const setting of defaultSettings) {
+    await prisma.setting.upsert({
+      where: { key: setting.key },
+      update: { value: setting.value },
+      create: setting,
+    });
+  }
+  console.log('✅ Default settings created');
+
   console.log('🎉 Seeding done!');
 }
 

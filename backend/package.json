@@ -19,9 +19,11 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "seed": "ts-node prisma/seed.ts",
+    "setup-settings": "ts-node scripts/setup-default-settings.ts",
     "init-sold-counts": "ts-node src/command.ts init-sold-counts",
     "create-test-orders": "ts-node src/command.ts create-test-orders",
-    "populate-readable-ids": "ts-node src/command.ts populate-readable-ids"
+    "populate-readable-ids": "ts-node src/command.ts populate-readable-ids",
+    "clear-db": "ts-node scripts/clear-db.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

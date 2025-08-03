@@ -322,4 +322,47 @@ export class ProductsService {
 
     return stats;
   }
+
+  async findLowStockProducts(limit: number = 5) {
+    return this.prisma.product.findMany({
+      where: {
+        quantity: {
+          lt: 10,
+        },
+        isActive: true,
+      },
+      include: {
+        category: true,
+        images: {
+          where: { isPrimary: true },
+          take: 1,
+        },
+      },
+      orderBy: {
+        quantity: 'asc',
+      },
+      take: limit,
+    });
+  }
+
+  async findTopProducts(limit: number = 5) {
+    // For now, return products with highest price as a proxy for top products
+    // In a real implementation, this would be based on actual sales data
+    return this.prisma.product.findMany({
+      where: {
+        isActive: true,
+      },
+      include: {
+        category: true,
+        images: {
+          where: { isPrimary: true },
+          take: 1,
+        },
+      },
+      orderBy: {
+        price: 'desc',
+      },
+      take: limit,
+    });
+  }
 }

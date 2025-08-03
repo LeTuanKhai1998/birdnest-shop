@@ -21,6 +21,10 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRequireAdmin } from '@/hooks/useAuth';
 import { Toaster } from '@/components/ui/toaster';
+import Footer from '@/components/Footer';
+import { Card, CardContent } from '@/components/ui/card';
+import { UnifiedAvatar } from '@/components/ui/UnifiedAvatar';
+import { Separator } from '@/components/ui/separator';
 
 const navLinks = [
   { href: '/admin', label: 'Bảng điều khiển', icon: LayoutDashboard },
@@ -110,71 +114,169 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
 
         {/* Sidebar */}
         <aside className={cn(
-          "flex flex-col w-64 bg-white dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700 py-6 px-4 gap-4 fixed top-0 left-0 h-screen z-20 overflow-y-auto transition-transform duration-300 ease-in-out",
+          "flex flex-col w-80 bg-white border-r border-gray-200 shadow-sm py-4 md:py-6 px-4 md:px-6 h-screen rounded-br-2xl border-b border-gray-200 overflow-y-auto transition-transform duration-300 ease-in-out z-20",
+          "fixed md:sticky top-0",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}>
-          <div className="mb-8 flex items-center gap-2 text-2xl font-bold text-red-700">
-            <span>Admin</span>
+          {/* Header */}
+          <div className="mb-4 md:mb-6">
+            <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-[#a10000] rounded-full flex items-center justify-center">
+                <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-base md:text-lg font-bold text-gray-900">Bảng điều khiển</h1>
+                <p className="text-xs text-gray-600 hidden md:block">Tổng quan hiệu suất cửa hàng</p>
+              </div>
+            </div>
+            
+            {/* User Info */}
+            <Card className="p-2 md:p-3 bg-gray-50 border-gray-200">
+              <div className="flex items-center gap-2 md:gap-3">
+                <UnifiedAvatar
+                  user={{ name: 'Admin User', email: 'admin@birdnest.vn' }}
+                  size={32}
+                  className="md:w-9 md:h-9"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate text-sm">Admin User</p>
+                  <p className="text-xs text-gray-500 truncate hidden md:block">admin@birdnest.vn</p>
+                </div>
+              </div>
+            </Card>
           </div>
-          <nav className="flex flex-col gap-2">
+          <nav className="flex flex-col gap-1.5 mb-4 md:mb-6">
+            <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              Bảng điều khiển
+            </h3>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-base font-medium hover:bg-red-50 dark:hover:bg-neutral-700 transition',
-                  'text-gray-700 dark:text-gray-200',
+                  'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                  pathname === link.href
+                    ? 'bg-[#a10000] text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
                 )}
               >
-                <link.icon className="w-5 h-5" />
-                <span>{link.label}</span>
+                <link.icon className={cn(
+                  "w-4 h-4 md:w-5 md:h-5 transition-colors",
+                  pathname === link.href ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+                )} />
+                <div className="flex-1">
+                  <span className="text-sm md:text-base">{link.label}</span>
+                  <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">
+                    {link.href === '/admin' && 'Tổng quan hiệu suất cửa hàng'}
+                    {link.href === '/admin/orders' && 'Xem và quản lý đơn hàng'}
+                    {link.href === '/admin/products' && 'Thêm, chỉnh sửa sản phẩm'}
+                    {link.href === '/admin/categories' && 'Quản lý danh mục sản phẩm'}
+                    {link.href === '/admin/users' && 'Xem thông tin khách hàng'}
+                    {link.href === '/admin/settings' && 'Cấu hình hệ thống'}
+                  </p>
+                </div>
               </Link>
             ))}
           </nav>
           
+          <Separator className="my-3 md:my-4" />
+          
           {/* Main Navigation */}
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-neutral-700">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+          <nav className="flex flex-col gap-1.5 mb-4 md:mb-6">
+            <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
               Điều hướng chính
             </h3>
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="/"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-red-50 dark:hover:bg-neutral-700 transition text-gray-700 dark:text-gray-200"
-              >
-                <HomeIcon className="w-5 h-5" />
-                <span>Trang chủ</span>
-              </Link>
-              <Link
-                href="/products"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-red-50 dark:hover:bg-neutral-700 transition text-gray-700 dark:text-gray-200"
-              >
-                <Box className="w-5 h-5" />
-                <span>Sản phẩm</span>
-              </Link>
-              <Link
-                href="/about"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-red-50 dark:hover:bg-neutral-700 transition text-gray-700 dark:text-gray-200"
-              >
-                <Info className="w-5 h-5" />
-                <span>Giới thiệu</span>
-              </Link>
-              <Link
-                href="/contact"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-red-50 dark:hover:bg-neutral-700 transition text-gray-700 dark:text-gray-200"
-              >
-                <Mail className="w-5 h-5" />
-                <span>Liên hệ</span>
-              </Link>
-              <Link
-                href="/guest-orders"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium hover:bg-red-50 dark:hover:bg-neutral-700 transition text-gray-700 dark:text-gray-200"
-              >
-                <Package className="w-5 h-5" />
-                <span>Tra đơn</span>
-              </Link>
-            </nav>
-          </div>
+            <Link
+              href="/"
+              className={cn(
+                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                pathname === '/'
+                  ? 'bg-[#a10000] text-white shadow-md'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+              )}
+            >
+              <HomeIcon className={cn(
+                "w-4 h-4 md:w-5 md:h-5 transition-colors",
+                pathname === '/' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1">
+                <span className="text-sm md:text-base">Trang chủ</span>
+                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Về trang chủ chính</p>
+              </div>
+            </Link>
+            <Link
+              href="/products"
+              className={cn(
+                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                pathname === '/products'
+                  ? 'bg-[#a10000] text-white shadow-md'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+              )}
+            >
+              <Box className={cn(
+                "w-4 h-4 md:w-5 md:h-5 transition-colors",
+                pathname === '/products' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1">
+                <span className="text-sm md:text-base">Sản phẩm</span>
+                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Khám phá sản phẩm</p>
+              </div>
+            </Link>
+            <Link
+              href="/about"
+              className={cn(
+                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                pathname === '/about'
+                  ? 'bg-[#a10000] text-white shadow-md'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+              )}
+            >
+              <Info className={cn(
+                "w-4 h-4 md:w-5 md:h-5 transition-colors",
+                pathname === '/about' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1">
+                <span className="text-sm md:text-base">Giới thiệu</span>
+                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Tìm hiểu về chúng tôi</p>
+              </div>
+            </Link>
+            <Link
+              href="/contact"
+              className={cn(
+                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                pathname === '/contact'
+                  ? 'bg-[#a10000] text-white shadow-md'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+              )}
+            >
+              <Mail className={cn(
+                "w-4 h-4 md:w-5 md:h-5 transition-colors",
+                pathname === '/contact' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1">
+                <span className="text-sm md:text-base">Liên hệ</span>
+                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Liên hệ hỗ trợ</p>
+              </div>
+            </Link>
+            <Link
+              href="/guest-orders"
+              className={cn(
+                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                pathname === '/guest-orders'
+                  ? 'bg-[#a10000] text-white shadow-md'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+              )}
+            >
+              <Package className={cn(
+                "w-4 h-4 md:w-5 md:h-5 transition-colors",
+                pathname === '/guest-orders' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1">
+                <span className="text-sm md:text-base">Tra đơn</span>
+                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Tra cứu đơn hàng</p>
+              </div>
+            </Link>
+          </nav>
           
           <div className="flex-1"></div>
         </aside>
@@ -188,18 +290,18 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
         )}
 
         {/* Main content area */}
-        <div className="flex-1 flex flex-col min-w-0 md:ml-64">
+        <div className="flex-1 flex flex-col min-w-0 md:ml-80">
           {/* Hero Section - Only show for admin pages */}
           {currentPageConfig && (
-            <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-6 w-full">
+            <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-4 md:py-6 w-full">
               <div className="w-full px-4 text-center">
-                <div className="mb-3">
-                  <IconComponent className="w-8 h-8 mx-auto" />
+                <div className="mb-2 md:mb-3">
+                  <IconComponent className="w-6 h-6 md:w-8 md:h-8 mx-auto" />
                 </div>
-                <h1 className="text-2xl md:text-3xl font-bold mb-1">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-1">
                   {currentPageConfig.title}
                 </h1>
-                <p className="text-base text-red-100">
+                <p className="text-sm md:text-base text-red-100">
                   {currentPageConfig.description}
                 </p>
               </div>
@@ -209,17 +311,15 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
           {/* Main content */}
           <main className="flex-1 max-w-full mx-auto w-full overflow-y-auto">
             {/* Page Content */}
-            <div className="container mx-auto px-6 py-6 pb-8 max-w-7xl">
+            <div className="container mx-auto px-4 md:px-6 py-4 md:py-6 pb-8 max-w-7xl">
               {children}
             </div>
           </main>
         </div>
       </div>
       
-      {/* Footer - Hidden */}
-      {/* <div className="relative z-10">
-        <Footer />
-      </div> */}
+      {/* Footer */}
+      <Footer />
       
       {/* Toast Notifications */}
       <Toaster />

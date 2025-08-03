@@ -1,10 +1,13 @@
 'use client';
 
 import { Truck, Gift, Star } from 'lucide-react';
-import { HOME_CONSTANTS } from '@/lib/constants';
 import { SlideUpSection } from '@/components/ui/ScrollAnimation';
+import { useFreeShippingThreshold } from '@/lib/settings-context';
+import { formatCurrency } from '@/lib/shipping-utils';
 
 export function PromotionalBanner() {
+  const freeShippingThreshold = useFreeShippingThreshold();
+  
   return (
     <section className="w-full bg-gradient-to-r from-red-600 to-red-700 py-3 sm:py-4 md:py-6">
       <div className="container mx-auto px-3 sm:px-4">
@@ -13,7 +16,9 @@ export function PromotionalBanner() {
           <div className="flex items-center gap-2 sm:gap-3">
             <Truck className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 flex-shrink-0" />
             <span className="text-xs sm:text-sm md:text-base font-semibold text-center leading-tight">
-              {HOME_CONSTANTS.shipping.message} cho đơn hàng từ {HOME_CONSTANTS.shipping.freeThreshold}
+              Giao hàng MIỄN PHÍ
+              <br className="hidden sm:block" />
+              Đơn hàng từ {formatCurrency(freeShippingThreshold)} trở lên
             </span>
           </div>
           
