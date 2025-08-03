@@ -436,8 +436,8 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Loading Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Loading Status Cards - Optimized for mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -624,8 +624,8 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-        {/* Error Content */}
-        <div className="text-center py-12">
+        {/* Error Content - Enhanced mobile UX */}
+        <div className="text-center py-12 md:py-16 px-6 md:px-8">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
@@ -659,8 +659,8 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Key Metrics - Optimized for mobile */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
         <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -825,7 +825,7 @@ export default function AdminDashboardPage() {
             <Bell className="w-5 h-5" />
             Thông báo hệ thống
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {systemAlerts.map((alert, index) => {
               const Icon = alert.icon;
               const alertColors = {
@@ -862,8 +862,8 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Charts Section - Optimized for mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Revenue Chart */}
         <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader className="pt-6">
@@ -1216,7 +1216,7 @@ export default function AdminDashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="pb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 md:mb-6">
               <div className="text-center p-4 border rounded-lg">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Users className="w-6 h-6 text-blue-600" />

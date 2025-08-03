@@ -78,13 +78,11 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
   const currentPageConfig = pageConfigs[pathname as keyof typeof pageConfigs];
   const IconComponent = currentPageConfig?.icon || LayoutDashboard;
 
-
-
   // Show loading while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="space-y-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900">
+        <div className="space-y-4 p-6">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-4 w-96" />
         </div>
@@ -100,10 +98,12 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 flex flex-col">
       <div className="flex flex-1 overflow-hidden">
-        {/* Mobile menu button */}
+        {/* Mobile menu button - Enhanced with modern mobile UX */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-gray-200 dark:border-neutral-700"
+          className="md:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-neutral-800 rounded-2xl shadow-xl border border-gray-200 dark:border-neutral-700 hover:shadow-2xl transition-all duration-300 active:scale-95"
+          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? (
             <X className="w-6 h-6 text-gray-700 dark:text-gray-200" />
@@ -112,61 +112,70 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
           )}
         </button>
 
-        {/* Sidebar */}
+        {/* Sidebar - Modern mobile-first design */}
         <aside className={cn(
-          "flex flex-col w-80 bg-white border-r border-gray-200 shadow-sm py-4 md:py-6 px-4 md:px-6 h-screen rounded-br-2xl border-b border-gray-200 overflow-y-auto transition-transform duration-300 ease-in-out z-20",
+          "flex flex-col w-80 bg-white dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700 shadow-xl py-6 md:py-8 px-6 md:px-8 h-screen rounded-br-3xl border-b border-gray-200 dark:border-neutral-700 overflow-y-auto transition-all duration-500 ease-out z-40",
           "fixed md:sticky top-0",
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          mobileMenuOpen ? "translate-x-0 opacity-100" : "-translate-x-full md:translate-x-0 md:opacity-100 opacity-0"
         )}>
-          {/* Header */}
-          <div className="mb-4 md:mb-6">
-            <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-[#a10000] rounded-full flex items-center justify-center">
-                <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          {/* Header - Enhanced mobile spacing and typography */}
+          <div className="mb-8 md:mb-10">
+            <div className="flex items-center gap-4 md:gap-5 mb-4 md:mb-5">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-[#a10000] to-[#c41e3a] rounded-2xl flex items-center justify-center shadow-lg">
+                <LayoutDashboard className="w-6 h-6 md:w-7 md:h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-base md:text-lg font-bold text-gray-900">Bảng điều khiển</h1>
-                <p className="text-xs text-gray-600 hidden md:block">Tổng quan hiệu suất cửa hàng</p>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">Bảng điều khiển</h1>
+                <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 hidden md:block">Tổng quan hiệu suất cửa hàng</p>
               </div>
             </div>
             
-            {/* User Info */}
-            <Card className="p-2 md:p-3 bg-gray-50 border-gray-200">
-              <div className="flex items-center gap-2 md:gap-3">
+            {/* User Info - Modern card design */}
+            <Card className="p-4 md:p-5 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-700 dark:to-neutral-600 border-gray-200 dark:border-neutral-600 rounded-2xl shadow-sm">
+              <div className="flex items-center gap-4 md:gap-5">
                 <UnifiedAvatar
                   user={{ name: 'Admin User', email: 'admin@birdnest.vn' }}
-                  size={32}
-                  className="md:w-9 md:h-9"
+                  size={48}
+                  className="md:w-12 md:h-12"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate text-sm">Admin User</p>
-                  <p className="text-xs text-gray-500 truncate hidden md:block">admin@birdnest.vn</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100 truncate text-base md:text-lg">Admin User</p>
+                  <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 truncate hidden md:block">admin@birdnest.vn</p>
                 </div>
               </div>
             </Card>
           </div>
-          <nav className="flex flex-col gap-1.5 mb-4 md:mb-6">
-            <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+
+          {/* Navigation - Modern mobile navigation patterns */}
+          <nav className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10">
+            <h3 className="text-sm md:text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 md:mb-5">
               Bảng điều khiển
             </h3>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                  'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                   pathname === link.href
-                    ? 'bg-[#a10000] text-white shadow-md'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+                    ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
                 )}
               >
-                <link.icon className={cn(
-                  "w-4 h-4 md:w-5 md:h-5 transition-colors",
-                  pathname === link.href ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+                {/* Background gradient effect */}
+                <div className={cn(
+                  "absolute inset-0 bg-gradient-to-r from-[#a10000] to-[#c41e3a] opacity-0 transition-opacity duration-300",
+                  pathname === link.href ? "opacity-100" : "group-hover:opacity-10"
                 )} />
-                <div className="flex-1">
-                  <span className="text-sm md:text-base">{link.label}</span>
-                  <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">
+                
+                <link.icon className={cn(
+                  "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                  pathname === link.href ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
+                )} />
+                <div className="flex-1 relative z-10">
+                  <span className="text-base md:text-lg font-semibold">{link.label}</span>
+                  <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">
                     {link.href === '/admin' && 'Tổng quan hiệu suất cửa hàng'}
                     {link.href === '/admin/orders' && 'Xem và quản lý đơn hàng'}
                     {link.href === '/admin/products' && 'Thêm, chỉnh sửa sản phẩm'}
@@ -179,101 +188,126 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
             ))}
           </nav>
           
-          <Separator className="my-3 md:my-4" />
+          <Separator className="my-6 md:my-8" />
           
-          {/* Main Navigation */}
-          <nav className="flex flex-col gap-1.5 mb-4 md:mb-6">
-            <h3 className="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          {/* Main Navigation - Enhanced mobile experience */}
+          <nav className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10">
+            <h3 className="text-sm md:text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 md:mb-5">
               Điều hướng chính
             </h3>
             <Link
               href="/"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/'
-                  ? 'bg-[#a10000] text-white shadow-md'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+                  ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
               )}
             >
-              <HomeIcon className={cn(
-                "w-4 h-4 md:w-5 md:h-5 transition-colors",
-                pathname === '/' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              <div className={cn(
+                "absolute inset-0 bg-gradient-to-r from-[#a10000] to-[#c41e3a] opacity-0 transition-opacity duration-300",
+                pathname === '/' ? "opacity-100" : "group-hover:opacity-10"
               )} />
-              <div className="flex-1">
-                <span className="text-sm md:text-base">Trang chủ</span>
-                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Về trang chủ chính</p>
+              <HomeIcon className={cn(
+                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                pathname === '/' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1 relative z-10">
+                <span className="text-base md:text-lg font-semibold">Trang chủ</span>
+                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Về trang chủ chính</p>
               </div>
             </Link>
             <Link
               href="/products"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/products'
-                  ? 'bg-[#a10000] text-white shadow-md'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+                  ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
               )}
             >
-              <Box className={cn(
-                "w-4 h-4 md:w-5 md:h-5 transition-colors",
-                pathname === '/products' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              <div className={cn(
+                "absolute inset-0 bg-gradient-to-r from-[#a10000] to-[#c41e3a] opacity-0 transition-opacity duration-300",
+                pathname === '/products' ? "opacity-100" : "group-hover:opacity-10"
               )} />
-              <div className="flex-1">
-                <span className="text-sm md:text-base">Sản phẩm</span>
-                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Khám phá sản phẩm</p>
+              <Box className={cn(
+                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                pathname === '/products' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1 relative z-10">
+                <span className="text-base md:text-lg font-semibold">Sản phẩm</span>
+                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Khám phá sản phẩm</p>
               </div>
             </Link>
             <Link
               href="/about"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/about'
-                  ? 'bg-[#a10000] text-white shadow-md'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+                  ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
               )}
             >
-              <Info className={cn(
-                "w-4 h-4 md:w-5 md:h-5 transition-colors",
-                pathname === '/about' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              <div className={cn(
+                "absolute inset-0 bg-gradient-to-r from-[#a10000] to-[#c41e3a] opacity-0 transition-opacity duration-300",
+                pathname === '/about' ? "opacity-100" : "group-hover:opacity-10"
               )} />
-              <div className="flex-1">
-                <span className="text-sm md:text-base">Giới thiệu</span>
-                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Tìm hiểu về chúng tôi</p>
+              <Info className={cn(
+                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                pathname === '/about' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1 relative z-10">
+                <span className="text-base md:text-lg font-semibold">Giới thiệu</span>
+                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Tìm hiểu về chúng tôi</p>
               </div>
             </Link>
             <Link
               href="/contact"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/contact'
-                  ? 'bg-[#a10000] text-white shadow-md'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+                  ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
               )}
             >
-              <Mail className={cn(
-                "w-4 h-4 md:w-5 md:h-5 transition-colors",
-                pathname === '/contact' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              <div className={cn(
+                "absolute inset-0 bg-gradient-to-r from-[#a10000] to-[#c41e3a] opacity-0 transition-opacity duration-300",
+                pathname === '/contact' ? "opacity-100" : "group-hover:opacity-10"
               )} />
-              <div className="flex-1">
-                <span className="text-sm md:text-base">Liên hệ</span>
-                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Liên hệ hỗ trợ</p>
+              <Mail className={cn(
+                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                pathname === '/contact' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1 relative z-10">
+                <span className="text-base md:text-lg font-semibold">Liên hệ</span>
+                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Liên hệ hỗ trợ</p>
               </div>
             </Link>
             <Link
               href="/guest-orders"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium transition-all duration-200 group',
+                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/guest-orders'
-                  ? 'bg-[#a10000] text-white shadow-md'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-[#a10000]'
+                  ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
               )}
             >
-              <Package className={cn(
-                "w-4 h-4 md:w-5 md:h-5 transition-colors",
-                pathname === '/guest-orders' ? "text-white" : "text-gray-500 group-hover:text-[#a10000]"
+              <div className={cn(
+                "absolute inset-0 bg-gradient-to-r from-[#a10000] to-[#c41e3a] opacity-0 transition-opacity duration-300",
+                pathname === '/guest-orders' ? "opacity-100" : "group-hover:opacity-10"
               )} />
-              <div className="flex-1">
-                <span className="text-sm md:text-base">Tra đơn</span>
-                <p className="text-xs opacity-75 mt-0.5 leading-tight hidden md:block">Tra cứu đơn hàng</p>
+              <Package className={cn(
+                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                pathname === '/guest-orders' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
+              )} />
+              <div className="flex-1 relative z-10">
+                <span className="text-base md:text-lg font-semibold">Tra đơn</span>
+                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Tra cứu đơn hàng</p>
               </div>
             </Link>
           </nav>
@@ -281,70 +315,74 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
           <div className="flex-1"></div>
         </aside>
         
-        {/* Mobile backdrop */}
+        {/* Mobile backdrop - Enhanced with modern blur effect */}
         {mobileMenuOpen && (
           <div 
-            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-10"
+            className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-md z-30"
             onClick={() => setMobileMenuOpen(false)}
           />
         )}
 
-        {/* Main content area */}
+        {/* Main content area - Modern mobile-first layout */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Hero Section - Only show for admin pages */}
+          {/* Hero Section - Enhanced mobile design */}
           {currentPageConfig && (
-            <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-4 md:py-6 w-full">
-              <div className="w-full px-4 text-center">
-                <div className="mb-2 md:mb-3">
-                  <IconComponent className="w-6 h-6 md:w-8 md:h-8 mx-auto" />
+            <div className="bg-gradient-to-br from-[#a10000] via-[#b51a2a] to-[#c41e3a] text-white py-8 md:py-10 w-full relative overflow-hidden">
+              {/* Background pattern */}
+              <div className="absolute inset-0 bg-black/10"></div>
+              <div className="relative z-10 w-full px-6 md:px-8 text-center">
+                <div className="mb-4 md:mb-6">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto backdrop-blur-sm">
+                    <IconComponent className="w-8 h-8 md:w-10 md:h-10 text-white" />
+                  </div>
                 </div>
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-1">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
                   {currentPageConfig.title}
                 </h1>
-                <p className="text-sm md:text-base text-red-100">
+                <p className="text-base md:text-lg lg:text-xl text-red-100 px-4 md:px-0 max-w-2xl mx-auto">
                   {currentPageConfig.description}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Main content */}
-          <main className="flex-1 max-w-full mx-auto w-full overflow-y-auto pb-20 md:pb-0">
-            {/* Page Content */}
-            <div className="container mx-auto px-4 md:px-6 py-4 md:py-6 pb-8 max-w-7xl">
+          {/* Main content - Enhanced mobile spacing and typography */}
+          <main className="flex-1 max-w-full mx-auto w-full overflow-y-auto pb-28 md:pb-0">
+            {/* Page Content - Modern mobile container */}
+            <div className="container mx-auto px-6 md:px-8 py-8 md:py-10 pb-8 max-w-7xl">
               {children}
             </div>
           </main>
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation - Admin */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg md:hidden">
-        <div className="flex justify-around items-center h-16 px-2">
+      {/* Mobile Bottom Navigation - Modern mobile navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-neutral-800/95 backdrop-blur-xl border-t border-gray-200 dark:border-neutral-700 shadow-2xl md:hidden">
+        <div className="flex justify-around items-center h-24 px-4 py-3">
           {navLinks.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
               href={href}
               className={cn(
-                'flex flex-col items-center justify-center flex-1 h-full text-xs font-medium transition-colors relative group',
+                'flex flex-col items-center justify-center flex-1 h-full text-xs font-semibold transition-all duration-300 relative group py-2',
                 pathname === href
-                  ? 'text-[#a10000]'
-                  : 'text-gray-600 hover:text-[#a10000]'
+                  ? 'text-[#a10000] scale-110'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-[#a10000] hover:scale-105'
               )}
             >
               <Icon className={cn(
-                "w-5 h-5 mb-1 transition-all duration-200",
+                "w-7 h-7 mb-2 transition-all duration-300",
                 pathname === href ? "text-[#a10000] scale-110" : "group-hover:scale-110"
               )} />
-              <span className="text-xs font-semibold">{label}</span>
+              <span className="text-xs font-bold">{label}</span>
               
-              {/* Active indicator */}
+              {/* Active indicator - Modern design */}
               {pathname === href && (
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-[#a10000] rounded-full" />
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-[#a10000] to-[#c41e3a] rounded-full shadow-lg" />
               )}
               
-              {/* Hover effect */}
-              <div className="absolute inset-0 bg-red-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-t-lg" />
+              {/* Hover effect - Enhanced visual feedback */}
+              <div className="absolute inset-0 bg-red-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
             </Link>
           ))}
         </div>

@@ -17,10 +17,17 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
-  Image as ImageIconAlt
+  Image as ImageIconAlt,
+  Loader2
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { 
+  compressImage, 
+  validateImageFile, 
+  formatFileSize,
+  generateUploadId 
+} from "@/lib/upload-utils";
 
 interface ProductImageUploadProps {
   endpoint: "productImageUploader";
@@ -33,6 +40,12 @@ interface ProductImageUploadProps {
   description?: string;
   currentImages?: { url: string; isPrimary?: boolean }[];
   onImagesChange?: (images: { url: string; isPrimary?: boolean }[]) => void;
+  entityId?: string; // For filename generation
+  compressionOptions?: {
+    maxWidthOrHeight?: number;
+    maxSizeMB?: number;
+    useWebWorker?: boolean;
+  };
 }
 
 interface UploadResponse {
@@ -42,6 +55,8 @@ interface UploadResponse {
   name: string;
   size: number;
   type: string;
+  filename?: string; // Our custom filename
+  originalName?: string;
 }
 
 export function ProductImageUpload({
@@ -54,14 +69,19 @@ export function ProductImageUpload({
   title = "Hình ảnh sản phẩm",
   description = "Tải lên hình ảnh sản phẩm chất lượng cao",
   currentImages = [],
-  onImagesChange
+  onImagesChange,
+  entityId = "product-default",
+  compressionOptions = {},
 }: ProductImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState<number>(0);
 
   const handleUploadComplete = useCallback((res: UploadResponse[]) => {
     setIsUploading(false);
-    const urls = res.map((file: UploadResponse) => file.ufsUrl);
+    setCompressionProgress(0);
+    
+    const urls = res.map((file: UploadResponse) => file.ufsUrl || file.url || '');
     
     // Add new images to current images
     const newImages = urls.map((url, index) => ({
@@ -81,12 +101,14 @@ export function ProductImageUpload({
     
     toast({
       title: "Tải lên thành công",
-      description: `${urls.length} hình ảnh đã được tải lên`,
+      description: `${res.length} hình ảnh đã được tải lên với nén tự động`,
+      variant: "success",
     });
   }, [currentImages, onImagesChange, onUpload]);
 
   const handleUploadError = useCallback((error: Error) => {
     setIsUploading(false);
+    setCompressionProgress(0);
     console.error("Upload error:", error);
     
     if (onUploadError) {
@@ -99,6 +121,11 @@ export function ProductImageUpload({
       variant: "destructive",
     });
   }, [onUploadError]);
+
+  const handleUploadBegin = useCallback(() => {
+    setIsUploading(true);
+    setCompressionProgress(0);
+  }, []);
 
   const removeImage = useCallback((index: number) => {
     const updatedImages = currentImages.filter((_, i) => i !== index);
@@ -176,6 +203,8 @@ export function ProductImageUpload({
             </h3>
             <p className="text-sm text-gray-600 mb-4">
               Chọn ảnh rõ nét, chất lượng cao. Khuyến nghị: 800x800 pixel, dưới {maxSize}MB.
+              <br />
+              <span className="text-blue-600 font-medium">Hình ảnh sẽ được tự động nén để tối ưu hiệu suất.</span>
             </p>
           </div>
 
@@ -204,25 +233,38 @@ export function ProductImageUpload({
                   Nhấp để tải lên hoặc kéo thả
                 </p>
                 <p className="text-sm text-gray-500">
-                  PNG, JPG, WEBP tối đa {maxSize}MB
+                  PNG, JPG, WEBP tối đa {maxSize}MB (tự động nén)
                 </p>
+                {isUploading && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-blue-600">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {compressionProgress > 0 && compressionProgress < 100 
+                      ? `Đang nén... ${Math.round(compressionProgress)}%`
+                      : "Đang tải lên..."
+                    }
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-center">
                 <UploadButton
                   endpoint={endpoint}
-                  onUploadBegin={() => setIsUploading(true)}
+                  onUploadBegin={handleUploadBegin}
                   onClientUploadComplete={handleUploadComplete}
                   onUploadError={handleUploadError}
                   className="ut-button:bg-white ut-button:text-[#a10000] ut-button:hover:bg-gray-50 ut-button:hover:text-[#a10000] ut-button:focus:bg-gray-50 ut-button:focus:text-[#a10000] ut-button:active:bg-gray-100 ut-button:active:text-[#a10000] ut-button:rounded-md ut-button:px-6 ut-button:py-3 ut-button:font-medium ut-button:transition-all ut-button:duration-200 ut-button:shadow-md ut-button:border ut-button:border-[#a10000] ut-button:min-w-[200px] ut-button:outline-none"
                   content={{
                     button: (
                       <div className="flex items-center justify-center gap-2 text-[#a10000] font-medium">
-                        <Upload className="h-4 w-4 text-[#a10000]" />
-                        {isUploading ? "Đang tải lên..." : "Chọn hình ảnh"}
+                        {isUploading ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-[#a10000]" />
+                        ) : (
+                          <Upload className="h-4 w-4 text-[#a10000]" />
+                        )}
+                        {isUploading ? "Đang xử lý..." : "Chọn hình ảnh"}
                       </div>
                     ),
-                    allowedContent: `Tối đa ${maxFiles} file, mỗi file ${maxSize}MB`,
+                    allowedContent: `Tối đa ${maxFiles} file, mỗi file ${maxSize}MB (tự động nén)`,
                   }}
                 />
               </div>
@@ -343,6 +385,10 @@ export function ProductImageUpload({
                 <div className="w-1.5 h-1.5 bg-[#a10000] rounded-full"></div>
                 Kích thước file dưới {maxSize}MB để tải nhanh
               </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
+                <span className="text-blue-600 font-medium">Hình ảnh sẽ được tự động nén và tối ưu</span>
+              </li>
             </ul>
           </CardContent>
         </Card>
@@ -352,7 +398,12 @@ export function ProductImageUpload({
           <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#a10000]"></div>
-              <span className="text-sm text-gray-600">Đang tải lên hình ảnh...</span>
+              <span className="text-sm text-gray-600">
+                {compressionProgress > 0 && compressionProgress < 100 
+                  ? `Đang nén hình ảnh... ${Math.round(compressionProgress)}%`
+                  : "Đang tải lên hình ảnh..."
+                }
+              </span>
             </div>
           </div>
         )}

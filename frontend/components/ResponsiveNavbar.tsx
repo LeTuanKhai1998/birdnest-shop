@@ -595,7 +595,7 @@ export function ResponsiveNavbar() {
                               <UnifiedAvatar
                                 user={user}
                                 size={40}
-                                className="bg-transparent ring-2 ring-gray-200 group-hover:ring-[#a10000] transition-all duration-300"
+                                className="bg-transparent transition-all duration-300"
                               />
                               <div>
                                 <div className="font-semibold text-gray-800 group-hover:text-[#a10000] transition-colors">
@@ -822,7 +822,7 @@ export function ResponsiveNavbar() {
                         size={40}
                         showName={true}
                         showEmail={true}
-                        className="bg-transparent ring-2 ring-gray-200 group-hover:ring-[#a10000] transition-all duration-300"
+                        className="bg-transparent transition-all duration-300"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />

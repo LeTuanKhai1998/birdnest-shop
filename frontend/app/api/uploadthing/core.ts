@@ -1,5 +1,6 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
+import { generateUploadFilename } from "@/lib/upload-utils";
 
 const f = createUploadthing();
 
@@ -11,10 +12,10 @@ const auth = async () => {
 };
 
 export const ourFileRouter = {
-  // Avatar uploader - single image, 2MB max (for profile pictures)
+  // Avatar uploader - single image, 4MB max (increased for better quality)
   avatarUploader: f({
     image: {
-      maxFileSize: "2MB",
+      maxFileSize: "4MB",
       maxFileCount: 1,
     },
   })
@@ -23,10 +24,21 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      return { uploadedBy: metadata.userId };
+      // Generate standardized filename
+      const filename = generateUploadFilename({
+        type: 'avatar',
+        entityId: metadata.userId,
+        originalName: file.name,
+      });
+      
+      return { 
+        uploadedBy: metadata.userId,
+        filename,
+        originalName: file.name,
+      };
     }),
 
-  // General image uploader - single image, 4MB max
+  // General image uploader - single image, 4MB max (increased for better quality)
   imageUploader: f({
     image: {
       maxFileSize: "4MB",
@@ -43,11 +55,22 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
       
+      // Generate standardized filename
+      const filename = generateUploadFilename({
+        type: 'general',
+        entityId: metadata.userId,
+        originalName: file.name,
+      });
+      
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-      return { uploadedBy: metadata.userId };
+      return { 
+        uploadedBy: metadata.userId,
+        filename,
+        originalName: file.name,
+      };
     }),
 
-  // Product image uploader - multiple images, 4MB max each
+  // Product image uploader - multiple images, 4MB max each (increased for better quality)
   productImageUploader: f({
     image: {
       maxFileSize: "4MB",
@@ -59,10 +82,21 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      return { uploadedBy: metadata.userId };
+      // Generate standardized filename
+      const filename = generateUploadFilename({
+        type: 'product',
+        entityId: metadata.userId,
+        originalName: file.name,
+      });
+      
+      return { 
+        uploadedBy: metadata.userId,
+        filename,
+        originalName: file.name,
+      };
     }),
 
-  // General image uploader - multiple images, 4MB max each
+  // General image uploader - multiple images, 4MB max each (increased for better quality)
   generalImageUploader: f({
     image: {
       maxFileSize: "4MB",
@@ -74,7 +108,18 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      return { uploadedBy: metadata.userId };
+      // Generate standardized filename
+      const filename = generateUploadFilename({
+        type: 'general',
+        entityId: metadata.userId,
+        originalName: file.name,
+      });
+      
+      return { 
+        uploadedBy: metadata.userId,
+        filename,
+        originalName: file.name,
+      };
     }),
 } satisfies FileRouter;
 
