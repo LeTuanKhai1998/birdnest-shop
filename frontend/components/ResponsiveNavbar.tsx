@@ -61,15 +61,10 @@ export function ResponsiveNavbar() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
   const pathname = usePathname();
-  const { user, isLoading } = useUser();
-  
-
+  const { user, loading } = useUser();
 
   // Use UserContext for authentication state
   const isAuthenticated = !!session || !!user;
-  
-  // UserContext will automatically provide updated user data
-  // No need for additional event listeners in navbar
   
   // Check if we're on dashboard or admin pages to hide left sidebar
   const isDashboardPage = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
@@ -175,26 +170,26 @@ export function ResponsiveNavbar() {
 
   return (
     <>
-      {/* Static Left Sidebar - Tablet and Desktop */}
+      {/* Enhanced Static Left Sidebar - Tablet and Desktop */}
       <div className={cn(
-        "hidden md:block fixed left-0 top-0 h-full w-20 bg-white border-r border-gray-200 z-[60] transition-all duration-500 ease-in-out group",
+        "hidden md:block fixed left-0 top-0 h-full w-20 bg-white/95 backdrop-blur-sm border-r border-gray-100 shadow-lg z-[60] transition-all duration-500 ease-in-out group",
         isLeftMenuVisible && !isDashboardPage ? "translate-x-0" : "-translate-x-full"
       )}>
-        {/* Hover trigger area */}
+        {/* Enhanced hover trigger area */}
         <div className="absolute -right-2 top-0 w-4 h-full bg-transparent group-hover:bg-transparent" />
         <div className="flex flex-col h-full">
-          {/* Navigation Items with Icons and Text Under */}
+          {/* Enhanced Navigation Items with Icons and Text Under */}
           <nav className="flex-1 p-3">
-            <div className="space-y-4">
-              {/* Hamburger Button - Icon only, bigger size */}
+            <div className="space-y-3">
+              {/* Enhanced Hamburger Button */}
               <Button
                 variant="ghost"
-                className="flex items-center justify-center w-full p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                className="flex items-center justify-center w-full p-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md group"
                 onClick={() => setDesktopSidebarOpen(true)}
-                                      aria-label="Mở menu bên"
+                aria-label="Mở menu bên"
                 aria-expanded={desktopSidebarOpen}
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-6 h-6 text-gray-700 group-hover:text-[#a10000] transition-colors" />
               </Button>
 
               {navigationItems.map((item) => {
@@ -204,81 +199,85 @@ export function ResponsiveNavbar() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 group relative",
+                      "flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
                       isActiveLink(item.href) 
-                        ? "bg-red-50 text-red-600" 
-                        : "text-gray-600 hover:bg-gray-100 hover:text-red-600"
+                        ? "bg-gradient-to-r from-red-50 to-red-100 text-[#a10000] shadow-md scale-105" 
+                        : "text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-[#a10000] hover:shadow-md hover:scale-105"
                     )}
                     title={item.label}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-xs font-medium text-center leading-tight">{item.label}</span>
-                    {/* Active indicator */}
+                    <Icon className={cn(
+                      "w-5 h-5 transition-all duration-300",
+                      isActiveLink(item.href) ? "text-[#a10000]" : "group-hover:text-[#a10000]"
+                    )} />
+                    <span className="text-xs font-semibold text-center leading-tight transition-colors">
+                      {item.label}
+                    </span>
+                    {/* Enhanced Active indicator */}
                     {isActiveLink(item.href) && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-red-600 rounded-r-full"></div>
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 bg-gradient-to-b from-[#a10000] to-[#c41e3a] rounded-r-full shadow-sm"></div>
                     )}
+                    {/* Hover effect overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-red-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
                   </Link>
                 );
               })}
             </div>
           </nav>
-
-
         </div>
       </div>
 
-      {/* Main Content - No left margin since sidebar overlays */}
+      {/* Enhanced Main Content */}
       <div>
-        {/* Full-width background container - Always sticky */}
+        {/* Enhanced Full-width background container */}
         <div className={cn(
-          "w-full bg-[#fdf6ef] border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-          isScrolled && "shadow-md bg-[#fdf6ef]/95 backdrop-blur-sm"
+          "w-full bg-gradient-to-r from-[#fdf6ef] to-[#fef8f2] border-b border-gray-100 shadow-lg fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+          isScrolled && "shadow-xl bg-gradient-to-r from-[#fdf6ef]/98 to-[#fef8f2]/98 backdrop-blur-md"
         )}>
-          {/* Content container */}
+          {/* Enhanced Content container */}
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between h-16 lg:h-20 px-4 lg:px-6 xl:px-8">
-              {/* Left: Logo and Brand Name */}
+              {/* Enhanced Left: Logo and Brand Name */}
               <div className="flex items-center flex-shrink-0">
-                <Link href="/" className="flex items-center gap-2 group">
+                <Link href="/" className="flex items-center gap-3 group">
                   <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#a10000] to-[#c41e3a] rounded-full blur-sm opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
                     <Image
                       src={logoUrl}
                       alt={`${storeName} Logo`}
                       width={40}
                       height={40}
-                      className="w-8 h-8 lg:w-10 lg:h-10 border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105"
+                      className="relative w-8 h-8 lg:w-10 lg:h-10 border-2 border-yellow-400 rounded-full transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
                       priority
                     />
                   </div>
-                  {/* Hide shop name on small screens */}
-                  <span className="hidden sm:block text-lg lg:text-xl font-bold text-red-700 tracking-wide group-hover:text-red-800 transition-colors">
+                  {/* Enhanced shop name */}
+                  <span className="hidden sm:block text-lg lg:text-xl font-bold bg-gradient-to-r from-[#a10000] to-[#c41e3a] bg-clip-text text-transparent tracking-wide group-hover:from-[#8a0000] group-hover:to-[#a10000] transition-all duration-300">
                     {storeName}
                   </span>
                 </Link>
               </div>
 
-
-
-              {/* Right: Search, Icons, User */}
-              <div className="flex items-center gap-2 lg:gap-4">
-                {/* Search - Desktop */}
+              {/* Enhanced Right: Search, Icons, User */}
+              <div className="flex items-center gap-3 lg:gap-6">
+                {/* Enhanced Search - Desktop */}
                 <div className="hidden md:flex items-center">
                   <form
-                    className="relative"
+                    className="relative group"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      // TODO: Implement search functionality
                     }}
                   >
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <input
                       type="text"
                       placeholder="Tìm kiếm sản phẩm..."
-                      className="w-56 lg:w-72 pl-4 pr-10 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all hover:border-gray-400"
+                      className="relative w-56 lg:w-72 pl-4 pr-12 py-3 text-sm border-2 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000] transition-all duration-300 hover:border-gray-300 bg-white/80 backdrop-blur-sm"
                       aria-label="Tìm kiếm sản phẩm"
                     />
                     <button
                       type="submit"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-[#a10000] hover:bg-red-50 rounded-full transition-all duration-300 hover:scale-110"
                       aria-label="Tìm kiếm"
                     >
                       <Search className="w-4 h-4" />
@@ -286,33 +285,33 @@ export function ResponsiveNavbar() {
                   </form>
                 </div>
 
-                {/* Search - Mobile */}
+                {/* Enhanced Search - Mobile */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="md:hidden p-2.5 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md"
                   onClick={() => setShowSearch(true)}
-                                        aria-label="Mở tìm kiếm"
+                  aria-label="Mở tìm kiếm"
                 >
-                  <Search className="w-5 h-5" />
+                  <Search className="w-5 h-5 text-gray-700 hover:text-[#a10000] transition-colors" />
                 </Button>
 
-                {/* Cart - All Screen Sizes */}
+                {/* Enhanced Cart - All Screen Sizes */}
                 <div className="relative">
                   <CartIconWithBadge />
                 </div>
 
-                {/* Notifications */}
+                {/* Enhanced Notifications */}
                 <NotificationBell />
 
-                {/* User Menu - All Screen Sizes */}
+                {/* Enhanced User Menu - All Screen Sizes */}
                 <div className="flex items-center">
                   {!isAuthenticated ? (
                     <Button
                       asChild
                       variant="outline"
                       size="sm"
-                      className="hidden sm:flex items-center gap-2 hover:bg-red-50 hover:border-red-300 transition-colors"
+                      className="hidden sm:flex items-center gap-2.5 px-4 py-2.5 border-2 border-[#a10000] text-[#a10000] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:border-[#c41e3a] hover:text-[#c41e3a] transition-all duration-300 hover:scale-105 hover:shadow-md rounded-xl font-semibold"
                     >
                       <Link
                         href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
@@ -327,105 +326,112 @@ export function ResponsiveNavbar() {
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="flex items-center gap-3 p-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md group"
                           >
-                            {!isLoading && user ? (
+                            {!loading && user ? (
                               <UnifiedAvatar
                                 user={user}
                                 size={32}
-                                className="w-8 h-8"
+                                className="w-8 h-8 transition-all duration-300"
                               />
                             ) : (
-                              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
                             )}
                             <div className="text-left">
-                              <div className="text-sm font-medium">{user?.name}</div>
+                              <div className="text-sm font-semibold text-gray-800 group-hover:text-[#a10000] transition-colors">
+                                {user?.name}
+                              </div>
                               {(user as ExtendedUser)?.bio && (
-                                <div className="text-xs text-gray-500 italic truncate max-w-32">&ldquo;{(user as ExtendedUser).bio}&rdquo;</div>
+                                <div className="text-xs text-gray-500 italic truncate max-w-32 group-hover:text-gray-600 transition-colors">
+                                  &ldquo;{(user as ExtendedUser).bio}&rdquo;
+                                </div>
                               )}
                             </div>
                           </Button>
                         </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <div className="p-2 border-b">
-                          <p className="text-sm font-medium">{user?.name}</p>
-                          <p className="text-xs text-gray-500">{user?.email}</p>
-                          {(user as ExtendedUser)?.bio && (
-                            <p className="text-xs text-gray-400 italic mt-1">&ldquo;{(user as ExtendedUser).bio}&rdquo;</p>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <div className="p-2 border-b">
+                            <p className="text-sm font-medium">{user?.name}</p>
+                            <p className="text-xs text-gray-500">{user?.email}</p>
+                            {(user as ExtendedUser)?.bio && (
+                              <p className="text-xs text-gray-400 italic mt-1">&ldquo;{(user as ExtendedUser).bio}&rdquo;</p>
+                            )}
+                          </div>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dashboard/profile">
+                              <User className="w-4 h-4 mr-2" />
+                              Hồ sơ
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dashboard/orders">
+                              <ShoppingBag className="w-4 h-4 mr-2" />
+                              Đơn hàng
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/dashboard/wishlist">
+                              <Heart className="w-4 h-4 mr-2" />
+                              Yêu thích
+                            </Link>
+                          </DropdownMenuItem>
+                          {session?.user?.isAdmin && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem asChild>
+                                <Link href="/admin">
+                                  <Settings className="w-4 h-4 mr-2" />
+                                  Quản trị
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
                           )}
-                        </div>
-                        <DropdownMenuItem asChild>
-                          <Link href="/dashboard/profile">
-                            <User className="w-4 h-4 mr-2" />
-                            Hồ sơ
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/dashboard/orders">
-                            <ShoppingBag className="w-4 h-4 mr-2" />
-                            Đơn hàng
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/dashboard/wishlist">
-                            <Heart className="w-4 h-4 mr-2" />
-                            Yêu thích
-                          </Link>
-                        </DropdownMenuItem>
-                        {session?.user?.isAdmin && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <Link href="/admin">
-                                <Settings className="w-4 h-4 mr-2" />
-                                Quản trị
-                              </Link>
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={handleLogout}
-                          className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Đăng xuất
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                          >
+                            <LogOut className="w-4 h-4 mr-2" />
+                            Đăng xuất
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   )}
                 </div>
 
-                {/* Mobile Menu Button */}
+                {/* Enhanced Mobile Menu Button */}
                 <Drawer open={sheetOpen} onOpenChange={setSheetOpen}>
                   <DrawerTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="md:hidden p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="md:hidden p-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#a10000] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md"
                       aria-label="Mở menu"
                     >
-                      <Menu className="w-5 h-5" />
+                      <Menu className="w-5 h-5 text-gray-700 hover:text-[#a10000] transition-colors" />
                     </Button>
                   </DrawerTrigger>
                   <DrawerContent className="w-80 p-0 h-full max-h-screen" data-vaul-drawer-direction="left">
                     <DrawerTitle className="sr-only">Menu Điều Hướng Di Động</DrawerTitle>
-                    <div className="p-6 h-full overflow-y-auto bg-white">
+                    <div className="p-6 h-full overflow-y-auto bg-gradient-to-br from-white to-gray-50">
                       <div className="flex items-center justify-between mb-8">
                         <Link
                           href="/"
                           className="flex items-center gap-3 group"
                           onClick={() => setSheetOpen(false)}
                         >
-                          <Image
-                            src={logoUrl}
-                            alt={`${storeName} Logo`}
-                            width={40}
-                            height={40}
-                            className="border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105"
-                          />
-                          <span className="font-bold text-xl text-red-700 group-hover:text-red-800 transition-colors">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#a10000] to-[#c41e3a] rounded-full blur-sm opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
+                            <Image
+                              src={logoUrl}
+                              alt={`${storeName} Logo`}
+                              width={40}
+                              height={40}
+                              className="relative border-2 border-yellow-400 rounded-full transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+                            />
+                          </div>
+                          <span className="font-bold text-xl bg-gradient-to-r from-[#a10000] to-[#c41e3a] bg-clip-text text-transparent group-hover:from-[#8a0000] group-hover:to-[#a10000] transition-all duration-300">
                             {storeName}
                           </span>
                         </Link>
@@ -434,13 +440,13 @@ export function ResponsiveNavbar() {
                           size="icon"
                           onClick={() => setSheetOpen(false)}
                           aria-label="Đóng menu"
-                          className="hover:bg-gray-100 rounded-lg transition-colors"
+                          className="hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md"
                         >
-                          <X className="w-6 h-6" />
+                          <X className="w-6 h-6 text-gray-700 hover:text-[#a10000] transition-colors" />
                         </Button>
                       </div>
 
-                      {/* Mobile Search */}
+                      {/* Enhanced Mobile Search */}
                       <div className="mb-8">
                         <form
                           onSubmit={(e) => {
@@ -448,16 +454,17 @@ export function ResponsiveNavbar() {
                             setSheetOpen(false);
                           }}
                         >
-                          <div className="relative">
+                          <div className="relative group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <input
                               type="text"
                               placeholder="Tìm kiếm sản phẩm..."
-                              className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all hover:border-gray-400"
+                              className="relative w-full pl-4 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000] transition-all duration-300 hover:border-gray-300 bg-white/80 backdrop-blur-sm"
                               aria-label="Tìm kiếm sản phẩm"
                             />
                             <button
                               type="submit"
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600 transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-[#a10000] hover:bg-red-50 rounded-full transition-all duration-300 hover:scale-110"
                               aria-label="Tìm kiếm"
                             >
                               <Search className="w-5 h-5" />
@@ -466,9 +473,9 @@ export function ResponsiveNavbar() {
                         </form>
                       </div>
 
-                      {/* Mobile Navigation */}
+                      {/* Enhanced Mobile Navigation */}
                       <nav className="space-y-2 mb-8">
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
                           Điều hướng
                         </h3>
                         {navigationItems.map((item) => {
@@ -478,14 +485,14 @@ export function ResponsiveNavbar() {
                               key={item.href}
                               href={item.href}
                               className={cn(
-                                "flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-all duration-200 text-lg group",
-                                isActiveLink(item.href) && "bg-red-50 text-red-600 border-r-2 border-red-600"
+                                "flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 text-lg group",
+                                isActiveLink(item.href) && "bg-gradient-to-r from-red-50 to-red-100 text-[#a10000] border-r-2 border-[#a10000] shadow-md scale-105"
                               )}
                               onClick={() => setSheetOpen(false)}
                             >
                               <Icon className={cn(
-                                "w-6 h-6 transition-colors",
-                                isActiveLink(item.href) ? "text-red-600" : "text-gray-600 group-hover:text-red-600"
+                                "w-6 h-6 transition-all duration-300",
+                                isActiveLink(item.href) ? "text-[#a10000]" : "text-gray-600 group-hover:text-[#a10000]"
                               )} />
                               {item.label}
                             </Link>
@@ -493,74 +500,84 @@ export function ResponsiveNavbar() {
                         })}
                       </nav>
 
-                      {/* User Section */}
+                      {/* Enhanced User Section */}
                       {isAuthenticated && (
                         <div className="mb-8">
-                          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
                             Tài khoản
                           </h3>
                           <div className="space-y-2">
                             <Link
                               href="/dashboard"
-                              className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                              className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 group"
                               onClick={() => setSheetOpen(false)}
                             >
-                              <User className="w-6 h-6" />
+                              <UnifiedAvatar
+                                user={user}
+                                size={40}
+                                className="bg-transparent ring-2 ring-gray-200 group-hover:ring-[#a10000] transition-all duration-300"
+                              />
                               <div>
-                                <div className="font-medium">{user?.name}</div>
-                                <div className="text-sm text-gray-500">{user?.email}</div>
+                                <div className="font-semibold text-gray-800 group-hover:text-[#a10000] transition-colors">
+                                  {user?.name}
+                                </div>
+                                <div className="text-sm text-gray-500 group-hover:text-gray-600 transition-colors">
+                                  {user?.email}
+                                </div>
                                 {(user as ExtendedUser)?.bio && (
-                                  <div className="text-xs text-gray-400 italic mt-1">&ldquo;{(user as ExtendedUser).bio}&rdquo;</div>
+                                  <div className="text-xs text-gray-400 italic mt-1 group-hover:text-gray-500 transition-colors">
+                                    &ldquo;{(user as ExtendedUser).bio}&rdquo;
+                                  </div>
                                 )}
                               </div>
                             </Link>
                             <Link
                               href="/dashboard/orders"
-                              className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                              className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 group"
                               onClick={() => setSheetOpen(false)}
                             >
-                              <ShoppingBag className="w-6 h-6" />
-                              Đơn hàng
+                              <ShoppingBag className="w-6 h-6 text-gray-600 group-hover:text-[#a10000] transition-colors" />
+                              <span className="group-hover:text-[#a10000] transition-colors">Đơn hàng</span>
                             </Link>
                             <Link
                               href="/dashboard/wishlist"
-                              className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                              className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 group"
                               onClick={() => setSheetOpen(false)}
                             >
-                              <Heart className="w-6 h-6" />
-                              Yêu thích
+                              <Heart className="w-6 h-6 text-gray-600 group-hover:text-[#a10000] transition-colors" />
+                              <span className="group-hover:text-[#a10000] transition-colors">Yêu thích</span>
                             </Link>
                             {session?.user?.isAdmin && (
                               <Link
                                 href="/admin"
-                                className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                                className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 group"
                                 onClick={() => setSheetOpen(false)}
                               >
-                                <Settings className="w-6 h-6" />
-                                Quản trị
+                                <Settings className="w-6 h-6 text-gray-600 group-hover:text-[#a10000] transition-colors" />
+                                <span className="group-hover:text-[#a10000] transition-colors">Quản trị</span>
                               </Link>
                             )}
-                                                          <button
-                                onClick={handleLogoutWithClose}
-                                className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors w-full text-left text-red-600"
-                              >
-                                <LogOut className="w-6 h-6" />
-                                Đăng xuất
-                              </button>
+                            <button
+                              onClick={handleLogoutWithClose}
+                              className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 w-full text-left text-[#a10000] group"
+                            >
+                              <LogOut className="w-6 h-6" />
+                              <span>Đăng xuất</span>
+                            </button>
                           </div>
                         </div>
                       )}
 
-                      {/* Guest Sign In */}
+                      {/* Enhanced Guest Sign In */}
                       {!isAuthenticated && (
                         <div className="mb-8">
-                          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
                             Tài khoản
                           </h3>
                           <Button
                             asChild
                             variant="outline"
-                            className="w-full flex items-center gap-3 hover:bg-red-50 hover:border-red-300 transition-colors"
+                            className="w-full flex items-center gap-3 border-2 border-[#a10000] text-[#a10000] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:border-[#c41e3a] hover:text-[#c41e3a] transition-all duration-300 hover:scale-105 hover:shadow-md rounded-xl font-semibold py-3"
                           >
                             <Link
                               href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
@@ -573,35 +590,35 @@ export function ResponsiveNavbar() {
                         </div>
                       )}
 
-                      {/* Quick Links Section */}
+                      {/* Enhanced Quick Links Section */}
                       <div className="mb-8">
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
                           Liên kết nhanh
                         </h3>
                         <div className="space-y-2">
                           <Link
                             href="/products?category=refined"
-                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                            className="flex items-center gap-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 text-sm group"
                             onClick={() => setSheetOpen(false)}
                           >
-                            <Star className="w-5 h-5 text-yellow-500" />
-                            Yến sào tinh chế
+                            <Star className="w-5 h-5 text-yellow-500 group-hover:scale-110 transition-all duration-300" />
+                            <span className="group-hover:text-[#a10000] transition-colors">Yến sào tinh chế</span>
                           </Link>
                           <Link
                             href="/products?category=raw"
-                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                            className="flex items-center gap-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 text-sm group"
                             onClick={() => setSheetOpen(false)}
                           >
-                            <Package className="w-5 h-5 text-blue-500" />
-                            Yến sào thô
+                            <Package className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-all duration-300" />
+                            <span className="group-hover:text-[#a10000] transition-colors">Yến sào thô</span>
                           </Link>
                           <Link
                             href="/contact"
-                            className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                            className="flex items-center gap-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 text-sm group"
                             onClick={() => setSheetOpen(false)}
                           >
-                            <HelpCircle className="w-5 h-5 text-green-500" />
-                            Hỗ trợ khách hàng
+                            <HelpCircle className="w-5 h-5 text-green-500 group-hover:scale-110 transition-all duration-300" />
+                            <span className="group-hover:text-[#a10000] transition-colors">Hỗ trợ khách hàng</span>
                           </Link>
                         </div>
                       </div>
@@ -617,25 +634,28 @@ export function ResponsiveNavbar() {
         <div className="h-16 lg:h-20"></div>
       </div>
 
-                    {/* Desktop Sidebar */}
-              <Drawer open={desktopSidebarOpen} onOpenChange={setDesktopSidebarOpen}>
-                <DrawerContent className="w-80 p-0 h-full max-h-screen z-[70]" data-vaul-drawer-direction="left">
+      {/* Enhanced Desktop Sidebar */}
+      <Drawer open={desktopSidebarOpen} onOpenChange={setDesktopSidebarOpen}>
+        <DrawerContent className="w-80 p-0 h-full max-h-screen z-[70]" data-vaul-drawer-direction="left">
           <DrawerTitle className="sr-only">Menu Điều Hướng Máy Tính</DrawerTitle>
-          <div className="p-6 h-full overflow-y-auto bg-white">
+          <div className="p-6 h-full overflow-y-auto bg-gradient-to-br from-white to-gray-50">
             <div className="flex items-center justify-between mb-8">
               <Link
                 href="/"
                 className="flex items-center gap-3 group"
                 onClick={() => setDesktopSidebarOpen(false)}
               >
-                <Image
-                  src={logoUrl}
-                  alt={`${storeName} Logo`}
-                  width={40}
-                  height={40}
-                  className="border-2 border-yellow-400 rounded-full transition-transform group-hover:scale-105"
-                />
-                <span className="font-bold text-xl text-red-700 group-hover:text-red-800 transition-colors">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#a10000] to-[#c41e3a] rounded-full blur-sm opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
+                  <Image
+                    src={logoUrl}
+                    alt={`${storeName} Logo`}
+                    width={40}
+                    height={40}
+                    className="relative border-2 border-yellow-400 rounded-full transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+                  />
+                </div>
+                <span className="font-bold text-xl bg-gradient-to-r from-[#a10000] to-[#c41e3a] bg-clip-text text-transparent group-hover:from-[#8a0000] group-hover:to-[#a10000] transition-all duration-300">
                   {storeName}
                 </span>
               </Link>
@@ -643,14 +663,14 @@ export function ResponsiveNavbar() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setDesktopSidebarOpen(false)}
-                                        aria-label="Đóng menu"
-                className="hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Đóng menu"
+                className="hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md"
               >
-                <X className="w-6 h-6" />
+                <X className="w-6 h-6 text-gray-700 hover:text-[#a10000] transition-colors" />
               </Button>
             </div>
 
-            {/* Desktop Sidebar Search */}
+            {/* Enhanced Desktop Sidebar Search */}
             <div className="mb-8">
               <form
                 onSubmit={(e) => {
@@ -658,16 +678,17 @@ export function ResponsiveNavbar() {
                   setDesktopSidebarOpen(false);
                 }}
               >
-                <div className="relative">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <input
                     type="text"
                     placeholder="Tìm kiếm sản phẩm..."
-                    className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all hover:border-gray-400"
+                    className="relative w-full pl-4 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000] transition-all duration-300 hover:border-gray-300 bg-white/80 backdrop-blur-sm"
                     aria-label="Tìm kiếm sản phẩm"
                   />
                   <button
                     type="submit"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-[#a10000] hover:bg-red-50 rounded-full transition-all duration-300 hover:scale-110"
                     aria-label="Submit search"
                   >
                     <Search className="w-5 h-5" />
@@ -676,11 +697,11 @@ export function ResponsiveNavbar() {
               </form>
             </div>
 
-            {/* Desktop Sidebar Navigation */}
+            {/* Enhanced Desktop Sidebar Navigation */}
             <nav className="space-y-2 mb-8">
-                              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                  Điều hướng
-                </h3>
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
+                Điều hướng
+              </h3>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -688,14 +709,14 @@ export function ResponsiveNavbar() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-all duration-200 text-lg group",
-                      isActiveLink(item.href) && "bg-red-50 text-red-600 border-r-2 border-red-600"
+                      "flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 text-lg group",
+                      isActiveLink(item.href) && "bg-gradient-to-r from-red-50 to-red-100 text-[#a10000] border-r-2 border-[#a10000] shadow-md scale-105"
                     )}
                     onClick={() => setDesktopSidebarOpen(false)}
                   >
                     <Icon className={cn(
-                      "w-6 h-6 transition-colors",
-                      isActiveLink(item.href) ? "text-red-600" : "text-gray-600 group-hover:text-red-600"
+                      "w-6 h-6 transition-all duration-300",
+                      isActiveLink(item.href) ? "text-[#a10000]" : "text-gray-600 group-hover:text-[#a10000]"
                     )} />
                     {item.label}
                   </Link>
@@ -703,77 +724,77 @@ export function ResponsiveNavbar() {
               })}
             </nav>
 
-            {/* User Section */}
+            {/* Enhanced User Section */}
             {isAuthenticated && (
               <div className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
                   Tài khoản
                 </h3>
                 <div className="space-y-2">
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 group"
                     onClick={() => setDesktopSidebarOpen(false)}
                   >
-                    {!isLoading && user ? (
+                    {!loading && user ? (
                       <UnifiedAvatar
                         user={user}
                         size={40}
                         showName={true}
                         showEmail={true}
-                        className="bg-transparent"
+                        className="bg-transparent ring-2 ring-gray-200 group-hover:ring-[#a10000] transition-all duration-300"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
                     )}
                   </Link>
                   <Link
                     href="/dashboard/orders"
-                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 group"
                     onClick={() => setDesktopSidebarOpen(false)}
                   >
-                    <ShoppingBag className="w-6 h-6" />
-                    Orders
+                    <ShoppingBag className="w-6 h-6 text-gray-600 group-hover:text-[#a10000] transition-colors" />
+                    <span className="group-hover:text-[#a10000] transition-colors">Orders</span>
                   </Link>
                   <Link
                     href="/dashboard/wishlist"
-                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 group"
                     onClick={() => setDesktopSidebarOpen(false)}
                   >
-                    <Heart className="w-6 h-6" />
-                    Wishlist
+                    <Heart className="w-6 h-6 text-gray-600 group-hover:text-[#a10000] transition-colors" />
+                    <span className="group-hover:text-[#a10000] transition-colors">Wishlist</span>
                   </Link>
                   {session?.user?.isAdmin && (
                     <Link
                       href="/admin"
-                      className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 group"
                       onClick={() => setDesktopSidebarOpen(false)}
                     >
-                      <Settings className="w-6 h-6" />
-                      Admin Dashboard
+                      <Settings className="w-6 h-6 text-gray-600 group-hover:text-[#a10000] transition-colors" />
+                      <span className="group-hover:text-[#a10000] transition-colors">Admin Dashboard</span>
                     </Link>
                   )}
-                                      <button
-                      onClick={handleLogoutWithDesktopClose}
-                      className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-100 transition-colors w-full text-left text-red-600"
-                    >
-                      <LogOut className="w-6 h-6" />
-                      Sign out
-                    </button>
+                  <button
+                    onClick={handleLogoutWithDesktopClose}
+                    className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 w-full text-left text-[#a10000] group"
+                  >
+                    <LogOut className="w-6 h-6" />
+                    <span>Sign out</span>
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Guest Sign In */}
+            {/* Enhanced Guest Sign In */}
             {!isAuthenticated && (
               <div className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
                   Account
                 </h3>
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full flex items-center gap-3 hover:bg-red-50 hover:border-red-300 transition-colors"
+                  className="w-full flex items-center gap-3 border-2 border-[#a10000] text-[#a10000] hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:border-[#c41e3a] hover:text-[#c41e3a] transition-all duration-300 hover:scale-105 hover:shadow-md rounded-xl font-semibold py-3"
                 >
                   <Link
                     href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
@@ -786,35 +807,35 @@ export function ResponsiveNavbar() {
               </div>
             )}
 
-            {/* Quick Links Section */}
+            {/* Enhanced Quick Links Section */}
             <div className="mb-8">
-                              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-                  Liên kết nhanh
-                </h3>
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
+                Liên kết nhanh
+              </h3>
               <div className="space-y-2">
                 <Link
                   href="/products?category=refined"
-                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 text-sm group"
                   onClick={() => setDesktopSidebarOpen(false)}
                 >
-                  <Star className="w-5 h-5 text-yellow-500" />
-                  Refined Bird&apos;s Nest
+                  <Star className="w-5 h-5 text-yellow-500 group-hover:scale-110 transition-all duration-300" />
+                  <span className="group-hover:text-[#a10000] transition-colors">Refined Bird&apos;s Nest</span>
                 </Link>
                 <Link
                   href="/products?category=raw"
-                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 text-sm group"
                   onClick={() => setDesktopSidebarOpen(false)}
                 >
-                  <Package className="w-5 h-5 text-blue-500" />
-                  Raw Bird&apos;s Nest
+                  <Package className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-all duration-300" />
+                  <span className="group-hover:text-[#a10000] transition-colors">Raw Bird&apos;s Nest</span>
                 </Link>
                 <Link
                   href="/contact"
-                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 transition-colors text-sm"
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 text-sm group"
                   onClick={() => setDesktopSidebarOpen(false)}
                 >
-                  <HelpCircle className="w-5 h-5 text-green-500" />
-                  Customer Support
+                  <HelpCircle className="w-5 h-5 text-green-500 group-hover:scale-110 transition-all duration-300" />
+                  <span className="group-hover:text-[#a10000] transition-colors">Customer Support</span>
                 </Link>
               </div>
             </div>
@@ -822,21 +843,21 @@ export function ResponsiveNavbar() {
         </DrawerContent>
       </Drawer>
 
-      {/* Mobile Search Modal */}
+      {/* Enhanced Mobile Search Modal */}
       {showSearch && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mt-16 animate-in slide-in-from-top-4 duration-300">
-            <div className="p-4 border-b">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mt-16 animate-in slide-in-from-top-4 duration-300 border-2 border-gray-100">
+            <div className="p-4 border-b border-gray-100">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Search</h3>
+                <h3 className="font-bold text-gray-800">Search</h3>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowSearch(false)}
                   aria-label="Close search"
-                  className="hover:bg-gray-100"
+                  className="hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4 text-gray-700 hover:text-[#a10000] transition-colors" />
                 </Button>
               </div>
             </div>
@@ -847,18 +868,19 @@ export function ResponsiveNavbar() {
                   setShowSearch(false);
                 }}
               >
-                <div className="relative">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <input
                     ref={searchInputRef}
                     type="text"
                     placeholder="Search products..."
-                    className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="relative w-full pl-4 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#a10000] focus:border-[#a10000] transition-all duration-300 hover:border-gray-300 bg-white/80 backdrop-blur-sm"
                     autoFocus
                     aria-label="Search products"
                   />
                   <button
                     type="submit"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-[#a10000] hover:bg-red-50 rounded-full transition-all duration-300 hover:scale-110"
                     aria-label="Submit search"
                   >
                     <Search className="w-5 h-5" />

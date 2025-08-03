@@ -11,7 +11,6 @@ import {
   DrawerTrigger,
   DrawerContent,
   DrawerHeader,
-  DrawerTitle,
   DrawerClose,
 } from '@/components/ui/drawer';
 import {
@@ -22,7 +21,7 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from '@/components/ui/pagination';
-import { Skeleton } from '@/components/ui/skeleton';
+
 import { PRODUCTS_CONSTANTS } from '@/lib/constants';
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -44,7 +43,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
   const [price, setPrice] = useState<number>(PRODUCTS_CONSTANTS.filters.priceRange.max);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(false);
+
   const [expandedFilters, setExpandedFilters] = useState<string[]>(['type']);
 
   // Fetch categories on component mount
@@ -54,7 +53,8 @@ export default function ProductsClient({ products }: { products: Product[] }) {
         const response = await apiService.getCategories();
         setCategories(response);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        // Set empty array on error to prevent undefined issues
+        setCategories([]);
       }
     };
     fetchCategories();
@@ -128,6 +128,12 @@ export default function ProductsClient({ products }: { products: Product[] }) {
     setPrice(PRODUCTS_CONSTANTS.filters.priceRange.max);
     setSearch('');
     setCurrentPage(1);
+    setExpandedFilters(['type']);
+    
+    // If no products from backend, reload the page
+    if (products.length === 0) {
+      window.location.reload();
+    }
   };
 
   const toggleFilter = (filterName: string) => {
@@ -348,7 +354,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
       {/* Page Header - Full width like Home page */}
         <section
           className="relative w-full bg-[#a10000] overflow-hidden lg:bg-[#a10000] bg-gradient-to-b from-[#a10000] to-[#fbd8b0]"
-          style={{ minHeight: '600px' }}
+          style={{ minHeight: '400px' }}
         >
           {/* Background Image - Desktop */}
           <Image
@@ -375,7 +381,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
           />
 
           {/* Content */}
-          <div className="relative z-10 flex items-center justify-center" style={{ minHeight: '600px' }}>
+          <div className="relative z-10 flex items-center justify-center" style={{ minHeight: '400px' }}>
             <div className="text-center text-white px-4 max-w-4xl mx-auto">
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
                 {PRODUCTS_CONSTANTS.title}
@@ -389,10 +395,9 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
+            {resultSummary}
 
-          {resultSummary}
-
-          <div className="flex w-full gap-4 lg:gap-6">
+            <div className="flex w-full gap-4 lg:gap-6">
             {/* Desktop Sidebar */}
             <aside className="w-64 bg-white/90 backdrop-blur-md border border-white/30 rounded-3xl p-6 hidden lg:block flex-shrink-0 shadow-2xl">
               <div className="sticky top-8">
@@ -402,39 +407,38 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
             {/* Main Content */}
             <div className="flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-                {loading ? (
-                  Array.from({ length: 8 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="group transition-transform duration-200"
-                    >
-                      <Skeleton className="w-full aspect-[4/3] mb-3 rounded-xl" />
-                      <Skeleton className="h-5 w-3/4 mb-2 rounded" />
-                      <Skeleton className="h-4 w-1/2 mb-2 rounded" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-8 w-1/2 rounded" />
-                        <Skeleton className="h-8 w-1/2 rounded" />
-                      </div>
-                    </div>
-                  ))
-                ) : paginatedProducts.length === 0 ? (
-                  <div className="col-span-full text-center py-16">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 border border-white/20 shadow-xl max-w-md mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 bg-gray-50/30 rounded-3xl p-4 lg:p-6">
+                {paginatedProducts.length === 0 ? (
+                  <div className="col-span-full text-center py-8">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-xl max-w-md mx-auto">
                       <div className="text-gray-300 mb-6">
                         <Search className="w-20 h-20 mx-auto" />
                       </div>
                       <h3 className="text-2xl font-bold text-gray-700 mb-4">
-                        {PRODUCTS_CONSTANTS.emptyState.title}
+                        {products.length === 0 
+                          ? 'Không có sản phẩm nào' 
+                          : PRODUCTS_CONSTANTS.emptyState.title}
                       </h3>
                       <p className="text-gray-500 mb-6 leading-relaxed">
-                        {PRODUCTS_CONSTANTS.emptyState.description}
+                        {products.length === 0 
+                          ? 'Hiện tại không có sản phẩm nào trong hệ thống. Vui lòng thử lại sau hoặc liên hệ với chúng tôi nếu vấn đề vẫn tiếp tục.'
+                          : PRODUCTS_CONSTANTS.emptyState.description}
                       </p>
+                      {products.length === 0 && (
+                        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm text-yellow-800">
+                            💡 <strong>Gợi ý:</strong> Kiểm tra xem backend API có đang chạy không tại{' '}
+                            <code className="bg-yellow-100 px-2 py-1 rounded text-xs">
+                              {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}
+                            </code>
+                          </p>
+                        </div>
+                      )}
                       <Button
                         onClick={handleResetFilters}
                         className="bg-[#a10000] hover:bg-red-800 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105"
                       >
-                        Xóa bộ lọc
+                        {products.length === 0 ? 'Tải lại trang' : 'Xóa bộ lọc'}
                       </Button>
                     </div>
                   </div>
@@ -447,7 +451,7 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex justify-center mt-16">
+                <div className="flex justify-center mt-8">
                   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
                     <Pagination>
                       <PaginationContent className="gap-2">

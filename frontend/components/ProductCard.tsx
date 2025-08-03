@@ -1,14 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { AddToCartButton } from '@/components/AddToCartButton';
-import { Eye, ShoppingCart, Heart, HeartOff, Star, Package, TrendingUp } from 'lucide-react';
+import { Eye, ShoppingCart, Heart, Package, TrendingUp } from 'lucide-react';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import ProductMeta from '@/components/ProductMeta';
 import { useWishlist } from '@/lib/wishlist-store';
 import { useSession } from 'next-auth/react';
-import { useCurrencyFormat } from '@/lib/currency-utils';
+import { useCurrencyFormat, formatPriceWithDiscount } from '@/lib/currency-utils';
 import { Product, Review } from '@/lib/types';
 import { getFirstImageUrl, cn } from '@/lib/utils';
 import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
@@ -19,6 +18,11 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const { data: session } = useSession();
   const wishlist = useWishlist();
   const { format } = useCurrencyFormat();
+  
+  // Don't show products that are out of stock
+  if ((product.quantity || 0) <= 0) {
+    return null;
+  }
   
   // Only show wishlist functionality for authenticated users
   const isInWishlist = session?.user ? wishlist.isInWishlist(product.id) : false;
@@ -43,8 +47,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         duration: 0.3,
       }}
     >
-      <div className="group">
-      <div className="relative">
+      <div className="group relative">
         <Card className="h-full flex flex-col bg-white/90 backdrop-blur-sm border border-white/30 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 min-w-0">
           <CardContent className="p-0 min-w-0 relative">
             {/* Product Image Section */}
@@ -92,13 +95,13 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 prefetch={false}
                 className="block min-w-0"
               >
-                <div className="relative w-full" style={{ aspectRatio: '5/3' }}>
+                <div className="relative w-full overflow-hidden" style={{ aspectRatio: '4/3' }}>
                   <SmartImage
                     src={product.image || getFirstImageUrl(product.images) || '/images/placeholder-image.svg'}
                     alt={product.name}
                     width={400}
-                    height={240}
-                    className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    height={300}
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                   />
                   
                   {/* Overlay on hover */}
@@ -107,72 +110,93 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               </Link>
             </div>
 
-            {/* Product Info Section */}
-            <div className="p-2 sm:p-3 lg:p-4 flex flex-col gap-1.5 sm:gap-2 lg:gap-3 flex-1 min-w-0">
-              {/* Product Name */}
-              <div className="min-w-0">
+                        {/* Product Info Section */}
+            <div className="p-3 sm:p-4 lg:p-5 flex flex-col gap-2 sm:gap-2.5 lg:gap-3 flex-1 min-w-0">
+              {/* Product Header */}
+              <div className="space-y-2">
+                {/* Product Name */}
                 <Link
                   href={`/products/${product.slug}`}
                   prefetch={false}
-                  className="text-xs sm:text-sm lg:text-base font-bold text-gray-900 line-clamp-2 mb-0.5 sm:mb-1 hover:text-[#a10000] transition-colors duration-200 leading-tight"
+                  className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 line-clamp-2 hover:text-[#a10000] transition-colors duration-200 leading-tight block"
                 >
                   {product.name}
                 </Link>
                 
-                {/* Product Category */}
-                {product.category && (
-                  <div className={cn(
-                    "text-xs font-medium mb-0.5 sm:mb-1 lg:mb-2 px-2 py-1 rounded-full inline-block",
-                    getCategoryBgColor(product.category.name, product.category.colorScheme),
-                    getCategoryTextColor(product.category.name, product.category.colorScheme)
-                  )}>
-                    {product.category.name}
+                {/* Product Category & Weight */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {product.category && (
+                    <div className={cn(
+                      "text-xs font-medium px-2 py-1 rounded-full border",
+                      getCategoryBgColor(product.category.name, product.category.colorScheme),
+                      getCategoryTextColor(product.category.name, product.category.colorScheme)
+                    )}>
+                      {product.category.name}
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-full">
+                    {product.weight}g
                   </div>
-                )}
-                {/* Product Type (fallback) */}
-                {!product.category && (
-                  <div className="text-xs text-gray-500 font-medium mb-0.5 sm:mb-1 lg:mb-2">
-                    Sản phẩm
-                  </div>
-                )}
+                </div>
               </div>
 
               {/* Product Meta */}
               <ProductMeta
                 rating={avgRating}
-                reviewCount={product.reviews?.length ?? 120}
-                soldCount={1500}
-                className="flex-wrap gap-x-1 sm:gap-x-2 gap-y-0.5 sm:gap-y-1 min-w-0 mb-0.5 sm:mb-1 lg:mb-1.5"
+                reviewCount={product.reviews?.length ?? 0}
+                soldCount={product.soldCount ?? 0}
+                className="flex-wrap gap-x-1 sm:gap-x-2 gap-y-0.5 sm:gap-y-1 min-w-0"
               />
 
-              {/* Price */}
-              <div className="mb-2 sm:mb-3 lg:mb-4">
-                <div className="text-base sm:text-lg lg:text-xl font-black text-[#a10000] mb-0.5 sm:mb-1">
-                  {format(product.price)}
-                </div>
-                <div className="text-xs text-gray-500">
-                  Giá đã bao gồm VAT
-                </div>
+              {/* Price Section */}
+              <div className="space-y-1">
+                {product.discount && product.discount > 0 ? (
+                  <>
+                    {/* Discount Badge */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-gradient-to-r from-red-500 to-orange-500 text-white px-2 py-1 rounded-full font-semibold shadow-sm">
+                        🔥 Giảm {product.discount}%
+                      </span>
+                      <span className="text-xs text-green-600 font-medium">
+                        Tiết kiệm {formatPriceWithDiscount(product.price, product.discount).savings}
+                      </span>
+                    </div>
+                    {/* Price Display */}
+                    <div className="space-y-0.5">
+                      <div className="text-sm text-gray-500 line-through">
+                        {format(product.price)}
+                      </div>
+                      <div className="text-lg sm:text-xl lg:text-2xl font-black text-[#a10000]">
+                        {formatPriceWithDiscount(product.price, product.discount).discounted}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* No Discount - Show Regular Price */
+                  <div className="text-lg sm:text-xl lg:text-2xl font-black text-[#a10000]">
+                    {format(product.price)}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-1.5 sm:gap-2 mt-auto">
+              <div className="flex flex-col gap-1 sm:gap-1.5 mt-auto">
                 {/* Desktop: Full buttons */}
                 <div className="hidden md:flex gap-2">
                   <AddToCartButton
                     product={product}
-                    className="flex-1 h-8 lg:h-10 bg-[#a10000] hover:bg-red-800 text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 shadow-lg border-0 text-xs flex items-center justify-center"
+                    className="flex-1 h-10 lg:h-12 bg-[#a10000] hover:bg-red-800 text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 shadow-lg border-0 text-sm flex items-center justify-center"
                   >
-                    <ShoppingCart className="w-3 h-3 mr-1.5" />
+                    <ShoppingCart className="w-4 h-4 mr-1.5" />
                     Thêm vào giỏ
                   </AddToCartButton>
                   <Link
                     href={`/products/${product.slug}`}
                     prefetch={false}
-                    className="flex-1 h-8 lg:h-10 border-2 border-[#a10000] text-[#a10000] font-semibold rounded-lg flex items-center justify-center text-center transition-all duration-200 hover:bg-[#a10000] hover:text-white hover:scale-105 shadow-lg text-xs"
+                    className="flex-1 h-10 lg:h-12 border-2 border-[#a10000] text-[#a10000] font-semibold rounded-lg flex items-center justify-center text-center transition-all duration-200 hover:bg-[#a10000] hover:text-white hover:scale-105 shadow-lg text-sm"
                     aria-label="View Details"
                   >
-                    <Eye className="w-3 h-3 mr-1.5" />
+                    <Eye className="w-4 h-4 mr-1.5" />
                     Chi tiết
                   </Link>
                 </div>
@@ -181,24 +205,23 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 <div className="flex gap-1.5 sm:gap-2 md:hidden">
                   <AddToCartButton
                     product={product}
-                    className="flex-1 h-6 sm:h-8 bg-[#a10000] hover:bg-red-800 text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 shadow-lg border-0 flex items-center justify-center"
+                    className="flex-1 h-8 sm:h-10 bg-[#a10000] hover:bg-red-800 text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 shadow-lg border-0 flex items-center justify-center"
                   >
-                    <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                   </AddToCartButton>
                   <Link
                     href={`/products/${product.slug}`}
                     prefetch={false}
-                    className="flex-1 h-6 sm:h-8 border-2 border-[#a10000] text-[#a10000] font-semibold rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-[#a10000] hover:text-white hover:scale-105 shadow-lg"
+                    className="flex-1 h-8 sm:h-10 border-2 border-[#a10000] text-[#a10000] font-semibold rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-[#a10000] hover:text-white hover:scale-105 shadow-lg"
                     aria-label="View Details"
                   >
-                    <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Link>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
       </div>
     </motion.div>
   );
