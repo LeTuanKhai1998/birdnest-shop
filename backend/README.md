@@ -1,98 +1,311 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Birdnest Shop Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based REST API for the Birdnest Shop e-commerce platform, providing comprehensive functionality for product management, order processing, user authentication, and admin operations.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Features
 
-## Description
+- **Authentication & Authorization**: JWT-based auth with role-based access control
+- **Product Management**: CRUD operations for products with image upload support
+- **Order Processing**: Complete order lifecycle management
+- **User Management**: Customer profiles and admin user management
+- **Address Management**: Multi-address support for customers
+- **Notifications**: Real-time notification system
+- **Reviews & Ratings**: Product review system
+- **Settings Management**: Configurable store settings
+- **Performance Monitoring**: Request tracking and performance metrics
+- **Structured Logging**: Comprehensive logging with user event tracking
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📋 Prerequisites
 
-## Project setup
+- Node.js (v18 or higher)
+- PostgreSQL (v12 or higher)
+- npm or yarn
 
+## 🛠️ Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd birdnest-shop/backend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Configure the following environment variables:
+   ```env
+   # Database
+   DATABASE_URL="postgresql://username:password@localhost:5432/birdnest_shop"
+   
+   # JWT
+   JWT_SECRET="your-super-secret-jwt-key"
+   JWT_EXPIRES_IN="7d"
+   
+   # App
+   APP_PORT=8080
+   NODE_ENV=development
+   
+   # CORS
+   ALLOWED_ORIGINS="http://localhost:3000,http://localhost:3001"
+   
+   # UploadThing (for image uploads)
+   UPLOADTHING_SECRET="your-uploadthing-secret"
+   UPLOADTHING_APP_ID="your-uploadthing-app-id"
+   ```
+
+4. **Database Setup**
+   ```bash
+   # Generate Prisma client
+   npx prisma generate
+   
+   # Run migrations
+   npx prisma migrate dev
+   
+   # Seed database (optional)
+   npx prisma db seed
+   ```
+
+## 🏃‍♂️ Running the Application
+
+### Development Mode
 ```bash
-$ npm install
+npm run start:dev
+```
+The API will be available at `http://localhost:8080`
+
+### Production Mode
+```bash
+npm run build
+npm run start:prod
 ```
 
-## Compile and run the project
-
+### Docker (Alternative)
 ```bash
-# development
-$ npm run start
+# Using docker-compose
+docker-compose up -d
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Or build and run manually
+docker build -t birdnest-backend .
+docker run -p 8080:8080 birdnest-backend
 ```
 
-## Run tests
+## 🧪 Testing
 
 ```bash
-# unit tests
-$ npm run test
+# Unit tests
+npm run test
 
-# e2e tests
-$ npm run test:e2e
+# E2E tests
+npm run test:e2e
 
-# test coverage
-$ npm run test:cov
+# Test coverage
+npm run test:cov
+
+# Test with watch mode
+npm run test:watch
 ```
 
-## Deployment
+## 📚 API Documentation
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Swagger UI
+Once the application is running, visit:
+- **Swagger Documentation**: `http://localhost:8080/swagger`
+- **API Base URL**: `http://localhost:8080/api`
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Main Endpoints
+
+#### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/refresh` - Refresh JWT token
+
+#### Products
+- `GET /api/products` - List products (with filtering/pagination)
+- `GET /api/products/:id` - Get product details
+- `POST /api/products` - Create product (Admin only)
+- `PUT /api/products/:id` - Update product (Admin only)
+- `DELETE /api/products/:id` - Delete product (Admin only)
+
+#### Orders
+- `GET /api/orders` - List orders (user's orders or all for admin)
+- `GET /api/orders/:id` - Get order details
+- `POST /api/orders` - Create order
+- `PATCH /api/orders/:id/status` - Update order status (Admin only)
+- `POST /api/orders/guest` - Create guest order
+
+#### Users
+- `GET /api/users` - List users (Admin only)
+- `GET /api/users/:id` - Get user profile
+- `PUT /api/users/:id` - Update user profile
+- `DELETE /api/users/:id` - Delete user (Admin only)
+
+#### Addresses
+- `GET /api/addresses` - List user addresses
+- `POST /api/addresses` - Create address
+- `PUT /api/addresses/:id` - Update address
+- `DELETE /api/addresses/:id` - Delete address
+
+#### Notifications
+- `GET /api/notifications` - List notifications
+- `PATCH /api/notifications/:id/read` - Mark as read
+- `PATCH /api/notifications/read-all` - Mark all as read
+
+#### Settings
+- `GET /api/settings` - Get store settings
+- `PUT /api/settings` - Update store settings (Admin only)
+
+## 🔐 Authentication
+
+The API uses JWT-based authentication. Include the token in the Authorization header:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+Authorization: Bearer <your-jwt-token>
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### User Roles
+- **USER**: Regular customer with access to products, orders, profile
+- **ADMIN**: Full access to all endpoints including user management
 
-## Resources
+## 📊 Database Schema
 
-Check out a few resources that may come in handy when working with NestJS:
+The application uses Prisma ORM with PostgreSQL. Key models include:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- **User**: Customer and admin users
+- **Product**: Product catalog with images and categories
+- **Order**: Order management with items and status tracking
+- **Address**: User shipping addresses
+- **Notification**: User notifications
+- **Review**: Product reviews and ratings
+- **Setting**: Store configuration
 
-## Support
+## 🚨 Error Handling
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+The API uses standardized error responses:
 
-## Stay in touch
+```json
+{
+  "statusCode": 400,
+  "message": "Validation failed",
+  "error": "Bad Request",
+  "details": ["Field 'email' is required"]
+}
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Common HTTP Status Codes
+- `200` - Success
+- `201` - Created
+- `400` - Bad Request (validation errors)
+- `401` - Unauthorized (invalid/missing token)
+- `403` - Forbidden (insufficient permissions)
+- `404` - Not Found
+- `500` - Internal Server Error
 
-## License
+## 📝 Logging
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+The application includes comprehensive logging:
+
+- **Structured Logging**: JSON-formatted logs with context
+- **User Event Tracking**: Track user actions and business events
+- **Performance Monitoring**: Request timing and performance metrics
+- **Error Logging**: Detailed error tracking with stack traces
+
+### Log Levels
+- `error` - Application errors
+- `warn` - Warning messages
+- `info` - General information
+- `debug` - Debug information
+- `verbose` - Detailed debugging
+
+## 🔧 Development
+
+### Project Structure
+```
+src/
+├── common/           # Shared utilities, filters, interceptors
+├── auth/            # Authentication and authorization
+├── products/        # Product management
+├── orders/          # Order processing
+├── users/           # User management
+├── addresses/       # Address management
+├── notifications/   # Notification system
+├── reviews/         # Review system
+├── settings/        # Store settings
+└── main.ts          # Application entry point
+```
+
+### Adding New Features
+
+1. **Create Module**: Generate new module with NestJS CLI
+   ```bash
+   nest generate module feature-name
+   ```
+
+2. **Create Controller**: Handle HTTP requests
+   ```bash
+   nest generate controller feature-name
+   ```
+
+3. **Create Service**: Business logic
+   ```bash
+   nest generate service feature-name
+   ```
+
+4. **Add DTOs**: Data transfer objects for validation
+5. **Update Prisma Schema**: Add database models if needed
+6. **Add Tests**: Unit and E2E tests
+7. **Update Documentation**: Add Swagger decorators
+
+### Code Style
+- Follow NestJS conventions
+- Use TypeScript strict mode
+- Implement proper error handling
+- Add comprehensive tests
+- Document with Swagger decorators
+
+## 🚀 Deployment
+
+### Environment Variables for Production
+```env
+NODE_ENV=production
+DATABASE_URL="postgresql://..."
+JWT_SECRET="strong-production-secret"
+ALLOWED_ORIGINS="https://yourdomain.com"
+```
+
+### Health Check
+The API includes a health check endpoint:
+- `GET /api/health` - Returns application status
+
+### Performance Considerations
+- Database connection pooling
+- Request rate limiting
+- Response caching
+- Image optimization
+- CDN integration for static assets
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Update documentation
+6. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For support and questions:
+- Check the [API Documentation](http://localhost:8080/swagger)
+- Review the [Frontend Repository](../frontend/README.md)
+- Open an issue on GitHub

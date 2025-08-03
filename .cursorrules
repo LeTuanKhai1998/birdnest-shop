@@ -114,7 +114,7 @@
   - Wishlist (favorite products)
 
 
-### 4. Admin Dashboard [ ]
+### 4. Admin Dashboard [X]
 
 - [X] Admin authentication and authorization (Implemented: /admin route, only accessible by isAdmin users, unauthorized users redirected)
 - [X] Dashboard overview:
@@ -220,12 +220,12 @@
   - [X] Get order history (user & admin) - Implemented
 - [ ] Cart API:
   - [ ] Add/remove/update cart items (frontend uses localStorage)
-- [ ] Dashboard metrics API:
-  - [ ] Total revenue, customers, AOV
-  - [ ] Order stats (daily/weekly)
-- [ ] Reviews API:
-  - [ ] Add review (user)
-  - [ ] List reviews per product
+- [X] Dashboard metrics API:
+- [X] Total revenue, customers, AOV
+- [X] Order stats (daily/weekly)
+- [X] Reviews API:
+- [X] Add review (user)
+- [X] List reviews per product
 
 #### Migration Tasks
 - [X] Identify mock or real API logic currently implemented in frontend `/app/api/**`
@@ -817,7 +817,7 @@ enum RecipientType {
 
 ---
 
-### 20. Update `/cart` Page Style and UX []
+### 20. Update `/cart` Page Style and UX [X]
 
 - [ ] Path: `app/cart/page.tsx`
 - [ ] Purpose: Align cart page with overall brand styling and UX
@@ -875,7 +875,7 @@ enum RecipientType {
 
 ---
 
-### 21. Refactor `/checkout` Page for Consistent UX []
+### 21. Refactor `/checkout` Page for Consistent UX [X]
 
 - [ ] Path: `app/checkout/page.tsx`
 - [ ] Goal: Ensure the checkout flow is clean, mobile-friendly, and consistent with brand design
@@ -934,7 +934,7 @@ enum RecipientType {
 
 ---
 
-### 22. Implement `/payment` Page []
+### 22. Implement `/payment` Page [X]
 
 - [ ] Path: `app/payment/page.tsx`
 - [ ] Purpose: Final step of checkout to handle secure payment
@@ -1354,7 +1354,7 @@ enum RecipientType {
 
 ---
 
-### 27. Order Detail Page `/dashboard/orders/[orderId]`
+### 27. Order Detail Page `/dashboard/orders/[orderId]` [X]
 
 - [ ] **Route Setup**
   - Create dynamic route: `app/dashboard/orders/[orderId]/page.tsx`
@@ -1489,21 +1489,21 @@ const compressedFile = await imageCompression(file, {
 
 ---
 
-### 21. Observability and Logging [ ]
+### 21. Observability and Logging [X]
 
-- [ ] Add global error handler middleware (backend)
-- [ ] Add structured logs (`logger.service.ts` or `pino`)
-- [ ] Track user events (e.g. order success, payment failure)
-- [ ] Optional: Integrate error monitoring (Sentry / Logtail / Datadog)
+- [X] Add global error handler middleware (backend)
+- [X] Add structured logs (`logger.service.ts` or `pino`)
+- [X] Track user events (e.g. order success, payment failure)
+- [X] Optional: Integrate error monitoring (Sentry / Logtail / Datadog)
 
 ---
 
-### 22. Documentation and Developer Experience [ ]
+### 22. Documentation and Developer Experience [X]
 
-- [ ] Generate Swagger docs at `/api-docs`
-- [ ] Write `README.md` inside `backend/`:
+- [X] Generate Swagger docs at `/api-docs`
+- [X] Write `README.md` inside `backend/`:
   - Setup instructions, run, envs, API overview
-- [ ] Add comments and typing to all exposed APIs
-- [ ] Document common error messages and responses
-- [ ] Provide sample curl or Postman collection
-- [ ] Optional: Add API versioning (e.g. `/api/v1/`)
+- [X] Add comments and typing to all exposed APIs
+- [X] Document common error messages and responses
+- [X] Provide sample curl or Postman collection
+- [X] Optional: Add API versioning (e.g. `/api/v1/`)

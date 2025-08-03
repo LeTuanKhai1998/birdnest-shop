@@ -134,6 +134,11 @@ export function ResponsiveNavbar() {
     { href: '/guest-orders', label: 'Tra đơn', icon: Package },
   ];
 
+  // Add dashboard link for authenticated users
+  const allNavigationItems = isAuthenticated 
+    ? [...navigationItems, { href: '/dashboard', label: 'Tài khoản', icon: User }]
+    : navigationItems;
+
   const isActiveLink = (href: string) => {
     if (href === '/') {
       return pathname === '/';
@@ -172,58 +177,127 @@ export function ResponsiveNavbar() {
     <>
       {/* Enhanced Static Left Sidebar - Tablet and Desktop */}
       <div className={cn(
-        "hidden md:block fixed left-0 top-0 h-full w-20 bg-white/95 backdrop-blur-sm border-r border-gray-100 shadow-lg z-[60] transition-all duration-500 ease-in-out group",
+        "hidden md:block fixed left-0 top-0 h-full w-24 bg-white/95 backdrop-blur-sm border-r border-gray-100 shadow-lg z-[60] transition-all duration-500 ease-in-out group",
         isLeftMenuVisible && !isDashboardPage ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Enhanced hover trigger area */}
         <div className="absolute -right-2 top-0 w-4 h-full bg-transparent group-hover:bg-transparent" />
         <div className="flex flex-col h-full">
           {/* Enhanced Navigation Items with Icons and Text Under */}
-          <nav className="flex-1 p-3">
-            <div className="space-y-3">
-              {/* Enhanced Hamburger Button */}
+          <nav className="flex-1 p-3" role="navigation" aria-label="Main navigation">
+            <div className="space-y-2">
+              {/* Enhanced Hamburger Button with better accessibility */}
               <Button
                 variant="ghost"
-                className="flex items-center justify-center w-full p-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md group"
+                size="sm"
+                className="flex items-center justify-center w-full p-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md group focus:ring-2 focus:ring-red-200 focus:ring-offset-1"
                 onClick={() => setDesktopSidebarOpen(true)}
                 aria-label="Mở menu bên"
                 aria-expanded={desktopSidebarOpen}
+                aria-controls="desktop-sidebar"
               >
-                <Menu className="w-6 h-6 text-gray-700 group-hover:text-[#a10000] transition-colors" />
+                <Menu className="w-5 h-5 text-gray-700 group-hover:text-[#a10000] transition-colors" aria-hidden="true" />
               </Button>
 
-              {navigationItems.map((item) => {
+              {/* Navigation Items with enhanced accessibility and visual feedback */}
+              {allNavigationItems.map((item, index) => {
                 const Icon = item.icon;
+                const isActive = isActiveLink(item.href);
+                
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
-                      isActiveLink(item.href) 
-                        ? "bg-gradient-to-r from-red-50 to-red-100 text-[#a10000] shadow-md scale-105" 
+                      "flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-offset-1 animate-in slide-in-from-left-2",
+                      isActive 
+                        ? "bg-gradient-to-r from-red-50 to-red-100 text-[#a10000] shadow-md scale-105 ring-1 ring-red-200" 
                         : "text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-[#a10000] hover:shadow-md hover:scale-105"
                     )}
+                    style={{ animationDelay: `${index * 50}ms` }}
                     title={item.label}
+                    aria-current={isActive ? "page" : undefined}
                   >
-                    <Icon className={cn(
-                      "w-5 h-5 transition-all duration-300",
-                      isActiveLink(item.href) ? "text-[#a10000]" : "group-hover:text-[#a10000]"
-                    )} />
-                    <span className="text-xs font-semibold text-center leading-tight transition-colors">
+                    {/* Icon with enhanced accessibility and subtle animation */}
+                    <Icon 
+                      className={cn(
+                        "w-5 h-5 transition-all duration-300",
+                        isActive ? "text-[#a10000] scale-110" : "group-hover:text-[#a10000] group-hover:scale-110"
+                      )} 
+                      aria-hidden="true"
+                    />
+                    
+                    {/* Label with full text display and better typography */}
+                    <span className="text-xs font-semibold text-center leading-tight transition-colors w-full group-hover:font-bold">
                       {item.label}
                     </span>
-                    {/* Enhanced Active indicator */}
-                    {isActiveLink(item.href) && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 bg-gradient-to-b from-[#a10000] to-[#c41e3a] rounded-r-full shadow-sm"></div>
+                    
+                    {/* Enhanced Active indicator with better positioning and animation */}
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-[#a10000] to-[#c41e3a] rounded-r-full shadow-sm animate-in slide-in-from-left-1" />
                     )}
-                    {/* Hover effect overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-red-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
+                    
+                    {/* Hover effect overlay with better performance and subtle animation */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-red-100/50 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl pointer-events-none group-hover:scale-105" />
+                    
+                    {/* Focus indicator for better accessibility */}
+                    <div className="absolute inset-0 rounded-xl ring-2 ring-transparent group-focus:ring-red-200 group-focus:ring-offset-1 transition-all duration-200" />
+                    
+                    {/* Subtle pulse animation for active items */}
+                    {isActive && (
+                      <div className="absolute inset-0 rounded-xl bg-red-100/20 animate-pulse pointer-events-none" />
+                    )}
                   </Link>
                 );
               })}
             </div>
           </nav>
+          
+          {/* Enhanced Bottom Section for User Actions */}
+          <div className="p-3 border-t border-gray-100 bg-gray-50/30">
+            <div className="space-y-2">
+              {/* Quick Access to Cart with enhanced feedback */}
+              <Link
+                href="/cart"
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-[#a10000] hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-offset-1"
+                title="Giỏ hàng"
+                aria-label="Xem giỏ hàng"
+              >
+                <div className="relative">
+                  <ShoppingBag className="w-5 h-5 transition-all duration-300 group-hover:text-[#a10000] group-hover:scale-110" aria-hidden="true" />
+                  {/* Cart badge indicator */}
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                </div>
+                <span className="text-xs font-semibold text-center leading-tight transition-colors w-full group-hover:font-bold">Giỏ hàng</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-red-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
+              </Link>
+              
+              {/* User Profile/Auth Section with enhanced states */}
+              {isAuthenticated ? (
+                <Link
+                  href="/dashboard"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-[#a10000] hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-offset-1"
+                  title="Tài khoản"
+                  aria-label="Quản lý tài khoản"
+                >
+                  <User className="w-5 h-5 transition-all duration-300 group-hover:text-[#a10000] group-hover:scale-110" aria-hidden="true" />
+                  <span className="text-xs font-semibold text-center leading-tight transition-colors w-full group-hover:font-bold">Tài khoản</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-red-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-[#a10000] hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-200 focus:ring-offset-1"
+                  title="Đăng nhập"
+                  aria-label="Đăng nhập vào tài khoản"
+                >
+                  <LogIn className="w-5 h-5 transition-all duration-300 group-hover:text-[#a10000] group-hover:scale-110" aria-hidden="true" />
+                  <span className="text-xs font-semibold text-center leading-tight transition-colors w-full group-hover:font-bold">Đăng nhập</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-red-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -364,6 +438,12 @@ export function ResponsiveNavbar() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
+                            <Link href="/dashboard">
+                              <HomeIcon className="w-4 h-4 mr-2" />
+                              Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
                             <Link href="/dashboard/orders">
                               <ShoppingBag className="w-4 h-4 mr-2" />
                               Đơn hàng
@@ -478,7 +558,7 @@ export function ResponsiveNavbar() {
                         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
                           Điều hướng
                         </h3>
-                        {navigationItems.map((item) => {
+                        {allNavigationItems.map((item) => {
                           const Icon = item.icon;
                           return (
                             <Link
@@ -702,7 +782,7 @@ export function ResponsiveNavbar() {
               <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
                 Điều hướng
               </h3>
-              {navigationItems.map((item) => {
+              {allNavigationItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link

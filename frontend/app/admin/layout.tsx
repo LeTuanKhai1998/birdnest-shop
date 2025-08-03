@@ -27,7 +27,7 @@ import { UnifiedAvatar } from '@/components/ui/UnifiedAvatar';
 import { Separator } from '@/components/ui/separator';
 
 const navLinks = [
-  { href: '/admin', label: 'Bảng điều khiển', icon: LayoutDashboard },
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/orders', label: 'Đơn hàng', icon: ShoppingBag },
   { href: '/admin/products', label: 'Sản phẩm', icon: Box },
   { href: '/admin/categories', label: 'Danh mục', icon: Tag },
@@ -290,7 +290,7 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
         )}
 
         {/* Main content area */}
-        <div className="flex-1 flex flex-col min-w-0 md:ml-80">
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Hero Section - Only show for admin pages */}
           {currentPageConfig && (
             <div className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white py-4 md:py-6 w-full">
@@ -309,7 +309,7 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
           )}
 
           {/* Main content */}
-          <main className="flex-1 max-w-full mx-auto w-full overflow-y-auto">
+          <main className="flex-1 max-w-full mx-auto w-full overflow-y-auto pb-20 md:pb-0">
             {/* Page Content */}
             <div className="container mx-auto px-4 md:px-6 py-4 md:py-6 pb-8 max-w-7xl">
               {children}
@@ -317,6 +317,38 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
           </main>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation - Admin */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg md:hidden">
+        <div className="flex justify-around items-center h-16 px-2">
+          {navLinks.map(({ label, href, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex flex-col items-center justify-center flex-1 h-full text-xs font-medium transition-colors relative group',
+                pathname === href
+                  ? 'text-[#a10000]'
+                  : 'text-gray-600 hover:text-[#a10000]'
+              )}
+            >
+              <Icon className={cn(
+                "w-5 h-5 mb-1 transition-all duration-200",
+                pathname === href ? "text-[#a10000] scale-110" : "group-hover:scale-110"
+              )} />
+              <span className="text-xs font-semibold">{label}</span>
+              
+              {/* Active indicator */}
+              {pathname === href && (
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-[#a10000] rounded-full" />
+              )}
+              
+              {/* Hover effect */}
+              <div className="absolute inset-0 bg-red-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-t-lg" />
+            </Link>
+          ))}
+        </div>
+      </nav>
       
       {/* Footer */}
       <Footer />

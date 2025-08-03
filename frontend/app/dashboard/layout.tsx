@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import Footer from '@/components/Footer';
 
 const navItems = [
+  { label: 'Quản lý tài khoản', href: '/dashboard', icon: User, description: 'Tổng quan tài khoản của bạn' },
   { label: 'Đơn hàng', href: '/dashboard/orders', icon: ListOrdered, description: 'Xem và quản lý đơn hàng' },
   { label: 'Hồ sơ', href: '/dashboard/profile', icon: User, description: 'Cập nhật thông tin cá nhân' },
   { label: 'Địa chỉ', href: '/dashboard/addresses', icon: MapPin, description: 'Quản lý địa chỉ giao hàng' },
@@ -28,6 +29,11 @@ const mainNavItems = [
 
 // Page configurations for hero banners
 const pageConfigs = {
+  '/dashboard': {
+    title: 'Quản Lý Tài Khoản',
+    description: 'Tổng quan tài khoản và thông tin cá nhân của bạn',
+    icon: User
+  },
   '/dashboard/orders': {
     title: 'Đơn Hàng Của Tôi',
     description: 'Theo dõi trạng thái và lịch sử đơn hàng của bạn',
