@@ -23,9 +23,13 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   
   // Helper function to format weight consistently
   const formatWeight = (weight: any): string => {
+    console.log('Raw weight value:', weight, 'Type:', typeof weight);
     if (typeof weight === 'number' && weight > 0) {
-      return `${weight}g`;
+      const formatted = `${weight}g`;
+      console.log('Formatted weight:', formatted);
+      return formatted;
     }
+    console.log('Using default weight: 100g');
     return '100g'; // Default fallback
   };
   

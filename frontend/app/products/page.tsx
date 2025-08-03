@@ -50,6 +50,7 @@ export default async function ProductsPage() {
       
       // Map weight from backend (default to 100 if not present)
       const weight = typeof p.weight === 'number' ? p.weight : 100;
+      console.log(`Product ${p.name}: weight = ${p.weight}, mapped weight = ${weight}`);
       
       // Map category information
       const category = p.category ? {
