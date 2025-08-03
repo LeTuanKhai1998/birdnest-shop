@@ -59,7 +59,14 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  BarChart as RechartsBarChart,
+  Bar
 } from 'recharts';
 
 // Utility functions
@@ -71,11 +78,19 @@ const formatVND = (amount: number) => {
 };
 
 const statusColor: Record<string, string> = {
-  PENDING: '#fbbf24',
-  PROCESSING: '#3b82f6',
-  SHIPPED: '#8b5cf6',
-  DELIVERED: '#10b981',
-  CANCELLED: '#ef4444'
+  PENDING: '#fbbf24',    // Yellow
+  PAID: '#3b82f6',       // Blue
+  SHIPPED: '#8b5cf6',    // Purple
+  DELIVERED: '#10b981',  // Green
+  CANCELLED: '#ef4444'   // Red
+};
+
+const statusLabels: Record<string, string> = {
+  PENDING: 'Chờ xử lý',
+  PAID: 'Đã thanh toán',
+  SHIPPED: 'Đã gửi hàng',
+  DELIVERED: 'Đã giao hàng',
+  CANCELLED: 'Đã hủy'
 };
 
 const FILTERS = [
@@ -138,6 +153,7 @@ export default function AdminDashboardPage() {
   const [recentOrdersLoading, setRecentOrdersLoading] = useState(true);
   const [lowStockLoading, setLowStockLoading] = useState(true);
   const [topProductsLoading, setTopProductsLoading] = useState(true);
+  const [topCustomersLoading, setTopCustomersLoading] = useState(true);
   const [forecastsLoading, setForecastsLoading] = useState(true);
 
   // Load basic metrics first (fastest to load)
@@ -158,7 +174,10 @@ export default function AdminDashboardPage() {
     try {
       setRecentOrdersLoading(true);
       const data = await apiService.getDashboardStats();
-      setDashboardData((prev: any) => ({ ...prev, recentOrders: data.recentOrders }));
+      setDashboardData((prev: any) => ({ 
+        ...prev, 
+        recentOrders: data.recentOrders || [] 
+      }));
     } catch (err) {
       console.error('Error loading recent orders:', err);
     } finally {
@@ -192,6 +211,32 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Load top customers
+  const loadTopCustomers = async () => {
+    try {
+      setTopCustomersLoading(true);
+      // Try dashboard stats first, fallback to test endpoint
+      try {
+        const data = await apiService.getDashboardStats();
+        
+        setDashboardData((prev: any) => ({ ...prev, topCustomers: data.topCustomers }));
+      } catch (dashboardErr) {
+        
+        // Fallback to test endpoint for development
+        const response = await fetch('http://localhost:8080/api/test/top-customers');
+        const testData = await response.json();
+        
+        if (testData.success) {
+          setDashboardData((prev: any) => ({ ...prev, topCustomers: testData.topCustomers }));
+        }
+      }
+    } catch (err) {
+      console.error('Error loading top customers:', err);
+    } finally {
+      setTopCustomersLoading(false);
+    }
+  };
+
   // Load forecasts (most complex, load last)
   const loadForecasts = async () => {
     try {
@@ -217,6 +262,7 @@ export default function AdminDashboardPage() {
       setLoading(true);
       setError(null);
       const data = await apiService.getDashboardStats();
+      
       setDashboardData(data);
       setLastRefresh(new Date());
       toast({
@@ -247,7 +293,8 @@ export default function AdminDashboardPage() {
     const timer1 = setTimeout(() => loadRecentOrders(), 200);
     const timer2 = setTimeout(() => loadLowStockProducts(), 400);
     const timer3 = setTimeout(() => loadTopProducts(), 600);
-    const timer4 = setTimeout(() => loadForecasts(), 800);
+    const timer4 = setTimeout(() => loadTopCustomers(), 700);
+    const timer5 = setTimeout(() => loadForecasts(), 800);
 
     return () => {
       clearTimeout(timer1);
@@ -265,6 +312,13 @@ export default function AdminDashboardPage() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Debug top customers data
+  React.useEffect(() => {
+    if (dashboardData?.topCustomers) {
+      
+    }
+  }, [dashboardData?.topCustomers]);
 
   // Quick action handlers
   const handleQuickAction = (action: string) => {
@@ -336,17 +390,22 @@ export default function AdminDashboardPage() {
 
   // Status distribution
   const statusDistribution = React.useMemo(() => {
-    if (!dashboardData?.recentOrders || dashboardData.recentOrders.length === 0) return [];
+    if (!dashboardData?.recentOrders || dashboardData.recentOrders.length === 0) {
+      return [];
+    }
+    
     const statusCount = dashboardData.recentOrders.reduce((acc: Record<string, number>, order: Order) => {
       acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
     }, {});
     
-    return Object.entries(statusCount).map(([name, value]) => ({
-      name,
+    const result = Object.entries(statusCount).map(([name, value]) => ({
+      name: statusLabels[name] || name,
       value,
       fill: statusColor[name] || '#6b7280'
     }));
+    
+    return result;
   }, [dashboardData?.recentOrders]);
 
   // Export functions
@@ -408,6 +467,207 @@ export default function AdminDashboardPage() {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', `low_stock_products_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Xuất CSV thành công",
+      description: "File CSV đã được tải xuống.",
+      variant: "success",
+    });
+  };
+
+  // Export Top Products CSV
+  const handleExportTopProductsCSV = () => {
+    if (!dashboardData?.topProducts) {
+      toast({
+        title: "Lỗi",
+        description: "Không có dữ liệu để xuất.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const csv = Papa.unparse(dashboardData.topProducts.map((product: any) => ({
+      'Tên sản phẩm': product.name,
+      'Danh mục': product.category?.name || 'N/A',
+      'Đã bán': product.soldCount || 0,
+      'Doanh thu': formatVND(Number(product.revenue) || 0),
+      'Giá': formatVND(Number(product.price)),
+      'Tồn kho': product.quantity || 0,
+      'Trạng thái': (product.quantity || 0) > 0 ? 'Còn hàng' : 'Hết hàng',
+    })));
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `top_products_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Xuất CSV thành công",
+      description: "File CSV đã được tải xuống.",
+      variant: "success",
+    });
+  };
+
+  // Export Top Customers CSV
+  const handleExportTopCustomersCSV = () => {
+    if (!dashboardData?.topCustomers) {
+      toast({
+        title: "Lỗi",
+        description: "Không có dữ liệu để xuất.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const csv = Papa.unparse(dashboardData.topCustomers.map((customer: any) => ({
+      'Tên khách hàng': customer.name,
+      'Email': customer.email,
+      'Số đơn hàng': customer.orderCount || 0,
+      'Tổng chi tiêu': formatVND(Number(customer.totalSpent) || 0),
+      'Đơn hàng cuối': customer.lastOrderDate ? format(new Date(customer.lastOrderDate), 'dd/MM/yyyy') : 'N/A',
+    })));
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `top_customers_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Xuất CSV thành công",
+      description: "File CSV đã được tải xuống.",
+      variant: "success",
+    });
+  };
+
+  // Export Revenue Analytics CSV
+  const handleExportRevenueAnalyticsCSV = () => {
+    if (!dashboardData?.revenueAnalytics) {
+      toast({
+        title: "Lỗi",
+        description: "Không có dữ liệu để xuất.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const csv = Papa.unparse(dashboardData.revenueAnalytics.map((item: any) => ({
+      'Ngày': item.date,
+      'Doanh thu': formatVND(Number(item.revenue) || 0),
+      'Số đơn hàng': item.orderCount || 0,
+      'Trung bình/đơn': formatVND(Number(item.averageOrderValue) || 0),
+    })));
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `revenue_analytics_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Xuất CSV thành công",
+      description: "File CSV đã được tải xuống.",
+      variant: "success",
+    });
+  };
+
+  // Export Dashboard Summary CSV
+  const handleExportDashboardSummaryCSV = () => {
+    if (!dashboardData?.metrics) {
+      toast({
+        title: "Lỗi",
+        description: "Không có dữ liệu để xuất.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const summaryData = [
+      {
+        'Chỉ số': 'Tổng doanh thu',
+        'Giá trị': formatVND(Number(dashboardData.metrics.totalRevenue) || 0),
+        'Đơn vị': 'VND'
+      },
+      {
+        'Chỉ số': 'Tổng đơn hàng',
+        'Giá trị': dashboardData.metrics.totalOrders || 0,
+        'Đơn vị': 'đơn hàng'
+      },
+      {
+        'Chỉ số': 'Tổng khách hàng',
+        'Giá trị': dashboardData.metrics.totalCustomers || 0,
+        'Đơn vị': 'khách hàng'
+      },
+      {
+        'Chỉ số': 'Giá trị đơn hàng trung bình',
+        'Giá trị': formatVND(Number(dashboardData.metrics.averageOrderValue) || 0),
+        'Đơn vị': 'VND'
+      }
+    ];
+
+    const csv = Papa.unparse(summaryData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `dashboard_summary_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Xuất CSV thành công",
+      description: "File CSV đã được tải xuống.",
+      variant: "success",
+    });
+  };
+
+  // Export Recent Orders CSV
+  const handleExportRecentOrdersCSV = () => {
+    if (!dashboardData?.recentOrders) {
+      toast({
+        title: "Lỗi",
+        description: "Không có dữ liệu để xuất.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const csv = Papa.unparse(dashboardData.recentOrders.map((order: any) => ({
+      'Mã đơn hàng': order.id,
+      'Khách hàng': order.user?.name || order.guestName || 'Khách',
+      'Email': order.user?.email || order.guestEmail || 'N/A',
+      'Số điện thoại': order.user?.phone || order.guestPhone || 'N/A',
+      'Tổng tiền': formatVND(Number(order.total) || 0),
+      'Trạng thái': statusLabels[order.status] || order.status,
+      'Phương thức thanh toán': order.paymentMethod || 'N/A',
+      'Ngày tạo': format(new Date(order.createdAt), 'dd/MM/yyyy HH:mm'),
+      'Địa chỉ giao hàng': order.shippingAddress || 'N/A',
+    })));
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `recent_orders_${format(new Date(), 'yyyy-MM-dd')}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -665,7 +925,11 @@ export default function AdminDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-green-600" />
+                {metricsLoading ? (
+                  <RefreshCw className="w-6 h-6 text-green-600 animate-spin" />
+                ) : (
+                  <DollarSign className="w-6 h-6 text-green-600" />
+                )}
               </div>
               <div className="text-right">
                 {metricsLoading ? (
@@ -685,7 +949,11 @@ export default function AdminDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
-                <ShoppingCart className="w-6 h-6 text-blue-600" />
+                {metricsLoading ? (
+                  <RefreshCw className="w-6 h-6 text-blue-600 animate-spin" />
+                ) : (
+                  <ShoppingCart className="w-6 h-6 text-blue-600" />
+                )}
               </div>
               <div className="text-right">
                 {metricsLoading ? (
@@ -705,7 +973,11 @@ export default function AdminDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center">
-                <Users className="w-6 h-6 text-purple-600" />
+                {metricsLoading ? (
+                  <RefreshCw className="w-6 h-6 text-purple-600 animate-spin" />
+                ) : (
+                  <Users className="w-6 h-6 text-purple-600" />
+                )}
               </div>
               <div className="text-right">
                 {metricsLoading ? (
@@ -725,7 +997,11 @@ export default function AdminDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center">
-                <Target className="w-6 h-6 text-orange-600" />
+                {metricsLoading ? (
+                  <RefreshCw className="w-6 h-6 text-orange-600 animate-spin" />
+                ) : (
+                  <Target className="w-6 h-6 text-orange-600" />
+                )}
               </div>
               <div className="text-right">
                 {metricsLoading ? (
@@ -950,52 +1226,77 @@ export default function AdminDashboardPage() {
             <CardDescription className="text-sm md:text-base">Phân bố trạng thái đơn hàng hiện tại</CardDescription>
           </CardHeader>
           <CardContent className="pb-6 md:pb-8 px-6 md:px-8">
-            {statusDistribution.length > 0 ? (
-              <div className="w-full h-[250px] md:h-[300px] lg:h-[350px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={statusDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={60}
-                      innerRadius={20}
-                      fill="#8884d8"
-                      dataKey="value"
-                      paddingAngle={2}
-                    >
-                      {statusDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value, name) => [value, name]}
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                      }}
-                    />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={36}
-                      wrapperStyle={{
-                        fontSize: '12px',
-                        paddingTop: '20px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+            {recentOrdersLoading ? (
+              <div className="w-full h-[250px] md:h-[300px] lg:h-[350px] flex items-center justify-center bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a10000] mx-auto mb-4"></div>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
+                    Đang tải dữ liệu...
+                  </p>
+                </div>
+              </div>
+            ) : statusDistribution.length > 0 ? (
+              <div className="w-full h-[400px] md:h-[450px] lg:h-[500px]">
+                <PieChart width={500} height={400}>
+                  <Pie
+                    data={statusDistribution.slice(0, 4)}
+                    cx={250}
+                    cy={200}
+                    innerRadius={60}
+                    outerRadius={120}
+                    paddingAngle={4}
+                    dataKey="value"
+                    label={({ name, value, percent }) => `${name}\n${value} (${(percent * 100).toFixed(0)}%)`}
+                    labelLine={false}
+                  >
+                    {statusDistribution.slice(0, 4).map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={statusColor[Object.keys(statusLabels)[index]] || '#a10000'}
+                        stroke="#ffffff"
+                        strokeWidth={2}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value, name) => [
+                      `${value} đơn hàng (${((value / statusDistribution.slice(0, 4).reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(1)}%)`, 
+                      'Số lượng'
+                    ]}
+                    labelFormatter={(label) => `Trạng thái: ${label}`}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+                      padding: '12px 16px',
+                      fontSize: '13px'
+                    }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={60}
+                    wrapperStyle={{
+                      fontSize: '12px',
+                      paddingTop: '20px'
+                    }}
+                    formatter={(value, entry) => (
+                      <span style={{ color: '#374151', fontWeight: 500 }}>
+                        {value}
+                      </span>
+                    )}
+                  />
+                </PieChart>
               </div>
             ) : (
               <div className="w-full h-[250px] md:h-[300px] lg:h-[350px] flex items-center justify-center bg-gray-50 dark:bg-neutral-800 rounded-lg">
                 <div className="text-center">
-                  <PieChart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
-                    {metricsLoading ? 'Đang tải dữ liệu...' : 'Chưa có dữ liệu phân bố'}
+                    Chưa có dữ liệu phân bố trạng thái
+                  </p>
+                  <p className="text-gray-400 dark:text-gray-500 text-xs mt-2">
+                    Dữ liệu sẽ hiển thị khi có đơn hàng
                   </p>
                 </div>
               </div>
@@ -1011,10 +1312,15 @@ export default function AdminDashboardPage() {
           <CardHeader className="pt-6 md:pt-8 px-6 md:px-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <CardTitle className="text-[#a10000] text-lg md:text-xl">Đơn hàng gần đây</CardTitle>
+                <CardTitle className="text-[#a10000] text-lg md:text-xl flex items-center gap-2">
+                  Đơn hàng gần đây
+                  {recentOrdersLoading && (
+                    <RefreshCw className="w-4 h-4 text-[#a10000] animate-spin" />
+                  )}
+                </CardTitle>
                 <CardDescription className="text-sm md:text-base">Hoạt động đơn hàng mới nhất</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={handleExportCSV} className="w-full sm:w-auto">
+              <Button variant="outline" size="sm" onClick={handleExportRecentOrdersCSV} className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
                 Xuất CSV
               </Button>
@@ -1022,7 +1328,24 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent className="pb-6">
             <div className="space-y-4">
-              {recentOrders && recentOrders.length > 0 ? (
+              {recentOrdersLoading ? (
+                // Loading skeleton for recent orders
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-10 h-10 rounded-full" />
+                      <div>
+                        <Skeleton className="h-4 w-24 mb-1" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Skeleton className="h-4 w-16 mb-1" />
+                      <Skeleton className="h-5 w-12 rounded-full" />
+                    </div>
+                  </div>
+                ))
+              ) : recentOrders && recentOrders.length > 0 ? (
                 recentOrders.map((order: Order) => (
                   <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
@@ -1057,13 +1380,18 @@ export default function AdminDashboardPage() {
           <CardHeader className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-[#a10000]">Cảnh báo tồn kho thấp</CardTitle>
+                <CardTitle className="text-[#a10000] flex items-center gap-2">
+                  Cảnh báo tồn kho thấp
+                  {lowStockLoading && (
+                    <RefreshCw className="w-4 h-4 text-[#a10000] animate-spin" />
+                  )}
+                </CardTitle>
                 <CardDescription>Sản phẩm sắp hết hàng</CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="bg-red-100 text-red-800">
                   <AlertTriangle className="w-3 h-3 mr-1" />
-                  {lowStockProducts?.length || 0} sản phẩm
+                  {lowStockLoading ? '...' : `${lowStockProducts?.length || 0} sản phẩm`}
                 </Badge>
                 <Button variant="outline" size="sm" onClick={handleExportLowStockCSV}>
                   <Download className="w-4 h-4 mr-2" />
@@ -1074,7 +1402,24 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent className="pb-6">
             <div className="space-y-4">
-              {lowStockProducts && lowStockProducts.length > 0 ? (
+              {lowStockLoading ? (
+                // Loading skeleton for low stock products
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-10 h-10 rounded-full" />
+                      <div>
+                        <Skeleton className="h-4 w-32 mb-1" />
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Skeleton className="h-4 w-16 mb-1" />
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </div>
+                  </div>
+                ))
+              ) : lowStockProducts && lowStockProducts.length > 0 ? (
                 lowStockProducts.map((product: Product) => (
                   <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
@@ -1116,7 +1461,12 @@ export default function AdminDashboardPage() {
         <CardHeader className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-[#a10000]">Sản phẩm bán chạy nhất</CardTitle>
+              <CardTitle className="text-[#a10000] flex items-center gap-2">
+                Sản phẩm bán chạy nhất
+                {topProductsLoading && (
+                  <RefreshCw className="w-4 h-4 text-[#a10000] animate-spin" />
+                )}
+              </CardTitle>
               <CardDescription>Sản phẩm bán chạy theo doanh thu</CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -1133,7 +1483,40 @@ export default function AdminDashboardPage() {
         </CardHeader>
         <CardContent className="pb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {topProducts && topProducts.length > 0 ? (
+            {topProductsLoading ? (
+              // Loading skeleton for top products
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="relative">
+                      <Skeleton className="w-16 h-16 rounded-lg" />
+                      <Skeleton className="absolute -top-2 -right-2 w-6 h-6 rounded-full" />
+                    </div>
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-32 mb-1" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <Skeleton className="h-3 w-8" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <Skeleton className="h-3 w-12" />
+                      <Skeleton className="h-3 w-8" />
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t">
+                    <Skeleton className="h-8 w-full rounded" />
+                  </div>
+                </div>
+              ))
+            ) : topProducts && topProducts.length > 0 ? (
               topProducts.map((product: Product, index: number) => {
                 const firstImage = product.images?.[0];
                 const imageUrl = typeof firstImage === 'string' 
@@ -1196,6 +1579,116 @@ export default function AdminDashboardPage() {
               <div className="col-span-full text-center py-8">
                 <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">Không có dữ liệu sản phẩm</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Top Customers */}
+      <Card className="hover:shadow-lg transition-shadow duration-200">
+        <CardHeader className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-[#a10000] flex items-center gap-2">
+                Top khách hàng
+                {topCustomersLoading && (
+                  <RefreshCw className="w-4 h-4 text-[#a10000] animate-spin" />
+                )}
+              </CardTitle>
+              <CardDescription>Khách hàng có tổng chi tiêu cao nhất</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push('/admin/users')}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Xem tất cả
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {topCustomersLoading ? (
+              // Loading skeleton for top customers
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="relative">
+                      <Skeleton className="w-16 h-16 rounded-full" />
+                      <Skeleton className="absolute -top-2 -right-2 w-6 h-6 rounded-full" />
+                    </div>
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-32 mb-1" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-3 w-12" />
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t">
+                    <Skeleton className="h-8 w-full rounded" />
+                  </div>
+                </div>
+              ))
+            ) : dashboardData?.topCustomers && dashboardData.topCustomers.length > 0 ? (
+              dashboardData.topCustomers.map((customer: any, index: number) => (
+                <div key={customer.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="relative">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Users className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#a10000] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                        #{index + 1}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm group-hover:text-[#a10000] transition-colors">
+                        {customer.name || `Khách hàng #${index + 1}`}
+                      </p>
+                      <p className="text-xs text-gray-500">Khách hàng VIP</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Đơn hàng:</span>
+                      <span className="font-medium">{customer.orderCount || 0} đơn</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Tổng chi tiêu:</span>
+                      <span className="font-medium text-green-600">
+                        {customer.totalSpent ? formatVND(customer.totalSpent) : '0 VND'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/admin/users/${customer.id}`)}
+                      className="w-full text-xs"
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      Xem chi tiết
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Không có dữ liệu khách hàng</p>
               </div>
             )}
           </div>
@@ -1278,7 +1771,7 @@ export default function AdminDashboardPage() {
                 </CardTitle>
                 <CardDescription>Thống kê hành vi và phân tích khách hàng</CardDescription>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExportTopCustomersCSV}>
                 <Download className="w-4 h-4 mr-2" />
                 Xuất báo cáo
               </Button>
@@ -1335,23 +1828,47 @@ export default function AdminDashboardPage() {
               <div>
                 <h4 className="font-medium mb-3">Top khách hàng</h4>
                 <div className="space-y-2">
-                  {[1, 2, 3].map((rank) => (
-                    <div key={rank} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-[#a10000] text-white rounded-full flex items-center justify-center text-sm font-bold">
-                          {rank}
+                  {topCustomersLoading ? (
+                    // Loading skeleton for top customers
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="w-8 h-8 rounded-full" />
+                          <div>
+                            <Skeleton className="h-4 w-24 mb-1" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-sm">Khách hàng #{rank}</p>
-                          <p className="text-xs text-gray-500">3 đơn hàng</p>
+                        <div className="text-right">
+                          <Skeleton className="h-4 w-20 mb-1" />
+                          <Skeleton className="h-3 w-16" />
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium text-sm">{formatVND(1500000)}</p>
-                        <p className="text-xs text-gray-500">Tổng chi tiêu</p>
+                    ))
+                  ) : dashboardData?.topCustomers && dashboardData.topCustomers.length > 0 ? (
+                    dashboardData.topCustomers.slice(0, 3).map((customer: any, index: number) => (
+                      <div key={customer.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-[#a10000] text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{customer.name || `Khách hàng #${index + 1}`}</p>
+                            <p className="text-xs text-gray-500">{customer.orderCount || 0} đơn hàng</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-sm">{formatVND(Number(customer.totalSpent) || 0)}</p>
+                          <p className="text-xs text-gray-500">Tổng chi tiêu</p>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4">
+                      <Users className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">Không có dữ liệu khách hàng</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
               
@@ -1392,7 +1909,7 @@ export default function AdminDashboardPage() {
                 </CardTitle>
                 <CardDescription>Thống kê tồn kho và hiệu suất bán hàng</CardDescription>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExportTopProductsCSV}>
                 <Download className="w-4 h-4 mr-2" />
                 Xuất báo cáo
               </Button>
@@ -1509,7 +2026,7 @@ export default function AdminDashboardPage() {
                 </CardTitle>
                 <CardDescription>Tổng quan tài chính và dòng tiền</CardDescription>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExportRevenueAnalyticsCSV}>
                 <Download className="w-4 h-4 mr-2" />
                 Xuất báo cáo
               </Button>
@@ -1626,7 +2143,7 @@ export default function AdminDashboardPage() {
                   <CalendarDays className="w-4 h-4 mr-2" />
                   Chọn khoảng thời gian
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handleExportDashboardSummaryCSV}>
                   <Download className="w-4 h-4 mr-2" />
                   Xuất báo cáo
                 </Button>
@@ -1835,19 +2352,35 @@ export default function AdminDashboardPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Thị phần hiện tại</span>
-                    <span className="font-medium text-sm">{dashboardData?.marketIntelligence?.currentMarketShare?.toFixed(1) || '12.5'}%</span>
+                    <span className="font-medium text-sm">
+                      {dashboardData?.marketIntelligence?.currentMarketShare 
+                        ? `${dashboardData.marketIntelligence.currentMarketShare.toFixed(1)}%` 
+                        : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Mục tiêu thị phần</span>
-                    <span className="font-medium text-sm">{dashboardData?.marketIntelligence?.targetMarketShare || '15'}%</span>
+                    <span className="font-medium text-sm">
+                      {dashboardData?.marketIntelligence?.targetMarketShare 
+                        ? `${dashboardData.marketIntelligence.targetMarketShare}%` 
+                        : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Tốc độ tăng trưởng</span>
-                    <span className="font-medium text-sm text-green-600">+{dashboardData?.marketIntelligence?.growthRate?.toFixed(1) || '2.3'}%/tháng</span>
+                    <span className="font-medium text-sm text-green-600">
+                      {dashboardData?.marketIntelligence?.growthRate 
+                        ? `+${dashboardData.marketIntelligence.growthRate.toFixed(1)}%/tháng` 
+                        : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Đối thủ cạnh tranh</span>
-                    <span className="font-medium text-sm">{dashboardData?.marketIntelligence?.competitors || '8'} công ty</span>
+                    <span className="font-medium text-sm">
+                      {dashboardData?.marketIntelligence?.competitors 
+                        ? `${dashboardData.marketIntelligence.competitors} công ty` 
+                        : 'N/A'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1891,7 +2424,11 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Tổng điểm rủi ro</span>
-                    <span className="font-medium text-sm text-green-600">{dashboardData?.riskAssessment?.totalRiskScore?.toFixed(1) || '2.1'}/10</span>
+                    <span className="font-medium text-sm text-green-600">
+                      {dashboardData?.riskAssessment?.totalRiskScore 
+                        ? `${dashboardData.riskAssessment.totalRiskScore.toFixed(1)}/10` 
+                        : 'N/A'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1905,3 +2442,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+

@@ -34,6 +34,7 @@ import { useSetting, useFreeShippingThreshold } from '@/lib/settings-context';
 import Footer from '@/components/Footer';
 import { formatReadableId, getEntityTypeColor, getEntityTypeLabel } from '@/lib/id-utils';
 import { formatCurrency } from '@/lib/shipping-utils';
+import ProductReviews from '@/components/ProductReviews';
 
 // Format sold count for display
 function formatSoldCount(count: number): string {
@@ -231,20 +232,10 @@ export default function ProductDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Review form state
-  const [reviewRating, setReviewRating] = React.useState(0);
-  const [reviewComment, setReviewComment] = React.useState('');
+  // Review state
   const [localReviews, setLocalReviews] = React.useState<Review[]>([]);
-  const [submitting, setSubmitting] = React.useState(false);
-  const [submitMsg, setSubmitMsg] = React.useState('');
   const [userHasReviewed, setUserHasReviewed] = React.useState(false);
   const [userReview, setUserReview] = React.useState<Review | null>(null);
-  
-  // Edit review state
-  const [editingReview, setEditingReview] = React.useState<Review | null>(null);
-  const [editComment, setEditComment] = React.useState('');
-  const [editRating, setEditRating] = React.useState(0);
-  const [editing, setEditing] = React.useState(false);
   
   // Hooks that need to be called unconditionally
   const { data: session } = useSession();
@@ -293,7 +284,7 @@ export default function ProductDetailPage({
         // Check if user has already reviewed this product
         if (session?.user?.id && adaptedProduct) {
           try {
-            const userReviews = await apiService.getUserReviews(session.user.id);
+            const userReviews = await apiService.getUserReviews();
             const existingReview = userReviews.find((review: any) => review.productId === adaptedProduct.id);
             if (existingReview) {
               setUserHasReviewed(true);
@@ -410,58 +401,9 @@ export default function ProductDetailPage({
     ? product.reviews.reduce((acc: number, review: Review) => acc + review.rating, 0) / product.reviews.length
     : 0;
 
-  // Handle edit review
+  // Handle edit review (placeholder for callback)
   const handleEditReview = (review: Review) => {
-    setEditingReview(review);
-    setEditComment(review.comment || '');
-    setEditRating(review.rating);
-    setEditing(false); // Reset editing state when starting edit
-  };
-
-  // Handle save edit
-  const handleSaveEdit = async () => {
-    if (!editingReview || !editComment.trim()) return;
-    
-    setEditing(true);
-    try {
-      // Update both rating and comment
-      const updatedReview = await apiService.updateReview(editingReview.id, {
-        rating: editRating,
-        comment: editComment
-      });
-      
-      // Update local reviews
-      setLocalReviews(prev => 
-        prev.map(review => 
-          review.id === editingReview.id 
-            ? { ...review, rating: updatedReview.rating, comment: updatedReview.comment }
-            : review
-        )
-      );
-      
-      // Update user review if it's the user's review
-      if (userReview && userReview.id === editingReview.id) {
-        setUserReview({ ...userReview, rating: updatedReview.rating, comment: updatedReview.comment });
-      }
-      
-      setEditingReview(null);
-      setEditComment('');
-      setEditRating(0);
-      toast.success('Đánh giá đã được cập nhật thành công!');
-    } catch (error) {
-      console.error('Error updating review:', error);
-      toast.error('Có lỗi xảy ra khi cập nhật đánh giá. Vui lòng thử lại.');
-    } finally {
-      setEditing(false);
-    }
-  };
-
-  // Handle cancel edit
-  const handleCancelEdit = () => {
-    setEditingReview(null);
-    setEditComment('');
-    setEditRating(0);
-    setEditing(false);
+    // This is now handled in the ProductReviews component
   };
 
   return (
@@ -853,398 +795,16 @@ export default function ProductDetailPage({
 
         {/* Reviews Section */}
         <div className="py-6 md:py-8 lg:py-10">
-          <Card className="mb-6 md:mb-8 shadow-xl border-0 bg-gradient-to-br from-white to-gray-50/50 backdrop-blur-sm">
-            <CardHeader className="pb-4 md:pb-6 pt-6 md:pt-8">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#a10000] to-[#c41e3a] rounded-full flex items-center justify-center">
-                    <Users className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl md:text-2xl font-bold text-gray-900">
-                      Đánh giá khách hàng
-                    </CardTitle>
-                    <p className="text-xs md:text-sm text-gray-600 mt-1">
-                      Chia sẻ trải nghiệm của bạn với sản phẩm này
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 md:gap-4 bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-gray-200 shadow-sm">
-                  <div className="text-center">
-                    <div className="text-2xl md:text-3xl font-bold text-[#a10000]">
-                      {averageRating.toFixed(1)}
-                    </div>
-                    <div className="flex justify-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-3 h-3 md:w-4 md:h-4 ${
-                            star <= averageRating
-                              ? 'text-yellow-400 fill-current'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs md:text-sm text-gray-600">
-                      {product.reviews?.length || 0} đánh giá
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="px-8 pb-8">
-            {/* Review Form for authenticated users */}
-            {session?.user && !userHasReviewed ? (
-              <Card className="mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-lg">
-                <CardContent className="p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                      <Star className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-bold text-gray-900">Viết đánh giá</h4>
-                      <p className="text-sm text-gray-600">Chia sẻ trải nghiệm của bạn</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-semibold mb-3 text-gray-700">Đánh giá của bạn</label>
-                      <div className="flex gap-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={() => setReviewRating(star)}
-                            className="text-3xl hover:scale-110 transition-transform duration-200 p-1"
-                          >
-                            <Star
-                              className={`w-8 h-8 ${
-                                star <= reviewRating
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-gray-300 hover:text-yellow-300'
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                      {reviewRating > 0 && (
-                        <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                          <p className="text-sm font-medium text-yellow-800">
-                            {reviewRating === 1 && '😞 Rất không hài lòng'}
-                            {reviewRating === 2 && '😐 Không hài lòng'}
-                            {reviewRating === 3 && '😊 Bình thường'}
-                            {reviewRating === 4 && '😄 Hài lòng'}
-                            {reviewRating === 5 && '🥰 Rất hài lòng'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-semibold mb-3 text-gray-700">Nhận xét</label>
-                      <textarea
-                        value={reviewComment}
-                        onChange={(e) => setReviewComment(e.target.value)}
-                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all duration-200"
-                        rows={4}
-                        placeholder="Chia sẻ trải nghiệm của bạn với sản phẩm này..."
-                      />
-                    </div>
-                    
-                    <button
-                      onClick={async () => {
-                        if (reviewRating > 0 && reviewComment.trim()) {
-                          setSubmitting(true);
-                          try {
-                            const newReview = await apiService.createReview({
-                              productId: product.id,
-                              rating: reviewRating,
-                              comment: reviewComment,
-                            });
-                            
-                            setLocalReviews([newReview, ...localReviews]);
-                            setReviewRating(0);
-                            setReviewComment('');
-                            setSubmitMsg('Đánh giá đã được gửi thành công!');
-                            toast.success('Đánh giá đã được gửi thành công!');
-                            setTimeout(() => setSubmitMsg(''), 3000);
-                          } catch (error) {
-                            console.error('Error creating review:', error);
-                            // Check if it's a duplicate review error
-                            if (error instanceof Error && (error.message.includes('already reviewed') || error.message.includes('User has already reviewed'))) {
-                              toast.error('Bạn đã đánh giá sản phẩm này rồi. Mỗi sản phẩm chỉ được đánh giá một lần.');
-                            } else {
-                              toast.error('Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại.');
-                            }
-                          } finally {
-                            setSubmitting(false);
-                          }
-                        }
-                      }}
-                      disabled={submitting || reviewRating === 0 || !reviewComment.trim()}
-                      className="w-full h-12 bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white font-semibold rounded-xl hover:from-[#8a0000] hover:to-[#a10000] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      {submitting ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Đang gửi...
-                        </div>
-                      ) : (
-                        'Gửi đánh giá'
-                      )}
-                    </button>
-                    
-                    {submitMsg && (
-                      <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
-                        <p className="text-sm text-green-700 flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
-                          {submitMsg}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ) : !session?.user ? (
-              <Card className="mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-lg">
-                <CardContent className="p-8 text-center">
-                  <div className="flex items-center justify-center mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                      <Users className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-3">Đăng nhập để viết đánh giá</h4>
-                  <p className="text-gray-600 mb-6 text-sm max-w-md mx-auto">
-                    Chia sẻ trải nghiệm của bạn với sản phẩm này để giúp khách hàng khác đưa ra quyết định tốt hơn.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button 
-                      onClick={() => router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname))}
-                      className="h-12 bg-gradient-to-r from-[#a10000] to-[#c41e3a] hover:from-[#8a0000] hover:to-[#a10000] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-                    >
-                      Đăng nhập ngay
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => router.push('/signup?callbackUrl=' + encodeURIComponent(window.location.pathname))}
-                      className="h-12 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all duration-200 transform hover:scale-105"
-                    >
-                      Tạo tài khoản
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {/* User's Existing Review */}
-            {userHasReviewed && userReview && (
-              <Card className="mb-8 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg">
-                <CardContent className="p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-bold text-gray-900">Đánh giá của bạn</h4>
-                      <p className="text-sm text-gray-600">Bạn đã đánh giá sản phẩm này</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-700">Đánh giá:</span>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`w-5 h-5 ${
-                              star <= userReview.rating
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {userReview.comment && (
-                      <div>
-                        <span className="text-sm font-semibold text-gray-700">Nhận xét:</span>
-                        <p className="text-sm text-gray-600 mt-1 p-3 bg-white rounded-lg border border-gray-200">
-                          "{userReview.comment}"
-                        </p>
-                      </div>
-                    )}
-                    
-                    <div className="text-xs text-gray-500">
-                      Đánh giá vào: {new Date(userReview.createdAt).toLocaleDateString('vi-VN')}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Reviews List */}
-            <div className="space-y-6">
-              {sortedReviews.map((review) => {
-                const isUserReview = session?.user?.id === review.userId;
-                const isEditing = editingReview?.id === review.id;
-                
-                return (
-                  <div key={review.id} className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold text-sm">
-                            {(review.user?.name || 'K').charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-semibold text-gray-900">{review.user?.name || 'Khách hàng'}</span>
-                            {isUserReview && (
-                              <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200">
-                                Bạn
-                              </Badge>
-                            )}
-                            <div className="flex">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  className={`w-4 h-4 ${
-                                    star <= review.rating
-                                      ? 'text-yellow-400 fill-current'
-                                      : 'text-gray-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <span className="text-sm text-gray-500">
-                            {new Date(review.createdAt).toLocaleDateString('vi-VN', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-lg font-bold text-[#a10000]">
-                          {review.rating}.0
-                        </div>
-                        {isUserReview && !isEditing && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditReview(review)}
-                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                          >
-                            Chỉnh sửa
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {isEditing ? (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-semibold mb-2 text-gray-700">Đánh giá của bạn</label>
-                          <div className="flex gap-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                type="button"
-                                onClick={() => setEditRating(star)}
-                                className="text-3xl hover:scale-110 transition-transform duration-200 p-1"
-                              >
-                                <Star
-                                  className={`w-8 h-8 ${
-                                    star <= editRating
-                                      ? 'text-yellow-400 fill-current'
-                                      : 'text-gray-300 hover:text-yellow-300'
-                                  }`}
-                                />
-                              </button>
-                            ))}
-                          </div>
-                          {editRating > 0 && (
-                            <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                              <p className="text-sm font-medium text-yellow-800">
-                                {editRating === 1 && '😞 Rất không hài lòng'}
-                                {editRating === 2 && '😐 Không hài lòng'}
-                                {editRating === 3 && '😊 Bình thường'}
-                                {editRating === 4 && '😄 Hài lòng'}
-                                {editRating === 5 && '🥰 Rất hài lòng'}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-semibold mb-2 text-gray-700">Chỉnh sửa nhận xét</label>
-                          <textarea
-                            value={editComment}
-                            onChange={(e) => setEditComment(e.target.value)}
-                            className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all duration-200"
-                            rows={4}
-                            placeholder="Chia sẻ trải nghiệm của bạn với sản phẩm này..."
-                          />
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={handleSaveEdit}
-                            disabled={editing || !editComment.trim() || editRating === 0}
-                            className="bg-gradient-to-r from-[#a10000] to-[#c41e3a] hover:from-[#8a0000] hover:to-[#a10000] text-white font-semibold"
-                          >
-                            {editing ? 'Đang lưu...' : 'Lưu thay đổi'}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={handleCancelEdit}
-                            disabled={editing}
-                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                          >
-                            Hủy
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      review.comment && (
-                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                          <p className="text-gray-700 leading-relaxed">{review.comment}</p>
-                        </div>
-                      )
-                    )}
-                  </div>
-                );
-              })}
-              
-              {(!localReviews.length && !product.reviews?.length) && (
-                <div className="text-center py-16">
-                  <div className="w-24 h-24 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-yellow-200">
-                    <Star className="w-12 h-12 text-yellow-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Chưa có đánh giá nào</h3>
-                  <p className="text-gray-600 text-sm mb-6 max-w-md mx-auto">
-                    Hãy là người đầu tiên đánh giá sản phẩm này và chia sẻ trải nghiệm của bạn!
-                  </p>
-                  {!session?.user && (
-                    <Button 
-                      onClick={() => router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname))}
-                      className="h-12 bg-gradient-to-r from-[#a10000] to-[#c41e3a] hover:from-[#8a0000] hover:to-[#a10000] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-                    >
-                      Đăng nhập để đánh giá
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          <ProductReviews
+            reviews={sortedReviews}
+            averageRating={averageRating}
+            totalReviews={product.reviews?.length || 0}
+            userReview={userReview}
+            userHasReviewed={userHasReviewed}
+            session={session}
+            onReviewEdit={handleEditReview}
+            productId={product.id}
+          />
         </div>
 
 

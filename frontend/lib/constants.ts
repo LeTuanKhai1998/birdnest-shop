@@ -182,9 +182,16 @@ export const PRODUCTS_CONSTANTS = {
       { value: "Tổ yến thô", label: "Tổ Yến Thô" },
     ],
     weights: [
+      { value: 25, label: "25g" },
       { value: 50, label: "50g" },
+      { value: 75, label: "75g" },
       { value: 100, label: "100g" },
+      { value: 150, label: "150g" },
       { value: 200, label: "200g" },
+      { value: 250, label: "250g" },
+      { value: 300, label: "300g" },
+      { value: 500, label: "500g" },
+      { value: 1000, label: "1kg" },
     ],
     priceRange: {
       min: 0,
@@ -192,13 +199,37 @@ export const PRODUCTS_CONSTANTS = {
       step: 100000,
     },
   },
+  sorting: {
+    title: "Sắp xếp theo",
+    options: [
+      { value: "featured", label: "Nổi bật", icon: "Star" },
+      { value: "newest", label: "Mới nhất", icon: "Clock" },
+      { value: "price_asc", label: "Giá tăng dần", icon: "ArrowUp" },
+      { value: "price_desc", label: "Giá giảm dần", icon: "ArrowDown" },
+      { value: "name_asc", label: "Tên A-Z", icon: "Type" },
+      { value: "name_desc", label: "Tên Z-A", icon: "Type" },
+      { value: "weight_asc", label: "Trọng lượng tăng", icon: "Weight" },
+      { value: "weight_desc", label: "Trọng lượng giảm", icon: "Weight" },
+      { value: "popularity", label: "Phổ biến nhất", icon: "TrendingUp" },
+      { value: "rating", label: "Đánh giá cao nhất", icon: "Star" },
+      { value: "sold_desc", label: "Bán chạy nhất", icon: "ShoppingCart" },
+    ],
+    default: "featured",
+  },
+  viewOptions: {
+    grid: { label: "Lưới", icon: "Grid" },
+    list: { label: "Danh sách", icon: "List" },
+    compact: { label: "Thu gọn", icon: "Square" },
+  },
   emptyState: {
     title: "Không tìm thấy sản phẩm",
     description: "Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác",
   },
-          pagination: {
-          itemsPerPage: 33, // 11 rows × 3 columns
-        },
+  pagination: {
+    itemsPerPage: 24, // Default to 24 items per page (6 rows × 4 columns on desktop)
+    options: [6, 12, 24, 36, 48], // Available items per page options
+    maxVisiblePages: 7, // Maximum number of page buttons to show
+  },
 };
 
 // Animation constants

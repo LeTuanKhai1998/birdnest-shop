@@ -19,6 +19,25 @@ export class AppController {
     return this.appService.getHello();
   }
 
+  @Get('test/top-customers')
+  async getTestTopCustomers() {
+    try {
+      const topCustomers = await this.calculateTopCustomers();
+      return {
+        success: true,
+        topCustomers,
+        count: topCustomers.length
+      };
+    } catch (error) {
+      console.error('Error in test endpoint:', error);
+      return {
+        success: false,
+        error: error.message,
+        topCustomers: []
+      };
+    }
+  }
+
   @Get('dashboard/stats')
   @UseGuards(AdminGuard)
   async getDashboardStats() {
@@ -42,6 +61,9 @@ export class AppController {
     // Get low stock and top products
     const lowStockProducts = await this.productsService.findLowStockProducts(5);
     const topProducts = await this.productsService.findTopProducts(5);
+
+    // Get top customers
+    const topCustomers = await this.calculateTopCustomers();
 
     // Calculate forecasting data
     const forecastData = await this.calculateForecasts();
@@ -72,6 +94,7 @@ export class AppController {
       recentOrders,
       lowStockProducts,
       topProducts,
+      topCustomers,
       forecasts: forecastData,
       trends: trendAnalysis,
       marketIntelligence,
@@ -427,5 +450,60 @@ export class AppController {
     if (percentage > 20) return 'high';
     if (percentage > 10) return 'medium';
     return 'low';
+  }
+
+  private async calculateTopCustomers() {
+    try {
+      // Get all orders and users
+      const allOrders = await this.ordersService.findAll({ take: 1000 });
+      const allUsers = await this.usersService.findAll();
+
+      // Group orders by user and calculate total spent
+      const customerStats = new Map<string, { 
+        id: string; 
+        name: string; 
+        email: string; 
+        orderCount: number; 
+        totalSpent: number; 
+        lastOrderDate: Date | null;
+      }>();
+
+      // Initialize customer stats
+      allUsers.forEach(user => {
+        customerStats.set(user.id, {
+          id: user.id,
+          name: user.name || `Khách hàng #${user.id.slice(-4)}`,
+          email: user.email,
+          orderCount: 0,
+          totalSpent: 0,
+          lastOrderDate: null
+        });
+      });
+
+      // Calculate stats from orders
+      allOrders.forEach(order => {
+        if (order.userId && customerStats.has(order.userId)) {
+          const customer = customerStats.get(order.userId)!;
+          customer.orderCount += 1;
+          customer.totalSpent += Number(order.total) || 0;
+          
+          const orderDate = new Date(order.createdAt);
+          if (!customer.lastOrderDate || orderDate > customer.lastOrderDate) {
+            customer.lastOrderDate = orderDate;
+          }
+        }
+      });
+
+      // Convert to array and sort by total spent
+      const topCustomers = Array.from(customerStats.values())
+        .filter(customer => customer.orderCount > 0) // Only customers with orders
+        .sort((a, b) => b.totalSpent - a.totalSpent)
+        .slice(0, 5); // Top 5 customers
+
+      return topCustomers;
+    } catch (error) {
+      console.error('Error calculating top customers:', error);
+      return [];
+    }
   }
 }

@@ -1,11 +1,18 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { ProductCard } from '@/components/ProductCard';
 import { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Drawer,
   DrawerTrigger,
@@ -21,13 +28,16 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from '@/components/ui/pagination';
+import { SortDropdown } from '@/components/ui/SortDropdown';
+import { ViewToggle, ViewMode } from '@/components/ui/ViewToggle';
 
 import { PRODUCTS_CONSTANTS } from '@/lib/constants';
-import { Search, Filter, X, ChevronDown } from 'lucide-react';
+import { Search, Filter, X, ChevronDown, Grid3X3, List, Square } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { apiService } from '@/lib/api';
 import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
 import { cn } from '@/lib/utils';
+import { sortProducts, SortOption, getDefaultSortOption } from '@/lib/sorting-utils';
 import Footer from '@/components/Footer';
 
 export default function ProductsClient({ products }: { products: Product[] }) {
@@ -43,6 +53,9 @@ export default function ProductsClient({ products }: { products: Product[] }) {
   const [price, setPrice] = useState<number>(PRODUCTS_CONSTANTS.filters.priceRange.max);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [search, setSearch] = useState('');
+  const [sortOption, setSortOption] = useState<SortOption>(getDefaultSortOption());
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [itemsPerPage, setItemsPerPage] = useState<number>(6); // Reduced to 6 to make pagination more likely and better for mobile
 
   const [expandedFilters, setExpandedFilters] = useState<string[]>(['type']);
 
@@ -60,33 +73,84 @@ export default function ProductsClient({ products }: { products: Product[] }) {
     fetchCategories();
   }, []);
 
-  // Filtering logic
-  const filteredProducts = products.filter((product) => {
-    // Filter by type (Loại Yến) - use the type field from the product
-    const typeMatch =
-      selectedCategories.length === 0 || 
-      (product.type && selectedCategories.includes(product.type));
-    const weightMatch =
-      selectedWeights.length === 0 || selectedWeights.includes(product.weight);
-    const priceMatch = parseFloat(product.price) <= price;
-    const searchMatch =
-      !search ||
-      product.name.toLowerCase().includes(search.toLowerCase()) ||
-      product.description.toLowerCase().includes(search.toLowerCase()) ||
-      (product.category?.name
-        ? product.category.name.toLowerCase().includes(search.toLowerCase())
-        : false) ||
-      product.weight.toString().includes(search);
-    return typeMatch && weightMatch && priceMatch && searchMatch;
-  });
+  // Filtering and sorting logic with useMemo for performance
+  const filteredAndSortedProducts = useMemo(() => {
+    // First filter the products
+    const filtered = products.filter((product) => {
+      // Filter by type (Loại Yến) - use the type field from the product
+      const typeMatch =
+        selectedCategories.length === 0 || 
+        (product.type && selectedCategories.includes(product.type));
+      const weightMatch =
+        selectedWeights.length === 0 || selectedWeights.includes(product.weight);
+      const priceMatch = parseFloat(product.price) <= price;
+      const searchMatch =
+        !search ||
+        product.name.toLowerCase().includes(search.toLowerCase()) ||
+        product.description.toLowerCase().includes(search.toLowerCase()) ||
+        (product.category?.name
+          ? product.category.name.toLowerCase().includes(search.toLowerCase())
+          : false) ||
+        product.weight.toString().includes(search);
+      return typeMatch && weightMatch && priceMatch && searchMatch;
+    });
 
-  // Pagination logic
-  const totalPages =
-    Math.ceil(filteredProducts.length / PRODUCTS_CONSTANTS.pagination.itemsPerPage) || 1;
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * PRODUCTS_CONSTANTS.pagination.itemsPerPage,
-    currentPage * PRODUCTS_CONSTANTS.pagination.itemsPerPage,
+    // Then sort the filtered products
+    return sortProducts(filtered, sortOption);
+  }, [products, selectedCategories, selectedWeights, price, search, sortOption]);
+
+  // Enhanced pagination logic
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / itemsPerPage) || 1;
+  const paginatedProducts = filteredAndSortedProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
   );
+
+  // Calculate page info
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, filteredAndSortedProducts.length);
+  const totalItems = filteredAndSortedProducts.length;
+
+  // Generate smart page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = PRODUCTS_CONSTANTS.pagination.maxVisiblePages;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Smart pagination with ellipsis
+      if (currentPage <= 4) {
+        // Near start: show first 5 pages + ellipsis + last page
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        // Near end: show first page + ellipsis + last 5 pages
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // Middle: show first page + ellipsis + current-1, current, current+1 + ellipsis + last page
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
 
   // Handlers
   const handleCategoryChange = (categoryId: string) => {
@@ -129,11 +193,19 @@ export default function ProductsClient({ products }: { products: Product[] }) {
     setSearch('');
     setCurrentPage(1);
     setExpandedFilters(['type']);
+    setSortOption(getDefaultSortOption());
+    setViewMode('grid');
     
     // If no products from backend, reload the page
     if (products.length === 0) {
       window.location.reload();
     }
+  };
+
+  const handleItemsPerPageChange = (value: string) => {
+    const newItemsPerPage = parseInt(value);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
   };
 
   const toggleFilter = (filterName: string) => {
@@ -284,45 +356,53 @@ export default function ProductsClient({ products }: { products: Product[] }) {
   );
 
   const resultSummary = (
-    <div className="mb-8 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        <div className="text-center lg:text-left">
-          <div className="text-2xl font-bold text-[#a10000] mb-1">
-            {filteredProducts.length}
-          </div>
-          <div className="text-sm text-gray-600">
-            sản phẩm được tìm thấy
-            {search && (
-              <>
-                {' '}cho <span className="font-semibold text-gray-900 bg-yellow-100 px-2 py-1 rounded-full">&quot;{search}&quot;</span>
-              </>
-            )}
-          </div>
+    <div className="mb-8 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg relative z-10">
+      {/* Single Line Search and Controls */}
+      <div className="flex flex-col lg:flex-row items-center gap-4">
+        {/* Search Input - Takes up available space */}
+        <div className="relative flex-1 min-w-0 max-w-[80%]">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm yến sào..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-12 pr-4 py-3 border-2 border-gray-200 focus:border-[#a10000] focus:ring-[#a10000] rounded-xl text-base shadow-sm transition-all duration-200 w-full"
+          />
         </div>
-        
-        {/* Search Input and Filter Button */}
-        <div className="flex flex-col sm:flex-row gap-3 max-w-md w-full mx-auto lg:mx-0">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              type="text"
-              placeholder="Tìm kiếm sản phẩm yến sào..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-12 pr-4 py-3 border-2 border-gray-200 focus:border-[#a10000] focus:ring-[#a10000] rounded-xl text-base shadow-sm transition-all duration-200"
+
+        {/* Controls Group - Compact horizontal layout */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700 hidden sm:inline">Sắp xếp:</span>
+            <SortDropdown
+              value={sortOption}
+              onValueChange={setSortOption}
+              className="w-32 sm:w-36"
             />
           </div>
-          
-          {/* Filter Button - Mobile and Tablet */}
+
+          {/* View Toggle */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700 hidden sm:inline">Xem:</span>
+            <ViewToggle
+              value={viewMode}
+              onValueChange={setViewMode}
+            />
+          </div>
+
+          {/* Filter Button - Mobile/Tablet Only */}
           <div className="lg:hidden">
             <Drawer>
               <DrawerTrigger>
-                <div 
-                  className="w-full py-3 px-4 text-base border border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors cursor-pointer flex items-center justify-center rounded-md"
+                <Button 
+                  variant="outline"
+                  className="border-[#a10000] text-[#a10000] hover:bg-[#a10000] hover:text-white transition-colors px-3 py-2"
                 >
                   <Filter className="w-4 h-4 mr-2" />
-                  Bộ lọc
-                </div>
+                  <span className="hidden sm:inline">Bộ lọc</span>
+                </Button>
               </DrawerTrigger>
               <DrawerContent className="max-w-sm mx-auto rounded-t-lg">
                 <DrawerHeader className="border-b border-gray-200">
@@ -344,6 +424,34 @@ export default function ProductsClient({ products }: { products: Product[] }) {
               </DrawerContent>
             </Drawer>
           </div>
+
+          {/* Product Count - Desktop Only */}
+          <div className="hidden lg:flex items-center gap-2">
+            <div className="w-2 h-2 bg-[#a10000] rounded-full"></div>
+            <span className="text-sm font-medium text-gray-700">
+              {filteredAndSortedProducts.length} sản phẩm
+              {search && (
+                <>
+                  {' '}cho <span className="font-semibold text-gray-900 bg-yellow-100 px-2 py-1 rounded-full">&quot;{search}&quot;</span>
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Product Count - Below the line */}
+      <div className="lg:hidden mt-4 text-center">
+        <div className="text-lg font-bold text-[#a10000] mb-1">
+          {filteredAndSortedProducts.length}
+        </div>
+        <div className="text-sm text-gray-600">
+          sản phẩm được tìm thấy
+          {search && (
+            <>
+              {' '}cho <span className="font-semibold text-gray-900 bg-yellow-100 px-2 py-1 rounded-full">&quot;{search}&quot;</span>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -407,7 +515,11 @@ export default function ProductsClient({ products }: { products: Product[] }) {
 
             {/* Main Content */}
             <div className="flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 bg-gray-50/30 rounded-3xl p-4 lg:p-6">
+              <div className={cn(
+                "bg-gray-50/30 rounded-3xl p-4 lg:p-6",
+                viewMode === 'grid' && "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6",
+                viewMode === 'list' && "space-y-6"
+              )} style={{ zIndex: 1 }}>
                 {paginatedProducts.length === 0 ? (
                   <div className="col-span-full text-center py-8">
                     <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-xl max-w-md mx-auto">
@@ -443,57 +555,166 @@ export default function ProductsClient({ products }: { products: Product[] }) {
                     </div>
                   </div>
                 ) : (
-                  paginatedProducts.map((product, i) => (
-                    <ProductCard key={i} product={product} />
+                  paginatedProducts.map((product: Product, i: number) => (
+                    <ProductCard 
+                      key={product.id || i} 
+                      product={product} 
+                      viewMode={viewMode}
+                    />
                   ))
                 )}
               </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-8">
-                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-                    <Pagination>
-                      <PaginationContent className="gap-2">
-                        <PaginationItem>
-                          <PaginationPrevious
-                            aria-disabled={currentPage === 1}
-                            tabIndex={currentPage === 1 ? -1 : 0}
-                            onClick={currentPage === 1 ? undefined : handlePrev}
-                            href="#"
-                            className="text-[#a10000] hover:bg-[#a10000] hover:text-white rounded-xl transition-all duration-200"
-                          />
-                        </PaginationItem>
-                        {Array.from({ length: totalPages }, (_, idx) => (
-                          <PaginationItem key={idx + 1}>
-                            <PaginationLink
-                              isActive={currentPage === idx + 1}
-                              onClick={() => handlePageChange(idx + 1)}
-                              href="#"
-                              className={`rounded-xl transition-all duration-200 ${
-                                currentPage === idx + 1
-                                  ? 'bg-[#a10000] text-white shadow-lg scale-105'
-                                  : 'text-[#a10000] hover:bg-[#a10000] hover:text-white hover:scale-105'
-                              }`}
-                            >
-                              {idx + 1}
-                            </PaginationLink>
-                          </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                          <PaginationNext
-                            aria-disabled={currentPage === totalPages}
-                            tabIndex={currentPage === totalPages ? -1 : 0}
-                            onClick={
-                              currentPage === totalPages ? undefined : handleNext
-                            }
-                            href="#"
-                            className="text-[#a10000] hover:bg-[#a10000] hover:text-white rounded-xl transition-all duration-200"
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
+              {/* Enhanced Pagination */}
+              {filteredAndSortedProducts.length > 0 && (
+                <div className="mt-12">
+                  {/* Single Line Pagination Layout */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-gradient-to-r from-white to-gray-50/50 rounded-2xl border border-gray-100 shadow-sm">
+                    {/* Left: Items per page selector */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-700">Hiển thị</span>
+                      <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                        <SelectTrigger className="w-20 h-9 bg-white border-gray-200 hover:border-gray-300 transition-colors">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRODUCTS_CONSTANTS.pagination.options.map(option => (
+                            <SelectItem key={option} value={option.toString()}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-sm text-gray-600">sản phẩm mỗi trang</span>
+                    </div>
+
+                    {/* Center: Page info */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-[#a10000] rounded-full"></div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {totalItems > 0 
+                          ? `Hiển thị ${startItem}-${endItem} trong ${totalItems} sản phẩm`
+                          : 'Không có sản phẩm nào'
+                        }
+                      </span>
+                    </div>
+
+                    {/* Right: Pagination controls */}
+                    {(totalPages > 1 || itemsPerPage < totalItems) && (
+                      <div className="flex items-center gap-2">
+                        <Pagination>
+                          <PaginationContent className="gap-1">
+                            {/* Previous Button */}
+                            <PaginationItem>
+                              <PaginationPrevious
+                                aria-disabled={currentPage === 1}
+                                tabIndex={currentPage === 1 ? -1 : 0}
+                                onClick={currentPage === 1 ? undefined : handlePrev}
+                                href="#"
+                                className="text-[#a10000] hover:bg-[#a10000] hover:text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2"
+                                aria-label="Trang trước"
+                              >
+                                Trước
+                              </PaginationPrevious>
+                            </PaginationItem>
+
+                            {/* Page Numbers */}
+                            {getPageNumbers().map((page, index) => (
+                              <PaginationItem key={index}>
+                                {page === '...' ? (
+                                  <span className="px-3 py-2 text-gray-400 font-medium" aria-label="Các trang khác">•••</span>
+                                ) : (
+                                  <PaginationLink
+                                    isActive={currentPage === page}
+                                    onClick={() => handlePageChange(page as number)}
+                                    href="#"
+                                    className={`rounded-lg transition-all duration-200 px-3 py-2 min-w-[32px] text-center text-sm ${
+                                      currentPage === page
+                                        ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105 font-semibold'
+                                        : 'text-[#a10000] hover:bg-[#a10000] hover:text-white hover:scale-105 border border-gray-200 hover:border-[#a10000]'
+                                    }`}
+                                    aria-label={`Trang ${page}`}
+                                  >
+                                    {page}
+                                  </PaginationLink>
+                                )}
+                              </PaginationItem>
+                            ))}
+
+                            {/* Next Button */}
+                            <PaginationItem>
+                              <PaginationNext
+                                aria-disabled={currentPage === totalPages}
+                                tabIndex={currentPage === totalPages ? -1 : 0}
+                                onClick={currentPage === totalPages ? undefined : handleNext}
+                                href="#"
+                                className="text-[#a10000] hover:bg-[#a10000] hover:text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2"
+                                aria-label="Trang tiếp"
+                              >
+                                Tiếp
+                              </PaginationNext>
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Mobile Pagination - Keep separate for mobile */}
+                  {(totalPages > 1 || itemsPerPage < totalItems) && (
+                    <div className="flex justify-center sm:hidden mt-4">
+                      <div className="w-full max-w-md bg-white/90 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                        <div className="flex items-center justify-between gap-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePageChange(1)}
+                            disabled={currentPage === 1}
+                            className="text-[#a10000] border-[#a10000] hover:bg-[#a10000] hover:text-white transition-all duration-200"
+                            aria-label="Trang đầu"
+                          >
+                            Đầu
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePageChange(Math.max(1, currentPage - 5))}
+                            disabled={currentPage <= 5}
+                            className="text-[#a10000] border-[#a10000] hover:bg-[#a10000] hover:text-white transition-all duration-200"
+                            aria-label="Lùi 5 trang"
+                          >
+                            -5
+                          </Button>
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white rounded-lg font-semibold text-sm" aria-label={`Trang hiện tại: ${currentPage}`}>
+                              {currentPage}
+                            </span>
+                            <span className="text-sm text-gray-500">/ {totalPages}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 5))}
+                            disabled={currentPage >= totalPages - 4}
+                            className="text-[#a10000] border-[#a10000] hover:bg-[#a10000] hover:text-white transition-all duration-200"
+                            aria-label="Tiến 5 trang"
+                          >
+                            +5
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePageChange(totalPages)}
+                            disabled={currentPage === totalPages}
+                            className="text-[#a10000] border-[#a10000] hover:bg-[#a10000] hover:text-white transition-all duration-200"
+                            aria-label="Trang cuối"
+                          >
+                            Cuối
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

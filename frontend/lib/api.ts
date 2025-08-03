@@ -835,9 +835,10 @@ export const apiService = {
     }
   },
 
-  getUserReviews: async (userId: string) => {
+  // Get reviews for current authenticated user
+  getUserReviews: async () => {
     try {
-      const response = await api.get(`/reviews/user/${userId}`);
+      const response = await api.get('/reviews/user');
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -847,8 +848,6 @@ export const apiService = {
           throw new Error('Authentication required to fetch user reviews');
         } else if (response.status === 403) {
           throw new Error('Unauthorized to access user reviews');
-        } else if (response.status === 404) {
-          throw new Error('User not found');
         } else {
           throw new Error(`Failed to fetch user reviews: ${errorMessage}`);
         }
@@ -860,6 +859,22 @@ export const apiService = {
       console.error('Error fetching user reviews:', error);
       // Return empty array instead of throwing to prevent page crashes
       return [];
+    }
+  },
+
+  deleteReview: async (reviewId: string) => {
+    try {
+      const response = await api.delete(`/reviews/${reviewId}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete review');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      throw error;
     }
   },
 

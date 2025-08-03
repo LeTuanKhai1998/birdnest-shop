@@ -16,6 +16,7 @@ const navItems = [
   { label: 'Hồ sơ', href: '/dashboard/profile', icon: User, description: 'Cập nhật thông tin cá nhân' },
   { label: 'Địa chỉ', href: '/dashboard/addresses', icon: MapPin, description: 'Quản lý địa chỉ giao hàng' },
   { label: 'Yêu thích', href: '/dashboard/wishlist', icon: Heart, description: 'Sản phẩm yêu thích' },
+  { label: 'Đánh giá', href: '/dashboard/reviews', icon: Star, description: 'Quản lý đánh giá sản phẩm' },
   { label: 'Thông báo', href: '/dashboard/notifications', icon: Bell, description: 'Xem thông báo mới' },
 ];
 
@@ -53,6 +54,11 @@ const pageConfigs = {
     title: 'Danh Sách Yêu Thích',
     description: 'Lưu trữ và quản lý các sản phẩm bạn yêu thích',
     icon: Heart
+  },
+  '/dashboard/reviews': {
+    title: 'Đánh Giá Của Tôi',
+    description: 'Quản lý tất cả đánh giá sản phẩm của bạn',
+    icon: Star
   },
   '/dashboard/notifications': {
     title: 'Thông Báo',

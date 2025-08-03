@@ -23,7 +23,8 @@
     "init-sold-counts": "ts-node src/command.ts init-sold-counts",
     "create-test-orders": "ts-node src/command.ts create-test-orders",
     "populate-readable-ids": "ts-node src/command.ts populate-readable-ids",
-    "clear-db": "ts-node scripts/clear-db.ts"
+    "clear-db": "ts-node scripts/clear-db.ts",
+    "create-historical-data": "ts-node scripts/create-historical-data.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

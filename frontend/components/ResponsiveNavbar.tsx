@@ -177,7 +177,7 @@ export function ResponsiveNavbar() {
     <>
       {/* Enhanced Static Left Sidebar - Tablet and Desktop */}
       <div className={cn(
-        "hidden md:block fixed left-0 top-0 h-full w-24 bg-white/95 backdrop-blur-sm border-r border-gray-100 shadow-lg z-[60] transition-all duration-500 ease-in-out group",
+        "hidden md:block fixed left-0 top-0 h-full w-24 bg-white/95 backdrop-blur-sm border-r border-gray-100 shadow-lg z-40 transition-all duration-500 ease-in-out group",
         isLeftMenuVisible && !isDashboardPage ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Enhanced hover trigger area */}
@@ -305,7 +305,7 @@ export function ResponsiveNavbar() {
       <div>
         {/* Enhanced Full-width background container */}
         <div className={cn(
-          "w-full bg-gradient-to-r from-[#fdf6ef] to-[#fef8f2] border-b border-gray-100 shadow-lg fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+          "w-full bg-gradient-to-r from-[#fdf6ef] to-[#fef8f2] border-b border-gray-100 shadow-lg fixed top-0 left-0 right-0 z-30 transition-all duration-500",
           isScrolled && "shadow-xl bg-gradient-to-r from-[#fdf6ef]/98 to-[#fef8f2]/98 backdrop-blur-md"
         )}>
           {/* Enhanced Content container */}
