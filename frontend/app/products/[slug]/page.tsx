@@ -704,7 +704,7 @@ export default function ProductDetailPage({
                             <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-orange-600" />
                             Trọng lượng:
                           </span>
-                          <span className="text-xs md:text-sm text-gray-900 font-medium">{product.weight}g</span>
+                          <span className="text-xs md:text-sm text-gray-900 font-medium">{typeof product.weight === 'number' ? `${product.weight}g` : '100g'}</span>
                         </div>
                       )}
                       
@@ -823,7 +823,7 @@ export default function ProductDetailPage({
                       Mô tả sản phẩm
                     </h3>
                     <div className="bg-white rounded-lg p-2 md:p-3 lg:p-4 border border-amber-100">
-                      <p className="text-xs md:text-sm text-gray-700 leading-relaxed">
+                      <p className="text-xs md:text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                         {product.description.length > 200 
                           ? `${product.description.substring(0, 200)}...` 
                           : product.description}
@@ -1367,7 +1367,7 @@ function ProductDetailsTabs({ product }: { product: Product }) {
                 </div>
                 <h3 className="text-base md:text-lg font-semibold text-gray-900">Mô tả chi tiết</h3>
               </div>
-              <div className="prose prose-sm text-gray-700 leading-relaxed max-w-none text-sm md:text-base">
+              <div className="prose prose-sm text-gray-700 leading-relaxed max-w-none text-sm md:text-base whitespace-pre-line">
                 {product.description}
               </div>
             </div>

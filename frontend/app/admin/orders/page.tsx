@@ -1343,7 +1343,7 @@ export default function AdminOrdersPage() {
                               </p>
                               {item.product?.weight && (
                                 <p className="text-xs text-gray-500">
-                                  Trọng lượng: {item.product.weight}g
+                                  Trọng lượng: {typeof item.product.weight === 'number' ? `${item.product.weight}g` : '100g'}
                                 </p>
               )}
             </div>

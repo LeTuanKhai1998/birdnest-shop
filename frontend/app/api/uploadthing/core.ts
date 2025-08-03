@@ -1,6 +1,28 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
-import { generateUploadFilename } from "@/lib/upload-utils";
+
+// Helper function to get entity ID from request or generate one
+const getEntityId = (req: Request, metadata: any): string => {
+  // Try to get entityId from URL params or request body
+  const url = new URL(req.url);
+  const entityId = url.searchParams.get('entityId') || metadata.userId || 'default';
+  return entityId;
+};
+
+// Helper function to generate standardized filename on server side
+const generateServerFilename = (type: string, entityId: string, originalName: string): string => {
+  const extension = originalName.split('.').pop()?.toLowerCase() || 'jpg';
+  const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+  const validExtension = allowedExtensions.includes(extension) ? extension : 'jpg';
+  
+  const cleanEntityId = entityId
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toLowerCase();
+  
+  const timestampStr = Math.floor(Date.now() / 1000).toString();
+  
+  return `${type}-${cleanEntityId}-${timestampStr}.${validExtension}`;
+};
 
 const f = createUploadthing();
 
@@ -21,20 +43,20 @@ export const ourFileRouter = {
   })
     .middleware(async ({ req }) => {
       const user = await auth();
-      return { userId: user.id };
+      const entityId = getEntityId(req, { userId: user.id });
+      return { userId: user.id, entityId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // Generate standardized filename
-      const filename = generateUploadFilename({
-        type: 'avatar',
-        entityId: metadata.userId,
-        originalName: file.name,
-      });
+      // Generate standardized filename on server side
+      const filename = generateServerFilename('avatar', metadata.entityId, file.name);
+      
+      console.log(`📁 Avatar upload: ${file.name} → ${filename}`);
       
       return { 
         uploadedBy: metadata.userId,
         filename,
         originalName: file.name,
+        entityId: metadata.entityId,
       };
     }),
 
@@ -55,12 +77,8 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
       
-      // Generate standardized filename
-      const filename = generateUploadFilename({
-        type: 'general',
-        entityId: metadata.userId,
-        originalName: file.name,
-      });
+      // Generate standardized filename on server side
+      const filename = generateServerFilename('general', metadata.userId, file.name);
       
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { 
@@ -79,20 +97,20 @@ export const ourFileRouter = {
   })
     .middleware(async ({ req }) => {
       const user = await auth();
-      return { userId: user.id };
+      const entityId = getEntityId(req, { userId: user.id });
+      return { userId: user.id, entityId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // Generate standardized filename
-      const filename = generateUploadFilename({
-        type: 'product',
-        entityId: metadata.userId,
-        originalName: file.name,
-      });
+      // Generate standardized filename on server side
+      const filename = generateServerFilename('product', metadata.entityId, file.name);
+      
+      console.log(`📁 Product upload: ${file.name} → ${filename}`);
       
       return { 
         uploadedBy: metadata.userId,
         filename,
         originalName: file.name,
+        entityId: metadata.entityId,
       };
     }),
 
@@ -105,20 +123,20 @@ export const ourFileRouter = {
   })
     .middleware(async ({ req }) => {
       const user = await auth();
-      return { userId: user.id };
+      const entityId = getEntityId(req, { userId: user.id });
+      return { userId: user.id, entityId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // Generate standardized filename
-      const filename = generateUploadFilename({
-        type: 'general',
-        entityId: metadata.userId,
-        originalName: file.name,
-      });
+      // Generate standardized filename on server side
+      const filename = generateServerFilename('general', metadata.entityId, file.name);
+      
+      console.log(`📁 General upload: ${file.name} → ${filename}`);
       
       return { 
         uploadedBy: metadata.userId,
         filename,
         originalName: file.name,
+        entityId: metadata.entityId,
       };
     }),
 } satisfies FileRouter;

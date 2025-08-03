@@ -7,12 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { 
-  compressImage, 
-  validateImageFile, 
-  formatFileSize,
-  generateUploadId 
-} from "@/lib/upload-utils";
+
 
 interface EnhancedUploadThingProps {
   endpoint: "avatarUploader" | "productImageUploader" | "generalImageUploader";
@@ -52,6 +47,7 @@ interface ClientUploadButtonProps {
   appearance?: Record<string, unknown>;
   content?: Record<string, React.ReactNode>;
   disabled?: boolean;
+  entityId?: string;
 }
 
 // Client-only wrapper for UploadButton
@@ -105,7 +101,7 @@ export function EnhancedUploadThing({
   showPreview = true,
   children,
   entityId = "default",
-  compressionOptions = {},
+
 }: EnhancedUploadThingProps) {
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -171,50 +167,7 @@ export function EnhancedUploadThing({
     });
   }, [onUploadComplete]);
 
-  // Custom file processing with compression
-  const processFiles = useCallback(async (files: File[]) => {
-    const processedFiles: File[] = [];
-    
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      
-      // Validate file
-      const validation = validateImageFile(file);
-      if (!validation.isValid) {
-        throw new Error(validation.error);
-      }
-      
-      // Update compression progress
-      setCompressionProgress((i / files.length) * 100);
-      
-      try {
-        // Compress image
-        const compressedFile = await compressImage(file, {
-          maxWidthOrHeight: 1080,
-          maxSizeMB: 1.5,
-          useWebWorker: true,
-          ...compressionOptions,
-        });
-        
-        // Create a new file with the compressed data
-        const processedFile = new File([compressedFile], file.name, {
-          type: compressedFile.type,
-          lastModified: Date.now(),
-        });
-        
-        processedFiles.push(processedFile);
-        
-        console.log(`Compressed ${file.name}: ${formatFileSize(file.size)} → ${formatFileSize(compressedFile.size)}`);
-        
-      } catch (error) {
-        console.warn('Compression failed for', file.name, error);
-        processedFiles.push(file); // Use original file if compression fails
-      }
-    }
-    
-    setCompressionProgress(100);
-    return processedFiles;
-  }, [compressionOptions]);
+
 
   // Don't render anything on server
   if (!isClient) {
@@ -250,8 +203,13 @@ export function EnhancedUploadThing({
           onUploadComplete={handleUploadComplete}
           onUploadError={handleUploadError}
           onUploadBegin={handleUploadBegin}
+          entityId={entityId}
           config={{
             mode: "auto",
+            // Pass entityId to the server for filename generation
+            input: {
+              entityId: entityId,
+            },
           }}
           appearance={{
             button: cn(

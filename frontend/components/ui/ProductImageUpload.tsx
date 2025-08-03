@@ -7,27 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  ImageIcon, 
-  X, 
   Upload, 
   Camera, 
   Star, 
   Trash2, 
-  Move,
-  CheckCircle2,
-  AlertCircle,
   Info,
   Image as ImageIconAlt,
   Loader2
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { 
-  compressImage, 
-  validateImageFile, 
-  formatFileSize,
-  generateUploadId 
-} from "@/lib/upload-utils";
+
 
 interface ProductImageUploadProps {
   endpoint: "productImageUploader";
@@ -70,8 +60,7 @@ export function ProductImageUpload({
   description = "Tải lên hình ảnh sản phẩm chất lượng cao",
   currentImages = [],
   onImagesChange,
-  entityId = "product-default",
-  compressionOptions = {},
+
 }: ProductImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);

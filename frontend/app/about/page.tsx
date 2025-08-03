@@ -175,7 +175,7 @@ export default function AboutPage() {
                     <product.icon className="w-8 h-8 text-green-600" />
                   </div>
                   <h3 className="text-xl font-semibold mb-3">{product.name}</h3>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 whitespace-pre-line">
                     {product.description}
                   </p>
                 </CardContent>

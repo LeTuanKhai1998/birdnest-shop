@@ -120,7 +120,7 @@ export default function ProfilePage() {
       // Store complete user data for display
       setCompleteUserData(userResponse);
       
-      // Debug: Log the user response
+  
       
       
       // Update form data with complete user information
@@ -469,7 +469,7 @@ export default function ProfilePage() {
               <div className="text-center">
                 {/* Modern Avatar Upload Section */}
                 <div className="relative mx-auto mb-3 group">
-                  {/* Avatar Container with Enhanced Styling */}
+                  {/* Avatar Container with Enhanced Styling - Full Height */}
                   <div className="relative inline-block">
                     <div 
                       className={`
@@ -489,21 +489,42 @@ export default function ProfilePage() {
                         }
                       }}
                     >
-                      {/* Unified Avatar Component */}
+                      {/* Custom Avatar Display - Full Height */}
                       <div className="w-full h-full">
                         {!isLoading && completeUserData ? (
-                          <UnifiedAvatar
-                            user={completeUserData}
-                            size={96}
-                            className="w-full h-full md:w-32 md:h-32"
-                          />
+                          (() => {
+                            const avatarUrl = completeUserData.avatar;
+                            const displayName = completeUserData.name || completeUserData.email || "User";
+                            
+                            if (avatarUrl && avatarUrl.trim() !== '') {
+                              // Custom avatar - show full height
+                              return (
+                                <img
+                                  src={avatarUrl}
+                                  alt={`${displayName} avatar`}
+                                  className="w-full h-full object-cover rounded-full"
+                                  onError={(e) => {
+                                    console.error('Avatar image failed to load:', avatarUrl);
+                                    e.currentTarget.src = '/images/default_avatar.mp4';
+                                  }}
+                                />
+                              );
+                            } else {
+                              // Default avatar or fallback
+                              return (
+                                <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
+                                  <User className="w-8 h-8 md:w-10 md:h-10 text-gray-400" />
+                                </div>
+                              );
+                            }
+                          })()
                         ) : (
                           <div className="w-full h-full rounded-full bg-gray-200 animate-pulse" />
                         )}
                       </div>
                       
                       {/* Best Practice Hover Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center scale-120">
+                      <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
                         <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg transform group-hover:scale-110 transition-transform duration-300">
                           <Camera className="w-5 h-5 md:w-6 md:h-6 text-gray-700" />
                         </div>
@@ -787,6 +808,10 @@ export default function ProfilePage() {
                       src={avatarUrl}
                       alt="Ảnh đại diện hiện tại"
                       className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+                      onError={(e) => {
+                        console.error('Avatar preview failed to load:', avatarUrl);
+                        e.currentTarget.src = '/images/default_avatar.mp4';
+                      }}
                     />
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border border-white"></div>
                   </div>

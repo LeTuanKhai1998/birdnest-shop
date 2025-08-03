@@ -122,11 +122,32 @@ export default function DashboardLayout({
             {/* User Info */}
             <Card className="p-3 bg-gray-50 border-gray-200">
               <div className="flex items-center gap-3">
-                <UnifiedAvatar
-                  user={user}
-                  size={36}
-                  className=""
-                />
+                {(() => {
+                  const avatarUrl = (user as any)?.avatar;
+                  const displayName = user?.name || user?.email || "User";
+                  
+                  if (avatarUrl && avatarUrl.trim() !== '') {
+                    // Custom avatar - show full height
+                    return (
+                      <img
+                        src={avatarUrl}
+                        alt={`${displayName} avatar`}
+                        className="w-9 h-9 object-cover rounded-full"
+                        onError={(e) => {
+                          console.error('Avatar image failed to load:', avatarUrl);
+                          e.currentTarget.src = '/images/default_avatar.mp4';
+                        }}
+                      />
+                    );
+                  } else {
+                    // Default avatar or fallback
+                    return (
+                      <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center">
+                        <User className="w-4 h-4 text-gray-400" />
+                      </div>
+                    );
+                  }
+                })()}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate text-sm">{user?.name || 'Người dùng'}</p>
                   <p className="text-xs text-gray-500 truncate">{user?.email}</p>

@@ -979,7 +979,7 @@ export default function CheckoutPage() {
                           </div>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="secondary" className="text-xs">
-                              {product.weight}g
+                              {typeof product.weight === 'number' ? `${product.weight}g` : '100g'}
                             </Badge>
                             <span className="text-xs text-gray-500">x{quantity}</span>
                           </div>

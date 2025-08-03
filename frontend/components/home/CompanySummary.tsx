@@ -91,7 +91,7 @@ export function CompanySummary() {
                       <div className="w-4 h-4 bg-[#a10000] rounded-full mt-1 mr-4 flex-shrink-0"></div>
                       <div>
                         <h4 className="font-bold text-base text-gray-800 mb-1">{product.title}</h4>
-                        <p className="text-base text-gray-600 leading-relaxed">{product.description}</p>
+                        <p className="text-base text-gray-600 leading-relaxed whitespace-pre-line">{product.description}</p>
                       </div>
                     </div>
                   ))}

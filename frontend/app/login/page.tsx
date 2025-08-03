@@ -244,23 +244,7 @@ function LoginPageInner() {
                     Đăng ký ngay
                   </a>
                 </p>
-                {/* Debug section - remove in production */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">Debug Info:</p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        localStorage.removeItem('auth-token');
-                        localStorage.removeItem('user');
-                        window.location.reload();
-                      }}
-                      className="text-xs text-red-600 hover:text-red-800 underline"
-                    >
-                      Clear Auth Data & Reload
-                    </button>
-                  </div>
-                )}
+
               </div>
             </CardContent>
           </Card>

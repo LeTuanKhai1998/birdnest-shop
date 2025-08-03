@@ -130,7 +130,7 @@ export default function CartPage() {
                                 </Link>
                                 <div className="flex items-center gap-2 mt-1">
                                   <Badge variant="secondary" className="text-xs">
-                                    {product.weight}g
+                                    {typeof product.weight === 'number' ? `${product.weight}g` : '100g'}
                                   </Badge>
                                   {product.categoryId && (
                                     <Badge variant="secondary" className="text-xs">

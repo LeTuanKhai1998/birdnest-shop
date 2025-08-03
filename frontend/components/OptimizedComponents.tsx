@@ -47,7 +47,7 @@ export const OptimizedProductList = memo(({
         >
           <div className="aspect-square bg-gray-200 rounded-lg mb-4"></div>
           <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
-          <p className="text-gray-600 text-sm mb-2">{product.description}</p>
+          <p className="text-gray-600 text-sm mb-2 whitespace-pre-line">{product.description}</p>
           <p className="font-bold text-red-600">${product.price}</p>
         </div>
       ))}

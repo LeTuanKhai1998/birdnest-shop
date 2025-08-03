@@ -403,11 +403,32 @@ export function ResponsiveNavbar() {
                             className="flex items-center gap-3 p-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-md group"
                           >
                             {!loading && user ? (
-                              <UnifiedAvatar
-                                user={user}
-                                size={32}
-                                className="w-8 h-8 transition-all duration-300"
-                              />
+                              (() => {
+                                const avatarUrl = user.avatar;
+                                const displayName = user.name || user.email || "User";
+                                
+                                if (avatarUrl && avatarUrl.trim() !== '') {
+                                  // Custom avatar - show full height
+                                  return (
+                                    <img
+                                      src={avatarUrl}
+                                      alt={`${displayName} avatar`}
+                                      className="w-8 h-8 object-cover rounded-full transition-all duration-300"
+                                      onError={(e) => {
+                                        console.error('Avatar image failed to load:', avatarUrl);
+                                        e.currentTarget.src = '/images/default_avatar.mp4';
+                                      }}
+                                    />
+                                  );
+                                } else {
+                                  // Default avatar or fallback
+                                  return (
+                                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                      <User className="w-4 h-4 text-gray-400" />
+                                    </div>
+                                  );
+                                }
+                              })()
                             ) : (
                               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
                             )}
@@ -592,11 +613,32 @@ export function ResponsiveNavbar() {
                               className="flex items-center gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 transition-all duration-300 group"
                               onClick={() => setSheetOpen(false)}
                             >
-                              <UnifiedAvatar
-                                user={user}
-                                size={40}
-                                className="bg-transparent transition-all duration-300"
-                              />
+                              {(() => {
+                                const avatarUrl = user?.avatar;
+                                const displayName = user?.name || user?.email || "User";
+                                
+                                if (avatarUrl && avatarUrl.trim() !== '') {
+                                  // Custom avatar - show full height
+                                  return (
+                                    <img
+                                      src={avatarUrl}
+                                      alt={`${displayName} avatar`}
+                                      className="w-10 h-10 object-cover rounded-full transition-all duration-300"
+                                      onError={(e) => {
+                                        console.error('Avatar image failed to load:', avatarUrl);
+                                        e.currentTarget.src = '/images/default_avatar.mp4';
+                                      }}
+                                    />
+                                  );
+                                } else {
+                                  // Default avatar or fallback
+                                  return (
+                                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                      <User className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                  );
+                                }
+                              })()}
                               <div>
                                 <div className="font-semibold text-gray-800 group-hover:text-[#a10000] transition-colors">
                                   {user?.name}
@@ -817,13 +859,32 @@ export function ResponsiveNavbar() {
                     onClick={() => setDesktopSidebarOpen(false)}
                   >
                     {!loading && user ? (
-                      <UnifiedAvatar
-                        user={user}
-                        size={40}
-                        showName={true}
-                        showEmail={true}
-                        className="bg-transparent transition-all duration-300"
-                      />
+                      (() => {
+                        const avatarUrl = user.avatar;
+                        const displayName = user.name || user.email || "User";
+                        
+                        if (avatarUrl && avatarUrl.trim() !== '') {
+                          // Custom avatar - show full height
+                          return (
+                            <img
+                              src={avatarUrl}
+                              alt={`${displayName} avatar`}
+                              className="w-10 h-10 object-cover rounded-full transition-all duration-300"
+                              onError={(e) => {
+                                console.error('Avatar image failed to load:', avatarUrl);
+                                e.currentTarget.src = '/images/default_avatar.mp4';
+                              }}
+                            />
+                          );
+                        } else {
+                          // Default avatar or fallback
+                          return (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                              <User className="w-5 h-5 text-gray-400" />
+                            </div>
+                          );
+                        }
+                      })()
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
                     )}

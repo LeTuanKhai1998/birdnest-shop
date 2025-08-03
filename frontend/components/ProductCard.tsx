@@ -21,6 +21,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const { format } = useCurrencyFormat();
   const freeShippingThreshold = useFreeShippingThreshold();
   
+  // Helper function to format weight consistently
+  const formatWeight = (weight: any): string => {
+    if (typeof weight === 'number' && weight > 0) {
+      return `${weight}g`;
+    }
+    return '100g'; // Default fallback
+  };
+  
   // Don't show products that are out of stock
   if ((product.quantity || 0) <= 0) {
     return null;
@@ -81,7 +89,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               {/* Weight Badge */}
               <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-20 bg-[#a10000]/90 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg border border-white/20">
                 <Package className="w-3 h-3 sm:w-4 sm:h-4 inline mr-0.5 sm:mr-1" />
-                {product.weight}g
+                {formatWeight(product.weight)}
               </div>
 
               {/* Popular Badge */}
@@ -145,7 +153,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     </div>
                   )}
                   <div className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-full">
-                    {product.weight}g
+                    {formatWeight(product.weight)}
                   </div>
                 </div>
               </div>

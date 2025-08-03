@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Tag,
+  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -71,7 +72,7 @@ const pageConfigs = {
 
 const AdminLayout = React.memo(function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { isLoading, isAuthenticated, isAdmin } = useRequireAdmin('/login?callbackUrl=/admin');
+  const { user, isLoading, isAuthenticated, isAdmin } = useRequireAdmin('/login?callbackUrl=/admin');
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Get current page configuration
@@ -114,7 +115,7 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
 
         {/* Sidebar - Modern mobile-first design */}
         <aside className={cn(
-          "flex flex-col w-80 bg-white dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700 shadow-xl py-6 md:py-8 px-6 md:px-8 h-screen rounded-br-3xl border-b border-gray-200 dark:border-neutral-700 overflow-y-auto transition-all duration-500 ease-out z-40",
+          "flex flex-col w-80 bg-white dark:bg-neutral-800 border-r border-gray-200 dark:border-neutral-700 shadow-xl py-6 md:py-8 px-6 md:px-8 h-[130vh] rounded-br-3xl border-b border-gray-200 dark:border-neutral-700 transition-all duration-500 ease-out z-40",
           "fixed md:sticky top-0",
           mobileMenuOpen ? "translate-x-0 opacity-100" : "-translate-x-full md:translate-x-0 md:opacity-100 opacity-0"
         )}>
@@ -133,22 +134,54 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
             {/* User Info - Modern card design */}
             <Card className="p-4 md:p-5 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-700 dark:to-neutral-600 border-gray-200 dark:border-neutral-600 rounded-2xl shadow-sm">
               <div className="flex items-center gap-4 md:gap-5">
-                <UnifiedAvatar
-                  user={{ name: 'Admin User', email: 'admin@birdnest.vn' }}
-                  size={48}
-                  className="md:w-12 md:h-12"
-                />
+                {(() => {
+                  const avatarUrl = (user as any)?.avatar;
+                  const displayName = user?.name || user?.email || 'Admin User';
+                  
+                  if (avatarUrl && avatarUrl.trim() !== '') {
+                    return (
+                      <>
+                        <img
+                          src={avatarUrl}
+                          alt={`${displayName} avatar`}
+                          className="w-12 h-12 object-cover rounded-full"
+                          onError={(e) => {
+                            console.error('Avatar image failed to load:', avatarUrl);
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.nextElementSibling;
+                            if (fallback) {
+                              fallback.classList.remove('hidden');
+                            }
+                          }}
+                        />
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#a10000] to-[#c41e3a] flex items-center justify-center hidden">
+                          <User className="w-6 h-6 text-white" />
+                        </div>
+                      </>
+                    );
+                  } else {
+                    return (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#a10000] to-[#c41e3a] flex items-center justify-center">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                    );
+                  }
+                })()}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 dark:text-gray-100 truncate text-base md:text-lg">Admin User</p>
-                  <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 truncate hidden md:block">admin@birdnest.vn</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100 truncate text-base md:text-lg">
+                    {user?.name || user?.email || 'Admin User'}
+                  </p>
+                  <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 truncate hidden md:block">
+                    {user?.email || 'admin@birdnest.vn'}
+                  </p>
                 </div>
               </div>
             </Card>
           </div>
 
           {/* Navigation - Modern mobile navigation patterns */}
-          <nav className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10">
-            <h3 className="text-sm md:text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 md:mb-5">
+          <nav className="flex flex-col gap-2 md:gap-3 mb-6 md:mb-8">
+            <h3 className="text-sm md:text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 md:mb-4">
               Bảng điều khiển
             </h3>
             {navLinks.map((link) => (
@@ -157,7 +190,7 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
+                  'flex items-center gap-4 md:gap-5 px-4 md:px-5 py-3 md:py-4 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                   pathname === link.href
                     ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
@@ -170,12 +203,12 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
                 )} />
                 
                 <link.icon className={cn(
-                  "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                  "w-5 h-5 md:w-6 md:h-6 transition-all duration-300 relative z-10",
                   pathname === link.href ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
                 )} />
                 <div className="flex-1 relative z-10">
-                  <span className="text-base md:text-lg font-semibold">{link.label}</span>
-                  <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">
+                  <span className="text-sm md:text-base font-semibold">{link.label}</span>
+                  <p className="text-xs md:text-sm opacity-75 mt-1 leading-tight hidden md:block">
                     {link.href === '/admin' && 'Tổng quan hiệu suất cửa hàng'}
                     {link.href === '/admin/orders' && 'Xem và quản lý đơn hàng'}
                     {link.href === '/admin/products' && 'Thêm, chỉnh sửa sản phẩm'}
@@ -188,18 +221,18 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
             ))}
           </nav>
           
-          <Separator className="my-6 md:my-8" />
+          <Separator className="my-4 md:my-6" />
           
           {/* Main Navigation - Enhanced mobile experience */}
-          <nav className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-10">
-            <h3 className="text-sm md:text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 md:mb-5">
+          <nav className="flex flex-col gap-2 md:gap-3 mb-6 md:mb-8">
+            <h3 className="text-sm md:text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 md:mb-4">
               Điều hướng chính
             </h3>
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
+                'flex items-center gap-4 md:gap-5 px-4 md:px-5 py-3 md:py-4 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/'
                   ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
@@ -210,19 +243,19 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
                 pathname === '/' ? "opacity-100" : "group-hover:opacity-10"
               )} />
               <HomeIcon className={cn(
-                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                "w-5 h-5 md:w-6 md:h-6 transition-all duration-300 relative z-10",
                 pathname === '/' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
               )} />
               <div className="flex-1 relative z-10">
-                <span className="text-base md:text-lg font-semibold">Trang chủ</span>
-                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Về trang chủ chính</p>
+                <span className="text-sm md:text-base font-semibold">Trang chủ</span>
+                <p className="text-xs md:text-sm opacity-75 mt-1 leading-tight hidden md:block">Về trang chủ chính</p>
               </div>
             </Link>
             <Link
               href="/products"
               onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
+                'flex items-center gap-4 md:gap-5 px-4 md:px-5 py-3 md:py-4 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/products'
                   ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
@@ -233,19 +266,19 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
                 pathname === '/products' ? "opacity-100" : "group-hover:opacity-10"
               )} />
               <Box className={cn(
-                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                "w-5 h-5 md:w-6 md:h-6 transition-all duration-300 relative z-10",
                 pathname === '/products' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
               )} />
               <div className="flex-1 relative z-10">
-                <span className="text-base md:text-lg font-semibold">Sản phẩm</span>
-                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Khám phá sản phẩm</p>
+                <span className="text-sm md:text-base font-semibold">Sản phẩm</span>
+                <p className="text-xs md:text-sm opacity-75 mt-1 leading-tight hidden md:block">Khám phá sản phẩm</p>
               </div>
             </Link>
             <Link
               href="/about"
               onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
+                'flex items-center gap-4 md:gap-5 px-4 md:px-5 py-3 md:py-4 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/about'
                   ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
@@ -256,19 +289,19 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
                 pathname === '/about' ? "opacity-100" : "group-hover:opacity-10"
               )} />
               <Info className={cn(
-                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                "w-5 h-5 md:w-6 md:h-6 transition-all duration-300 relative z-10",
                 pathname === '/about' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
               )} />
               <div className="flex-1 relative z-10">
-                <span className="text-base md:text-lg font-semibold">Giới thiệu</span>
-                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Tìm hiểu về chúng tôi</p>
+                <span className="text-sm md:text-base font-semibold">Giới thiệu</span>
+                <p className="text-xs md:text-sm opacity-75 mt-1 leading-tight hidden md:block">Tìm hiểu về chúng tôi</p>
               </div>
             </Link>
             <Link
               href="/contact"
               onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
+                'flex items-center gap-4 md:gap-5 px-4 md:px-5 py-3 md:py-4 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/contact'
                   ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
@@ -279,19 +312,19 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
                 pathname === '/contact' ? "opacity-100" : "group-hover:opacity-10"
               )} />
               <Mail className={cn(
-                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                "w-5 h-5 md:w-6 md:h-6 transition-all duration-300 relative z-10",
                 pathname === '/contact' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
               )} />
               <div className="flex-1 relative z-10">
-                <span className="text-base md:text-lg font-semibold">Liên hệ</span>
-                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Liên hệ hỗ trợ</p>
+                <span className="text-sm md:text-base font-semibold">Liên hệ</span>
+                <p className="text-xs md:text-sm opacity-75 mt-1 leading-tight hidden md:block">Liên hệ hỗ trợ</p>
               </div>
             </Link>
             <Link
               href="/guest-orders"
               onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'flex items-center gap-4 md:gap-5 px-5 md:px-6 py-4 md:py-5 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
+                'flex items-center gap-4 md:gap-5 px-4 md:px-5 py-3 md:py-4 rounded-2xl font-medium transition-all duration-300 group relative overflow-hidden',
                 pathname === '/guest-orders'
                   ? 'bg-gradient-to-r from-[#a10000] to-[#c41e3a] text-white shadow-lg scale-105'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:text-[#a10000] hover:scale-102'
@@ -302,12 +335,12 @@ const AdminLayout = React.memo(function AdminLayout({ children }: { children: Re
                 pathname === '/guest-orders' ? "opacity-100" : "group-hover:opacity-10"
               )} />
               <Package className={cn(
-                "w-6 h-6 md:w-7 md:h-7 transition-all duration-300 relative z-10",
+                "w-5 h-5 md:w-6 md:h-6 transition-all duration-300 relative z-10",
                 pathname === '/guest-orders' ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-[#a10000]"
               )} />
               <div className="flex-1 relative z-10">
-                <span className="text-base md:text-lg font-semibold">Tra đơn</span>
-                <p className="text-sm opacity-75 mt-1 leading-tight hidden md:block">Tra cứu đơn hàng</p>
+                <span className="text-sm md:text-base font-semibold">Tra đơn</span>
+                <p className="text-xs md:text-sm opacity-75 mt-1 leading-tight hidden md:block">Tra cứu đơn hàng</p>
               </div>
             </Link>
           </nav>

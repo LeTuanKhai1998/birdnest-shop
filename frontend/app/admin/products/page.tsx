@@ -764,13 +764,15 @@ export default function AdminProductsPage() {
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
                     <th className="text-left p-2 sm:p-4 font-medium text-gray-700">Sản phẩm</th>
-                    <th className="hidden sm:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">Danh mục</th>
-                    <th className="hidden md:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">
+                    <th className="text-left p-2 sm:p-4 font-medium text-gray-700">Danh mục</th>
+                    <th className="text-left p-2 sm:p-4 font-medium text-gray-700">
                       <button
                         onClick={() => handleSort('price')}
                         className="flex items-center gap-1 hover:text-gray-900 transition-colors"
@@ -779,7 +781,7 @@ export default function AdminProductsPage() {
                         {getSortIcon('price')}
                       </button>
                     </th>
-                    <th className="hidden md:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">
+                    <th className="text-left p-2 sm:p-4 font-medium text-gray-700">
                       <button
                         onClick={() => handleSort('quantity')}
                         className="flex items-center gap-1 hover:text-gray-900 transition-colors"
@@ -788,47 +790,165 @@ export default function AdminProductsPage() {
                         {getSortIcon('quantity')}
                       </button>
                     </th>
-                    <th className="hidden sm:table-cell text-left p-2 sm:p-4 font-medium text-gray-700">Trạng thái</th>
+                    <th className="text-left p-2 sm:p-4 font-medium text-gray-700">Trạng thái</th>
                     <th className="text-right p-2 sm:p-4 font-medium text-gray-700 whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedProducts.map((product: Product) => (
-                                            <tr key={product.id} className="border-b hover:bg-gray-50 transition-colors">
-                          <td className="p-2 sm:p-4">
-                            <div className="flex items-center gap-2 sm:gap-3">
-                              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <SmartImage
-                                  src={getFirstImageUrl(product.images as any) || FALLBACK_IMAGE}
-                                  alt={product.name}
-                                  width={48}
-                                  height={48}
-                                  className="rounded-lg object-cover w-full h-full"
-                                />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="font-medium text-sm truncate">{product.name}</p>
-                                <p className="text-xs text-gray-500 truncate hidden sm:block">
-                                  {product.description}
-                                </p>
-                                <div className="flex items-center gap-2 sm:hidden mt-1">
-                                  <Badge 
-                                    variant="secondary" 
-                                    className={cn(
-                                      "text-xs border",
-                                      getCategoryColor(product.category?.name, product.category?.colorScheme)
-                                    )}
-                                  >
-                                    {product.category?.name || 'N/A'}
-                                  </Badge>
-                                  <StatusBadge 
-                                    status={product.isActive ? 'ACTIVE' : 'INACTIVE'} 
-                                  />
-                                </div>
-                              </div>
+                    <tr key={product.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-2 sm:p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <SmartImage
+                              src={getFirstImageUrl(product.images as any) || FALLBACK_IMAGE}
+                              alt={product.name}
+                              width={64}
+                              height={64}
+                              className="rounded-lg object-cover w-full h-full"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm truncate">{product.name}</p>
+                            <div className="text-xs text-gray-500">
+                              <p 
+                                className="overflow-hidden cursor-help" 
+                                style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}
+                                title={product.description}
+                              >
+                                {product.description}
+                              </p>
                             </div>
-                          </td>
-                          <td className="hidden sm:table-cell p-2 sm:p-4">
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-2 sm:p-4">
+                        <Badge 
+                          variant="secondary" 
+                          className={cn(
+                            "text-xs border",
+                            getCategoryColor(product.category?.name, product.category?.colorScheme)
+                          )}
+                        >
+                          {product.category?.name || 'N/A'}
+                        </Badge>
+                      </td>
+                      <td className="p-2 sm:p-4">
+                        <p className="font-medium text-sm">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(product.price))}
+                        </p>
+                      </td>
+                      <td className="p-2 sm:p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{product.quantity || 0}</span>
+                          {(product.quantity || 0) < 10 && (
+                            <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
+                              Low
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-2 sm:p-4">
+                        <StatusBadge 
+                          status={product.isActive ? 'ACTIVE' : 'INACTIVE'} 
+                        />
+                      </td>
+                      <td className="p-2 sm:p-4 text-right">
+                        <div className="flex items-center gap-2 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(product)}
+                            className="h-9 w-9 p-0"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleToggleActive(product)}
+                            className={cn(
+                              "whitespace-nowrap transition-all duration-200 font-medium h-9 w-9 p-0",
+                              product.isActive 
+                                ? "text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300" 
+                                : "text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200 hover:border-green-300"
+                            )}
+                            title={product.isActive ? "Vô hiệu hóa sản phẩm" : "Kích hoạt sản phẩm"}
+                          >
+                            {product.isActive ? (
+                              <X className="w-4 h-4" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {paginatedProducts.map((product: Product) => (
+                <Card key={product.id} className="hover:shadow-md transition-shadow duration-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <SmartImage
+                          src={getFirstImageUrl(product.images as any) || FALLBACK_IMAGE}
+                          alt={product.name}
+                          width={64}
+                          height={64}
+                          className="rounded-lg object-cover w-full h-full"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-medium text-sm text-gray-900 truncate flex-1">
+                            {product.name}
+                          </h3>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(product)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleActive(product)}
+                              className={cn(
+                                "whitespace-nowrap transition-all duration-200 font-medium h-8 w-8 p-0",
+                                product.isActive 
+                                  ? "text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300" 
+                                  : "text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200 hover:border-green-300"
+                              )}
+                              title={product.isActive ? "Vô hiệu hóa sản phẩm" : "Kích hoạt sản phẩm"}
+                            >
+                              {product.isActive ? (
+                                <X className="w-4 h-4" />
+                              ) : (
+                                <CheckCircle2 className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <p 
+                          className="text-xs text-gray-600 mb-3 overflow-hidden cursor-help" 
+                          style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}
+                          title={product.description}
+                        >
+                          {product.description}
+                        </p>
+                        
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
                             <Badge 
                               variant="secondary" 
                               className={cn(
@@ -838,62 +958,32 @@ export default function AdminProductsPage() {
                             >
                               {product.category?.name || 'N/A'}
                             </Badge>
-                          </td>
-                          <td className="hidden md:table-cell p-2 sm:p-4">
-                            <p className="font-medium text-sm">
+                            <StatusBadge 
+                              status={product.isActive ? 'ACTIVE' : 'INACTIVE'} 
+                            />
+                          </div>
+                          
+                          <div className="text-right">
+                            <p className="font-medium text-sm text-gray-900">
                               {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(product.price))}
                             </p>
-                          </td>
-                          <td className="hidden md:table-cell p-2 sm:p-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">{product.quantity || 0}</span>
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="text-xs text-gray-500">Tồn kho: {product.quantity || 0}</span>
                               {(product.quantity || 0) < 10 && (
                                 <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
                                   Low
                                 </Badge>
                               )}
                             </div>
-                          </td>
-                          <td className="hidden sm:table-cell p-2 sm:p-4">
-                            <StatusBadge 
-                              status={product.isActive ? 'ACTIVE' : 'INACTIVE'} 
-                            />
-                          </td>
-                          <td className="p-2 sm:p-4 text-right">
-                            <div className="flex items-center gap-1 sm:gap-2 justify-end">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEdit(product)}
-                                className="h-8 w-8 sm:h-9 sm:w-9 p-0"
-                              >
-                                <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleToggleActive(product)}
-                                className={cn(
-                                  "whitespace-nowrap transition-all duration-200 font-medium h-8 w-8 sm:h-9 sm:w-9 p-0",
-                                  product.isActive 
-                                    ? "text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:border-red-300" 
-                                    : "text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200 hover:border-green-300"
-                                )}
-                                title={product.isActive ? "Vô hiệu hóa sản phẩm" : "Kích hoạt sản phẩm"}
-                              >
-                                {product.isActive ? (
-                                  <X className="w-3 h-3 sm:w-4 sm:h-4" />
-                                ) : (
-                                  <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                                )}
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                  ))}
-                </tbody>
-              </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+            </>
           )}
           
           {/* Enhanced Pagination Controls - Inside Card */}

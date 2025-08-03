@@ -862,17 +862,17 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Charts Section - Optimized for mobile */}
+      {/* Charts Section - Enhanced mobile responsiveness */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Revenue Chart */}
-        <Card className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="pt-6">
-            <div className="flex items-center justify-between">
+        <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl border-0 shadow-lg">
+          <CardHeader className="pt-6 md:pt-8 px-6 md:px-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <CardTitle className="text-[#a10000]">Xu hướng doanh thu</CardTitle>
-                <CardDescription>Doanh thu theo thời gian</CardDescription>
+                <CardTitle className="text-[#a10000] text-lg md:text-xl">Xu hướng doanh thu</CardTitle>
+                <CardDescription className="text-sm md:text-base">Doanh thu theo thời gian</CardDescription>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2 flex-wrap">
                 {FILTERS.map((filter) => {
                   const Icon = filter.icon;
                   return (
@@ -881,71 +881,140 @@ export default function AdminDashboardPage() {
                       variant={selectedFilter === filter.value ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSelectedFilter(filter.value)}
-                      className="flex items-center gap-1"
+                      className="flex items-center gap-1 text-xs md:text-sm px-2 md:px-3 py-1 md:py-2"
                     >
-                      <Icon className="w-3 h-3" />
-                      {filter.label}
+                      <Icon className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="hidden sm:inline">{filter.label}</span>
+                      <span className="sm:hidden">{filter.label.split(' ')[0]}</span>
                     </Button>
                   );
                 })}
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pb-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip formatter={(value) => [formatVND(value as number), 'Revenue']} />
-                <Line type="monotone" dataKey="revenue" stroke="#a10000" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
+          <CardContent className="pb-6 md:pb-8 px-6 md:px-8">
+            {chartData.length > 0 ? (
+              <div className="w-full h-[250px] md:h-[300px] lg:h-[350px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => formatVND(value).replace('₫', '')}
+                    />
+                    <Tooltip 
+                      formatter={(value) => [formatVND(value as number), 'Doanh thu']}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#a10000" 
+                      strokeWidth={3}
+                      dot={{ fill: '#a10000', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: '#a10000', strokeWidth: 2, fill: '#fff' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="w-full h-[250px] md:h-[300px] lg:h-[350px] flex items-center justify-center bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                <div className="text-center">
+                  <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
+                    {metricsLoading ? 'Đang tải dữ liệu...' : 'Chưa có dữ liệu doanh thu'}
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Status Distribution */}
-        <Card className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="pt-6">
-            <CardTitle className="text-[#a10000]">Phân bố trạng thái đơn hàng</CardTitle>
-            <CardDescription>Phân bố trạng thái đơn hàng hiện tại</CardDescription>
+        <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl border-0 shadow-lg">
+          <CardHeader className="pt-6 md:pt-8 px-6 md:px-8">
+            <CardTitle className="text-[#a10000] text-lg md:text-xl">Phân bố trạng thái đơn hàng</CardTitle>
+            <CardDescription className="text-sm md:text-base">Phân bố trạng thái đơn hàng hiện tại</CardDescription>
           </CardHeader>
-          <CardContent className="pb-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={statusDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {statusDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent className="pb-6 md:pb-8 px-6 md:px-8">
+            {statusDistribution.length > 0 ? (
+              <div className="w-full h-[250px] md:h-[300px] lg:h-[350px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={statusDistribution}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={60}
+                      innerRadius={20}
+                      fill="#8884d8"
+                      dataKey="value"
+                      paddingAngle={2}
+                    >
+                      {statusDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value, name) => [value, name]}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      wrapperStyle={{
+                        fontSize: '12px',
+                        paddingTop: '20px'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="w-full h-[250px] md:h-[300px] lg:h-[350px] flex items-center justify-center bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                <div className="text-center">
+                  <PieChart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
+                    {metricsLoading ? 'Đang tải dữ liệu...' : 'Chưa có dữ liệu phân bố'}
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Tables Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Tables Section - Enhanced mobile layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Recent Orders */}
-        <Card className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="pt-6">
-            <div className="flex items-center justify-between">
+        <Card className="hover:shadow-xl transition-all duration-300 rounded-2xl border-0 shadow-lg">
+          <CardHeader className="pt-6 md:pt-8 px-6 md:px-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <CardTitle className="text-[#a10000]">Đơn hàng gần đây</CardTitle>
-                <CardDescription>Hoạt động đơn hàng mới nhất</CardDescription>
+                <CardTitle className="text-[#a10000] text-lg md:text-xl">Đơn hàng gần đây</CardTitle>
+                <CardDescription className="text-sm md:text-base">Hoạt động đơn hàng mới nhất</CardDescription>
               </div>
-                              <Button variant="outline" size="sm" onClick={handleExportCSV}>
+              <Button variant="outline" size="sm" onClick={handleExportCSV} className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
                 Xuất CSV
               </Button>
