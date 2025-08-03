@@ -29,7 +29,8 @@ import {
   ChevronsRight,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  ZoomIn
 } from 'lucide-react';
 import { useRef } from 'react';
 import { AdminTable } from '@/components/ui/AdminTable';
@@ -56,6 +57,7 @@ import { SmartImage } from '@/components/ui/SmartImage';
 import useSWR, { mutate as globalMutate } from 'swr';
 import { apiService } from '@/lib/api';
 import type { Product } from '@/lib/types';
+import { formatReadableId, getEntityTypeColor, getEntityTypeLabel } from '@/lib/id-utils';
 import { getFirstImageUrl, cn } from '@/lib/utils';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -784,12 +786,12 @@ export default function AdminProductsPage() {
                     <tr key={product.id} className="border-b hover:bg-gray-50 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                             <SmartImage
-                              src={getFirstImageUrl(product.images) || FALLBACK_IMAGE}
+                              src={getFirstImageUrl(product.images as any) || FALLBACK_IMAGE}
                               alt={product.name}
-                              width={48}
-                              height={48}
+                              width={64}
+                              height={64}
                               className="rounded-lg object-cover"
                             />
                           </div>
@@ -1181,16 +1183,33 @@ export default function AdminProductsPage() {
                   
                     {/* Image Preview */}
                     {images.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
                         {images.map((image, index) => (
                           <div key={index} className="relative group">
                             <img
                               src={image.url}
                               alt={`Product image ${index + 1}`}
-                              className="w-full h-24 object-cover rounded-lg"
+                              className="w-full h-48 md:h-56 lg:h-64 object-cover rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform duration-200"
+                              onError={(e) => {
+                                console.error('Image failed to load:', image.url);
+                                e.currentTarget.src = '/images/placeholder-image.svg';
+                              }}
+                              onClick={() => {
+                                window.open(image.url, '_blank');
+                              }}
                             />
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-200 rounded-lg flex items-center justify-center pointer-events-none">
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1 pointer-events-auto">
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => window.open(image.url, '_blank')}
+                                    title="Click to view full size"
+                                  >
+                                    <ZoomIn className="h-3 w-3" />
+                                  </Button>
                                 <Button
                                   type="button"
                                   variant="secondary"

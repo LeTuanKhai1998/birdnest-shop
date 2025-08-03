@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Package, Truck, Clock, MapPin, User, FileText } from 'lucide-react';
 import Image from 'next/image';
+import { formatReadableId } from '@/lib/id-utils';
 
 interface OrderItem {
   id: string;
@@ -24,6 +25,7 @@ interface OrderItem {
 
 interface Order {
   id: string;
+  readableId?: string;
   userId: string | null;
   total: string;
   status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
@@ -201,7 +203,7 @@ export default function OrderConfirmationPage({
               <CardContent className="space-y-4 pb-6">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Mã đơn hàng:</span>
-                  <span className="font-mono font-semibold">{order.id}</span>
+                  <span className="font-mono font-semibold">{formatReadableId(order.readableId, order.id)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Trạng thái:</span>

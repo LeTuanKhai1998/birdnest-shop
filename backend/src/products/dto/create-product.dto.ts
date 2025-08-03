@@ -5,7 +5,18 @@ import {
   IsOptional,
   IsArray,
   IsBoolean,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class ImageDto {
+  @IsString()
+  @IsNotEmpty()
+  url: string;
+
+  @IsBoolean()
+  isPrimary: boolean;
+}
 
 export class CreateProductDto {
   @IsString()
@@ -42,10 +53,9 @@ export class CreateProductDto {
 
   @IsArray()
   @IsOptional()
-  images?: Array<{
-    url: string;
-    isPrimary: boolean;
-  }>;
+  @ValidateNested({ each: true })
+  @Type(() => ImageDto)
+  images?: ImageDto[];
 
   @IsBoolean()
   @IsOptional()

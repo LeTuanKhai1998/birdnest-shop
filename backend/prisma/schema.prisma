@@ -11,6 +11,7 @@ datasource db {
 
 model User {
   id            String         @id @default(cuid())
+  readableId    String?        @unique // Human-readable ID (e.g., USR-2024-001)
   email         String         @unique
   password      String
   name          String?
@@ -32,6 +33,7 @@ model User {
 
 model Product {
   id          String      @id @default(cuid())
+  readableId  String?     @unique // Human-readable ID (e.g., PROD-2024-001)
   name        String
   slug        String      @unique
   description String
@@ -43,6 +45,7 @@ model Product {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   weight      Int         @default(100)
+  soldCount   Int         @default(0)  // Track total sold quantity
   cartItems   CartItem[]
   images      Image[]
   orderItems  OrderItem[]
@@ -53,6 +56,7 @@ model Product {
 
 model Category {
   id          String    @id @default(cuid())
+  readableId  String?   @unique // Human-readable ID (e.g., CAT-2024-001)
   name        String    @unique
   slug        String    @unique
   colorScheme String?   // Optional color scheme override
@@ -63,6 +67,7 @@ model Category {
 
 model Order {
   id              String        @id @default(cuid())
+  readableId      String?       @unique // Human-readable ID (e.g., ORD-2024-001)
   userId          String?
   total           Decimal       @db.Decimal(10, 2)
   status          OrderStatus   @default(PENDING)
@@ -89,6 +94,7 @@ model OrderItem {
 
 model Review {
   id        String   @id @default(cuid())
+  readableId String? @unique // Human-readable ID (e.g., REV-2024-001)
   userId    String
   productId String
   rating    Int

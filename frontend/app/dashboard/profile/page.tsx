@@ -494,8 +494,8 @@ export default function ProfilePage() {
                         {!isLoading && completeUserData ? (
                           <UnifiedAvatar
                             user={completeUserData}
-                            size={128}
-                            className="w-full h-full"
+                            size={96}
+                            className="w-full h-full md:w-32 md:h-32"
                           />
                         ) : (
                           <div className="w-full h-full rounded-full bg-gray-200 animate-pulse" />

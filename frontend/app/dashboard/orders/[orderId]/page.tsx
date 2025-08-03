@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { apiService } from '@/lib/api';
 import { Order } from '@/lib/types';
+import { formatReadableId } from '@/lib/id-utils';
 import Image from 'next/image';
 
 const getStatusInfo = (status: string) => {
@@ -232,7 +233,7 @@ export default function OrderDetailPage({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Chi tiết đơn hàng</h1>
-            <p className="text-gray-600">Mã đơn hàng: {order.id}</p>
+            <p className="text-gray-600">Mã đơn hàng: {formatReadableId(order.readableId, order.id)}</p>
           </div>
           <Badge className={`${statusInfo.bgColor} ${statusInfo.color} px-3 py-1`}>
             <statusInfo.icon className="w-4 h-4 mr-2" />

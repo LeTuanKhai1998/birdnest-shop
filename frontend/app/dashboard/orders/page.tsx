@@ -22,6 +22,7 @@ import { useState, useEffect } from 'react';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { apiService } from '@/lib/api';
 import { Order } from '@/lib/types';
+import { formatReadableId } from '@/lib/id-utils';
 
 export default function OrdersPage() {
   const { user, isLoading, isAuthenticated } = useRequireAuth('/login');
@@ -226,7 +227,7 @@ export default function OrdersPage() {
                 <CardHeader className="pt-6">
                   <CardTitle className="flex items-center gap-2 text-xl font-bold text-[#a10000]">
                     <FileText className="w-5 h-5" />
-                    Đơn Hàng #{order.id}
+                    Đơn Hàng #{formatReadableId(order.readableId, order.id)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 pb-6">

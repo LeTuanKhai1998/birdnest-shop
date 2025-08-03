@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useCartStore } from '@/lib/cart-store';
@@ -12,6 +12,7 @@ import { useCheckoutStore } from '@/lib/checkout-store';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, CreditCard, Smartphone, Building2, DollarSign, CheckCircle, Loader2, Copy, QrCode, Package } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatReadableId } from '@/lib/id-utils';
 
 const PAYMENT_METHODS = [
   { 
@@ -44,22 +45,13 @@ const PAYMENT_METHODS = [
   },
 ];
 
-type ProductCartItem = {
-  product: {
-    id: string;
-    price: number;
-    name: string;
-    images?: string[];
-    image?: string;
-  };
-  quantity: number;
-};
+
 
 export default function PaymentPage() {
   const [method, setMethod] = useState('stripe');
   const [confirming, setConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const items = useCheckoutStore((s) => s.products);
   const subtotal = items.reduce(
     (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
@@ -148,7 +140,7 @@ export default function PaymentPage() {
       clearCart();
       
       // Show success message
-      toast.success(`Đặt hàng thành công! Mã đơn hàng: ${order.id}`);
+      toast.success(`Đặt hàng thành công! Mã đơn hàng: ${formatReadableId(order.readableId, order.id)}`);
       
       // Redirect to order confirmation page
       router.push(`/order/${order.id}`);

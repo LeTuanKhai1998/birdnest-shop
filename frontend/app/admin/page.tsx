@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,17 +10,11 @@ import {
   Package, 
   Users, 
   ShoppingCart,
-  TrendingUp,
-  TrendingDown,
   BarChart3,
   Activity,
   Calendar,
-  Clock,
-  CheckCircle2,
-  XCircle,
   AlertTriangle,
   Download,
-  MoreHorizontal,
   RefreshCw,
   Eye,
   ArrowUpRight,
@@ -28,23 +22,19 @@ import {
   Target
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import useSWR from 'swr';
 import { apiService } from '@/lib/api';
-import { Order, Product, User } from '@/lib/types';
+import { Order, Product } from '@/lib/types';
+import { OrderId } from '@/components/ui/ReadableId';
 import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
 import { cn } from '@/lib/utils';
-import { isAfter, isBefore, format, subDays, startOfDay, endOfDay } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import { format } from 'date-fns';
 import Papa from 'papaparse';
 import { SmartImage } from '@/components/ui/SmartImage';
 import {
-  BarChart,
-  Bar,
   Cell,
   PieChart,
   Pie,
@@ -251,8 +241,7 @@ async function exportTopProductsPDF(
 
 const AdminDashboardPage = React.memo(function AdminDashboardPage() {
   const { toast } = useToast();
-  const { data: session, status } = useSession();
-  const router = useRouter();
+
   const [selectedFilter, setSelectedFilter] = useState('daily');
   const [isExporting, setIsExporting] = useState(false);
 
@@ -339,13 +328,21 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
   // Top products (based on actual product data)
   const topProducts = useMemo(() => {
     if (!products) return [];
-    return products.slice(0, 5).map((p: Product) => ({
-      name: p.name,
-      unitsSold: (p.quantity || 0) > 0 ? Math.max(0, 100 - (p.quantity || 0)) : 50, // Estimate based on stock reduction
-      revenue: (p.quantity || 0) > 0 ? Math.max(0, 100 - (p.quantity || 0)) * parseFloat(p.price) : parseFloat(p.price) * 50,
-      stock: p.quantity || 0,
-                      image: p.images?.[0] || '/images/placeholder-image.svg',
-    }));
+    return products.slice(0, 5).map((p: Product) => {
+      // Handle images - backend returns ProductImage[] objects, frontend expects string[]
+      const firstImage = p.images?.[0];
+      const imageUrl = typeof firstImage === 'string' 
+        ? firstImage 
+        : (firstImage as any)?.url || '/images/placeholder-image.svg';
+      
+      return {
+        name: p.name,
+        unitsSold: (p.quantity || 0) > 0 ? Math.max(0, 100 - (p.quantity || 0)) : 50, // Estimate based on stock reduction
+        revenue: (p.quantity || 0) > 0 ? Math.max(0, 100 - (p.quantity || 0)) * parseFloat(p.price) : parseFloat(p.price) * 50,
+        stock: p.quantity || 0,
+        image: imageUrl,
+      };
+    });
   }, [products]);
 
   // Recent orders
@@ -649,7 +646,7 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
                           <Package className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{order.id}</p>
+                                                          <OrderId readableId={order.readableId} fallbackId={order.id} size="sm" />
                           <p className="text-xs text-gray-500">{order.user?.name || 'Không xác định'}</p>
                         </div>
                       </div>
@@ -722,12 +719,12 @@ const AdminDashboardPage = React.memo(function AdminDashboardPage() {
                 {topProducts.map((product, index) => (
                   <div key={index} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                         <SmartImage
                           src={product.image}
                           alt={product.name}
-                          width={40}
-                          height={40}
+                          width={64}
+                          height={64}
                           className="object-cover rounded"
                         />
                       </div>

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { CacheService } from '../common/cache.service';
+import { SoldCountService } from './sold-count.service';
+import { IdGeneratorService } from '../common/id-generator.service';
 import { Product, Prisma } from '@prisma/client';
 
 @Injectable()
@@ -8,6 +10,8 @@ export class ProductsService {
   constructor(
     private prisma: PrismaService,
     private cacheService: CacheService,
+    private soldCountService: SoldCountService,
+    private idGenerator: IdGeneratorService,
   ) {}
 
   async findAll(params: {
@@ -52,6 +56,16 @@ export class ProductsService {
       include: {
         category: true,
         images: true,
+        reviews: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
             reviews: true,
@@ -121,8 +135,14 @@ export class ProductsService {
   }
 
   async create(data: Prisma.ProductCreateInput): Promise<Product> {
+    // Generate readable ID for new product
+    const readableId = await this.idGenerator.generateReadableId('PRODUCT');
+    
     const product = await this.prisma.product.create({
-      data,
+      data: {
+        ...data,
+        readableId,
+      },
       include: {
         category: true,
         images: true,
@@ -144,7 +164,7 @@ export class ProductsService {
     if (cleanData.images && typeof cleanData.images === 'object') {
       const imagesData = cleanData.images as any;
       
-      // If create array is empty or contains invalid items, remove the images update
+      // If create array is empty or contains invalid items, handle appropriately
       if (imagesData.create && Array.isArray(imagesData.create)) {
         const validCreateItems = imagesData.create.filter((item: any) => 
           item && typeof item === 'object' && 
@@ -154,8 +174,10 @@ export class ProductsService {
         );
         
         if (validCreateItems.length === 0) {
-          // Remove the entire images object if no valid items
-          delete cleanData.images;
+          // If no valid items to create, just delete existing images
+          cleanData.images = {
+            deleteMany: {},
+          };
         } else {
           // Replace with only valid items
           imagesData.create = validCreateItems;

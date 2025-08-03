@@ -28,11 +28,14 @@ export function SmartImage({
   onError,
   fallbackSrc,
 }: SmartImageProps) {
+  // Ensure src is a string
+  const imageSrc = typeof src === 'string' ? src : fallbackSrc || '/images/placeholder-image.svg';
+  
   // Check if the URL is from UploadThing
-  if (isUploadThingUrl(src)) {
+  if (isUploadThingUrl(imageSrc)) {
     return (
       <UploadThingImage
-        src={src}
+        src={imageSrc}
         alt={alt}
         width={width}
         height={height}
@@ -47,7 +50,7 @@ export function SmartImage({
   // Use Next.js Image for other URLs
   return (
     <Image
-      src={src}
+      src={imageSrc}
       alt={alt}
       width={width || 400}
       height={height || 400}

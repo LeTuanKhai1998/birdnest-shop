@@ -116,6 +116,11 @@ export class ProductsController {
           deleteMany: {}, // Delete existing images
           create: validImages, // Create new images
         };
+      } else {
+        // If no valid images provided, just delete existing images
+        prismaData.images = {
+          deleteMany: {}, // Delete existing images
+        };
       }
     }
 

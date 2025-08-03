@@ -34,39 +34,53 @@ export function Avatar({
   return (
     <div
       className={`relative flex items-center justify-center rounded-full bg-gray-200 overflow-hidden border border-gray-300 ${className}`}
-      style={{ width: size, height: size }}
+      style={{ 
+        // Only set fixed dimensions if no responsive classes are present
+        ...(className?.includes('w-') || className?.includes('h-') ? {} : {
+          width: size, 
+          height: size,
+          minWidth: size,
+          minHeight: size,
+          maxWidth: size,
+          maxHeight: size
+        })
+      }}
       {...props}
     >
       {src && !imageError ? (
         // Check if this is the default avatar (MP4)
         src === '/images/default_avatar.mp4' ? (
-          // Default avatar as MP4 video
-          <video
-            src={src}
-            className="object-cover w-full h-full rounded-full opacity-100"
-            width={size}
-            height={size}
-            autoPlay
-            loop
-            muted
-            playsInline
-            onError={() => {
-              setImageError(true);
-            }}
-            aria-label={alt || name || 'User'}
-          />
+          // Default avatar as MP4 video - wrapped in flex container for perfect centering
+          <div className="flex items-center justify-center w-full h-full">
+            <video
+              src={src}
+              className="object-contain w-full h-full rounded-full opacity-100"
+              width={size}
+              height={size}
+              autoPlay
+              loop
+              muted
+              playsInline
+              onError={() => {
+                setImageError(true);
+              }}
+              aria-label={alt || name || 'User'}
+            />
+          </div>
         ) : (
-          // Custom avatar as image
-          <img
-            src={src}
-            alt={alt || name || 'User'}
-            className="object-cover w-full h-full rounded-full opacity-100"
-            width={size}
-            height={size}
-            onError={() => {
-              setImageError(true);
-            }}
-          />
+          // Custom avatar as image - wrapped in flex container for perfect centering
+          <div className="flex items-center justify-center w-full h-full">
+            <img
+              src={src}
+              alt={alt || name || 'User'}
+              className="object-contain w-full h-full rounded-full opacity-100"
+              width={size}
+              height={size}
+              onError={() => {
+                setImageError(true);
+              }}
+            />
+          </div>
         )
       ) : (
         <div className="flex items-center justify-center w-full h-full">

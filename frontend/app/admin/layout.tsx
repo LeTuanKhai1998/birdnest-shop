@@ -13,10 +13,6 @@ import {
   Info,
   Mail,
   Package,
-  FileText,
-  Shield,
-  Star,
-  MessageSquare,
   Menu,
   X,
   Tag,
@@ -25,7 +21,6 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRequireAdmin } from '@/hooks/useAuth';
 import { Toaster } from '@/components/ui/toaster';
-import Footer from '@/components/Footer';
 
 const navLinks = [
   { href: '/admin', label: 'Bảng điều khiển', icon: LayoutDashboard },
@@ -71,9 +66,8 @@ const pageConfigs = {
 };
 
 const AdminLayout = React.memo(function AdminLayout({ children }: { children: ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
-  const { user, isLoading, isAuthenticated, isAdmin } = useRequireAdmin('/login?callbackUrl=/admin');
+  const { isLoading, isAuthenticated, isAdmin } = useRequireAdmin('/login?callbackUrl=/admin');
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Get current page configuration

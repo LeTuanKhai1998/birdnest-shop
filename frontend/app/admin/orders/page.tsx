@@ -49,6 +49,8 @@ import { Avatar } from '@/components/ui/avatar';
 import useSWR from 'swr';
 import { apiService } from '@/lib/api';
 import { Order } from '@/lib/types';
+import { formatReadableId, getEntityTypeColor, getEntityTypeLabel } from '@/lib/id-utils';
+import { OrderId } from '@/components/ui/ReadableId';
 
 
 const STATUS = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
@@ -582,7 +584,7 @@ export default function AdminOrdersPage() {
                                     <Package className="w-5 h-5 text-blue-600" />
                                   </div>
                                   <div>
-                                    <p className="font-medium text-sm">{order.id}</p>
+                                    <OrderId readableId={order.readableId} fallbackId={order.id} size="sm" />
                                     <p className="text-xs text-gray-500">
                                       {(order.orderItems?.length || 0)} sản phẩm
                                     </p>
@@ -872,7 +874,7 @@ export default function AdminOrdersPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Package className="w-5 h-5 text-blue-600" />
-                          <span className="font-medium text-sm">{order.id}</span>
+                                                      <OrderId readableId={order.readableId} fallbackId={order.id} size="sm" />
                         </div>
                         <Badge className={`${statusConfig?.color} inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium border-0 whitespace-nowrap`}>
                           <StatusIcon className="w-3 h-3 flex-shrink-0" />
@@ -994,7 +996,9 @@ export default function AdminOrdersPage() {
                       <Package className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900">{detailedOrder.id}</h3>
+                                              <h3 className="font-bold text-lg text-gray-900">
+                          <OrderId readableId={detailedOrder.readableId} fallbackId={detailedOrder.id} size="lg" />
+                        </h3>
                       <p className="text-sm text-gray-600">
                         Đặt hàng lúc {formatFullDate(detailedOrder.createdAt)}
                       </p>
@@ -1043,7 +1047,7 @@ export default function AdminOrdersPage() {
                          />
                          <div>
                            <p className="font-medium text-sm">{detailedOrder.user?.name || 'Khách hàng'}</p>
-                           <p className="text-xs text-gray-500">ID: {detailedOrder.user?.id || 'N/A'}</p>
+                           <p className="text-xs text-gray-500">ID: <UserId readableId={detailedOrder.user?.readableId} fallbackId={detailedOrder.user?.id} variant="text" size="sm" /></p>
                         </div>
                        </div>
                        <Separator />
@@ -1207,7 +1211,7 @@ export default function AdminOrdersPage() {
                         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                           <p className="text-xs text-yellow-700">
                             <strong>Thông tin đơn hàng:</strong><br/>
-                            ID: {detailedOrder.id}<br/>
+                            ID: <OrderId readableId={detailedOrder.readableId} fallbackId={detailedOrder.id} variant="text" size="sm" /><br/>
                             Tổng tiền: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parseFloat(detailedOrder.total))}<br/>
                             Trạng thái: {STATUS_CONFIG[detailedOrder.status as keyof typeof STATUS_CONFIG]?.label}
                           </p>

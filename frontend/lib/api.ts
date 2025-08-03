@@ -749,6 +749,14 @@ export const apiService = {
       
       if (!response.ok) {
         const error = await response.json();
+        // Handle specific error cases
+        if (response.status === 409) {
+          throw new Error('User has already reviewed this product');
+        }
+        // Handle other error responses
+        if (error && error.message) {
+          throw new Error(error.message);
+        }
         throw new Error(error.message || 'Failed to create review');
       }
 

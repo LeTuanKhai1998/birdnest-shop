@@ -1,14 +1,13 @@
 'use client';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { apiService } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Package, Star, ShoppingCart, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { AddToCartButton } from '@/components/AddToCartButton';
+import { ProductCard } from '@/components/ProductCard';
 import { useWishlist } from '@/lib/wishlist-store';
 import { useSession } from 'next-auth/react';
 import { getCategoryTextColor, getCategoryBgColor } from '@/lib/category-colors';
@@ -32,6 +31,31 @@ export default function RelatedProducts({
   const productsPerPage = 4;
   const maxProducts = showAll ? 12 : 8;
 
+  // Function to fetch reviews for a product
+  const fetchProductReviews = async (productId: string) => {
+    try {
+      const reviews = await apiService.getProductReviews(productId);
+      return reviews;
+    } catch (error) {
+      console.error(`Error fetching reviews for product ${productId}:`, error);
+      return [];
+    }
+  };
+
+  // Function to enhance product with real review data
+  const enhanceProductWithReviews = async (product: Product): Promise<Product> => {
+    try {
+      const reviews = await fetchProductReviews(product.id);
+      return {
+        ...product,
+        reviews: reviews,
+      };
+    } catch (error) {
+      console.error(`Error enhancing product ${product.id}:`, error);
+      return product;
+    }
+  };
+
   useEffect(() => {
     const fetchRelatedProducts = async () => {
       try {
@@ -50,9 +74,20 @@ export default function RelatedProducts({
           
           // Combine category products with other products, prioritizing category products
           const combined = [...filtered, ...otherProducts].slice(0, maxProducts);
-          setRelatedProducts(combined);
+          
+          // Enhance products with real review data
+          const enhancedProducts = await Promise.all(
+            combined.map((product: Product) => enhanceProductWithReviews(product))
+          );
+          
+          setRelatedProducts(enhancedProducts);
         } else {
-          setRelatedProducts(filtered.slice(0, maxProducts));
+          // Enhance products with real review data
+          const enhancedProducts = await Promise.all(
+            filtered.slice(0, maxProducts).map((product: Product) => enhanceProductWithReviews(product))
+          );
+          
+          setRelatedProducts(enhancedProducts);
         }
       } catch (error) {
         console.error('Error fetching related products:', error);
@@ -79,13 +114,32 @@ export default function RelatedProducts({
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="space-y-8">
+        {/* Loading Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#a10000] to-[#c41e3a] rounded-lg animate-pulse"></div>
+              <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-8 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="h-9 w-24 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+
+        {/* Loading Products Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white/90 backdrop-blur-sm border border-white/30 rounded-xl shadow-lg p-3 flex flex-col items-center animate-pulse">
-              <div className="w-full h-36 bg-gray-200 rounded-lg mb-3"></div>
-              <div className="w-3/4 h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="w-1/2 h-6 bg-gray-200 rounded"></div>
+            <div key={i} className="group">
+              <div className="bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg overflow-hidden animate-pulse">
+                <div className="aspect-[4/3] bg-gray-200"></div>
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -95,237 +149,181 @@ export default function RelatedProducts({
 
   if (relatedProducts.length === 0) {
     return (
-      <div className="text-center py-8">
-        <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-          <Package className="w-10 h-10 text-gray-400" />
+      <div className="text-center py-12">
+        <div className="relative">
+          {/* Background decoration */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-white to-gray-50/50 rounded-3xl" />
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-gradient-to-br from-[#a10000]/5 to-[#c41e3a]/5 rounded-full blur-3xl" />
+          
+          <div className="relative bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-12">
+            <div className="p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+              <Package className="w-12 h-12 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Không có sản phẩm liên quan</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Hãy khám phá các sản phẩm khác từ bộ sưu tập đa dạng của chúng tôi
+            </p>
+            <Link href="/products">
+              <Button className="bg-[#a10000] hover:bg-[#8a0000] text-white font-medium px-8 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-lg">
+                Xem tất cả sản phẩm
+              </Button>
+            </Link>
+          </div>
         </div>
-        <p className="text-gray-600 text-lg font-medium mb-2">Không có sản phẩm liên quan</p>
-        <p className="text-gray-500 text-sm">Hãy khám phá các sản phẩm khác của chúng tôi</p>
-        <Link href="/products">
-          <Button className="mt-4 bg-[#a10000] hover:bg-[#8a0000] text-white">
-            Xem tất cả sản phẩm
-          </Button>
-        </Link>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with toggle */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Sản phẩm liên quan ({relatedProducts.length})
-          </h3>
-          <p className="text-sm text-gray-600">
-            Khám phá thêm các sản phẩm tương tự
+    <div className="space-y-8">
+      {/* Modern Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#a10000] to-[#c41e3a] rounded-lg flex items-center justify-center">
+              <Package className="w-4 h-4 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">
+              Sản phẩm liên quan
+            </h3>
+            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+              {relatedProducts.length}
+            </span>
+          </div>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            Khám phá thêm các sản phẩm tương tự từ cùng danh mục
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowAll(!showAll)}
-          className="text-[#a10000] border-[#a10000] hover:bg-[#a10000] hover:text-white transition-all duration-200"
-        >
-          {showAll ? 'Thu gọn' : 'Xem thêm'}
-        </Button>
+        
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAll(!showAll)}
+            className="group relative overflow-hidden bg-white border-gray-200 hover:border-[#a10000] hover:bg-[#a10000] hover:text-white transition-all duration-300"
+          >
+            <span className="relative z-10 flex items-center gap-2">
+              {showAll ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                  </svg>
+                  Thu gọn
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Xem thêm
+                </>
+              )}
+            </span>
+          </Button>
+        </div>
       </div>
 
-      {/* Products Grid */}
+      {/* Enhanced Products Section */}
       <div className="relative">
-        {/* Navigation arrows for pagination */}
+        {/* Modern Navigation Arrows */}
         {totalPages > 1 && (
           <>
             <Button
               variant="ghost"
               size="icon"
               onClick={prevPage}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 shadow-lg hover:bg-white border border-gray-200 transition-all duration-200"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white border border-gray-200/50 hover:border-gray-300 transition-all duration-300 rounded-full group"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={nextPage}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 shadow-lg hover:bg-white border border-gray-200 transition-all duration-200"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white border border-gray-200/50 hover:border-gray-300 transition-all duration-300 rounded-full group"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
             </Button>
           </>
         )}
 
-        {/* Products */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {currentProducts.map((product, index) => {
-            const isInWishlist = session?.user ? wishlist.isInWishlist(product.id) : false;
-            const avgRating = product.reviews && product.reviews.length > 0
-              ? product.reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / product.reviews.length
-              : 0;
-
-            return (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="h-full bg-white/90 backdrop-blur-sm border border-white/30 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group">
-                  <CardContent className="p-0">
-                    {/* Product Image */}
-                    <div className="relative">
-                      {/* Wishlist Button */}
-                      {session?.user && (
-                        <button
-                          type="button"
-                          aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                          className="absolute top-2 right-2 z-20 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-red-50 hover:scale-110 transition-all duration-200 border border-white/20"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (isInWishlist) {
-                              wishlist.remove(product.id, wishlist.mutate);
-                            } else {
-                              wishlist.add(product, wishlist.mutate);
-                            }
-                          }}
-                        >
-                          <svg
-                            className={`w-4 h-4 ${isInWishlist ? 'text-red-500 fill-red-500' : 'text-gray-500 hover:text-red-500'}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                            />
-                          </svg>
-                        </button>
-                      )}
-
-                      {/* Weight Badge */}
-                      <div className="absolute top-2 left-2 z-20 bg-[#a10000]/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg border border-white/20">
-                        <Package className="w-3 h-3 inline mr-1" />
-                        {product.weight}g
-                      </div>
-
-                      <Link href={`/products/${product.slug}`} className="block">
-                        <div className="relative w-full" style={{ aspectRatio: '5/3' }}>
-                          <Image
-                            src={
-                              product.images?.[0] ||
-                              product.image ||
-                              '/images/placeholder-image.svg'
-                            }
-                            alt={product.name}
-                            fill
-                            className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
-                          />
-                          {/* Overlay on hover */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        </div>
-                      </Link>
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="p-3 space-y-2">
-                      {/* Product Name */}
-                      <Link href={`/products/${product.slug}`}>
-                        <h4 className="text-sm font-bold text-gray-900 hover:text-[#a10000] transition-colors line-clamp-2 leading-tight">
-                          {product.name}
-                        </h4>
-                      </Link>
-
-                      {/* Product Category */}
-                      {product.category && (
-                        <div className={cn(
-                          "text-xs font-medium px-2 py-1 rounded-full inline-block",
-                          getCategoryBgColor(product.category.name, product.category.colorScheme),
-                          getCategoryTextColor(product.category.name, product.category.colorScheme)
-                        )}>
-                          {product.category.name}
-                        </div>
-                      )}
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-1">
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`w-3 h-3 ${
-                                star <= avgRating
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          ({product.reviews?.length || 0})
-                        </span>
-                      </div>
-
-                      {/* Price */}
-                      <div className="text-[#a10000] font-black text-lg">
-                        {new Intl.NumberFormat('vi-VN', {
-                          style: 'currency',
-                          currency: 'VND',
-                          maximumFractionDigits: 0,
-                        }).format(parseFloat(product.price))}
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2 pt-2">
-                        <AddToCartButton
-                          product={product}
-                          className="flex-1 h-8 bg-[#a10000] hover:bg-red-800 text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 shadow-lg border-0 text-xs flex items-center justify-center"
-                        >
-                          <ShoppingCart className="w-3 h-3 mr-1" />
-                          Thêm vào giỏ
-                        </AddToCartButton>
-                        <Link
-                          href={`/products/${product.slug}`}
-                          className="flex-1 h-8 border-2 border-[#a10000] text-[#a10000] font-semibold rounded-lg flex items-center justify-center text-center transition-all duration-200 hover:bg-[#a10000] hover:text-white hover:scale-105 shadow-lg text-xs"
-                        >
-                          <Eye className="w-3 h-3" />
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+        {/* Enhanced Products Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {currentProducts.map((product, index) => (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ 
+                delay: index * 0.1,
+                duration: 0.5,
+                ease: [0.25, 0.46, 0.45, 0.94]
+              }}
+              whileHover={{ 
+                y: -8,
+                transition: { duration: 0.2 }
+              }}
+            >
+              <div className="group">
+                              <div className="relative">
+                  <ProductCard product={product} />
+                  {/* Subtle hover effect overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/0 via-transparent to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
-        {/* Pagination Dots */}
+        {/* Modern Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center mt-6 space-x-2">
+          <div className="flex items-center justify-center mt-8 gap-2">
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentPage(i)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  i === currentPage ? 'bg-[#a10000]' : 'bg-gray-300'
+                className={`relative w-3 h-3 rounded-full transition-all duration-300 ${
+                  i === currentPage 
+                    ? 'bg-[#a10000] scale-125' 
+                    : 'bg-gray-300 hover:bg-gray-400'
                 }`}
-              />
+              >
+                {i === currentPage && (
+                  <motion.div
+                    layoutId="activeDot"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundColor: '#a10000',
+                      borderRadius: '50%'
+                    }}
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* View All Products Link */}
-      <div className="text-center pt-4 border-t border-gray-200">
-        <Link href="/products">
-          <Button variant="outline" className="text-[#a10000] border-[#a10000] hover:bg-[#a10000] hover:text-white transition-all duration-200">
-            Xem tất cả sản phẩm
-          </Button>
-        </Link>
+      {/* Enhanced CTA Section */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-50 to-transparent" />
+        <div className="relative text-center py-8">
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-full shadow-sm">
+            <Package className="w-5 h-5 text-[#a10000]" />
+            <span className="text-gray-700 font-medium">Khám phá toàn bộ bộ sưu tập</span>
+            <Link href="/products">
+              <Button 
+                size="sm"
+                className="bg-[#a10000] hover:bg-[#8a0000] text-white font-medium transition-all duration-300 hover:scale-105"
+              >
+                Xem tất cả
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

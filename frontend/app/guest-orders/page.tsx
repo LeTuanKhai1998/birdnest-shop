@@ -9,9 +9,11 @@ import { Search, Package, Calendar, User, Phone, Mail, Eye, AlertCircle } from '
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
+import { formatReadableId } from '@/lib/id-utils';
 
 interface GuestOrder {
   id: string;
+  readableId?: string;
   createdAt: string;
   status: string;
   total: number;
@@ -272,7 +274,7 @@ export default function GuestOrdersPage() {
                           <div className="flex items-center gap-4">
                             <div>
                               <h3 className="font-semibold text-lg text-[#a10000]">
-                                Đơn hàng #{order.id.slice(-8).toUpperCase()}
+                                Đơn hàng #{formatReadableId(order.readableId, order.id)}
                               </h3>
                               <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                                 <div className="flex items-center gap-1">

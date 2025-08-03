@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
+import { IdGeneratorService } from '../common/id-generator.service';
 import { Order, Prisma, OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerator: IdGeneratorService,
+  ) {}
 
   async findAll(params: {
     skip?: number;
@@ -156,9 +160,13 @@ export class OrdersService {
     );
     const total = subtotal + (deliveryFee || 0);
 
+    // Generate readable ID for new order
+    const readableId = await this.idGenerator.generateReadableId('ORDER');
+
     return this.prisma.order.create({
       data: {
         userId,
+        readableId,
         total,
         status: 'PENDING',
         paymentMethod: mapPaymentMethod(paymentMethod),
@@ -236,6 +244,9 @@ export class OrdersService {
     );
     const total = subtotal + (deliveryFee || 0);
 
+    // Generate readable ID for new guest order
+    const readableId = await this.idGenerator.generateReadableId('ORDER');
+
     // Compose shipping address string
     const addressString = [
       shippingAddress.fullName,
@@ -257,6 +268,7 @@ export class OrdersService {
       data: {
         // Use userId if provided, otherwise undefined for true guest orders
         userId: userId || undefined,
+        readableId,
         // Save guest information
         guestEmail: shippingAddress.email || '',
         guestName: shippingAddress.fullName,
@@ -372,6 +384,7 @@ export class OrdersService {
       },
       select: {
         id: true,
+        readableId: true,
         createdAt: true,
         status: true,
         total: true,

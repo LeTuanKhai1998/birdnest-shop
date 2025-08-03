@@ -56,6 +56,9 @@ export function extractFileKeyFromUrl(url: string): string | null {
  * @returns True if it's an UploadThing URL
  */
 export function isUploadThingUrl(url: string): boolean {
+  if (typeof url !== 'string') {
+    return false;
+  }
   return url.includes('.ufs.sh') || url.includes('uploadthing.com');
 }
 

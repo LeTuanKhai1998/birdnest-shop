@@ -1,6 +1,7 @@
 // Product types
 export interface Product {
   id: string;
+  readableId?: string; // Human-readable ID (e.g., PROD-2024-001)
   name: string;
   slug: string;
   description: string;
@@ -14,7 +15,7 @@ export interface Product {
   updatedAt?: string;
   category?: Category;
   image?: string;
-  images: string[];
+  images: (ProductImage | string)[]; // Backend returns ProductImage[], frontend can handle both
   reviews?: Review[];
   _count?: {
     reviews: number;
@@ -27,6 +28,7 @@ export interface Product {
 
 export interface Review {
   id: string;
+  readableId?: string; // Human-readable ID (e.g., REV-2024-001)
   userId: string;
   productId: string;
   rating: number;
@@ -40,6 +42,7 @@ export interface Review {
 
 export interface Category {
   id: string;
+  readableId?: string; // Human-readable ID (e.g., CAT-2024-001)
   name: string;
   slug: string;
   colorScheme?: string;
@@ -61,6 +64,7 @@ export interface ProductImage {
 // Order types
 export interface Order {
   id: string;
+  readableId?: string; // Human-readable ID (e.g., ORD-2024-001)
   userId?: string;
   status: OrderStatus;
   total: string;
@@ -113,6 +117,7 @@ export interface Address {
 // User types
 export interface User {
   id: string;
+  readableId?: string; // Human-readable ID (e.g., USR-2024-001)
   email: string;
   name: string;
   isAdmin: boolean;

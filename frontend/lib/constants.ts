@@ -199,7 +199,7 @@ export const PRODUCTS_CONSTANTS = {
     description: "Thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác",
   },
           pagination: {
-          itemsPerPage: 12,
+          itemsPerPage: 33, // 11 rows × 3 columns
         },
 };
 

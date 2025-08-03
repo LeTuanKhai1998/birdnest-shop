@@ -169,14 +169,14 @@ export default function DashboardHome() {
               <div className="flex items-center space-x-4">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Đơn hàng #12345 đã được giao thành công</p>
+                  <p className="font-medium text-gray-900">Đơn hàng #ORD-2025-001 đã được giao thành công</p>
                   <p className="text-sm text-gray-500">2 giờ trước</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Đơn hàng #12344 đang được xử lý</p>
+                  <p className="font-medium text-gray-900">Đơn hàng #ORD-2025-002 đang được xử lý</p>
                   <p className="text-sm text-gray-500">1 ngày trước</p>
                 </div>
               </div>

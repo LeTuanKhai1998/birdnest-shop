@@ -234,15 +234,19 @@ export function ProductImageUpload({
               )}
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {currentImages.map((image, index) => (
                 <div key={index} className="relative group">
-                  <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-300 transition-colors">
+                  <div className="relative aspect-[4/3] rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-300 transition-colors shadow-md">
                     <Image
                       src={image.url}
                       alt={`Product image ${index + 1}`}
                       fill
                       className="object-cover"
+                      onError={(e) => {
+                        console.error('Image failed to load:', image.url);
+                        e.currentTarget.src = '/images/placeholder-image.svg';
+                      }}
                     />
                     
                     {/* Primary Badge */}
@@ -256,25 +260,27 @@ export function ProductImageUpload({
                     )}
                     
                     {/* Action Buttons */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      {!image.isPrimary && currentImages.length > 1 && (
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center gap-2 pointer-events-none">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-2 pointer-events-auto">
+                        {!image.isPrimary && currentImages.length > 1 && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => setPrimaryImage(index)}
+                          >
+                            <Star className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button
-                          variant="secondary"
+                          variant="destructive"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => setPrimaryImage(index)}
+                          onClick={() => removeImage(index)}
                         >
-                          <Star className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
-                      )}
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => removeImage(index)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </div>
                     </div>
                   </div>
                   

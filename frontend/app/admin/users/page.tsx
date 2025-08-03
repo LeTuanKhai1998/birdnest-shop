@@ -46,6 +46,8 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { formatReadableId, getEntityTypeColor, getEntityTypeLabel } from '@/lib/id-utils';
+import { UserId } from '@/components/ui/ReadableId';
 
 type AdminUser = {
   id: string;
@@ -480,7 +482,7 @@ export default function AdminUsersPage() {
                                   </div>
                                   <div>
                                     <p className="font-medium text-sm">{user.name}</p>
-                                    <p className="text-xs text-gray-500">ID: {user.id}</p>
+                                    <UserId readableId={user.readableId} fallbackId={user.id} variant="text" size="sm" />
                                   </div>
                                 </div>
                               </td>

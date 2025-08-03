@@ -39,14 +39,15 @@ export default function ProductMeta({
       <div className="flex items-center gap-1 sm:gap-2">
         {soldCount !== undefined && (
           <span className="flex items-center gap-0.5">
-            <span className="hidden sm:inline">|</span>
             <span>🔥</span>
             <span className="text-xs">Sold: {formatSold(soldCount)}</span>
           </span>
         )}
+        {soldCount !== undefined && reviewCount !== undefined && (
+          <span className="hidden sm:inline">|</span>
+        )}
         {reviewCount !== undefined && (
           <span className="flex items-center gap-0.5">
-            <span className="hidden sm:inline">|</span>
             <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="text-xs">{reviewCount}</span>
             <span className="hidden sm:inline">reviews</span>
