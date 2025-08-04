@@ -66,7 +66,7 @@ curl -X PATCH http://localhost:8080/api/settings \
 
 ### Method 4: Setup Script
 ```bash
-cd backend
+cd birdnest-backend
 npm run setup-settings
 ```
 

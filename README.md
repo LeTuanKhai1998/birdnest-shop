@@ -92,7 +92,7 @@ birdnest-shop/
 
 4. **Set up the database**:
    ```bash
-   cd frontend
+   cd birdnest-frontend
    npx prisma migrate dev
    npx prisma generate
    npm run db:seed
@@ -101,11 +101,11 @@ birdnest-shop/
 5. **Start the development servers**:
    ```bash
    # Terminal 1: Start backend
-   cd backend
+   cd birdnest-backend
    npm run start:dev
    
    # Terminal 2: Start frontend
-   cd frontend
+   cd birdnest-frontend
    npm run dev
    ```
 
@@ -118,14 +118,14 @@ birdnest-shop/
 
 ### Backend Tests
 ```bash
-cd backend
+cd birdnest-backend
 npm test              # Unit tests
 npm run test:e2e      # E2E tests
 ```
 
 ### Frontend Tests
 ```bash
-cd frontend
+cd birdnest-frontend
 npm test              # Unit tests
 npm run test:watch    # Watch mode
 npm run test:coverage # Coverage report

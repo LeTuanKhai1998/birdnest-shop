@@ -4,80 +4,80 @@
 
 backend:
 	@echo "🚀 Starting backend development server"
-	cd backend && rm -rf .next && npm install && npm run start:dev
+	cd birdnest-backend && rm -rf .next && npm install && npm run start:dev
 
 # Database Management
 db-seed:
-	cd backend && npm run seed
+	cd birdnest-backend && npm run seed
 
 db-setup-settings:
 	@echo "⚙️  Setting up default settings"
-	cd backend && npm run setup-settings
+	cd birdnest-backend && npm run setup-settings
 
 db-migrate:
-	cd backend && npx prisma migrate dev
+	cd birdnest-backend && npx prisma migrate dev
 
 db-reset:
-	cd backend && npx prisma migrate reset --force
+	cd birdnest-backend && npx prisma migrate reset --force
 
 db-generate:
-	cd backend && npx prisma generate
+	cd birdnest-backend && npx prisma generate
 
 db-studio:
-	cd backend && npx prisma studio
+	cd birdnest-backend && npx prisma studio
 
 # Database Clear Commands
 clear-db:
 	@echo "🗑️  Interactive database clear (recommended)"
-	cd backend && npm run clear-db
+	cd birdnest-backend && npm run clear-db
 
 clear-db-all:
 	@echo "🗑️  Clearing all database data"
-	cd backend && npm run clear-db -- --all
+	cd birdnest-backend && npm run clear-db -- --all
 
 clear-db-orders:
 	@echo "🗑️  Clearing orders data only"
-	cd backend && npm run clear-db -- --orders
+	cd birdnest-backend && npm run clear-db -- --orders
 
 clear-db-users:
 	@echo "🗑️  Clearing users data only"
-	cd backend && npm run clear-db -- --users
+	cd birdnest-backend && npm run clear-db -- --users
 
 clear-db-products:
 	@echo "🗑️  Clearing products data only"
-	cd backend && npm run clear-db -- --products
+	cd birdnest-backend && npm run clear-db -- --products
 
 clear-db-images:
 	@echo "🗑️  Clearing images data only"
-	cd backend && npm run clear-db -- --images
+	cd birdnest-backend && npm run clear-db -- --images
 
 clear-db-reviews:
 	@echo "🗑️  Clearing reviews data only"
-	cd backend && npm run clear-db -- --reviews
+	cd birdnest-backend && npm run clear-db -- --reviews
 
 clear-db-help:
 	@echo "📖 Showing database clear help"
-	cd backend && npm run clear-db -- --help
+	cd birdnest-backend && npm run clear-db -- --help
 
 frontend:
 	@echo "🌐 Starting frontend development server"
-	cd frontend && rm -rf .next && npm install && npm run dev
+	cd birdnest-frontend && rm -rf .next && npm install && npm run dev
 
 run:
 	@echo "🚀 Starting both backend and frontend servers"
-	(cd backend && rm -rf .next && npm install && npm run start:dev &) && (cd frontend && rm -rf .next && npm install && npm run dev)
+	(cd birdnest-backend && rm -rf .next && npm install && npm run start:dev &) && (cd birdnest-frontend && rm -rf .next && npm install && npm run dev)
 
 test:
 	@echo "🧪 Running tests for both backend and frontend"
-	cd backend && npm test && cd ../frontend && npm test
+	cd birdnest-backend && npm test && cd ../frontend && npm test
 
 test-backend:
 	@echo "🧪 Running backend tests"
-	cd backend && npm test
+	cd birdnest-backend && npm test
 
 test-frontend:
 	@echo "🧪 Running frontend tests"
-	cd frontend && npm test
+	cd birdnest-frontend && npm test
 
 stop:
 	@echo "🛑 Stopping all development servers"

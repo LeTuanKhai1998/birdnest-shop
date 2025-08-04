@@ -67,7 +67,7 @@ This guide covers the complete deployment setup for the Birdnest Shop applicatio
 
 1. **Backend Setup**
    ```bash
-   cd backend
+   cd birdnest-backend
    npm install
    npx prisma generate
    npx prisma migrate dev
@@ -76,7 +76,7 @@ This guide covers the complete deployment setup for the Birdnest Shop applicatio
 
 2. **Frontend Setup**
    ```bash
-   cd frontend
+   cd birdnest-frontend
    npm install
    npm run dev
    ```
