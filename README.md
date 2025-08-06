@@ -269,7 +269,7 @@ cd birdnest-backend
 ### Authentication & Authorization
 - **JWT Tokens**: Secure token-based authentication
 - **Role-based Access**: Admin and user role management
-- **OAuth Integration**: Google, GitHub authentication
+- **OAuth Integration**: Google authentication
 - **Session Management**: Secure session handling
 
 ### Data Protection
