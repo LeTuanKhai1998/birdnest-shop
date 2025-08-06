@@ -1,297 +1,335 @@
 # Birdnest Shop - Full-Stack E-commerce Platform
 
-A modern, full-stack e-commerce platform for bird's nest products built with Next.js 15, NestJS, and PostgreSQL.
+A modern, full-stack e-commerce platform built with Next.js 15 frontend and NestJS backend, featuring comprehensive product management, user authentication, admin dashboard, and real-time notifications.
 
-## 🚀 Features
+## 🏗️ Project Architecture
+
+This is a monorepo structure with separate frontend and backend applications:
+
+```
+birdnest-shop/
+├── birdnest-frontend/     # Next.js 15 Frontend Application
+├── birdnest-backend/      # NestJS Backend API
+├── docker-compose.yml     # Docker development setup
+├── nginx/                 # Nginx configuration
+└── README.md             # This file
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- PostgreSQL (v12 or higher)
+- npm or yarn
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd birdnest-shop
+```
+
+### 2. Backend Setup
+
+```bash
+cd birdnest-backend
+npm install
+cp env.example .env
+# Configure your environment variables
+npx prisma generate
+npx prisma migrate dev
+npm run start:dev
+```
+
+### 3. Frontend Setup
+
+```bash
+cd birdnest-frontend
+npm install
+cp env.example .env.local
+# Configure your environment variables
+npm run dev
+```
+
+### 4. Access the Application
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080
+- **API Documentation**: http://localhost:8080/swagger
+- **Health Check**: http://localhost:8080/api/health
+
+## 🎯 Features
 
 ### Customer Features
-- **Product Catalog**: Browse and search bird's nest products with filtering
-- **Shopping Cart**: Add/remove items with persistent storage
-- **User Authentication**: Secure login/signup with NextAuth.js
-- **Order Management**: Complete checkout process with Stripe payments
-- **User Dashboard**: Order history, profile management, wishlist
-- **Responsive Design**: Mobile-first design with Tailwind CSS
+- **Product Browsing**: Advanced catalog with filtering and search
+- **Shopping Cart**: Persistent cart with real-time updates
+- **User Authentication**: Secure login with multiple providers
+- **Order Management**: Complete order lifecycle
+- **Guest Checkout**: Purchase without registration
+- **Order Tracking**: Real-time order status updates
+- **Wishlist**: Save favorite products
+- **Reviews & Ratings**: Product review system
+- **Notifications**: Real-time notification system
+- **Address Management**: Multiple shipping addresses
 
 ### Admin Features
-- **Dashboard Analytics**: Revenue, orders, customer insights
+- **Dashboard Analytics**: Comprehensive sales metrics
 - **Product Management**: CRUD operations with image upload
-- **Order Management**: Process orders and update status
-- **User Management**: Customer list and admin privileges
-- **Real-time Updates**: Live notifications and stock alerts
+- **Order Processing**: Manage and update orders
+- **User Management**: Customer and admin user management
+- **Settings Management**: Store configuration
+- **Inventory Management**: Stock tracking and alerts
+- **Performance Monitoring**: Request tracking and metrics
 
 ### Technical Features
-- **Full-Stack Architecture**: Next.js frontend + NestJS backend
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT + NextAuth.js with OAuth support
-- **Payments**: Stripe integration (extensible to Momo/VNPAY)
-- **File Upload**: Uploadthing for product images
-- **Testing**: Comprehensive unit and e2e tests
-- **Code Quality**: ESLint, Prettier, TypeScript
+- **Responsive Design**: Mobile-first approach
+- **Performance Optimized**: Lazy loading and code splitting
+- **SEO Optimized**: Meta tags and structured data
+- **Security**: JWT authentication and role-based access
+- **Real-time Updates**: WebSocket notifications
+- **Image Upload**: Secure file upload with optimization
+- **API Documentation**: Swagger/OpenAPI integration
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Shadcn UI
+- **State Management**: Zustand
+- **Authentication**: NextAuth.js
+- **File Upload**: UploadThing
+- **Charts**: Recharts
+- **Forms**: React Hook Form + Zod
+
+### Backend
+- **Framework**: NestJS
+- **Language**: TypeScript
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Authentication**: JWT
+- **Validation**: class-validator
+- **Documentation**: Swagger/OpenAPI
+- **Testing**: Jest + Supertest
+- **File Upload**: UploadThing
+
+### DevOps
+- **Containerization**: Docker
+- **Reverse Proxy**: Nginx
+- **CI/CD**: GitHub Actions
+- **Deployment**: Vercel (Frontend), Railway (Backend)
 
 ## 📁 Project Structure
 
 ```
 birdnest-shop/
-├── frontend/          # Next.js 15 frontend application
-│   ├── app/          # App Router pages and API routes
-│   ├── components/   # Reusable UI components
-│   ├── lib/          # Utilities and configurations
-│   └── prisma/       # Database schema and migrations
-├── backend/          # NestJS API server
-│   ├── src/          # Source code
-│   │   ├── auth/     # Authentication module
-│   │   ├── products/ # Products API
-│   │   ├── orders/   # Orders API
-│   │   └── users/    # Users API
-│   └── test/         # E2E tests
-├── package.json      # Root package.json for monorepo
-└── README.md        # This file
+├── birdnest-frontend/          # Next.js Frontend
+│   ├── app/                   # App Router pages
+│   ├── components/            # React components
+│   ├── lib/                  # Utilities and API client
+│   ├── hooks/                # Custom React hooks
+│   └── public/               # Static assets
+├── birdnest-backend/          # NestJS Backend
+│   ├── src/                  # Source code
+│   │   ├── auth/            # Authentication
+│   │   ├── products/        # Product management
+│   │   ├── orders/          # Order processing
+│   │   ├── users/           # User management
+│   │   ├── notifications/   # Notification system
+│   │   └── common/          # Shared utilities
+│   ├── prisma/              # Database schema
+│   └── test/                # E2E tests
+├── docker-compose.yml        # Development environment
+├── nginx/                   # Production nginx config
+└── scripts/                 # Deployment scripts
 ```
-
-## 🛠️ Quick Start
-
-### Prerequisites
-
-- Node.js 18+ 
-- npm 8+
-- PostgreSQL database
-
-### Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd birdnest-shop
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm run install:all
-   ```
-
-3. **Set up environment variables**:
-   
-   Create `.env.local` in `frontend/`:
-   ```env
-   DATABASE_URL=your_postgresql_url
-   NEXTAUTH_SECRET=your_nextauth_secret
-   NEXTAUTH_URL=http://localhost:3000
-   NEXT_PUBLIC_API_URL=http://localhost:8080/api
-   STRIPE_SECRET_KEY=your_stripe_secret
-   STRIPE_PUBLISHABLE_KEY=your_stripe_publishable
-   UPLOADTHING_SECRET=your_uploadthing_secret
-   UPLOADTHING_APP_ID=your_uploadthing_app_id
-   ```
-   
-   Create `.env` in `backend/`:
-   ```env
-   DATABASE_URL=your_postgresql_url
-   JWT_SECRET=your_jwt_secret
-   APP_PORT=8080
-   ```
-
-4. **Set up the database**:
-   ```bash
-   cd birdnest-frontend
-   npx prisma migrate dev
-   npx prisma generate
-   npm run db:seed
-   ```
-
-5. **Start the development servers**:
-   ```bash
-   # Terminal 1: Start backend
-   cd birdnest-backend
-   npm run start:dev
-   
-   # Terminal 2: Start frontend
-   cd birdnest-frontend
-   npm run dev
-   ```
-
-6. **Access the application**:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8080
-   - API Documentation: http://localhost:8080/swagger
-
-## 🧪 Testing
-
-### Backend Tests
-```bash
-cd birdnest-backend
-npm test              # Unit tests
-npm run test:e2e      # E2E tests
-```
-
-### Frontend Tests
-```bash
-cd birdnest-frontend
-npm test              # Unit tests
-npm run test:watch    # Watch mode
-npm run test:coverage # Coverage report
-```
-
-**Test Results**: 30 total tests (20 backend unit + 10 e2e tests) with 100% pass rate
-
-## 📚 API Documentation
-
-The backend API is documented with Swagger/OpenAPI and available at:
-- **Development**: http://localhost:8080/swagger
-- **Production**: https://your-domain.com/swagger
-
-### Key Endpoints
-
-#### Products API
-- `GET /api/products` - List products with filtering
-- `GET /api/products/:id` - Get product by ID
-- `GET /api/products/slug/:slug` - Get product by slug
-- `POST /api/products` - Create product (admin)
-- `PUT /api/products/:id` - Update product (admin)
-- `DELETE /api/products/:id` - Delete product (admin)
-
-#### Orders API
-- `GET /api/orders` - List orders with filtering
-- `GET /api/orders/:id` - Get order by ID
-- `POST /api/orders` - Create order
-- `PUT /api/orders/:id/status` - Update order status (admin)
-
-#### Auth API
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `GET /api/auth/profile` - Get user profile
 
 ## 🔧 Development
 
-### Available Scripts
+### Environment Variables
 
-#### Root (Monorepo)
+#### Backend (.env)
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/birdnest_shop"
+JWT_SECRET="your-jwt-secret"
+NEXTAUTH_SECRET="your-nextauth-secret"
+PORT=8080
+NODE_ENV=development
+```
+
+#### Frontend (.env.local)
+```env
+NEXTAUTH_SECRET="your-nextauth-secret"
+NEXTAUTH_URL="http://localhost:3000"
+NEXT_PUBLIC_API_URL="http://localhost:8080"
+UPLOADTHING_SECRET="your-uploadthing-secret"
+UPLOADTHING_APP_ID="your-uploadthing-app-id"
+```
+
+### Development Commands
+
+#### Backend
 ```bash
-npm run install:all    # Install all dependencies
-npm run dev           # Start both frontend and backend
-npm run build         # Build both applications
-npm run lint          # Lint all code
-npm run format        # Format all code
+cd birdnest-backend
+npm run start:dev    # Start development server
+npm run test         # Run unit tests
+npm run test:e2e     # Run E2E tests
+npm run build        # Build for production
 ```
 
 #### Frontend
 ```bash
-npm run dev           # Start development server
-npm run build         # Build for production
-npm run start         # Start production server
-npm run lint          # Run ESLint
-npm run format        # Run Prettier
-npm test              # Run tests
-npm run db:seed       # Seed database
+cd birdnest-frontend
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run lint         # Lint code
+npm run test         # Run tests
 ```
-
-#### Backend
-```bash
-npm run start:dev     # Start development server
-npm run build         # Build for production
-npm run start         # Start production server
-npm run lint          # Run ESLint
-npm run format        # Run Prettier
-npm test              # Run unit tests
-npm run test:e2e      # Run E2E tests
-```
-
-### Code Quality
-
-The project uses:
-- **ESLint** for code linting
-- **Prettier** for code formatting
-- **TypeScript** for type safety
-- **Husky** for pre-commit hooks (optional)
 
 ### Database Management
 
 ```bash
-# Generate Prisma client
-npx prisma generate
-
-# Run migrations
-npx prisma migrate dev
-
-# Reset database
-npx prisma migrate reset
-
-# View database
-npx prisma studio
+cd birdnest-backend
+npx prisma generate   # Generate Prisma client
+npx prisma migrate dev # Run migrations
+npx prisma db seed    # Seed database
+npx prisma studio     # Open database GUI
 ```
-
-## 🏃‍♂️ Easy Run with Makefile
-
-You can use the provided `Makefile` for quick project commands:
-
-```bash
-make backend   # Start backend server (NestJS)
-make frontend  # Start frontend (Next.js)
-make run       # Start both backend and frontend in parallel
-make test      # Run all backend and frontend tests
-make stop      # Stop all running dev servers
-```
-
-- By default, backend runs on http://localhost:8080 and frontend on http://localhost:3000
-- Make sure your `.env` files are set up as described above.
 
 ## 🚀 Deployment
 
-### Frontend Deployment (Vercel)
+### Docker Development
 
-1. Connect your repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### Backend Deployment
-
-#### Railway
-1. Connect your repository to Railway
-2. Set environment variables
-3. Deploy automatically
-
-#### Docker
 ```bash
-# Build image
-docker build -t birdnest-backend ./backend
+# Start all services
+docker-compose up -d
 
-# Run container
-docker run -p 8080:8080 birdnest-backend
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
-### Environment Variables for Production
+### Production Deployment
 
-#### Frontend (.env.production)
-```env
-DATABASE_URL=your_production_db_url
-NEXTAUTH_SECRET=your_production_secret
-NEXTAUTH_URL=https://your-domain.com
-NEXT_PUBLIC_API_URL=https://api.your-domain.com
+#### Frontend (Vercel)
+```bash
+cd birdnest-frontend
+vercel --prod
 ```
 
-#### Backend (.env.production)
-```env
-DATABASE_URL=your_production_db_url
-JWT_SECRET=your_production_jwt_secret
-APP_PORT=8080
-NODE_ENV=production
+#### Backend (Railway/Render)
+```bash
+cd birdnest-backend
+# Deploy to Railway or Render
 ```
+
+### Environment Setup
+
+1. **Database**: Set up PostgreSQL instance
+2. **Environment Variables**: Configure all required variables
+3. **Domain**: Set up custom domain and SSL
+4. **Monitoring**: Set up error tracking and analytics
+
+## 🧪 Testing
+
+### Backend Testing
+- **Unit Tests**: Service and controller testing
+- **E2E Tests**: API endpoint testing
+- **Integration Tests**: Database integration testing
+
+### Frontend Testing
+- **Unit Tests**: Component testing
+- **Integration Tests**: Page and feature testing
+- **E2E Tests**: User flow testing
+
+### Test Coverage
+- Aim for >80% code coverage
+- Critical business logic coverage
+- Error handling coverage
+
+## 📊 Monitoring & Analytics
+
+### Performance Monitoring
+- **Core Web Vitals**: Frontend performance metrics
+- **API Response Times**: Backend performance tracking
+- **Error Tracking**: Application error monitoring
+- **User Analytics**: User behavior tracking
+
+### Health Checks
+- **Frontend**: Built-in Next.js health checks
+- **Backend**: `/api/health` endpoint
+- **Database**: Connection status monitoring
+
+## 🔐 Security
+
+### Authentication & Authorization
+- **JWT Tokens**: Secure token-based authentication
+- **Role-based Access**: Admin and user role management
+- **OAuth Integration**: Google, GitHub authentication
+- **Session Management**: Secure session handling
+
+### Data Protection
+- **Input Validation**: Comprehensive input sanitization
+- **SQL Injection Prevention**: Prisma ORM protection
+- **XSS Protection**: Content Security Policy
+- **CSRF Protection**: Cross-site request forgery prevention
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes**: Follow the coding standards
+4. **Add tests**: Ensure all new features are tested
+5. **Update documentation**: Keep docs up to date
+6. **Submit a pull request**: Describe your changes clearly
 
-## 📝 License
+### Development Guidelines
+
+- Follow TypeScript strict mode
+- Use ESLint and Prettier for code formatting
+- Write comprehensive tests
+- Update API documentation
+- Follow conventional commits
+- Implement proper error handling
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
-For support, email support@birdnestshop.com or create an issue in the repository.
+### Documentation
+- [Frontend Documentation](birdnest-frontend/README.md)
+- [Backend Documentation](birdnest-backend/README.md)
+- [API Documentation](http://localhost:8080/swagger)
+
+### Getting Help
+- **Issues**: Open an issue on GitHub
+- **Discussions**: Use GitHub Discussions
+- **Email**: Contact the development team
+
+## 🔄 Recent Updates
+
+### Latest Improvements
+- ✅ **Code Quality**: Removed unused imports and variables
+- ✅ **Error Handling**: Improved exception handling
+- ✅ **Performance**: Optimized loading and caching
+- ✅ **Security**: Enhanced authentication and validation
+- ✅ **Documentation**: Comprehensive README updates
+- ✅ **Testing**: Enhanced test coverage and structure
+
+## 🎉 Acknowledgments
+
+- **Next.js Team**: For the amazing React framework
+- **NestJS Team**: For the robust Node.js framework
+- **Shadcn UI**: For the beautiful component library
+- **Prisma Team**: For the excellent ORM
+- **Vercel**: For the seamless deployment platform
 
 ---
 
-**Built with ❤️ using Next.js, NestJS, and PostgreSQL** 
+**Built with ❤️ by the Birdnest Shop Team** 
