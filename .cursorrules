@@ -1531,3 +1531,178 @@ enum RecipientType {
 - [X] Document common error messages and responses
 - [X] Provide sample curl or Postman collection
 - [X] Optional: Add API versioning (e.g. `/api/v1/`)
+
+
+### 23.  TASK: Upgrade Messenger Chatbot – Smart VN Assistant for Birdnest Shop
+Goal: Make the bot “hiểu tiếng Việt”, tư vấn mua hàng, trả lời FAQ, đọc DB để giới thiệu/gợi ý sản phẩm, và hỗ trợ tạo đơn (guest hoặc user). Keep it deterministic (rule/ML-lite) and robust.
+
+1) NLU (Intents & Entities) – Vietnamese
+Implement a lightweight intent router (rule-based + keyword synonyms) in messenger.service.ts.
+
+Intents:
+
+greeting (chào, xin chào, hello)
+
+product_search (tìm, có yến…, còn hàng…, giá bao nhiêu)
+
+recommend (tư vấn, gợi ý, nhu cầu…)
+
+order_create (đặt hàng, mua)
+
+order_status (kiểm tra đơn, tra cứu đơn, mã đơn)
+
+faq_shipping (giao hàng, ship, phí vận chuyển)
+
+faq_payment (thanh toán, COD, chuyển khoản)
+
+faq_return (đổi trả, bảo hành)
+
+contact_human (nhân viên, gọi điện, hỗ trợ)
+
+fallback (không hiểu)
+
+Entities to extract (từ câu tiếng Việt):
+
+category (yến thô, yến tinh chế, yến hủ, yến baby)
+
+weight (50g, 100g, 200g…)
+
+budget (ngân sách: <x VND, khoảng x-x VND)
+
+purpose (biếu/tặng, bồi bổ, cho trẻ em, cho mẹ bầu)
+
+quantity
+
+Add a small Vietnamese synonyms list & regex extractors (số, đơn vị g, kg, “triệu”, “trăm nghìn”…).
+
+2) DB Integration (Prisma) – Product Discovery
+In messenger.service.ts, add search helpers:
+
+findProducts({ category?, minPrice?, maxPrice?, weight? })
+
+findTopSellers(limit=5)
+
+findPromotions(limit=5)
+
+Use existing Product schema (categories: Yến thô, Yến tinh chế, Yến hủ, Yến baby).
+
+Format currency (VND) and weights nicely; use Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).
+
+3) Recommendation Logic (Rule-Based)
+If purpose = biếu/tặng → ưu tiên combo premium / yến tinh chế.
+
+Nếu trẻ em / mẹ bầu → gợi ý yến tinh chế / yến hủ (dễ dùng).
+
+Nếu budget thấp → gợi ý gói nhỏ (50g, 100g); budget cao → 100–200g premium.
+
+Nếu không đủ slot (thiếu category/weight/budget) → hỏi tiếp (slot filling).
+
+Trả về top 3 gợi ý + nút quick-reply “Đặt sản phẩm này”.
+
+4) Order Flow (Slot Filling + Create Order)
+States: IDLE → ASK_NAME → ASK_PHONE → ASK_ADDRESS → ASK_ITEMS → REVIEW → CONFIRM → ORDER_CREATED
+
+Cho phép guest order (psid), lưu vào Order với readableId.
+
+ASK_ITEMS: chấp nhận dạng “yến tinh chế 100g x2”, parse list vào items.
+
+REVIEW: tóm tắt, hiển thị tổng tiền (tính theo DB).
+
+CONFIRM: tạo đơn, lưu DB, trả về mã readableId.
+
+Validate phone (VN regex), địa chỉ not empty; nếu fail → xin nhập lại.
+
+5) FAQ (VN Templates)
+faq_shipping: “Shop giao toàn quốc, miễn phí đơn từ 500.000₫. TP.HCM giao nhanh trong 24–48h.”
+
+faq_payment: “Hỗ trợ COD, chuyển khoản ngân hàng, và thanh toán online.”
+
+faq_return: “Đổi trả trong 7 ngày nếu sản phẩm lỗi/không đúng mô tả. Giữ nguyên tem & hoá đơn.”
+
+contact_human: “Bạn muốn nhân viên gọi hỗ trợ chứ? Vui lòng để lại số điện thoại.”
+
+6) Response Templates (VN) – Reusable
+Create templates/vi.ts with helpers:
+
+greet(name?)
+
+listProducts(products)
+
+askSlot(slotName) (name/phone/address/weight/budget)
+
+orderSummary(orderDraft)
+
+confirmOrder(readableId)
+
+fallback()
+Use concise, friendly tone. Add emoji nhẹ nhàng 🎁🕊️.
+
+7) Messenger UX (Quick Replies & Typing)
+Always show quick replies for main branches: “Tư vấn sản phẩm”, “Xem khuyến mãi”, “Đặt hàng”, “Tra cứu đơn”.
+
+When long DB ops → sendTyping(psid, true) + send message khi xong.
+
+For product cards: use generic template (image, title, subtitle price/weight).
+
+8) Robustness & Logging
+Add structured logs per event: {psid, intent, entities, state}.
+
+Add rate-limit per PSID (basic in-memory window) to avoid spam.
+
+Simple profanity/abuse filter → reply lịch sự và đề xuất liên hệ nhân viên.
+
+Fallback: nếu 2 lần không hiểu → gợi ý menu chính.
+
+9) Order Lookup (Guest)
+Intent order_status: chấp nhận readableId hoặc phone.
+
+If phone → trả danh sách đơn gần đây (giới hạn 3), yêu cầu chọn 1 để xem trạng thái.
+
+10) Language & i18n
+Default Vietnamese responses.
+
+Keep response layer isolated (templates/vi.ts) để sau này thêm EN dễ.
+
+11) Files to Update/Create
+src/messenger/messenger.service.ts: intent routing, slot filling, DB calls.
+
+src/messenger/intent.ts: detect intent + extract entities (VN).
+
+src/messenger/templates/vi.ts: all reply strings & formatters (VND).
+
+src/messenger/facebook.client.ts: quick replies, typing, generic templates.
+
+src/messenger/types.ts: Intent, Entity, State enums, DraftOrder type.
+
+12) Done Criteria
+Bot chào bằng tiếng Việt, gợi ý menu chính.
+
+product_search & recommend trả kết quả từ DB (top 3) + quick replies “Đặt”.
+
+Flow tạo đơn chạy trơn tru, sinh readableId, lưu DB.
+
+order_status tra được theo mã hoặc số điện thoại.
+
+FAQ trả lời đúng template, ngắn gọn, lịch sự.
+
+Log/metrics cơ bản hoạt động; không crash khi payload lạ.
+
+13) Sample VN Replies (use in templates)
+Greet: “Chào bạn 👋 Mình là trợ lý Birdnest. Bạn muốn tư vấn sản phẩm, xem khuyến mãi, đặt hàng, hay tra cứu đơn?”
+
+Ask budget: “Bạn dự trù ngân sách khoảng bao nhiêu? (vd: 1–2 triệu)”
+
+Recommend confirm: “Mình gợi ý 3 lựa chọn phù hợp. Bạn muốn đặt sản phẩm nào, hay xem thêm?”
+
+Order summary: “Xác nhận đơn: 2× Yến tinh chế 100g, giao: Quận 1, HCM. Tổng tạm tính: 2.800.000₫. Xác nhận đặt hàng chứ?”
+
+Order created: “Đặt hàng thành công 🎉 Mã đơn: ORD-20250805-0012. Cảm ơn bạn đã tin tưởng Birdnest!”
+
+Implementation Notes
+Keep everything VN-first; no English copy in user responses.
+
+Avoid external LLM dependencies; rely on rules for speed and reliability.
+
+All prices/weights pulled from DB to avoid drift.
+
+Please implement the above, refactor messenger.service.ts accordingly, and add unit tests for the intent/entity extraction functions.
